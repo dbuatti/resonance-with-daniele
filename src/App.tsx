@@ -13,6 +13,7 @@ import AdminMembers from "./pages/AdminMembers";
 import AdminSurveyData from "./pages/AdminSurveyData";
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
+import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider
 
 // New imports for profile and survey separation
 import ProfileLayoutPage from "./pages/ProfileLayoutPage"; // The new parent for profile routes
@@ -26,28 +27,31 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <SessionContextProvider>
-          <Routes>
-            <Route path="/" element={<Layout><Index /></Layout>} />
-            <Route path="/resources" element={<Layout><Resources /></Layout>} />
-            <Route path="/events" element={<Layout><Events /></Layout>} />
-            <Route path="/login" element={<Layout><Login /></Layout>} />
-            
-            {/* Nested routes for Profile and Survey */}
-            <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
-              <Route index element={<ProfileDetails />} /> {/* Default child route for /profile */}
-              <Route path="survey" element={<SurveyPage />} /> {/* Route for /profile/survey */}
-            </Route>
+      {/* Wrap the entire application with ThemeProvider */}
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <BrowserRouter>
+          <SessionContextProvider>
+            <Routes>
+              <Route path="/" element={<Layout><Index /></Layout>} />
+              <Route path="/resources" element={<Layout><Resources /></Layout>} />
+              <Route path="/events" element={<Layout><Events /></Layout>} />
+              <Route path="/login" element={<Layout><Login /></Layout>} />
+              
+              {/* Nested routes for Profile and Survey */}
+              <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
+                <Route index element={<ProfileDetails />} /> {/* Default child route for /profile */}
+                <Route path="survey" element={<SurveyPage />} /> {/* Route for /profile/survey */}
+              </Route>
 
-            <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
-            <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
-            <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </SessionContextProvider>
-      </BrowserRouter>
+              <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
+              <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
+              <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SessionContextProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -12,6 +12,7 @@ import BackToTopButton from "./BackToTopButton";
 import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
+import { ThemeToggle } from "./ThemeToggle"; // Import ThemeToggle
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -118,8 +119,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </Button>
               </>
             )}
+            <ThemeToggle /> {/* Add ThemeToggle here */}
           </nav>
-          <MobileNav user={user} loading={loading} handleLogout={handleLogout} />
+          <div className="flex items-center sm:hidden"> {/* Wrap MobileNav and ThemeToggle for mobile */}
+            <ThemeToggle /> {/* Add ThemeToggle here for mobile */}
+            <MobileNav user={user} loading={loading} handleLogout={handleLogout} />
+          </div>
         </div>
       </header>
       <main className="flex-grow container mx-auto py-8 px-4">
