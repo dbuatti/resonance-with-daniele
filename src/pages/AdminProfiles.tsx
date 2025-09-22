@@ -102,6 +102,8 @@ const AdminProfiles: React.FC = () => {
     return null; // Should be redirected by useEffect
   }
 
+  console.log("[AdminProfiles] Rendering AdminProfiles component.");
+
   return (
     <div className="space-y-6 py-8 animate-fade-in-up">
       <h1 className="text-4xl font-bold text-center font-lora">All Member Profiles & Survey Data</h1>
