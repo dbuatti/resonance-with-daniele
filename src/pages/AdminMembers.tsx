@@ -5,7 +5,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table } from "@/components/ui/table"; // Only import Table, remove TableBody, TableCell, TableHeader
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, Eye } from "lucide-react";
@@ -173,22 +173,25 @@ const AdminMembers: React.FC = () => {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <thead className="[&_tr]:border-b"><tr>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Name</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Email</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Role</th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Survey Status</th>
-                    <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Actions</th>
-                  </tr></thead>
-                <tbody className="[&_tr:last-child]:border-0">{profiles.map((profile) => (
-                    <tr key={profile.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                      <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 font-medium">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Survey Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {profiles.map((profile) => (
+                    <TableRow key={profile.id}>
+                      <TableCell className="font-medium">
                         {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}
-                      </td>
-                      <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                      </TableCell>
+                      <TableCell>
                         {profile.email || "N/A"}
-                      </td>
-                      <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                      </TableCell>
+                      <TableCell>
                         <Select
                           value={profile.is_admin ? "admin" : "user"}
                           onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
@@ -202,15 +205,15 @@ const AdminMembers: React.FC = () => {
                             <SelectItem value="user">User</SelectItem>
                           </SelectContent>
                         </Select>
-                      </td>
-                      <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+                      </TableCell>
+                      <TableCell>
                         {hasSurveyResponses(profile) ? (
                           <Badge variant="secondary" className="bg-green-100 text-green-800">Responded</Badge>
                         ) : (
                           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>
                         )}
-                      </td>
-                      <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-right">
+                      </TableCell>
+                      <TableCell className="text-right">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button variant="outline" size="sm" onClick={() => setSelectedProfile(profile)}>
@@ -267,8 +270,9 @@ const AdminMembers: React.FC = () => {
                           </DialogContent>
                         </Dialog>
                       </td>
-                    </tr>
-                  ))}</tbody>
+                    </TableRow>
+                  ))}
+                </TableBody>
               </Table>
             </div>
           )}
