@@ -16,29 +16,22 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // Start loading as true
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    console.log('SessionContextProvider: Initializing auth state listener.');
-    console.log('SessionContextProvider: Current URL hash on mount:', window.location.hash);
-
     // The onAuthStateChange listener will handle both initial session and subsequent changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log('SessionContextProvider: Auth state changed!', { event, currentSession });
-      
       setSession(currentSession);
       setUser(currentSession?.user || null);
-      setLoading(false); // Set loading to false after the first auth state change event
+      setLoading(false);
 
       if (currentSession?.user) {
-        console.log('SessionContextProvider: User found, redirecting from login if applicable.');
         if (location.pathname === '/login') {
           navigate('/');
         }
       } else {
-        console.log('SessionContextProvider: No user found, redirecting to login if not already there.');
         if (location.pathname !== '/login') {
           navigate('/login');
         }
@@ -46,10 +39,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     });
 
     return () => {
-      console.log('SessionContextProvider: Unsubscribing from auth state changes.');
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname]); // Dependencies for useEffect
+  }, [navigate, location.pathname]);
 
   const contextValue = { session, user, loading };
 
