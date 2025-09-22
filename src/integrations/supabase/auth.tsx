@@ -33,23 +33,38 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       console.log("[SessionContext] Raw currentUser from session:", currentUser);
 
       if (currentUser) {
-        console.log(`[SessionContext] Fetching profile data for user ID: ${currentUser.id}`);
-        // Changed to select all columns to debug 406 error
+        console.log(`[SessionContext] Checking/Fetching profile data for user ID: ${currentUser.id}`);
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('*') // Select all columns
+          .select('*')
           .eq('id', currentUser.id);
 
         if (profileError) {
           console.error("[SessionContext] Error fetching profile data:", profileError);
           currentUser = { ...currentUser, is_admin: false };
         } else if (profileData && profileData.length > 0) {
-          // Access is_admin from the first item in the array
+          // Profile exists, get is_admin status
           currentUser = { ...currentUser, is_admin: profileData[0].is_admin };
-          console.log("[SessionContext] User is_admin status fetched:", profileData[0].is_admin);
+          console.log("[SessionContext] User profile found. is_admin status:", profileData[0].is_admin);
         } else {
-          currentUser = { ...currentUser, is_admin: false }; // Default to false if no profile data
-          console.log("[SessionContext] No profile data found for user, setting is_admin to false.");
+          // No profile found, create one
+          console.log("[SessionContext] No profile found for user, creating a new one.");
+          const { error: insertError } = await supabase.from('profiles').insert({
+            id: currentUser.id,
+            first_name: currentUser.user_metadata?.first_name || null,
+            last_name: currentUser.user_metadata?.last_name || null,
+            avatar_url: currentUser.user_metadata?.avatar_url || null,
+            is_admin: currentUser.email === 'daniele.buatti@gmail.com' || currentUser.email === 'resonancewithdaniele@gmail.com',
+          });
+
+          if (insertError) {
+            console.error("[SessionContext] Error creating new profile:", insertError);
+            currentUser = { ...currentUser, is_admin: false }; // Default to false on insert error
+          } else {
+            console.log("[SessionContext] New profile created successfully.");
+            // After creating, set is_admin based on the email check
+            currentUser = { ...currentUser, is_admin: currentUser.email === 'daniele.buatti@gmail.com' || currentUser.email === 'resonancewithdaniele@gmail.com' };
+          }
         }
       }
       
