@@ -21,11 +21,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
-        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2"> {/* Adjusted for better stacking on small screens */}
           <Link to="/" className="text-2xl font-bold whitespace-nowrap">
             Resonance with Daniele
           </Link>
-          <nav className="flex flex-wrap justify-center sm:justify-end gap-2">
+          <nav className="flex flex-wrap justify-center sm:justify-end gap-2"> {/* Used gap-2 for consistent spacing */}
             <Button variant="ghost" asChild>
               <Link to="/">Home</Link>
             </Button>
@@ -41,7 +41,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   Logout
                 </Button>
               ) : (
-                <Button variant="default" asChild> {/* Changed to variant="default" for logged-out users */}
+                <Button variant="ghost" asChild>
                   <Link to="/login">Login</Link>
                 </Button>
               )
