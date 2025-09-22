@@ -20,7 +20,7 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<CustomUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Initial state is true
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -33,43 +33,37 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       console.log("[SessionContext] Raw currentUser from session:", currentUser);
 
       if (currentUser) {
-        console.log(`[SessionContext] Checking/Fetching profile data for user ID: ${currentUser.id}`);
+        console.log(`[SessionContext] Ensuring profile exists for user ID: ${currentUser.id}`);
+        // Use upsert to either insert a new profile or update an existing one
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id);
+          .upsert(
+            {
+              id: currentUser.id,
+              first_name: currentUser.user_metadata?.first_name || null,
+              last_name: currentUser.user_metadata?.last_name || null,
+              avatar_url: currentUser.user_metadata?.avatar_url || null,
+              is_admin: currentUser.email === 'daniele.buatti@gmail.com' || currentUser.email === 'resonancewithdaniele@gmail.com',
+            },
+            { onConflict: 'id' } // If a row with this 'id' exists, update it; otherwise, insert it.
+          );
 
         if (profileError) {
-          console.error("[SessionContext] Error fetching profile data:", profileError);
-          currentUser = { ...currentUser, is_admin: false };
+          console.error("[SessionContext] Error upserting profile data:", profileError);
+          currentUser = { ...currentUser, is_admin: false }; // Default to false on error
         } else if (profileData && profileData.length > 0) {
-          // Profile exists, get is_admin status
+          // Profile exists or was created/updated, get is_admin status from the returned data
           currentUser = { ...currentUser, is_admin: profileData[0].is_admin };
-          console.log("[SessionContext] User profile found. is_admin status:", profileData[0].is_admin);
+          console.log("[SessionContext] User profile upserted. is_admin status:", profileData[0].is_admin);
         } else {
-          // No profile found, create one
-          console.log("[SessionContext] No profile found for user, creating a new one.");
-          const { error: insertError } = await supabase.from('profiles').insert({
-            id: currentUser.id,
-            first_name: currentUser.user_metadata?.first_name || null,
-            last_name: currentUser.user_metadata?.last_name || null,
-            avatar_url: currentUser.user_metadata?.avatar_url || null,
-            is_admin: currentUser.email === 'daniele.buatti@gmail.com' || currentUser.email === 'resonancewithdaniele@gmail.com',
-          });
-
-          if (insertError) {
-            console.error("[SessionContext] Error creating new profile:", insertError);
-            currentUser = { ...currentUser, is_admin: false }; // Default to false on insert error
-          } else {
-            console.log("[SessionContext] New profile created successfully.");
-            // After creating, set is_admin based on the email check
-            currentUser = { ...currentUser, is_admin: currentUser.email === 'daniele.buatti@gmail.com' || currentUser.email === 'resonancewithdaniele@gmail.com' };
-          }
+          // Fallback if upsert didn't return data (should ideally not happen with upsert)
+          currentUser = { ...currentUser, is_admin: currentUser.email === 'daniele.buatti@gmail.com' || currentUser.email === 'resonancewithdaniele@gmail.com' };
+          console.log("[SessionContext] Profile upserted, but no data returned. Setting is_admin based on email.");
         }
       }
       
       setUser(currentUser);
-      setLoading(false);
+      setLoading(false); // Ensure loading is set to false after all async operations
       console.log("[SessionContext] Final user state:", currentUser);
       console.log("[SessionContext] Loading state set to false.");
 
@@ -81,6 +75,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         }
       } else {
         console.log(`[SessionContext] User is NOT logged in. Current path: ${location.pathname}`);
+        // Only redirect if not already on a public page
         if (location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
           console.log(`[SessionContext] Redirecting from ${location.pathname} to /login.`);
           navigate('/login');
