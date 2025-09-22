@@ -19,7 +19,7 @@ const HeroSection: React.FC = () => {
             <Link to="/login">Sign Up Now</Link>
           </Button>
           <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 dark:border-primary-foreground dark:text-primary-foreground dark:hover:bg-primary-foreground/10" asChild>
-            <Link to="/#about-choir">Learn More</Link>
+            <Link to="/learn-more">Learn More</Link> {/* Updated link */}
           </Button>
           <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 dark:border-primary-foreground dark:text-primary-foreground dark:hover:bg-primary-foreground/10" asChild>
             <Link to="/events">See Upcoming Events</Link>
