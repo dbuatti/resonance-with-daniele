@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery, useQueryClient, QueryKey } from '@tanstack/react-query'; // Import QueryKey
+import { useQuery, useQueryClient, QueryKey } from '@tanstack/react-query';
 
 export interface Profile {
   id: string;
@@ -58,9 +58,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     Error,          // TError: The type of error that can be thrown
     Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
     QueryKey        // TQueryKey: The type of the query key
-  >(
-    ['profile', session?.user?.id], // Query key
-    async () => {
+  >({ // Changed to single object argument
+    queryKey: ['profile', session?.user?.id],
+    queryFn: async () => {
       if (!session?.user?.id) {
         console.log("[SessionContext] No user ID, skipping profile fetch.");
         return null;
@@ -96,16 +96,14 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         };
       }
     },
-    {
-      enabled: !!session?.user?.id, // Only run query if user ID is available
-      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-      refetchOnWindowFocus: true, // Refetch when window regains focus
-      onError: (error) => {
-        console.error("[SessionContext] React Query profile fetch error:", error);
-      },
-    }
-  );
+    enabled: !!session?.user?.id, // Only run query if user ID is available
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    onError: (error) => {
+      console.error("[SessionContext] React Query profile fetch error:", error);
+    },
+  });
 
   // Derived user object with admin status
   const user: CustomUser | null = session?.user ? {
