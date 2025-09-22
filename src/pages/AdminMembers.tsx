@@ -49,7 +49,8 @@ const AdminMembers: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
 
-  const isLoadingAny = loadingSession || loadingProfiles;
+  // Only consider if profiles data itself is loading, as session loading is handled by Layout
+  const isLoadingAny = loadingProfiles;
   // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   useEffect(() => {

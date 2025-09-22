@@ -51,7 +51,8 @@ const SurveyForm: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
   const [surveyDataLoaded, setSurveyDataLoaded] = useState(false);
 
-  const isLoadingAny = loadingUserSession || !surveyDataLoaded;
+  // Only consider if survey data itself is loaded, as session loading is handled by Layout
+  const isLoadingAny = !surveyDataLoaded;
   // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<SurveyFormData>({

@@ -32,7 +32,8 @@ const ProfileDetails: React.FC = () => {
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  const isLoadingAny = loadingUserSession || !profileDataLoaded;
+  // Only consider if profile data itself is loaded, as session loading is handled by Layout
+  const isLoadingAny = !profileDataLoaded; 
   // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<ProfileFormData>({
@@ -251,7 +252,7 @@ const ProfileDetails: React.FC = () => {
   };
 
   if (isLoadingAny) { // Directly use isLoadingAny
-    console.log("[ProfileDetails Page] Rendering skeleton due to loadingUserSession or !profileDataLoaded.");
+    console.log("[ProfileDetails Page] Rendering skeleton due to !profileDataLoaded.");
     return (
       <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader className="text-center">

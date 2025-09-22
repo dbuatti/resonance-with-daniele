@@ -53,7 +53,8 @@ const WelcomeHub: React.FC = () => {
   const [loadingResources, setLoadingResources] = useState(true);
   const [isSurveyCompleted, setIsSurveyCompleted] = useState(false);
 
-  const isLoadingAny = loadingUserSession || loadingProfile || loadingEvent || loadingResources;
+  // Only consider internal data loading states, as session loading is handled by Layout
+  const isLoadingAny = loadingProfile || loadingEvent || loadingResources;
   // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   useEffect(() => {

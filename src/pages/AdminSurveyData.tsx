@@ -36,7 +36,8 @@ const AdminSurveyData: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
 
-  const isLoadingAny = loadingSession || loadingProfiles;
+  // Only consider if profiles data itself is loading, as session loading is handled by Layout
+  const isLoadingAny = loadingProfiles;
   // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   useEffect(() => {
