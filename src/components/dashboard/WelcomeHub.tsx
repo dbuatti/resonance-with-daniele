@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Music, Mic2, Users, Camera } from "lucide-react";
+import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
+import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
 
 interface Profile {
   first_name: string | null;
@@ -15,10 +16,30 @@ interface Profile {
   avatar_url: string | null;
 }
 
+interface Event {
+  id: string;
+  title: string;
+  date: string; // ISO date string
+  location?: string;
+  description?: string;
+  humanitix_link?: string;
+}
+
+interface Resource {
+  id: string;
+  title: string;
+  description?: string;
+  url: string;
+}
+
 const WelcomeHub: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [upcomingEvent, setUpcomingEvent] = useState<Event | null>(null);
+  const [loadingEvent, setLoadingEvent] = useState(true);
+  const [recentResources, setRecentResources] = useState<Resource[]>([]);
+  const [loadingResources, setLoadingResources] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -42,12 +63,47 @@ const WelcomeHub: React.FC = () => {
       }
     };
 
+    const fetchUpcomingEvent = async () => {
+      setLoadingEvent(true);
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .gte("date", format(new Date(), "yyyy-MM-dd")) // Only future events
+        .order("date", { ascending: true })
+        .limit(1);
+
+      if (error) {
+        console.error("Error fetching upcoming event:", error);
+      } else if (data && data.length > 0) {
+        setUpcomingEvent(data[0]);
+      }
+      setLoadingEvent(false);
+    };
+
+    const fetchRecentResources = async () => {
+      setLoadingResources(true);
+      const { data, error } = await supabase
+        .from("resources")
+        .select("id, title, description, url")
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (error) {
+        console.error("Error fetching recent resources:", error);
+      } else {
+        setRecentResources(data || []);
+      }
+      setLoadingResources(false);
+    };
+
     if (!loadingUserSession) {
       fetchProfile();
+      fetchUpcomingEvent();
+      fetchRecentResources();
     }
   }, [user, loadingUserSession]);
 
-  if (loadingUserSession || loadingProfile) {
+  if (loadingUserSession || loadingProfile || loadingEvent || loadingResources) {
     return (
       <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
         <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 animate-fade-in-up">
@@ -118,6 +174,84 @@ const WelcomeHub: React.FC = () => {
           <p>
             No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. I celebrate all voices and all identities, and everyone is invited to shine their unique light here.
           </p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            {/* Upcoming Event Card */}
+            <Card className="shadow-md border border-border">
+              <CardHeader>
+                <CardTitle className="text-xl font-lora flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-primary" /> Next Event
+                </CardTitle>
+                <CardDescription>Your next opportunity to sing!</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {upcomingEvent ? (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-foreground">{upcomingEvent.title}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(upcomingEvent.date), "PPP")}
+                      {upcomingEvent.location && ` at ${upcomingEvent.location}`}
+                    </p>
+                    {upcomingEvent.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">{upcomingEvent.description}</p>
+                    )}
+                    <Button size="sm" className="w-full mt-2" asChild>
+                      <Link to={upcomingEvent.humanitix_link || "/events"}>
+                        {upcomingEvent.humanitix_link ? "View Details" : "View All Events"}
+                      </Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    <p>No upcoming events.</p>
+                    <Button variant="link" className="p-0 h-auto" asChild>
+                      <Link to="/events">View all events</Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Resources Card */}
+            <Card className="shadow-md border border-border">
+              <CardHeader>
+                <CardTitle className="text-xl font-lora flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" /> Recent Resources
+                </CardTitle>
+                <CardDescription>Fresh materials to help you practice.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {recentResources.length > 0 ? (
+                  <ul className="space-y-3">
+                    {recentResources.map((resource) => (
+                      <li key={resource.id} className="flex items-start gap-2">
+                        <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+                        <div>
+                          <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                            {resource.title}
+                          </a>
+                          {resource.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-1">{resource.description}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                    <Button variant="link" className="p-0 h-auto mt-2" asChild>
+                      <Link to="/resources">View all resources</Link>
+                    </Button>
+                  </ul>
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    <p>No recent resources.</p>
+                    <Button variant="link" className="p-0 h-auto" asChild>
+                      <Link to="/resources">View all resources</Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           <p className="text-center">
             💡 Learn more about me and my work:{" "}
             <Button variant="link" className="p-0 h-auto text-primary hover:underline" asChild>
