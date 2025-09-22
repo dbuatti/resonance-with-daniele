@@ -222,7 +222,7 @@ const Events: React.FC = () => {
   console.log("[Events Page] Rendering Events component. Loading Events:", loadingEvents, "Events count:", events.length);
 
   return (
-    <div className="space-y-6 py-8 animate-fade-in-up">
+    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
       <h1 className="text-4xl font-bold text-center font-lora">
         {showDelayedSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>
@@ -314,8 +314,8 @@ const Events: React.FC = () => {
                     <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
                     <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
                     {addForm.formState.errors.humanitix_link && (
-                      <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
-                    )}
+                          <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
+                        )}
                   </div>
                   <DialogFooter>
                     <Button type="submit" disabled={addForm.formState.isSubmitting}>

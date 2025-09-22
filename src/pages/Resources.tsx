@@ -205,7 +205,7 @@ const Resources: React.FC = () => {
   console.log("[Resources Page] Rendering Resources component. Loading Resources:", loadingResources, "Resources count:", resources.length);
 
   return (
-    <div className="space-y-6 py-8 animate-fade-in-up">
+    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
       <h1 className="text-4xl font-bold text-center font-lora">
         {showDelayedSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>

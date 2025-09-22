@@ -8,7 +8,7 @@ const ProfileLayoutPage: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in-up">
+    <div className="container mx-auto px-4 py-8 md:py-12 space-y-8"> {/* Removed animate-fade-in-up */}
       <h1 className="text-4xl font-bold text-center font-lora">My Account</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Manage your personal details and survey responses.
