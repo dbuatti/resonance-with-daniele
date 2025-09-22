@@ -11,13 +11,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Loader2, Eye } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import SurveyMetricsCard from "@/components/admin/SurveyMetricsCard"; // Import the new component
+import SurveyMetricsCard from "@/components/admin/SurveyMetricsCard";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Profile {
   id: string;
   first_name: string | null;
   last_name: string | null;
-  email: string | null; // Now directly from profiles table
+  email: string | null;
   avatar_url: string | null;
   is_admin: boolean;
   how_heard: string | null;
@@ -39,6 +46,7 @@ const AdminProfiles: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null); // To track which user's status is being updated
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -47,30 +55,56 @@ const AdminProfiles: React.FC = () => {
     }
   }, [user, loadingSession, navigate]);
 
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      if (user && user.is_admin) {
-        setLoadingProfiles(true);
-        // Fetch all profile data, including the new 'email' column
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*, email") // Select all columns, explicitly including email
-          .order("updated_at", { ascending: false });
+  const fetchProfiles = async () => {
+    if (user && user.is_admin) {
+      setLoadingProfiles(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*, email")
+        .order("updated_at", { ascending: false });
 
-        if (error) {
-          console.error("Error fetching profiles:", error);
-          showError("Failed to load profiles.");
-        } else {
-          setProfiles(data as Profile[]); // Cast data to Profile[]
-        }
-        setLoadingProfiles(false);
+      if (error) {
+        console.error("Error fetching profiles:", error);
+        showError("Failed to load profiles.");
+      } else {
+        setProfiles(data as Profile[]);
       }
-    };
+      setLoadingProfiles(false);
+    }
+  };
 
+  useEffect(() => {
     if (!loadingSession && user?.is_admin) {
       fetchProfiles();
     }
   }, [user, loadingSession]);
+
+  const handleAdminStatusChange = async (profileId: string, newStatus: boolean) => {
+    if (!user || !user.is_admin) {
+      showError("You do not have permission to change admin status.");
+      return;
+    }
+
+    if (profileId === user.id && !newStatus) {
+      showError("You cannot demote yourself from admin status.");
+      return;
+    }
+
+    setIsUpdatingAdminStatus(profileId);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_admin: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", profileId);
+
+    if (error) {
+      console.error("Error updating admin status:", error);
+      showError("Failed to update admin status: " + error.message);
+    } else {
+      showSuccess(`User role updated to ${newStatus ? "Admin" : "User"}!`);
+      fetchProfiles(); // Re-fetch profiles to reflect the change
+    }
+    setIsUpdatingAdminStatus(null);
+  };
 
   if (loadingSession || loadingProfiles) {
     return (
@@ -111,13 +145,12 @@ const AdminProfiles: React.FC = () => {
         View and manage all registered member profiles and their survey responses.
       </p>
 
-      {/* New Survey Metrics Card */}
       <SurveyMetricsCard profiles={profiles} />
 
       <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-lora">Member List</CardTitle>
-          <CardDescription>Click "View Survey" to see detailed responses.</CardDescription>
+          <CardDescription>Click "View Survey" to see detailed responses or change user roles.</CardDescription>
         </CardHeader>
         <CardContent>
           {profiles.length === 0 ? (
@@ -132,7 +165,7 @@ const AdminProfiles: React.FC = () => {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Admin</TableHead>
+                    <TableHead>Role</TableHead> {/* Changed from Admin to Role */}
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -143,7 +176,21 @@ const AdminProfiles: React.FC = () => {
                         {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : "N/A"}
                       </TableCell>
                       <TableCell>{profile.email || "N/A"}</TableCell>
-                      <TableCell>{profile.is_admin ? "Yes" : "No"}</TableCell>
+                      <TableCell>
+                        <Select
+                          value={profile.is_admin ? "admin" : "user"}
+                          onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
+                          disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id} // Disable if current user or currently updating
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="user">User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Dialog>
                           <DialogTrigger asChild>
