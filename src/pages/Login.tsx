@@ -35,7 +35,8 @@ const Login: React.FC = () => {
                 },
               },
             }}
-            theme={authTheme} {/* Use the dynamically determined theme */}
+            // Use the dynamically determined theme
+            theme={authTheme}
             redirectTo={redirectToUrl}
           />
           <div className="mt-6 text-center">
