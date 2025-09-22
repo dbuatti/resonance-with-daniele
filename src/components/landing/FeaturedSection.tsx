@@ -45,8 +45,8 @@ const FeaturedSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora animate-fade-in-up">Featured Highlight</h2>
-        <Card className="max-w-2xl mx-auto p-8 shadow-lg rounded-xl border-2 border-primary/20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora">Featured Highlight</h2>
+        <Card className="max-w-2xl mx-auto p-8 shadow-lg rounded-xl border-2 border-primary/20">
           {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-10 w-10 rounded-full mx-auto" />

@@ -8,9 +8,9 @@ const AboutChoirSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora animate-fade-in-up">About My Choir</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora">About My Choir</h2>
 
-        <div className="max-w-3xl mx-auto text-lg text-muted-foreground space-y-6 mb-12 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <div className="max-w-3xl mx-auto text-lg text-muted-foreground space-y-6 mb-12">
           <p>
             Led by me, Daniele Buatti, a musical director and vocal coach with years of experience in musical theatre and performance, my choir is all about connecting through music. I celebrate all voices, all backgrounds, and all identities.
           </p>
@@ -20,12 +20,11 @@ const AboutChoirSection: React.FC = () => {
         <img
           src="/images/daniele-conduct.jpeg"
           alt="Daniele Buatti conducting the choir"
-          className="w-full max-w-3xl mx-auto rounded-xl shadow-lg mb-12 object-cover animate-fade-in-up"
-          style={{ animationDelay: '0.3s' }}
+          className="w-full max-w-3xl mx-auto rounded-xl shadow-lg mb-12 object-cover"
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Card className="text-center p-6 shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <Card className="text-center p-6 shadow-lg rounded-xl">
             <CardHeader className="flex flex-col items-center">
               <Heart className="h-10 w-10 text-primary mb-4" />
               <CardTitle className="text-xl font-semibold font-lora">What I Believe In</CardTitle>
@@ -40,7 +39,7 @@ const AboutChoirSection: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="text-center p-6 shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+          <Card className="text-center p-6 shadow-lg rounded-xl">
             <CardHeader className="flex flex-col items-center">
               <Users className="h-10 w-10 text-primary mb-4" />
               <CardTitle className="text-xl font-semibold font-lora">Why Join My Choir?</CardTitle>
@@ -55,7 +54,7 @@ const AboutChoirSection: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="text-center p-6 shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+          <Card className="text-center p-6 shadow-lg rounded-xl">
             <CardHeader className="flex flex-col items-center">
               <Sparkles className="h-10 w-10 text-primary mb-4" />
               <CardTitle className="text-xl font-semibold font-lora">My Philosophy</CardTitle>

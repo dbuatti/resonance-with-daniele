@@ -9,8 +9,8 @@ const MeetDanieleSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora animate-fade-in-up">Meet Daniele</h2>
-        <Card className="max-w-3xl mx-auto p-8 shadow-lg rounded-xl flex flex-col md:flex-row items-center gap-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora">Meet Daniele</h2>
+        <Card className="max-w-3xl mx-auto p-8 shadow-lg rounded-xl flex flex-col md:flex-row items-center gap-8">
           <img
             src="/images/daniele-buatti-headshot.jpeg"
             alt="Daniele Buatti"

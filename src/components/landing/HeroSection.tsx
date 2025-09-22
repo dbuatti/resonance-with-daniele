@@ -8,13 +8,13 @@ const HeroSection: React.FC = () => {
   return (
     <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end py-24 md:py-40 text-center overflow-hidden rounded-xl shadow-lg">
       <div className="container mx-auto px-4 relative z-10">
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 animate-fade-in-up font-lora text-foreground"> {/* Changed to text-foreground */}
+        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 font-lora text-foreground">
           Sing. Connect. Shine. <br className="hidden sm:inline" /> Join Melbourne’s Pop-Up Choir with Daniele.
         </h1>
-        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto animate-fade-in-up text-foreground" style={{ animationDelay: '0.2s' }}> {/* Changed to text-foreground */}
+        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-foreground">
           A joyful, welcoming space I've created for anyone who loves to sing — no experience needed.
         </p>
-        <div className="flex justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+        <div className="flex justify-center gap-4">
           <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border border-muted-foreground/30" asChild>
             <Link to="/login">Sign Up Now</Link>
           </Button>
