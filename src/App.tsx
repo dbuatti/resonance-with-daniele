@@ -29,33 +29,31 @@ const App = () => (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <BrowserRouter>
         <SessionContextProvider>
-          <React.Fragment> {/* This Fragment now acts as the single child for SessionContextProvider */}
-            <Sonner />
-            <TooltipProvider>
-              <Routes>
-                <Route path="/" element={<Layout><Index /></Layout>} />
-                <Route path="/resources" element={<Layout><Resources /></Layout>} />
-                <Route path="/events" element={<Layout><Events /></Layout>} />
-                <Route path="/login" element={<Layout><Login /></Layout>} />
-                <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
-                <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} />
-                
-                <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
-                  <Route index element={<ProfileDetails />} />
-                  <Route path="survey" element={<SurveyPage />} />
-                </Route>
+          <TooltipProvider>
+            <Routes>
+              <Route path="/" element={<Layout><Index /></Layout>} />
+              <Route path="/resources" element={<Layout><Resources /></Layout>} />
+              <Route path="/events" element={<Layout><Events /></Layout>} />
+              <Route path="/login" element={<Layout><Login /></Layout>} />
+              <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
+              <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} />
+              
+              <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
+                <Route index element={<ProfileDetails />} />
+                <Route path="survey" element={<SurveyPage />} />
+              </Route>
 
-                <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
-                <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
-                <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
-                <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </TooltipProvider>
-          </React.Fragment>
+              <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
+              <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
+              <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
+              <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
         </SessionContextProvider>
       </BrowserRouter>
     </ThemeProvider>
+    <Sonner /> {/* Moved Sonner here, as a sibling to the main app tree */}
   </QueryClientProvider>
 );
 
