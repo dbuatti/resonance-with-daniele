@@ -88,12 +88,16 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  html {
+    @apply bg-background; /* Ensure html also has the background */
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    min-height: 100vh; /* Ensure body always takes full viewport height */
   }
 
-  body {
-    @apply bg-background text-foreground font-sans; /* Re-added bg-background text-foreground to body */
+  * {
+    @apply border-border;
   }
 
   h1, h2, h3, h4, h5, h6 {
