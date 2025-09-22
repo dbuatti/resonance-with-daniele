@@ -21,30 +21,43 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
-        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2"> {/* Adjusted for better stacking on small screens */}
+        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
           <Link to="/" className="text-2xl font-bold whitespace-nowrap">
             Resonance with Daniele
           </Link>
-          <nav className="flex flex-wrap justify-center sm:justify-end gap-2"> {/* Used gap-2 for consistent spacing */}
-            <Button variant="ghost" asChild>
-              <Link to="/">Home</Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link to="/resources">Resources</Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link to="/events">Events</Link>
-            </Button>
-            {!loading && (
-              user ? (
+          <nav className="flex flex-wrap justify-center sm:justify-end gap-2">
+            {!loading && user ? (
+              // Logged-in user menu
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/">Dashboard</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link to="/resources">Resources</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link to="/events">Events</Link>
+                </Button>
                 <Button variant="ghost" onClick={handleLogout}>
                   Logout
                 </Button>
-              ) : (
+              </>
+            ) : (
+              // Logged-out user menu
+              <>
                 <Button variant="ghost" asChild>
-                  <Link to="/login">Login</Link>
+                  <Link to="/">Home</Link>
                 </Button>
-              )
+                <Button variant="ghost" asChild>
+                  <Link to="/resources">Resources</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link to="/events">Events</Link>
+                </Button>
+                <Button asChild> {/* Make login/signup more prominent */}
+                  <Link to="/login">Sign Up Now</Link>
+                </Button>
+              </>
             )}
           </nav>
         </div>
