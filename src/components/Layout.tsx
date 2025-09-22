@@ -13,18 +13,17 @@ import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
-import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, loading: loadingSession } = useSession();
-  const { pageLoading } = usePageLoading(); // Consume pageLoading state
+  const { user, loading } = useSession();
   const location = useLocation();
-  
-  console.log("[Layout] User:", user ? user.id : 'null', "Loading Session:", loadingSession, "Page Loading:", pageLoading, "Path:", location.pathname);
+  // Removed: const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
+  console.log("[Layout] User:", user ? user.id : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
     console.log("[Layout] Attempting to log out user.");
@@ -40,9 +39,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       location.pathname === path ? "text-accent font-semibold" : "text-primary-foreground"
     );
 
-  // Show global skeleton if session is loading OR if the current page component is still loading its data
-  if (loadingSession || pageLoading) { 
-    console.log("[Layout] Session or Page is loading, rendering full-page skeleton.");
+  if (loading) { // Directly use 'loading' from useSession for immediate skeleton display
+    console.log("[Layout] Session is loading, rendering full-page skeleton.");
     return (
       <div className="min-h-screen flex flex-col">
         <header className="bg-primary text-primary-foreground p-4 shadow-lg">
@@ -56,22 +54,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Skeleton className="h-8 w-8 sm:hidden bg-primary-foreground/20 rounded-md" />
           </div>
         </header>
-        <main className="flex-grow container mx-auto py-8 px-4">
-          {/* Enhanced skeleton for the main content area */}
-          <div className="space-y-6">
-            <Skeleton className="h-10 w-3/4 mx-auto mb-4" />
-            <Skeleton className="h-6 w-1/2 mx-auto" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="p-6 border rounded-lg shadow-sm space-y-4">
-                  <Skeleton className="h-6 w-1/2" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ))}
-            </div>
-          </div>
+        <main className="flex-grow container mx-auto py-8 px-4 flex items-center justify-center">
+          <p className="text-lg text-muted-foreground">Loading application...</p>
         </main>
         <FooterSection />
       </div>
@@ -141,7 +125,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           <div className="flex items-center sm:hidden">
             <ThemeToggle />
-            <MobileNav user={user} loading={loadingSession} handleLogout={handleLogout} />
+            <MobileNav user={user} loading={loading} handleLogout={handleLogout} />
           </div>
         </div>
       </header>

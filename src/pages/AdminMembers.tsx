@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface Profile {
   id: string;
@@ -43,30 +43,26 @@ interface Profile {
 
 const AdminMembers: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
-  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
 
+  // Only consider if profiles data itself is loading, as session loading is handled by Layout
+  const isLoadingAny = loadingProfiles;
+  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
+
   useEffect(() => {
-    console.log("[AdminMembers] useEffect: Session loading:", loadingSession);
     if (!loadingSession && (!user || !user.is_admin)) {
       navigate("/");
-      setPageLoading(false); // Page is not loading if redirected
       showError("Access Denied: You must be an administrator to view this page.");
-    } else if (!loadingSession && user?.is_admin) {
-      fetchProfiles();
-    } else {
-      setPageLoading(true); // Keep page loading true while session is loading
     }
-  }, [user, loadingSession, navigate, setPageLoading]);
+  }, [user, loadingSession, navigate]);
 
   const fetchProfiles = async () => {
     if (user && user.is_admin) {
       setLoadingProfiles(true);
-      setPageLoading(true); // Indicate that page is loading its data
       const { data, error } = await supabase
         .from("profiles")
         .select("*, email")
@@ -79,9 +75,14 @@ const AdminMembers: React.FC = () => {
         setProfiles(data as Profile[]);
       }
       setLoadingProfiles(false);
-      setPageLoading(false); // Data loaded, set page loading to false
     }
   };
+
+  useEffect(() => {
+    if (!loadingSession && user?.is_admin) {
+      fetchProfiles();
+    }
+  }, [user, loadingSession]);
 
   const handleAdminStatusChange = async (profileId: string, newStatus: boolean) => {
     if (!user || !user.is_admin) {
@@ -126,7 +127,7 @@ const AdminMembers: React.FC = () => {
     );
   };
 
-  if (loadingProfiles) { // Only use internal loading for skeleton
+  if (isLoadingAny) { // Directly use isLoadingAny
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">
@@ -157,7 +158,7 @@ const AdminMembers: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8">
+    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
       <h1 className="text-4xl font-bold text-center font-lora">Manage Member Profiles</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         View and manage all registered member profiles, including their roles.

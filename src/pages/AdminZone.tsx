@@ -9,30 +9,31 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
-import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const AdminZone: React.FC = () => {
-  const { user, loading: loadingSession } = useSession();
-  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
+  const { user, loading } = useSession();
   const navigate = useNavigate();
+  // Removed: const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
 
   useEffect(() => {
-    console.log("[AdminZone] useEffect: Session loading:", loadingSession);
-    if (!loadingSession && (!user || !user.is_admin)) {
+    if (!loading && (!user || !user.is_admin)) {
+      // If not loading, and user is not logged in or not an admin, redirect to home
       navigate("/");
-      setPageLoading(false); // Page is not loading if redirected
-    } else if (!loadingSession && user?.is_admin) {
-      setPageLoading(false); // Admin user is loaded, page is not loading
-    } else {
-      setPageLoading(true); // Keep page loading true while session is loading
     }
-  }, [user, loadingSession, navigate, setPageLoading]);
+  }, [user, loading, navigate]);
 
-  if (loadingSession) { // Layout handles global skeleton based on this
-    return null;
+  if (loading) { // Directly use loading
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Loading admin access...</p>
+      </div>
+    );
   }
 
   if (!user || !user.is_admin) {
+    // This block should ideally not be reached due to the redirect in useEffect,
+    // but serves as a fallback for immediate rendering before redirect.
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-6 text-center shadow-lg rounded-xl border-destructive/20 border-2">
@@ -54,7 +55,7 @@ const AdminZone: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8">
+    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
       <h1 className="text-4xl font-bold text-center font-lora">Welcome to the Admin Zone, Daniele!</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.

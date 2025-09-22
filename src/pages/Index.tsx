@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import HeroSection from "@/components/landing/HeroSection";
 import VideoSection from "@/components/landing/VideoSection";
 import AboutChoirSection from "@/components/landing/AboutChoirSection";
@@ -12,36 +12,14 @@ import CallToActionSection from "@/components/landing/CallToActionSection";
 import FooterSection from "@/components/landing/FooterSection";
 import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
-import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
+// No need for useDelayedLoading here, as Layout handles the global session loading.
 
 const Index: React.FC = () => {
-  const { user, loading: loadingSession } = useSession();
-  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
+  const { user, loading } = useSession();
+  console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
 
-  useEffect(() => {
-    console.log("[Index Page] useEffect: Session loading:", loadingSession);
-    // If session is still loading, the page is also loading.
-    if (loadingSession) {
-      setPageLoading(true);
-      console.log("[Index Page] Page loading set to true (session loading).");
-      return; // Exit early, let session resolve first
-    }
-
-    // Once session is NOT loading:
-    if (!user) {
-      // If no user, we're showing the static landing page.
-      // This page doesn't have further data fetches, so it's "loaded".
-      setPageLoading(false);
-      console.log("[Index Page] Page loading set to false (no user, static landing).");
-    }
-    // If there is a user, WelcomeHub will be rendered.
-    // WelcomeHub itself will manage setPageLoading(true/false) based on its data fetches.
-    // So, Index.tsx should NOT set setPageLoading(false) here if user exists,
-    // to avoid a flicker before WelcomeHub sets it to true.
-  }, [loadingSession, user, setPageLoading]);
-
-  // If the session is still loading, render nothing. The Layout component will show a global skeleton.
-  if (loadingSession) {
+  // If the session is still loading, render nothing. The Layout component will show a global skeleton if needed.
+  if (loading) {
     return null;
   }
 

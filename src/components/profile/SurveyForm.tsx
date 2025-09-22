@@ -30,7 +30,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const surveySchema = z.object({
   how_heard: z.string().optional(),
@@ -49,10 +49,11 @@ type SurveyFormData = z.infer<typeof surveySchema>;
 
 const SurveyForm: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
-  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
   const [surveyDataLoaded, setSurveyDataLoaded] = useState(false);
 
+  // Only consider if survey data itself is loaded, as session loading is handled by Layout
   const isLoadingAny = !surveyDataLoaded;
+  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
@@ -77,7 +78,6 @@ const SurveyForm: React.FC = () => {
     console.log("[SurveyForm] useEffect: User session loading:", loadingUserSession, "User:", user?.id, "Survey data loaded:", surveyDataLoaded, "Previous User ID Ref:", previousUserIdRef.current);
 
     if (loadingUserSession) {
-      setPageLoading(true); // Keep page loading true while session is loading
       return;
     }
 
@@ -97,7 +97,6 @@ const SurveyForm: React.FC = () => {
     if (!user) {
       console.log("[SurveyForm] useEffect: No user, resetting survey states.");
       setSurveyDataLoaded(true); // No user, so no survey data to load, consider it "loaded"
-      setPageLoading(false); // No user, no data to load, so page is not loading
       form.reset({
         how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
         session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
@@ -108,7 +107,6 @@ const SurveyForm: React.FC = () => {
 
     // Only load survey if user is present AND survey data hasn't been loaded yet
     if (user && !surveyDataLoaded) {
-      setPageLoading(true); // Indicate that page is loading its data
       const loadSurveyData = async () => {
         console.log(`[SurveyForm] loadSurveyData: Fetching survey data for user ID: ${user.id}`);
         const { data, error } = await supabase
@@ -143,12 +141,11 @@ const SurveyForm: React.FC = () => {
           });
         }
         setSurveyDataLoaded(true); // Mark survey data as loaded
-        setPageLoading(false); // Data loaded, set page loading to false
-        console.log("[SurveyForm] loadSurveyData: Survey data loaded state set to true. Page loading set to false.");
+        console.log("[SurveyForm] loadSurveyData: Survey data loaded state set to true.");
       };
       loadSurveyData();
     }
-  }, [user?.id, loadingUserSession, surveyDataLoaded, setPageLoading]); // Dependencies: user?.id, loadingUserSession, and surveyDataLoaded
+  }, [user?.id, loadingUserSession, surveyDataLoaded]); // Dependencies: user?.id, loadingUserSession, and surveyDataLoaded
 
   const onSubmit = async (data: SurveyFormData) => {
     if (!user) {
