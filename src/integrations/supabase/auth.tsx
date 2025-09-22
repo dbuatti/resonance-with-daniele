@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery, useQueryClient, QueryKey } from '@tanstack/react-query';
+import { useQuery, useQueryClient, QueryKey, UseQueryOptions } from '@tanstack/react-query';
 
 export interface Profile {
   id: string;
@@ -52,14 +52,29 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     return profileAdminStatus ?? (userEmail === 'daniele.buatti@gmail.com' || userEmail === 'resonancewithdaniele@gmail.com');
   }, []);
 
-  // Use react-query to fetch and cache the user profile
-  const { data: profile, isLoading: profileLoading } = useQuery<
-    Profile | null, // TQueryFnData: The type of data returned by the queryFn
-    Error,          // TError: The type of error that can be thrown
-    Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
-    ['profile', string | undefined] // TQueryKey: Explicitly define the QueryKey type to allow undefined
-  >({
-    queryKey: ['profile', session?.user?.id], // Removed 'as string' to match TQueryKey
+  // Effect to handle Supabase auth state changes and initial session fetch
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      console.log("[SessionContext] Auth state changed:", _event, currentSession ? 'session present' : 'no session');
+      setSession(currentSession);
+      setInitialLoading(false);
+      // Invalidate profile query to refetch with new session
+      queryClient.invalidateQueries({ queryKey: ['profile', currentSession?.user?.id] });
+    });
+
+    // Fetch initial session on component mount
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("[SessionContext] Initial getSession:", currentSession ? 'session present' : 'no session');
+      setSession(currentSession);
+      setInitialLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [queryClient]); // Add queryClient to dependencies
+
+  // Define the options object with explicit UseQueryOptions type
+  const profileQueryOptions: UseQueryOptions<Profile | null, Error, Profile | null, ['profile', string | undefined]> = {
+    queryKey: ['profile', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) {
         console.log("[SessionContext] No user ID, skipping profile fetch.");
@@ -103,7 +118,10 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     onError: (error) => {
       console.error("[SessionContext] React Query profile fetch error:", error);
     },
-  });
+  };
+
+  // Use react-query to fetch and cache the user profile
+  const { data: profile, isLoading: profileLoading } = useQuery(profileQueryOptions);
 
   // Derived user object with admin status
   const user: CustomUser | null = session?.user ? {
