@@ -173,7 +173,7 @@ const AdminMembers: React.FC = () => {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <thead> {/* Replaced TableHeader with native thead */}
+                <thead className="[&_tr]:border-b"> {/* Replaced TableHeader with native thead */}
                   <tr>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Name</th>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Email</th>
@@ -182,7 +182,7 @@ const AdminMembers: React.FC = () => {
                     <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Actions</th>
                   </tr>
                 </thead>
-                <tbody> {/* Replaced TableBody with native tbody */}
+                <tbody className="[&_tr:last-child]:border-0"> {/* Replaced TableBody with native tbody */}
                   {profiles.map((profile) => (
                     <tr key={profile.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                       <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 font-medium">
