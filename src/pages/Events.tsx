@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import *s z from "zod";
+import * as z from "zod";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -184,7 +184,7 @@ const Events: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 py-8">
+    <div className="space-y-6 py-8 animate-fade-in-up"> {/* Added fade-in-up */}
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>

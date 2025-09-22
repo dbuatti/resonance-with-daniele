@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
-import { User as UserIcon } from "lucide-react";
+import { User as UserIcon, LogOut, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -135,17 +135,48 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
   if (loadingUserSession || loadingProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Loading profile...</p>
+      <div className="container mx-auto px-4 py-8 md:py-12 animate-fade-in-up">
+        <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
+          <CardHeader className="text-center">
+            <Skeleton className="w-24 h-24 rounded-full mx-auto mb-4" />
+            <Skeleton className="h-8 w-1/2 mx-auto mb-2" />
+            <Skeleton className="h-5 w-2/3 mx-auto" />
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid gap-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="grid gap-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="grid gap-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center animate-fade-in-up">
         <p className="text-lg text-muted-foreground">Please log in to view your profile.</p>
       </div>
     );
@@ -155,8 +186,8 @@ const Profile: React.FC = () => {
   const currentLastName = form.watch("last_name");
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
-      <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl animate-fade-in-up">
+    <div className="container mx-auto px-4 py-8 md:py-12 animate-fade-in-up">
+      <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader className="text-center">
           <Avatar className="w-24 h-24 mx-auto mb-4">
             {currentAvatarUrl ? (
@@ -199,7 +230,16 @@ const Profile: React.FC = () => {
               />
             )}
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Saving..." : "Save Profile"}
+              {form.formState.isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                </>
+              ) : (
+                "Save Profile"
+              )}
+            </Button>
+            <Button variant="outline" onClick={handleLogout} className="w-full text-destructive hover:text-destructive-foreground hover:bg-destructive">
+              <LogOut className="mr-2 h-4 w-4" /> Sign Out
             </Button>
           </form>
         </CardContent>

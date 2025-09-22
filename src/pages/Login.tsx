@@ -4,14 +4,17 @@ import React from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const Login: React.FC = () => {
   // Dynamically get the current origin for the redirect URL
   const redirectToUrl = window.location.origin + '/';
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <div className="p-8 max-w-md w-full bg-card rounded-xl shadow-lg border border-border animate-fade-in-up">
+    <div className="flex flex-col items-center justify-center p-4 min-h-[calc(100vh-80px)] animate-fade-in-up"> {/* Added min-h and fade-in */}
+      <div className="p-8 max-w-md w-full bg-card rounded-xl shadow-lg border border-border">
         <h2 className="text-3xl font-bold text-center mb-8 text-foreground font-lora">Login to Resonance with Daniele</h2>
         <Auth
           supabaseClient={supabase}
@@ -30,6 +33,13 @@ const Login: React.FC = () => {
           theme="light"
           redirectTo={redirectToUrl} // Use the dynamic redirect URL
         />
+        <div className="mt-6 text-center">
+          <Button variant="link" asChild>
+            <Link to="/" className="text-primary hover:underline">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

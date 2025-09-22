@@ -167,7 +167,7 @@ const Resources: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 py-8">
+    <div className="space-y-6 py-8 animate-fade-in-up"> {/* Added fade-in-up */}
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>
@@ -308,7 +308,7 @@ const Resources: React.FC = () => {
 
       {/* Edit Resource Dialog */}
       {editingResource && (
-        <Dialog open={isEditDialogOpen} onOnpenChange={setIsEditDialogOpen}>
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Resource</DialogTitle>
