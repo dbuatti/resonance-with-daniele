@@ -20,7 +20,7 @@ const Index: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-24 md:py-40 text-center">
+      <div className="py-24 md:py-40 text-center"> {/* Keep vertical padding for skeleton */}
         <Skeleton className="h-16 w-3/4 mx-auto mb-4" />
         <Skeleton className="h-8 w-1/2 mx-auto" />
         <div className="flex justify-center gap-4 mt-8">

@@ -225,7 +225,7 @@ const Events: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 py-8">
+    <div className="space-y-6 py-8"> {/* Removed container mx-auto */}
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>

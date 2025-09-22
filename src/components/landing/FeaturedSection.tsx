@@ -44,7 +44,7 @@ const FeaturedSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
-      <div className="px-4 text-center"> {/* Removed container mx-auto */}
+      <div className="text-center"> {/* Removed px-4 */}
         <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora">Featured Highlight</h2>
         <Card className="max-w-2xl mx-auto p-8 shadow-lg rounded-xl border-2 border-primary/20">
           {loading ? (
