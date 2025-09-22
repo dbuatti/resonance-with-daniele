@@ -184,7 +184,7 @@ const Events: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 py-8 animate-fade-in-up"> {/* Added fade-in-up */}
+    <div className="space-y-6 py-8 animate-fade-in-up">
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>
@@ -304,7 +304,7 @@ const Events: React.FC = () => {
           </div>
         ) : (
           events.map((event) => (
-            <Card key={event.id} className="shadow-lg rounded-xl">
+            <Card key={event.id} className="shadow-lg rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-[1.01]">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-medium font-lora">
                   {event.title}
