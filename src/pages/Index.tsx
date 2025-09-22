@@ -18,8 +18,12 @@ const Index: React.FC = () => {
   const { user, loading } = useSession();
   console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
 
-  // The Layout component already handles the global loading state with a skeleton.
-  // We can directly render the content here, and WelcomeHub will manage its own internal delayed loading.
+  // If the session is still loading, render nothing. The Layout component will show a global skeleton if needed.
+  if (loading) {
+    return null;
+  }
+
+  // Once loading is complete, render content based on user authentication status.
   return (
     <>
       {user ? (
