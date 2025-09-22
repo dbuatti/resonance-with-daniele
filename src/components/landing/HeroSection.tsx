@@ -15,7 +15,7 @@ const HeroSection: React.FC = () => {
           A joyful, welcoming space I've created for anyone who loves to sing — no experience needed.
         </p>
         <div className="flex justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-          <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
+          <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border border-muted-foreground/30" asChild>
             <Link to="/login">Sign Up Now</Link>
           </Button>
         </div>
