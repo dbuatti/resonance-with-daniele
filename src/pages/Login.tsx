@@ -6,9 +6,6 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 
 const Login: React.FC = () => {
-  // The SessionContextProvider handles redirects after login,
-  // so we don't need a separate useEffect here.
-
   return (
     <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
       <h2 style={{ textAlign: 'center' }}>Login to Choir Companion</h2>
@@ -20,6 +17,7 @@ const Login: React.FC = () => {
         }}
         theme="light"
         debug={true}
+        redirectTo={window.location.origin + '/'} // Explicitly redirect to root after login
       />
     </div>
   );
