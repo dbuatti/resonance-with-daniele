@@ -40,47 +40,45 @@ const Profile: React.FC = () => {
     },
   });
 
-  const fetchProfileData = useCallback(async (userId: string) => {
-    console.log(`[Profile Page] fetchProfileData: Fetching profile for user ID: ${userId}`);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("first_name, last_name, avatar_url")
-      .eq("id", userId)
-      .single();
+  // Effect to fetch profile data when user or session loading state changes
+  useEffect(() => {
+    console.log("[Profile Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id);
+    if (!loadingUserSession && user) {
+      const loadProfile = async () => {
+        console.log(`[Profile Page] loadProfile: Fetching profile for user ID: ${user.id}`);
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("first_name, last_name, avatar_url")
+          .eq("id", user.id)
+          .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
-      console.error("[Profile Page] fetchProfileData: Error fetching profile:", error);
-      showError("Failed to load profile data.");
-    } else if (data) {
-      console.log("[Profile Page] fetchProfileData: Profile data fetched:", data);
-      form.reset({
-        first_name: data.first_name || "",
-        last_name: data.last_name || "",
-      });
-      setCurrentAvatarUrl(data.avatar_url);
-    } else {
-      console.log("[Profile Page] fetchProfileData: No profile data found for user, initializing with empty values.");
+        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
+          console.error("[Profile Page] loadProfile: Error fetching profile:", error);
+          showError("Failed to load profile data.");
+        } else if (data) {
+          console.log("[Profile Page] loadProfile: Profile data fetched:", data);
+          form.reset({
+            first_name: data.first_name || "",
+            last_name: data.last_name || "",
+          });
+          setCurrentAvatarUrl(data.avatar_url);
+        } else {
+          console.log("[Profile Page] loadProfile: No profile data found for user, initializing with empty values.");
+          form.reset({ first_name: "", last_name: "" });
+          setCurrentAvatarUrl(null);
+        }
+        setProfileDataLoaded(true); // Mark profile data as loaded
+        console.log("[Profile Page] loadProfile: Profile data loaded state set to true.");
+      };
+      loadProfile();
+    } else if (!loadingUserSession && !user) {
+      // If session is loaded but no user (e.g., logged out), reset states
+      console.log("[Profile Page] useEffect: No user, resetting profile states.");
+      setProfileDataLoaded(true); // No user, so no profile data to load, consider it "loaded"
       form.reset({ first_name: "", last_name: "" });
       setCurrentAvatarUrl(null);
     }
-    setProfileDataLoaded(true); // Mark profile data as loaded
-    console.log("[Profile Page] fetchProfileData: Profile data loaded state set to true.");
-  }, [form]); // form is a dependency because form.reset is used
-
-  useEffect(() => {
-    console.log("[Profile Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id);
-    if (!loadingUserSession) {
-      if (user) {
-        // If user session is loaded and a user is present, fetch their profile data.
-        fetchProfileData(user.id);
-      } else {
-        // If session is loaded but no user (e.g., logged out), reset states
-        setProfileDataLoaded(true); // No user, so no profile data to load, consider it "loaded"
-        form.reset({ first_name: "", last_name: "" });
-        setCurrentAvatarUrl(null);
-      }
-    }
-  }, [user, loadingUserSession, fetchProfileData]); // Removed 'form' from dependencies
+  }, [user, loadingUserSession]); // Dependencies: user and loadingUserSession
 
   const handleAvatarFileChange = (file: File | null) => {
     console.log("[Profile Page] Avatar file changed:", file ? file.name : 'null');
@@ -203,14 +201,16 @@ const Profile: React.FC = () => {
     }
     console.log("[Profile Page] Supabase Auth User updated:", updatedAuthUser);
 
-    // Re-fetch profile data to ensure the form is reset with the latest information
-    await fetchProfileData(user.id); 
-
+    // Manually update form state and avatar URL after successful save
+    form.reset({
+      first_name: data.first_name || "",
+      last_name: data.last_name || "",
+    });
     setCurrentAvatarUrl(newAvatarUrl);
     setSelectedAvatarFile(null); // Clear selected file after successful upload
     setRemoveAvatarRequested(false); // Reset removal request
     showSuccess("Profile updated successfully!");
-    setIsSavingProfile(false); // Stop spinner after successful save and re-fetch
+    setIsSavingProfile(false); // Stop spinner after successful save
     console.log("[Profile Page] Profile update process completed successfully.");
   };
 

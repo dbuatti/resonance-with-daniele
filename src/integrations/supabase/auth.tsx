@@ -177,7 +177,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     getInitialSessionAndSetupListener();
 
-  }, [navigate, location.pathname, processUserAndProfile]); // Empty dependency array for the main useEffect
+  }, []); // Empty dependency array for the main useEffect
 
   const contextValue = { session, user, loading };
   console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null');

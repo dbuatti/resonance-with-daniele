@@ -66,60 +66,58 @@ const SurveyForm: React.FC = () => {
     },
   });
 
-  const fetchSurveyData = useCallback(async (userId: string) => {
-    console.log(`[SurveyForm] fetchSurveyData: Fetching survey data for user ID: ${userId}`);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
-      .eq("id", userId)
-      .single();
+  // Effect to fetch survey data when user or session loading state changes
+  useEffect(() => {
+    console.log("[SurveyForm] useEffect: User session loading:", loadingUserSession, "User:", user?.id);
+    if (!loadingUserSession && user) {
+      const loadSurveyData = async () => {
+        console.log(`[SurveyForm] loadSurveyData: Fetching survey data for user ID: ${user.id}`);
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
+          .eq("id", user.id)
+          .single();
 
-    if (error && error.code !== 'PGRST116') {
-      console.error("[SurveyForm] fetchSurveyData: Error fetching survey data:", error);
-      showError("Failed to load survey data.");
-    } else if (data) {
-      console.log("[SurveyForm] fetchSurveyData: Survey data fetched:", data);
-      form.reset({
-        how_heard: data.how_heard || "",
-        motivation: data.motivation || [],
-        attended_session: data.attended_session ?? undefined,
-        singing_experience: data.singing_experience || "",
-        session_frequency: data.session_frequency || "",
-        preferred_time: data.preferred_time || "",
-        music_genres: data.music_genres || [],
-        choir_goals: data.choir_goals || "",
-        inclusivity_importance: data.inclusivity_importance || "",
-        suggestions: data.suggestions || "",
-      });
-    } else {
-      console.log("[SurveyForm] fetchSurveyData: No survey data found for user, initializing with empty values.");
+        if (error && error.code !== 'PGRST116') {
+          console.error("[SurveyForm] loadSurveyData: Error fetching survey data:", error);
+          showError("Failed to load survey data.");
+        } else if (data) {
+          console.log("[SurveyForm] loadSurveyData: Survey data fetched:", data);
+          form.reset({
+            how_heard: data.how_heard || "",
+            motivation: data.motivation || [],
+            attended_session: data.attended_session ?? undefined,
+            singing_experience: data.singing_experience || "",
+            session_frequency: data.session_frequency || "",
+            preferred_time: data.preferred_time || "",
+            music_genres: data.music_genres || [],
+            choir_goals: data.choir_goals || "",
+            inclusivity_importance: data.inclusivity_importance || "",
+            suggestions: data.suggestions || "",
+          });
+        } else {
+          console.log("[SurveyForm] loadSurveyData: No survey data found for user, initializing with empty values.");
+          form.reset({
+            how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
+            session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
+            inclusivity_importance: "", suggestions: "",
+          });
+        }
+        setSurveyDataLoaded(true); // Mark survey data as loaded
+        console.log("[SurveyForm] loadSurveyData: Survey data loaded state set to true.");
+      };
+      loadSurveyData();
+    } else if (!loadingUserSession && !user) {
+      // If session is loaded but no user (e.g., logged out), reset states
+      console.log("[SurveyForm] useEffect: No user, resetting survey states.");
+      setSurveyDataLoaded(true); // No user, so no survey data to load, consider it "loaded"
       form.reset({
         how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
         session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
         inclusivity_importance: "", suggestions: "",
       });
     }
-    setSurveyDataLoaded(true); // Mark survey data as loaded
-    console.log("[SurveyForm] fetchSurveyData: Survey data loaded state set to true.");
-  }, [form]);
-
-  useEffect(() => {
-    console.log("[SurveyForm] useEffect: User session loading:", loadingUserSession, "User:", user?.id);
-    if (!loadingUserSession) {
-      if (user) {
-        // If user session is loaded and a user is present, fetch their survey data.
-        fetchSurveyData(user.id);
-      } else {
-        // If session is loaded but no user (e.g., logged out), reset states
-        setSurveyDataLoaded(true); // No user, so no survey data to load, consider it "loaded"
-        form.reset({
-          how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
-          session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
-          inclusivity_importance: "", suggestions: "",
-        });
-      }
-    }
-  }, [user, loadingUserSession, fetchSurveyData]); // Removed 'form' from dependencies
+  }, [user, loadingUserSession]); // Dependencies: user and loadingUserSession
 
   const onSubmit = async (data: SurveyFormData) => {
     if (!user) {
@@ -152,7 +150,19 @@ const SurveyForm: React.FC = () => {
       showError("Failed to update survey data: " + error.message);
     } else {
       showSuccess("Survey data updated successfully!");
-      await fetchSurveyData(user.id); // Re-fetch to update form state and clear isSubmitting
+      // Manually update form state after successful save
+      form.reset({
+        how_heard: data.how_heard || "",
+        motivation: data.motivation || [],
+        attended_session: data.attended_session ?? undefined,
+        singing_experience: data.singing_experience || "",
+        session_frequency: data.session_frequency || "",
+        preferred_time: data.preferred_time || "",
+        music_genres: data.music_genres || [],
+        choir_goals: data.choir_goals || "",
+        inclusivity_importance: data.inclusivity_importance || "",
+        suggestions: data.suggestions || "",
+      });
     }
   };
 
