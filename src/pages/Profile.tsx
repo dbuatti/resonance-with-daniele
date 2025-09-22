@@ -154,6 +154,8 @@ const Profile: React.FC = () => {
   const currentFirstName = form.watch("first_name");
   const currentLastName = form.watch("last_name");
 
+  console.log("Profile.tsx - currentAvatarUrl for main avatar:", currentAvatarUrl); // Added log
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl animate-fade-in-up">

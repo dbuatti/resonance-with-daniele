@@ -78,7 +78,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       .getPublicUrl(filePath);
 
     if (publicUrlData?.publicUrl) {
-      console.log("Public URL generated:", publicUrlData.publicUrl); // Add this log
+      console.log("Public URL generated:", publicUrlData.publicUrl);
       onUploadSuccess(publicUrlData.publicUrl);
       setFile(null); // Clear the selected file after successful upload
     } else {
@@ -137,6 +137,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       document.removeEventListener("paste", handlePaste);
     };
   }, [handlePaste]);
+
+  console.log("AvatarUpload.tsx - preview URL:", preview); // Added log
 
   return (
     <div className="space-y-4">
