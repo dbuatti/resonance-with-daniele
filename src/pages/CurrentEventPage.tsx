@@ -10,7 +10,7 @@ const HUMANITIX_EVENT_URL = "https://events.humanitix.com/melbourne-pop-up-choir
 const CurrentEventPage: React.FC = () => {
   return (
     <div className="container mx-auto">
-      <div className="px-4 py-8 md:py-12 space-y-6">
+      <div className="py-8 md:py-12 space-y-6"> {/* Removed px-4 here */}
         <Card className="p-6 md:p-8 shadow-lg rounded-xl border-2 border-primary">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-bold font-lora">COMING UP!</CardTitle>
