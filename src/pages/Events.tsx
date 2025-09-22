@@ -184,12 +184,19 @@ const Events: React.FC = () => {
 
   return (
     <div className="space-y-6 py-8 animate-fade-in-up">
-      <h1 className="text-4xl font-bold text-center font-lora">
-        {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
-      </h1>
-      <p className="text-lg text-center text-muted-foreground">
-        {loadingEvents ? <Skeleton className="h-6 w-1/2 mx-auto" /> : "Stay up-to-date with all my choir's performances, rehearsals, and social gatherings."}
-      </p>
+      {loadingEvents ? (
+        <div className="text-center">
+          <Skeleton className="h-10 w-3/4 mx-auto mb-4" />
+          <Skeleton className="h-6 w-1/2 mx-auto" />
+        </div>
+      ) : (
+        <>
+          <h1 className="text-4xl font-bold text-center font-lora">Upcoming Events</h1>
+          <p className="text-lg text-center text-muted-foreground">
+            Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
+          </p>
+        </>
+      )}
 
       <div className="flex justify-center">
         {loadingEvents ? (
