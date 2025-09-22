@@ -3,7 +3,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -57,7 +56,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className="flex-grow container mx-auto py-8 px-4">
         {children}
       </main>
-      <MadeWithDyad />
     </div>
   );
 };

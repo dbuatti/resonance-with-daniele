@@ -3,8 +3,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Facebook, Instagram, Mail } from "lucide-react"; // Removed Youtube
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { Facebook, Instagram, Mail } from "lucide-react";
 
 const FooterSection: React.FC = () => {
   return (
@@ -59,7 +58,6 @@ const FooterSection: React.FC = () => {
       </div>
       <div className="mt-8 text-center text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} Resonance with Daniele. All rights reserved.</p>
-        <MadeWithDyad />
       </div>
     </footer>
   );
