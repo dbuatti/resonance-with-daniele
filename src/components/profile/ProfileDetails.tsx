@@ -242,7 +242,7 @@ const ProfileDetails: React.FC = () => {
   if (!user) {
     console.log("[ProfileDetails Page] No user found, displaying login prompt.");
     return (
-      <div className="min-h-screen flex items-center justify-center animate-fade-in-up">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg text-muted-foreground">Please log in to view your profile.</p>
       </div>
     );

@@ -216,7 +216,7 @@ const WelcomeHub: React.FC = () => {
           </p>
 
           {!isSurveyCompleted && (
-            <Card className="bg-accent/10 border-accent text-accent-foreground p-6 shadow-md rounded-xl mt-8 animate-fade-in-up dark:bg-accent/20">
+            <Card className="bg-accent/10 border-accent text-accent-foreground p-6 shadow-md rounded-xl mt-8 dark:bg-accent/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
                 <CardTitle className="text-xl font-lora flex items-center gap-2">
                   <ClipboardList className="h-6 w-6 text-accent" /> Complete Your Survey!
