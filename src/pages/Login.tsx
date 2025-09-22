@@ -34,6 +34,7 @@ const Login: React.FC = () => {
             },
           }}
           theme="light"
+          debug={false} // Set to false for production
           redirectTo="http://localhost:32100/"
         />
       </div>
