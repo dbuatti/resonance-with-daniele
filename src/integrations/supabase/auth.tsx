@@ -98,7 +98,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     },
     enabled: !!session?.user?.id, // Only run query if user ID is available
     staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes (renamed from cacheTime in v5)
     refetchOnWindowFocus: true, // Refetch when window regains focus
     onError: (error) => {
       console.error("[SessionContext] React Query profile fetch error:", error);
