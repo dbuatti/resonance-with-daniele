@@ -269,7 +269,11 @@ const WelcomeHub: React.FC = () => {
                 <p className="text-base">
                   Help me tailor the choir experience to your needs and preferences by filling out a quick market research survey. It only takes a few minutes!
                 </p>
-                <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full" asChild>
+                <Button 
+                  size="sm" 
+                  className="bg-accent text-accent-foreground hover:bg-accent/90 w-full dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90" 
+                  asChild
+                >
                   <Link to="/profile/survey">
                     <Settings className="mr-2 h-4 w-4" /> Go to Profile & Survey
                   </Link>
