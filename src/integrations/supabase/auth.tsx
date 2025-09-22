@@ -123,6 +123,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       initialSessionHandledRef.current = true; 
       console.log("[SessionContext] Initial session processed. Loading set to false. User and Profile set.");
 
+      // Define publicly accessible paths
+      const publicPaths = ['/', '/events', '/resources', '/current-event'];
+
       // Handle redirects based on initial session and admin status
       if (userWithAdminStatus) {
         if (location.pathname === '/login') {
@@ -130,7 +133,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           navigate('/');
         }
       } else {
-        if (location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
+        if (!publicPaths.includes(location.pathname)) {
           console.log(`[SessionContext] Redirecting from ${location.pathname} to /login after initial session.`);
           navigate('/login');
         }
@@ -207,7 +210,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
             navigate('/');
           }
         } else {
-          if (location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
+          if (!publicPaths.includes(location.pathname)) {
             console.log(`[SessionContext] Redirecting from ${location.pathname} to /login after listener update.`);
             navigate('/login');
           }
