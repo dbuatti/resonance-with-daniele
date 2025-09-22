@@ -27,10 +27,10 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <SessionContextProvider> {/* SessionContextProvider should be inside ThemeProvider */}
-        <BrowserRouter>
-          <TooltipProvider> {/* TooltipProvider now wraps Sonner and Routes */}
-            <React.Fragment> {/* This is the single child for TooltipProvider */}
+      <BrowserRouter>
+        <SessionContextProvider> {/* SessionContextProvider is now inside BrowserRouter */}
+          <TooltipProvider>
+            <React.Fragment>
               <Sonner />
               <Routes>
                 <Route path="/" element={<Layout><Index /></Layout>} />
@@ -53,8 +53,8 @@ const App = () => (
               </Routes>
             </React.Fragment>
           </TooltipProvider>
-        </BrowserRouter>
-      </SessionContextProvider>
+        </SessionContextProvider>
+      </BrowserRouter>
     </ThemeProvider>
   </QueryClientProvider>
 );
