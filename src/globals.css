@@ -48,26 +48,26 @@
   }
 
   .dark {
-    --background: 220 10% 15%; /* Dark Blue-Gray */
+    --background: 220 10% 15%; /* Very dark blue-gray */
     --foreground: 0 0% 100%; /* White */
 
-    --card: 220 10% 20%;
-    --card-foreground: 0 0% 100%;
+    --card: 220 10% 20%; /* Slightly lighter dark blue-gray for cards */
+    --card-foreground: 0 0% 100%; /* White */
 
     --popover: 220 10% 20%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 220 70% 40%; /* Brighter Blue */
-    --primary-foreground: 220 10% 15%; /* Dark Blue-Gray */
+    --primary: 220 10% 20%; /* Dark blue-gray for primary backgrounds (e.g., header) */
+    --primary-foreground: 0 0% 100%; /* White for text on primary backgrounds */
 
-    --secondary: 220 30% 65%; /* Brighter Soft Blue-Gray */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 220 20% 30%; /* Darker secondary for dark mode */
+    --secondary-foreground: 0 0% 100%; /* White */
 
-    --muted: 220 20% 25%; /* Darker Blue-Gray */
-    --muted-foreground: 220 10% 70%; /* Light Blue-Gray */
+    --muted: 220 10% 25%; /* Darker muted for dark mode */
+    --muted-foreground: 220 10% 70%; /* Lighter muted foreground */
 
     --accent: 54 85% 70%; /* Brighter Vibrant Yellow */
-    --accent-foreground: 220 10% 15%; /* Dark Blue-Gray */
+    --accent-foreground: 220 10% 15%; /* Dark Blue-Gray (for text on accent background) */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;

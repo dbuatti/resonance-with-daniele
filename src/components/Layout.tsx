@@ -33,8 +33,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const getNavLinkClass = (path: string) =>
     cn(
-      "hover:text-primary-foreground/80",
-      location.pathname === path && "text-accent font-semibold"
+      "hover:text-primary-foreground/80", // Default hover for links on primary background
+      location.pathname === path ? "text-accent font-semibold" : "text-primary-foreground" // Active link uses accent, others use primary-foreground
     );
 
   if (loading) {
@@ -64,7 +64,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen flex flex-col"> {/* Removed bg-background text-foreground */}
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora">
+          <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora text-primary-foreground">
             Resonance with Daniele
           </Link>
           <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">

@@ -195,7 +195,7 @@ const WelcomeHub: React.FC = () => {
             alt="Daniele Buatti"
             className="w-32 h-32 rounded-full object-cover shadow-md mx-auto mb-6"
           />
-          <CardTitle className="text-4xl md:text-5xl font-extrabold text-center text-primary mb-4 font-lora">
+          <CardTitle className="text-4xl md:text-5xl font-extrabold text-center text-foreground mb-4 font-lora">
             Welcome, {firstName} to the Resonance with Daniele Hub!
           </CardTitle>
           <p className="text-center text-xl md:text-2xl font-semibold text-foreground mb-6 font-lora">
@@ -212,35 +212,35 @@ const WelcomeHub: React.FC = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             <div className="flex items-start gap-3">
-              <CalendarDays className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <CalendarDays className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-foreground text-xl font-lora">Rehearsals & Events</h3>
                 <p className="text-base">See the calendar, RSVP, and get updates in real time.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Music className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <Music className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-foreground text-xl font-lora">Songs & Resources</h3>
                 <p className="text-base">Access sheet music, audio tracks, and video tutorials to guide your practice.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Mic2 className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <Mic2 className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-foreground text-xl font-lora">Vocal Exercises & Warm-Ups</h3>
                 <p className="text-base">Explore exercises to strengthen, release, and resonate your voice.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Users className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <Users className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-foreground text-xl font-lora">Community & Connection</h3>
                 <p className="text-base">Chat, share, and celebrate with fellow singers.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Camera className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <Camera className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-foreground text-xl font-lora">Performance Highlights & Media</h3>
                 <p className="text-base">Relive moments from past concerts or see what’s coming next.</p>
@@ -277,7 +277,7 @@ const WelcomeHub: React.FC = () => {
             <Card className="shadow-md border border-border">
               <CardHeader>
                 <CardTitle className="text-xl font-lora flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5 text-primary" /> Next Event
+                  <CalendarDays className="h-5 w-5 text-foreground" /> Next Event
                 </CardTitle>
                 <CardDescription>Your next opportunity to sing!</CardDescription>
               </CardHeader>
@@ -313,7 +313,7 @@ const WelcomeHub: React.FC = () => {
             <Card className="shadow-md border border-border">
               <CardHeader>
                 <CardTitle className="text-xl font-lora flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" /> Recent Resources
+                  <FileText className="h-5 w-5 text-foreground" /> Recent Resources
                 </CardTitle>
                 <CardDescription>Fresh materials to help you practice.</CardDescription>
               </CardHeader>
