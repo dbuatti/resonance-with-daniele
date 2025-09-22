@@ -16,7 +16,7 @@ interface Profile {
   id: string;
   first_name: string | null;
   last_name: string | null;
-  email: string | null; // Assuming email can be fetched or derived
+  email: string | null; // Now directly from profiles table
   avatar_url: string | null;
   is_admin: boolean;
   how_heard: string | null;
@@ -50,25 +50,17 @@ const AdminProfiles: React.FC = () => {
     const fetchProfiles = async () => {
       if (user && user.is_admin) {
         setLoadingProfiles(true);
+        // Fetch all profile data, including the new 'email' column
         const { data, error } = await supabase
           .from("profiles")
-          .select("*")
+          .select("*, email") // Select all columns, explicitly including email
           .order("updated_at", { ascending: false });
 
         if (error) {
           console.error("Error fetching profiles:", error);
           showError("Failed to load profiles.");
         } else {
-          // Fetch emails from auth.users table for each profile
-          const profilesWithEmails = await Promise.all(data.map(async (profile) => {
-            const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profile.id);
-            if (userError) {
-              console.error(`Error fetching user email for ${profile.id}:`, userError);
-              return { ...profile, email: "N/A" };
-            }
-            return { ...profile, email: userData.user?.email || "N/A" };
-          }));
-          setProfiles(profilesWithEmails as Profile[]);
+          setProfiles(data as Profile[]); // Cast data to Profile[]
         }
         setLoadingProfiles(false);
       }
@@ -144,7 +136,7 @@ const AdminProfiles: React.FC = () => {
                       <TableCell className="font-medium">
                         {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : "N/A"}
                       </TableCell>
-                      <TableCell>{profile.email}</TableCell>
+                      <TableCell>{profile.email || "N/A"}</TableCell> {/* Display email from profiles table */}
                       <TableCell>{profile.is_admin ? "Yes" : "No"}</TableCell>
                       <TableCell className="text-right">
                         <Dialog>
