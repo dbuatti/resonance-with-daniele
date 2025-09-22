@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; // Import useQuery and useQueryClient
 
 export interface Profile {
   id: string;
@@ -33,92 +34,115 @@ interface SessionContextType {
   session: Session | null;
   user: CustomUser | null;
   profile: Profile | null;
-  loading: boolean;
+  loading: boolean; // Overall loading for the session context
+  profileLoading: boolean; // Loading specifically for the profile data
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
-  const [contextState, setContextState] = useState<SessionContextType>({
-    session: null,
-    user: null,
-    profile: null,
-    loading: true,
-  });
-
+  const [session, setSession] = useState<Session | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true); // For initial session fetch
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
 
-  const fetchProfileData = useCallback(async (userId: string): Promise<Profile | null> => {
-    console.log(`[SessionContext] Fetching full profile data for user ID: ${userId}`);
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means "no rows found"
-      console.error("[SessionContext] Error fetching profile data:", profileError);
-      return null;
-    } else if (profileData) {
-      console.log("[SessionContext] Full profile data fetched:", profileData);
-      return profileData as Profile;
-    } else {
-      console.log("[SessionContext] No profile found for user. Returning null profile.");
-      return null;
-    }
-  }, []);
-
+  // Function to determine admin status
   const determineAdminStatus = useCallback((userEmail: string | undefined, profileAdminStatus: boolean | undefined): boolean => {
     return profileAdminStatus ?? (userEmail === 'daniele.buatti@gmail.com' || userEmail === 'resonancewithdaniele@gmail.com');
   }, []);
 
+  // Use react-query to fetch and cache the user profile
+  const { data: profile, isLoading: profileLoading } = useQuery<Profile | null, Error>(
+    ['profile', session?.user?.id], // Query key depends on user ID
+    async () => {
+      if (!session?.user?.id) {
+        console.log("[SessionContext] No user ID, skipping profile fetch.");
+        return null;
+      }
+      console.log(`[SessionContext] Fetching full profile data for user ID: ${session.user.id}`);
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+        console.error("[SessionContext] Error fetching profile data:", profileError);
+        return null;
+      } else if (profileData) {
+        console.log("[SessionContext] Full profile data fetched:", profileData);
+        // Add email to profile for convenience
+        return { ...profileData, email: session.user.email } as Profile;
+      } else {
+        console.log("[SessionContext] No profile found for user. Returning null profile.");
+        // If no profile exists, return a minimal one for context with admin status
+        return {
+          id: session.user.id,
+          first_name: null,
+          last_name: null,
+          avatar_url: null,
+          is_admin: determineAdminStatus(session.user.email, undefined), // Determine admin status even if no profile
+          updated_at: new Date().toISOString(),
+          how_heard: null, motivation: null, attended_session: null, singing_experience: null,
+          session_frequency: null, preferred_time: null, music_genres: null, choir_goals: null,
+          inclusivity_importance: null, suggestions: null,
+          email: session.user.email,
+        };
+      }
+    },
+    {
+      enabled: !!session?.user?.id, // Only run query if user ID is available
+      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+      refetchOnWindowFocus: true, // Refetch when window regains focus
+      onError: (error) => {
+        console.error("[SessionContext] React Query profile fetch error:", error);
+      },
+    }
+  );
+
+  // Effect for Supabase auth state changes
   useEffect(() => {
     console.log("[SessionContext] Initializing auth state listener.");
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       console.log(`[SessionContext] Auth state changed: Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
+      setSession(currentSession);
+      setInitialLoading(false); // Initial session check is complete
 
-      let newUser: CustomUser | null = null;
-      let newProfile: Profile | null = null;
-
+      // Invalidate profile query on auth changes to ensure fresh profile data
       if (currentSession?.user) {
-        newProfile = await fetchProfileData(currentSession.user.id);
-        const isAdmin = determineAdminStatus(currentSession.user.email, newProfile?.is_admin);
-        newUser = { ...currentSession.user, is_admin: isAdmin };
-        // Ensure profile also has the email for convenience, even if not directly from DB
-        if (newProfile) {
-          newProfile.email = currentSession.user.email;
-        } else {
-          // If no profile exists, create a minimal one for context
-          newProfile = {
-            id: currentSession.user.id,
-            first_name: null,
-            last_name: null,
-            avatar_url: null,
-            is_admin: isAdmin,
-            updated_at: new Date().toISOString(),
-            how_heard: null, motivation: null, attended_session: null, singing_experience: null,
-            session_frequency: null, preferred_time: null, music_genres: null, choir_goals: null,
-            inclusivity_importance: null, suggestions: null,
-            email: currentSession.user.email,
-          };
-        }
+        queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
+      } else {
+        queryClient.removeQueries({ queryKey: ['profile'] }); // Clear profile cache if logged out
       }
+    });
 
-      setContextState({
-        session: currentSession,
-        user: newUser,
-        profile: newProfile,
-        loading: false,
-      });
-      console.log("[SessionContext] State updated. Loading set to false. User and Profile set.");
+    // Fetch initial session on component mount
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      console.log("[SessionContext] Initial getSession result:", initialSession ? 'present' : 'null');
+      setSession(initialSession);
+      setInitialLoading(false);
+    });
 
-      // Define publicly accessible paths
+    return () => {
+      console.log("[SessionContext] Unsubscribing from auth state changes.");
+      subscription.unsubscribe();
+    };
+  }, [queryClient]); // Add queryClient to dependencies
+
+  // Derived user object with admin status
+  const user: CustomUser | null = session?.user ? {
+    ...session.user,
+    is_admin: determineAdminStatus(session.user.email, profile?.is_admin),
+  } : null;
+
+  // Handle redirects
+  useEffect(() => {
+    if (!initialLoading) {
       const publicPaths = ['/', '/events', '/resources', '/current-event', '/login'];
-
-      // Handle redirects after auth state change
-      if (newUser) {
+      if (user) {
         if (location.pathname === '/login') {
           console.log("[SessionContext] Redirecting from /login to / after login.");
           navigate('/');
@@ -129,16 +153,17 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           navigate('/login');
         }
       }
-    });
+    }
+  }, [user, initialLoading, location.pathname, navigate]);
 
-    return () => {
-      console.log("[SessionContext] Unsubscribing from auth state changes.");
-      subscription.unsubscribe();
-    };
-  }, [navigate, fetchProfileData, determineAdminStatus, location.pathname]);
-
-  const contextValue = { ...contextState };
-  console.log("[SessionContext] Rendering SessionContextProvider with loading:", contextState.loading, "user:", contextState.user ? contextState.user.id : 'null', "is_admin:", contextState.user?.is_admin, "profile:", contextState.profile ? 'present' : 'null');
+  const contextValue = {
+    session,
+    user,
+    profile,
+    loading: initialLoading || profileLoading, // Overall loading is true if initial session or profile is loading
+    profileLoading,
+  };
+  console.log("[SessionContext] Rendering SessionContextProvider with overall loading:", contextValue.loading, "profileLoading:", profileLoading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin, "profile:", profile ? 'present' : 'null');
 
   return (
     <SessionContext.Provider value={contextValue}>
