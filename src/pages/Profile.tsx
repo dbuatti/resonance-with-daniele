@@ -42,8 +42,10 @@ const Profile: React.FC = () => {
 
   // Effect to fetch profile data when user or session loading state changes
   useEffect(() => {
-    console.log("[Profile Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id);
-    if (!loadingUserSession && user) {
+    console.log("[Profile Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id, "Profile data loaded:", profileDataLoaded);
+    // Only load profile if user is present, session is not loading, AND profile data hasn't been loaded yet
+    // OR if the user ID changes (e.g., a different user logs in)
+    if (!loadingUserSession && user && (!profileDataLoaded || user.id !== form.getValues().id)) { // Added user.id !== form.getValues().id check
       const loadProfile = async () => {
         console.log(`[Profile Page] loadProfile: Fetching profile for user ID: ${user.id}`);
         const { data, error } = await supabase
@@ -78,7 +80,7 @@ const Profile: React.FC = () => {
       form.reset({ first_name: "", last_name: "" });
       setCurrentAvatarUrl(null);
     }
-  }, [user, loadingUserSession]); // Dependencies: user and loadingUserSession
+  }, [user?.id, loadingUserSession, profileDataLoaded]); // Dependencies: user?.id, loadingUserSession, and profileDataLoaded
 
   const handleAvatarFileChange = (file: File | null) => {
     console.log("[Profile Page] Avatar file changed:", file ? file.name : 'null');
@@ -209,6 +211,7 @@ const Profile: React.FC = () => {
     setCurrentAvatarUrl(newAvatarUrl);
     setSelectedAvatarFile(null); // Clear selected file after successful upload
     setRemoveAvatarRequested(false); // Reset removal request
+    setProfileDataLoaded(true); // Crucially, mark data as loaded to prevent re-fetch by useEffect
     showSuccess("Profile updated successfully!");
     setIsSavingProfile(false); // Stop spinner after successful save
     console.log("[Profile Page] Profile update process completed successfully.");
