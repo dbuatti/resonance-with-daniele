@@ -53,26 +53,20 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       console.log(`[SessionContext] Processing profile for user ID: ${processedUser.id}`);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .upsert(
-          {
-            id: processedUser.id,
-            first_name: processedUser.user_metadata?.first_name || null,
-            last_name: processedUser.user_metadata?.last_name || null,
-            avatar_url: processedUser.user_metadata?.avatar_url || null,
-            is_admin: processedUser.email === 'daniele.buatti@gmail.com' || processedUser.email === 'resonancewithdaniele@gmail.com',
-          },
-          { onConflict: 'id' }
-        ) as { data: Profile[] | null; error: PostgrestError | null }; // Explicitly type the return
+        .select('is_admin') // Only select is_admin, as other profile data is managed elsewhere
+        .eq('id', processedUser.id)
+        .single();
 
-      if (profileError) {
-        console.error("[SessionContext] Error upserting profile data:", profileError);
-        processedUser = { ...processedUser, is_admin: false };
-      } else if (profileData && profileData.length > 0) {
-        processedUser = { ...processedUser, is_admin: profileData[0].is_admin };
-        console.log("[SessionContext] User profile upserted. is_admin status:", profileData[0].is_admin);
+      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error("[SessionContext] Error fetching profile data:", profileError);
+        processedUser = { ...processedUser, is_admin: false }; // Default to false on error
+      } else if (profileData) {
+        processedUser = { ...processedUser, is_admin: profileData.is_admin };
+        console.log("[SessionContext] User profile fetched. is_admin status:", profileData.is_admin);
       } else {
+        // If no profile found, assume not admin, or set based on email for initial setup
         processedUser = { ...processedUser, is_admin: processedUser.email === 'daniele.buatti@gmail.com' || processedUser.email === 'resonancewithdaniele@gmail.com' };
-        console.log("[SessionContext] Profile upserted, but no data returned. Setting is_admin based on email.");
+        console.log("[SessionContext] No profile found for user. Setting is_admin based on email.");
       }
     }
     return processedUser;
