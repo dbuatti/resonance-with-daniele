@@ -53,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Skeleton className="h-8 w-8 sm:hidden bg-primary-foreground/20 rounded-md" />
           </div>
         </header>
-        <main className="flex-grow container mx-auto py-8 px-4 flex items-center justify-center">
+        <main className="flex-grow container mx-auto flex items-center justify-center">
           <p className="text-lg text-muted-foreground">Loading application...</p>
         </main>
         <FooterSection />
@@ -131,7 +131,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
       </header>
-      <main className="flex-grow container mx-auto py-8 px-4">
+      <main className="flex-grow container mx-auto">
         {children}
       </main>
       <FooterSection />

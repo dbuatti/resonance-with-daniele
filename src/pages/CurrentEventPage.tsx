@@ -18,13 +18,13 @@ const CurrentEventPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-xl border border-border">
+          <div className="relative w-full max-w-4xl mx-auto h-[400px] md:h-[600px] rounded-lg overflow-hidden shadow-xl border border-border">
             <iframe
-              src={HUMANITIX_EVENT_URL + "/tickets?widget=popup"}
+              src={HUMANITIX_EVENT_URL} {/* Removed ?widget=popup */}
               title="Humanitix Current Event"
               className="absolute top-0 left-0 w-full h-full border-0"
               allowFullScreen
-              allow="payment" /* Added allow="payment" here */
+              allow="payment"
             ></iframe>
           </div>
           <div className="text-center">
