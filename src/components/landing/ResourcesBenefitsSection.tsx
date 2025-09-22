@@ -12,11 +12,6 @@ const ResourcesBenefitsSection: React.FC = () => {
       description: "Access all your practice materials in one convenient place.",
     },
     {
-      icon: <Mic2 className="h-8 w-8 text-primary" />,
-      title: "Guided Vocal Exercises",
-      description: "Strengthen your voice with expert-led warm-ups and tutorials.",
-    },
-    {
       icon: <Users className="h-8 w-8 text-primary" />,
       title: "Supportive Community",
       description: "Connect with fellow singers and share your musical journey.",
