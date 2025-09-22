@@ -126,7 +126,15 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
         let newUserWithAdminStatus: CustomUser | null = null;
         if (currentSession?.user) {
-          const isAdmin = await fetchIsAdminStatus(currentSession.user.id, currentSession.user.email);
+          // Only fetch is_admin if it's a new user, or if the existing user's admin status is unknown/different
+          const existingUser = userRef.current;
+          let isAdmin = false;
+          if (existingUser && existingUser.id === currentSession.user.id && typeof existingUser.is_admin === 'boolean') {
+            isAdmin = existingUser.is_admin; // Use existing admin status if available and same user
+            console.log("[SessionContext] Reusing existing is_admin status for same user.");
+          } else {
+            isAdmin = await fetchIsAdminStatus(currentSession.user.id, currentSession.user.email);
+          }
           newUserWithAdminStatus = { ...currentSession.user, is_admin: isAdmin };
         }
 

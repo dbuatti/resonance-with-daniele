@@ -125,13 +125,16 @@ const ProfileDetails: React.FC = () => { // Renamed component
       let uploadError: Error | null = null;
       let deleteError: Error | null = null;
 
+      // --- Step 1: Handle Avatar Upload/Removal ---
       if (removeAvatarRequested && currentAvatarUrl) {
         console.log("[ProfileDetails Page] Processing avatar removal.");
         const urlParts = currentAvatarUrl.split('/');
-        const fileNameWithFolder = urlParts.slice(urlParts.indexOf('avatars') + 1).join('/');
+        // The path in storage is typically 'user_id/filename.ext'
+        // We need to extract 'user_id/filename.ext' from the full public URL
+        const pathInStorage = urlParts.slice(urlParts.indexOf('avatars') + 1).join('/');
         const { error } = await supabase.storage
           .from("avatars")
-          .remove([fileNameWithFolder]);
+          .remove([pathInStorage]);
 
         if (error) {
           console.error("[ProfileDetails Page] Error removing avatar:", error);
@@ -146,8 +149,8 @@ const ProfileDetails: React.FC = () => { // Renamed component
       if (selectedAvatarFile) {
         console.log("[ProfileDetails Page] Processing new avatar upload.");
         const fileExt = selectedAvatarFile.name.split(".").pop();
-        const fileName = `${user.id}-${Math.random()}.${fileExt}`; // Ensure unique file name within user folder
-        const filePath = `${user.id}/${fileName}`;
+        const fileName = `${user.id}/${Math.random()}.${fileExt}`; // Ensure unique file name within user folder
+        const filePath = fileName; // filePath is already user.id/filename
 
         const { error: uploadErr } = await supabase.storage
           .from("avatars")
@@ -176,6 +179,26 @@ const ProfileDetails: React.FC = () => { // Renamed component
         return;
       }
 
+      // --- Step 2: Update Supabase Auth User Metadata ---
+      console.log("[ProfileDetails Page] Updating user metadata in Supabase Auth.");
+      const { data: authResponseData, error: authUpdateError } = await supabase.auth.updateUser({
+        data: { 
+          first_name: data.first_name || null,
+          last_name: data.last_name || null,
+          avatar_url: newAvatarUrl 
+        },
+      });
+      console.log("[ProfileDetails Page] Supabase Auth updateUser response data:", authResponseData);
+      console.log("[ProfileDetails Page] Supabase Auth updateUser response error:", authUpdateError);
+
+      if (authUpdateError) {
+        console.error("[ProfileDetails Page] Error updating avatar URL in auth user metadata:", authUpdateError);
+        showError("Failed to update avatar URL in user session.");
+        return;
+      }
+      console.log("[ProfileDetails Page] Supabase Auth User updated successfully:", authResponseData.user);
+
+      // --- Step 3: Update profiles table ---
       console.log("[ProfileDetails Page] Updating profiles table.");
       const { error: profileUpdateError } = await supabase
         .from("profiles")
@@ -197,22 +220,7 @@ const ProfileDetails: React.FC = () => { // Renamed component
       }
       console.log("[ProfileDetails Page] Profile table updated successfully.");
 
-      console.log("[ProfileDetails Page] Updating user metadata in Supabase Auth.");
-      const { data: { user: updatedAuthUser }, error: authUpdateError } = await supabase.auth.updateUser({
-        data: { 
-          first_name: data.first_name || null,
-          last_name: data.last_name || null,
-          avatar_url: newAvatarUrl 
-        },
-      });
-
-      if (authUpdateError) {
-        console.error("[ProfileDetails Page] Error updating avatar URL in auth user metadata:", authUpdateError);
-        showError("Failed to update avatar URL in user session.");
-        return;
-      }
-      console.log("[ProfileDetails Page] Supabase Auth User updated:", updatedAuthUser);
-
+      // --- Final UI updates ---
       form.reset({
         first_name: data.first_name || "",
         last_name: data.last_name || "",
@@ -229,6 +237,7 @@ const ProfileDetails: React.FC = () => { // Renamed component
       showError("An unexpected error occurred: " + error.message);
     } finally {
       setIsSavingProfile(false);
+      console.log("[ProfileDetails Page] Finally block executed. isSavingProfile set to false.");
     }
   };
 
