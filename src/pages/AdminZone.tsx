@@ -73,13 +73,6 @@ const AdminZone: React.FC = () => {
             Manage Members
           </Link>
         </Card>
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">Interest Submissions</CardTitle>
-          <CardDescription>View contact details of interested individuals.</CardDescription>
-          <Link to="/admin/interest-submissions" className={cn(buttonVariants({ variant: "default" }), "mt-4 flex items-center justify-center")}>
-            <Mail className="mr-2 h-4 w-4" /> View Submissions
-          </Link>
-        </Card>
       </div>
     </div>
   );
