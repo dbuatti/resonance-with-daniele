@@ -4,7 +4,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ResponsiveContainer,
   BarChart,
@@ -18,7 +18,6 @@ import {
   Cell,
 } from "recharts";
 
-// Define the Profile interface (can be imported if available globally)
 interface Profile {
   id: string;
   first_name: string | null;
@@ -62,6 +61,19 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
   const totalResponses = profilesWithResponses.length;
   const surveyCompletionRate = totalProfiles > 0 ? ((totalResponses / totalProfiles) * 100).toFixed(1) : "0.0";
 
+  // Determine the most recent update time
+  const latestUpdate = profilesWithResponses.reduce((latest: Date | null, profile) => {
+    if (profile.updated_at) {
+      const profileDate = new Date(profile.updated_at);
+      if (!latest || profileDate > latest) {
+        return profileDate;
+      }
+    }
+    return latest;
+  }, null);
+
+  const formattedLatestUpdate = latestUpdate ? latestUpdate.toLocaleString() : "N/A";
+
   if (totalResponses === 0) {
     return (
       <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
@@ -79,12 +91,12 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
   // Helper to aggregate data for charts
   const aggregateData = (field: keyof Profile, isMultiSelect: boolean = false) => {
     const counts: { [key: string]: number } = {};
-    profilesWithResponses.forEach(profile => { // Use profilesWithResponses for aggregation
+    profilesWithResponses.forEach(profile => {
       if (isMultiSelect && Array.isArray(profile[field])) {
         (profile[field] as string[]).forEach(item => {
           counts[item] = (counts[item] || 0) + 1;
         });
-      } else if (profile[field] !== null && profile[field] !== undefined) { // Check for null/undefined
+      } else if (profile[field] !== null && profile[field] !== undefined) {
         const value = String(profile[field]);
         counts[value] = (counts[value] || 0) + 1;
       }
@@ -117,133 +129,82 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
     response: p.suggestions,
   }));
 
+  const renderChart = (data: any[], title: string, fill: string, type: 'bar' | 'pie' = 'bar') => {
+    if (data.length === 0) {
+      return (
+        <Card className="p-4 flex flex-col items-center justify-center h-[250px]">
+          <CardTitle className="text-xl font-lora mb-4">{title}</CardTitle>
+          <p className="text-muted-foreground text-center">No data available for this question yet.</p>
+        </Card>
+      );
+    }
+
+    return (
+      <Card className="p-4">
+        <CardTitle className="text-xl font-lora mb-4">{title}</CardTitle>
+        <ResponsiveContainer width="100%" height={200}>
+          {type === 'bar' ? (
+            <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
+              <YAxis />
+              <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
+              <Bar dataKey="value" fill={fill} />
+            </BarChart>
+          ) : (
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percentage }) => `${name}: ${percentage}%`}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
+              <Legend />
+            </PieChart>
+          )}
+        </ResponsiveContainer>
+      </Card>
+    );
+  };
+
   return (
     <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
       <CardHeader>
         <CardTitle className="text-3xl font-bold font-lora">Survey Metrics & Insights</CardTitle>
         <CardDescription className="text-muted-foreground">
-          Overview of member survey responses ({totalResponses} out of {totalProfiles} members have responded).
+          Overview of member survey responses ({totalResponses} out of {totalProfiles} members have responded). Last updated: {formattedLatestUpdate}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">Overall Engagement</CardTitle>
-            <CardContent className="p-0 space-y-2 text-muted-foreground">
-              <div>Total Members: <Badge variant="secondary">{totalProfiles}</Badge></div>
-              <div>Members with Responses: <Badge variant="secondary">{totalResponses}</Badge></div>
-              <div>Survey Completion Rate: <Badge variant="secondary">{surveyCompletionRate}%</Badge></div>
-              <div>Avg. Motivations Selected: <Badge variant="secondary">{averageMotivationSelections}</Badge></div>
-            </CardContent>
-          </Card>
-          
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">How Heard About Us</CardTitle>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={howHeardData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
-                <YAxis />
-                <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
-                <Bar dataKey="value" fill={COLORS[0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
+        <Card className="p-4">
+          <CardTitle className="text-xl font-lora mb-4">Overall Engagement</CardTitle>
+          <CardContent className="p-0 space-y-2 text-muted-foreground">
+            <div>Total Members: <Badge variant="secondary">{totalProfiles}</Badge></div>
+            <div>Members with Responses: <Badge variant="secondary">{totalResponses}</Badge></div>
+            <div>Survey Completion Rate: <Badge variant="secondary">{surveyCompletionRate}%</Badge></div>
+            <div>Avg. Motivations Selected: <Badge variant="secondary">{averageMotivationSelections}</Badge></div>
+          </CardContent>
+        </Card>
 
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">Motivation for Joining</CardTitle>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={motivationData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
-                <YAxis />
-                <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
-                <Bar dataKey="value" fill={COLORS[1]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
+        <Separator />
 
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">Attended Session?</CardTitle>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={attendedSessionData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percentage }) => `${name}: ${percentage}%`}
-                >
-                  {attendedSessionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">Singing Experience Level</CardTitle>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={singingExperienceData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
-                <YAxis />
-                <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
-                <Bar dataKey="value" fill={COLORS[2]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">Preferred Session Frequency</CardTitle>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={sessionFrequencyData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
-                <YAxis />
-                <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
-                <Bar dataKey="value" fill={COLORS[3]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">Preferred Session Time</CardTitle>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={preferredTimeData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
-                <YAxis />
-                <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
-                <Bar dataKey="value" fill={COLORS[4]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">Music Genres Enjoyed</CardTitle>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={musicGenresData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
-                <YAxis />
-                <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
-                <Bar dataKey="value" fill={COLORS[5]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card className="p-4">
-            <CardTitle className="text-xl font-lora mb-4">Inclusivity Importance</CardTitle>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={inclusivityImportanceData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
-                <YAxis />
-                <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
-                <Bar dataKey="value" fill={COLORS[6]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {renderChart(howHeardData, "How Heard About Us", COLORS[0])}
+          {renderChart(motivationData, "Motivation for Joining", COLORS[1])}
+          {renderChart(attendedSessionData, "Attended Session?", COLORS[2], 'pie')}
+          {renderChart(singingExperienceData, "Singing Experience Level", COLORS[3])}
+          {renderChart(sessionFrequencyData, "Preferred Session Frequency", COLORS[4])}
+          {renderChart(preferredTimeData, "Preferred Session Time", COLORS[5])}
+          {renderChart(musicGenresData, "Music Genres Enjoyed", COLORS[6])}
+          {renderChart(inclusivityImportanceData, "Inclusivity Importance", COLORS[7])}
         </div>
 
         <Separator />
