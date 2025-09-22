@@ -112,7 +112,7 @@ const Events: React.FC = () => {
   if (loadingUserSession || loadingEvents) {
     return (
       <Layout>
-        <div className="text-center text-lg">Loading...</div>
+        <div className="text-center text-lg py-8">Loading...</div> {/* Added vertical padding */}
       </Layout>
     );
   }
@@ -120,7 +120,7 @@ const Events: React.FC = () => {
   if (!user) {
     return (
       <Layout>
-        <div className="text-center text-lg text-muted-foreground">
+        <div className="text-center text-lg text-muted-foreground py-8"> {/* Added vertical padding */}
           Please log in to view and manage events.
         </div>
       </Layout>
@@ -129,7 +129,7 @@ const Events: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-6 py-8"> {/* Added vertical padding */}
         <h1 className="text-4xl font-bold text-center">Upcoming Events</h1>
         <p className="text-lg text-center text-muted-foreground">
           Stay up-to-date with all our choir's performances, rehearsals, and social gatherings.
@@ -210,13 +210,13 @@ const Events: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.length === 0 ? (
-            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg"> {/* Enhanced styling */}
+            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg">
               <p className="text-xl text-muted-foreground font-semibold">No events found.</p>
               <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>
             </div>
           ) : (
             events.map((event) => (
-              <Card key={event.id} className="shadow-lg rounded-xl"> {/* Added shadow-lg and rounded-xl */}
+              <Card key={event.id} className="shadow-lg rounded-xl">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-2xl font-medium">
                     {event.title}
