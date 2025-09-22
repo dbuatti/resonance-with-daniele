@@ -153,7 +153,7 @@ const AdminMembers: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8">
+    <div className="space-y-6 py-8"> {/* Removed container mx-auto */}
       <h1 className="text-4xl font-bold text-center font-lora">Manage Member Profiles</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         View and manage all registered member profiles, including their roles.
