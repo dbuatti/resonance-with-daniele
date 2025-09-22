@@ -100,20 +100,19 @@ const Events: React.FC = () => {
   };
 
   // Use react-query for events data
-  const { data: events, isLoading, isFetching, error: fetchError } = useQuery<Event[], Error>(
-    ['events', searchTerm], // Query key includes search term
-    () => fetchEvents(searchTerm),
-    {
-      enabled: !loadingUserSession, // Only fetch if user session is not loading
-      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-      refetchOnWindowFocus: true, // Refetch when window regains focus
-      onError: (queryError) => {
-        console.error("[Events Page] React Query error:", queryError);
-        showError("An error occurred while loading events.");
-      },
-    }
-  );
+  const { data: events, isLoading, isFetching, error: fetchError } = useQuery<
+    Event[], // TQueryFnData
+    Error,          // TError
+    Event[], // TData (the type of the 'data' property)
+    ['events', string] // TQueryKey
+  >({
+    queryKey: ['events', searchTerm], // Query key includes search term
+    queryFn: () => fetchEvents(searchTerm),
+    enabled: !loadingUserSession, // Only fetch if user session is not loading
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+  });
 
   useEffect(() => {
     if (editingEvent) {
@@ -151,7 +150,7 @@ const Events: React.FC = () => {
         showSuccess("Event added successfully!");
         addForm.reset();
         setIsAddDialogOpen(false);
-        queryClient.invalidateQueries(['events']); // Invalidate to refetch and update UI
+        queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
       }
     } catch (error) {
       console.error("Unexpected error adding event:", error);
@@ -187,7 +186,7 @@ const Events: React.FC = () => {
         showSuccess("Event updated successfully!");
         setIsEditDialogOpen(false);
         setEditingEvent(null);
-        queryClient.invalidateQueries(['events']); // Invalidate to refetch and update UI
+        queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
       }
     } catch (error) {
       console.error("Unexpected error updating event:", error);
@@ -213,7 +212,7 @@ const Events: React.FC = () => {
         showError("Failed to delete event. Please try again.");
       } else {
         showSuccess("Event deleted successfully!");
-        queryClient.invalidateQueries(['events']); // Invalidate to refetch and update UI
+        queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
       }
     } catch (error) {
       console.error("Unexpected error deleting event:", error);
