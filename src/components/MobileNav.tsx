@@ -40,32 +40,34 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
         </SheetHeader>
         <nav className="flex flex-col gap-2 flex-grow">
           <Link to="/" className={getNavLinkClass("/")} onClick={() => setIsOpen(false)}>
-            Home
+            <span>Home</span>
           </Link>
           {!loading && user ? (
             <>
               <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>
-                Resources
+                <span>Resources</span>
               </Link>
               <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
-                Events
+                <span>Events</span>
               </Link>
               {user.is_admin && ( // Conditionally render Admin Zone link
                 <Link to="/admin" className={cn(getNavLinkClass("/admin"), "flex items-center gap-2")} onClick={() => setIsOpen(false)}>
-                  <Shield className="h-5 w-5" /> Admin Zone
+                  <span><Shield className="h-5 w-5" /> Admin Zone</span>
                 </Link>
               )}
               <Link to="/profile" className={cn(getNavLinkClass("/profile"), "flex items-center gap-2")} onClick={() => setIsOpen(false)}>
-                <Avatar className="h-7 w-7">
-                  {user.user_metadata?.avatar_url ? (
-                    <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
-                  ) : (
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      <UserIcon className="h-4 w-4" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                My Profile
+                <span>
+                  <Avatar className="h-7 w-7">
+                    {user.user_metadata?.avatar_url ? (
+                      <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
+                    ) : (
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        <UserIcon className="h-4 w-4" />
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  My Profile
+                </span>
               </Link>
               <Button variant="ghost" className={cn(getNavLinkClass(""), "mt-auto text-destructive hover:bg-destructive/10 hover:text-destructive")} onClick={() => { handleLogout(); setIsOpen(false); }}>
                 <LogOut className="mr-2 h-5 w-5" /> Logout
@@ -74,10 +76,10 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
           ) : (
             <>
               <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
-                Events
+                <span>Events</span>
               </Link>
               <Button asChild className="mt-auto w-full">
-                <Link to="/login" onClick={() => setIsOpen(false)}>Sign Up Now</Link>
+                <Link to="/login" onClick={() => setIsOpen(false)}><span>Sign Up Now</span></Link>
               </Button>
             </>
           )}

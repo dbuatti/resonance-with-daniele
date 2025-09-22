@@ -68,39 +68,41 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Link>
           <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">
             <Button variant="ghost" asChild>
-              <Link to="/" className={getNavLinkClass("/")}>Home</Link>
+              <Link to="/" className={getNavLinkClass("/")}><span>Home</span></Link>
             </Button>
             {user ? (
               <>
                 {console.log("[Layout] User is logged in, rendering authenticated nav links.")}
                 <Button variant="ghost" asChild>
-                  <Link to="/resources" className={getNavLinkClass("/resources")}>Resources</Link>
+                  <Link to="/resources" className={getNavLinkClass("/resources")}><span>Resources</span></Link>
                 </Button>
                 <Button variant="ghost" asChild>
-                  <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
+                  <Link to="/events" className={getNavLinkClass("/events")}><span>Events</span></Link>
                 </Button>
                 {user.is_admin && (
                   <>
                     {console.log("[Layout] User is admin, rendering Admin Zone link.")}
                     <Button variant="ghost" asChild>
                       <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))}>
-                        <Shield className="h-4 w-4" /> Admin Zone
+                        <span><Shield className="h-4 w-4" /> Admin Zone</span>
                       </Link>
                     </Button>
                   </>
                 )}
                 <Button variant="ghost" asChild>
                   <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))}>
-                    <Avatar className="h-6 w-6">
-                      {user.user_metadata?.avatar_url ? (
-                        <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
-                      ) : (
-                        <AvatarFallback className="bg-primary-foreground text-primary">
-                          <UserIcon className="h-4 w-4" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    My Profile
+                    <span>
+                      <Avatar className="h-6 w-6">
+                        {user.user_metadata?.avatar_url ? (
+                          <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
+                        ) : (
+                          <AvatarFallback className="bg-primary-foreground text-primary">
+                            <UserIcon className="h-4 w-4" />
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      My Profile
+                    </span>
                   </Link>
                 </Button>
                 <Button variant="ghost" onClick={handleLogout}>
@@ -111,10 +113,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <>
                 {console.log("[Layout] User is NOT logged in, rendering public nav links.")}
                 <Button variant="ghost" asChild>
-                  <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
+                  <Link to="/events" className={getNavLinkClass("/events")}><span>Events</span></Link>
                 </Button>
                 <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
-                  <Link to="/login">Sign Up Now</Link>
+                  <Link to="/login"><span>Sign Up Now</span></Link>
                 </Button>
               </>
             )}
