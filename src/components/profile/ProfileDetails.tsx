@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload";
+import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -28,6 +29,7 @@ const ProfileDetails: React.FC = () => {
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const queryClient = useQueryClient(); // Initialize query client
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -183,6 +185,9 @@ const ProfileDetails: React.FC = () => {
       setSelectedAvatarFile(null);
       setRemoveAvatarRequested(false);
       showSuccess("Profile updated successfully!");
+      // Invalidate relevant queries to refetch and update UI
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['adminMembers'] }); // Invalidate admin members list
       console.log("[ProfileDetails Page] Profile update process completed successfully.");
 
     } catch (error: any) {

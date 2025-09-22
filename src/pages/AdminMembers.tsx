@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 
 interface Profile {
   id: string;
@@ -43,10 +44,9 @@ interface Profile {
 const AdminMembers: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
+  const queryClient = useQueryClient(); // Initialize query client
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -55,29 +55,36 @@ const AdminMembers: React.FC = () => {
     }
   }, [user, loadingSession, navigate]);
 
-  const fetchProfiles = async () => {
-    if (user && user.is_admin) {
-      setLoadingProfiles(true);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*, email")
-        .order("updated_at", { ascending: false });
+  // Query function for fetching profiles
+  const fetchProfiles = async (): Promise<Profile[]> => {
+    console.log("[AdminMembers] Fetching all profiles.");
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*, email")
+      .order("updated_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching profiles:", error);
-        showError("Failed to load profiles.");
-      } else {
-        setProfiles(data as Profile[]);
-      }
-      setLoadingProfiles(false);
+    if (error) {
+      console.error("Error fetching profiles:", error);
+      throw new Error("Failed to load profiles.");
     }
+    console.log("[AdminMembers] Profiles fetched successfully:", data?.length, "profiles.");
+    return data || [];
   };
 
-  useEffect(() => {
-    if (!loadingSession && user?.is_admin) {
-      fetchProfiles();
-    }
-  }, [user, loadingSession]);
+  // Use react-query for profiles data
+  const { data: profiles, isLoading: loadingProfiles, error: fetchError } = useQuery<
+    Profile[], // TQueryFnData
+    Error,          // TError
+    Profile[], // TData (the type of the 'data' property)
+    ['adminMembers'] // TQueryKey
+  >({
+    queryKey: ['adminMembers'],
+    queryFn: fetchProfiles,
+    enabled: !loadingSession && !!user?.is_admin, // Only fetch if session is not loading and user is admin
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+  });
 
   const handleAdminStatusChange = async (profileId: string, newStatus: boolean) => {
     if (!user || !user.is_admin) {
@@ -101,7 +108,9 @@ const AdminMembers: React.FC = () => {
       showError("Failed to update admin status: " + error.message);
     } else {
       showSuccess(`User role updated to ${newStatus ? "Admin" : "User"}!`);
-      fetchProfiles();
+      queryClient.invalidateQueries({ queryKey: ['adminMembers'] }); // Invalidate to refetch and update UI
+      queryClient.invalidateQueries({ queryKey: ['adminProfiles'] }); // Also invalidate survey data
+      queryClient.invalidateQueries({ queryKey: ['profile', profileId] }); // Invalidate the specific user's profile
     }
     setIsUpdatingAdminStatus(null);
   };
@@ -152,6 +161,17 @@ const AdminMembers: React.FC = () => {
     return null;
   }
 
+  if (fetchError) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl text-center">
+          <CardTitle className="text-2xl font-lora text-destructive">Error Loading Data</CardTitle>
+          <CardDescription className="text-muted-foreground">{fetchError.message}</CardDescription>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 py-8"> {/* Removed container mx-auto */}
       <h1 className="text-4xl font-bold text-center font-lora">Manage Member Profiles</h1>
@@ -165,7 +185,7 @@ const AdminMembers: React.FC = () => {
           <CardDescription>Change user roles or view their detailed survey responses.</CardDescription>
         </CardHeader>
         <CardContent>
-          {profiles.length === 0 ? (
+          {profiles && profiles.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <p className="text-xl font-semibold">No profiles found.</p>
               <p className="mt-2">It looks like no members have registered yet.</p>
@@ -183,7 +203,7 @@ const AdminMembers: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {profiles.map((profile) => (
+                  {profiles?.map((profile) => (
                     <TableRow key={profile.id}>
                       <TableCell className="font-medium">
                         {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}

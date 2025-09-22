@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import SurveyMetricsCard from "@/components/admin/SurveyMetricsCard";
 import { showError } from "@/utils/toast";
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
 
 interface Profile {
   id: string;
@@ -32,8 +33,6 @@ interface Profile {
 const AdminSurveyData: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loadingProfiles, setLoadingProfiles] = useState(true);
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -42,29 +41,36 @@ const AdminSurveyData: React.FC = () => {
     }
   }, [user, loadingSession, navigate]);
 
-  const fetchProfiles = async () => {
-    if (user && user.is_admin) {
-      setLoadingProfiles(true);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*, email")
-        .order("updated_at", { ascending: false });
+  // Query function for fetching profiles
+  const fetchProfiles = async (): Promise<Profile[]> => {
+    console.log("[AdminSurveyData] Fetching all profiles for survey data.");
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*, email")
+      .order("updated_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching profiles for survey data:", error);
-        showError("Failed to load survey data.");
-      } else {
-        setProfiles(data as Profile[]);
-      }
-      setLoadingProfiles(false);
+    if (error) {
+      console.error("Error fetching profiles for survey data:", error);
+      throw new Error("Failed to load survey data.");
     }
+    console.log("[AdminSurveyData] Profiles fetched successfully:", data?.length, "profiles.");
+    return data || [];
   };
 
-  useEffect(() => {
-    if (!loadingSession && user?.is_admin) {
-      fetchProfiles();
-    }
-  }, [user, loadingSession]);
+  // Use react-query for profiles data
+  const { data: profiles, isLoading: loadingProfiles, error: fetchError } = useQuery<
+    Profile[], // TQueryFnData
+    Error,          // TError
+    Profile[], // TData (the type of the 'data' property)
+    ['adminProfiles'] // TQueryKey
+  >({
+    queryKey: ['adminProfiles'],
+    queryFn: fetchProfiles,
+    enabled: !loadingSession && !!user?.is_admin, // Only fetch if session is not loading and user is admin
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+  });
 
   if (loadingProfiles) {
     return (
@@ -87,13 +93,24 @@ const AdminSurveyData: React.FC = () => {
     return null;
   }
 
+  if (fetchError) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl text-center">
+          <CardTitle className="text-2xl font-lora text-destructive">Error Loading Data</CardTitle>
+          <CardDescription className="text-muted-foreground">{fetchError.message}</CardDescription>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 py-8"> {/* Removed container mx-auto */}
       <h1 className="text-4xl font-bold text-center font-lora">Member Survey Data & Insights</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Explore aggregated survey responses to understand your community's preferences and feedback.
       </p>
-      <SurveyMetricsCard profiles={profiles} loading={loadingProfiles} />
+      <SurveyMetricsCard profiles={profiles || []} loading={loadingProfiles} />
     </div>
   );
 };

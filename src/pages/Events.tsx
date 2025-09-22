@@ -100,7 +100,12 @@ const Events: React.FC = () => {
   };
 
   // Use react-query for events data
-  const { data, isLoading, isFetching, error: fetchError } = useQuery({ // Removed explicit generics here
+  const { data: events, isLoading, isFetching, error: fetchError } = useQuery<
+    Event[], // TQueryFnData
+    Error,          // TError
+    Event[], // TData (the type of the 'data' property)
+    ['events', string] // TQueryKey
+  >({
     queryKey: ['events', searchTerm], // Query key includes search term
     queryFn: () => fetchEvents(searchTerm),
     enabled: !loadingUserSession, // Only fetch if user session is not loading
@@ -108,8 +113,6 @@ const Events: React.FC = () => {
     gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
-
-  const events: Event[] | undefined = data; // Explicitly type data here
 
   useEffect(() => {
     if (editingEvent) {
@@ -148,6 +151,7 @@ const Events: React.FC = () => {
         addForm.reset();
         setIsAddDialogOpen(false);
         queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
+        queryClient.invalidateQueries({ queryKey: ['currentEvent'] }); // Also invalidate current event
       }
     } catch (error) {
       console.error("Unexpected error adding event:", error);
@@ -184,6 +188,7 @@ const Events: React.FC = () => {
         setIsEditDialogOpen(false);
         setEditingEvent(null);
         queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
+        queryClient.invalidateQueries({ queryKey: ['currentEvent'] }); // Also invalidate current event
       }
     } catch (error) {
       console.error("Unexpected error updating event:", error);
@@ -210,6 +215,7 @@ const Events: React.FC = () => {
       } else {
         showSuccess("Event deleted successfully!");
         queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
+        queryClient.invalidateQueries({ queryKey: ['currentEvent'] }); // Also invalidate current event
       }
     } catch (error) {
       console.error("Unexpected error deleting event:", error);
@@ -353,7 +359,7 @@ const Events: React.FC = () => {
               <CardContent className="space-y-2">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-5/6" />
-                <Skeleton className="h-10 w-full mt-4" />
+                <Skeleton className="h-10 w-full" />
               </CardContent>
             </Card>
           ))

@@ -30,6 +30,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 
 const surveySchema = z.object({
   how_heard: z.string().optional(),
@@ -48,6 +49,7 @@ type SurveyFormData = z.infer<typeof surveySchema>;
 
 const SurveyForm: React.FC = () => {
   const { user, profile, loading: loadingSession } = useSession(); // Get profile from context
+  const queryClient = useQueryClient(); // Initialize query client
 
   const form = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
@@ -124,8 +126,9 @@ const SurveyForm: React.FC = () => {
       showError("Failed to update survey data: " + error.message);
     } else {
       showSuccess("Survey data updated successfully!");
-      // The SessionContextProvider will re-fetch the profile on auth state change (USER_UPDATED)
-      // which will then update the form via the useEffect.
+      // Invalidate profile query to refetch with new data
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['adminProfiles'] }); // Invalidate admin survey data
     }
   };
 

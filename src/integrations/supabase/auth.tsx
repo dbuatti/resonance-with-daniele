@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery, useQueryClient, QueryKey, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface Profile {
   id: string;
@@ -100,7 +100,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         // Add email to profile for convenience
         return { ...profileData, email: session.user.email } as Profile;
       } else {
-        console.log("[SessionContext] No profile found for user. Returning null profile.");
+        console.log("[SessionContext] No profile found for user. Returning minimal profile with admin status.");
         // If no profile exists, return a minimal one for context with admin status
         return {
           id: session.user.id,
@@ -108,7 +108,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           last_name: null,
           avatar_url: null,
           is_admin: determineAdminStatus(session.user.email, undefined), // Determine admin status even if no profile
-          updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(), // Provide a default or current timestamp
           how_heard: null, motivation: null, attended_session: null, singing_experience: null,
           session_frequency: null, preferred_time: null, music_genres: null, choir_goals: null,
           inclusivity_importance: null, suggestions: null,

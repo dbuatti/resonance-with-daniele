@@ -98,7 +98,7 @@ const Resources: React.FC = () => {
   >({
     queryKey: ['resources', searchTerm], // Query key includes search term
     queryFn: () => fetchResources(searchTerm),
-    enabled: !loadingUserSession, // Only fetch if user session is not loading
+    enabled: !loadingUserSession, // Only run query if user session is not loading
     staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
     refetchOnWindowFocus: true, // Refetch when window regains focus
@@ -295,7 +295,7 @@ const Resources: React.FC = () => {
               <CardContent className="space-y-2">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-5/6" />
-                <Skeleton className="h-10 w-full mt-4" />
+                <Skeleton className="h-10 w-full" />
               </CardContent>
             </Card>
           ))

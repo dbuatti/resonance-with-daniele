@@ -8,61 +8,75 @@ import { Users, CalendarDays, FileText, PlusCircle, Loader2, Mail } from "lucide
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showError } from "@/utils/toast";
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
 
 const AdminDashboardOverview: React.FC = () => {
-  const [memberCount, setMemberCount] = useState<number | null>(null);
-  const [eventCount, setEventCount] = useState<number | null>(null);
-  const [resourceCount, setResourceCount] = useState<number | null>(null);
-  const [interestSubmissionCount, setInterestSubmissionCount] = useState<number | null>(null); // New state for interest submissions
-  const [loading, setLoading] = useState(true);
+  // Query function for fetching counts
+  const fetchCounts = async () => {
+    console.log("[AdminDashboardOverview] Fetching dashboard counts.");
+    const { count: members, error: memberError } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true });
+    if (memberError) throw memberError;
+
+    const { count: events, error: eventError } = await supabase
+      .from("events")
+      .select("id", { count: "exact", head: true });
+    if (eventError) throw eventError;
+
+    const { count: resources, error: resourceError } = await supabase
+      .from("resources")
+      .select("id", { count: "exact", head: true });
+    if (resourceError) throw resourceError;
+
+    const { count: submissions, error: submissionError } = await supabase
+      .from("interest_submissions")
+      .select("id", { count: "exact", head: true });
+    if (submissionError) throw submissionError;
+
+    return {
+      memberCount: members,
+      eventCount: events,
+      resourceCount: resources,
+      interestSubmissionCount: submissions,
+    };
+  };
+
+  // Use react-query for dashboard counts
+  const { data, isLoading, error } = useQuery<
+    {
+      memberCount: number | null;
+      eventCount: number | null;
+      resourceCount: number | null;
+      interestSubmissionCount: number | null;
+    },
+    Error,
+    {
+      memberCount: number | null;
+      eventCount: number | null;
+      resourceCount: number | null;
+      interestSubmissionCount: number | null;
+    },
+    ['adminDashboardCounts']
+  >({
+    queryKey: ['adminDashboardCounts'],
+    queryFn: fetchCounts,
+    staleTime: 60 * 1000, // Counts are fresh for 1 minute
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnWindowFocus: true,
+  });
 
   useEffect(() => {
-    const fetchCounts = async () => {
-      setLoading(true);
-      try {
-        // Fetch member count
-        const { count: members, error: memberError } = await supabase
-          .from("profiles")
-          .select("id", { count: "exact", head: true });
-        if (memberError) throw memberError;
-        setMemberCount(members);
+    if (error) {
+      console.error("Error fetching admin dashboard counts:", error.message);
+      showError("Failed to load dashboard data.");
+    }
+  }, [error]);
 
-        // Fetch event count
-        const { count: events, error: eventError } = await supabase
-          .from("events")
-          .select("id", { count: "exact", head: true });
-        if (eventError) throw eventError;
-        setEventCount(events);
-
-        // Fetch resource count
-        const { count: resources, error: resourceError } = await supabase
-          .from("resources")
-          .select("id", { count: "exact", head: true });
-        if (resourceError) throw resourceError;
-        setResourceCount(resources);
-
-        // Fetch interest submission count
-        const { count: submissions, error: submissionError } = await supabase
-          .from("interest_submissions")
-          .select("id", { count: "exact", head: true });
-        if (submissionError) throw submissionError;
-        setInterestSubmissionCount(submissions);
-
-      } catch (error: any) {
-        console.error("Error fetching admin dashboard counts:", error.message);
-        showError("Failed to load dashboard data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCounts();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(4)].map((_, i) => ( // Increased array size for new card
+        {[...Array(4)].map((_, i) => (
           <Card key={i} className="shadow-lg rounded-xl p-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-6 w-1/2" />
@@ -77,6 +91,13 @@ const AdminDashboardOverview: React.FC = () => {
       </div>
     );
   }
+
+  const { memberCount, eventCount, resourceCount, interestSubmissionCount } = data || {
+    memberCount: null,
+    eventCount: null,
+    resourceCount: null,
+    interestSubmissionCount: null,
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

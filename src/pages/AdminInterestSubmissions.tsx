@@ -10,6 +10,7 @@ import { Loader2, Mail, Phone } from "lucide-react";
 import { showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
 
 interface InterestSubmission {
   id: string;
@@ -23,8 +24,6 @@ interface InterestSubmission {
 const AdminInterestSubmissions: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const navigate = useNavigate();
-  const [submissions, setSubmissions] = useState<InterestSubmission[]>([]);
-  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -33,29 +32,36 @@ const AdminInterestSubmissions: React.FC = () => {
     }
   }, [user, loadingSession, navigate]);
 
-  const fetchSubmissions = async () => {
-    if (user && user.is_admin) {
-      setLoadingSubmissions(true);
-      const { data, error } = await supabase
-        .from("interest_submissions")
-        .select("*")
-        .order("created_at", { ascending: false });
+  // Query function for fetching submissions
+  const fetchSubmissions = async (): Promise<InterestSubmission[]> => {
+    console.log("[AdminInterestSubmissions] Fetching all interest submissions.");
+    const { data, error } = await supabase
+      .from("interest_submissions")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching interest submissions:", error);
-        showError("Failed to load interest submissions.");
-      } else {
-        setSubmissions(data as InterestSubmission[]);
-      }
-      setLoadingSubmissions(false);
+    if (error) {
+      console.error("Error fetching interest submissions:", error);
+      throw new Error("Failed to load interest submissions.");
     }
+    console.log("[AdminInterestSubmissions] Submissions fetched successfully:", data?.length, "submissions.");
+    return data || [];
   };
 
-  useEffect(() => {
-    if (!loadingSession && user?.is_admin) {
-      fetchSubmissions();
-    }
-  }, [user, loadingSession]);
+  // Use react-query for submissions data
+  const { data: submissions, isLoading: loadingSubmissions, error: fetchError } = useQuery<
+    InterestSubmission[], // TQueryFnData
+    Error,          // TError
+    InterestSubmission[], // TData (the type of the 'data' property)
+    ['interestSubmissions'] // TQueryKey
+  >({
+    queryKey: ['interestSubmissions'],
+    queryFn: fetchSubmissions,
+    enabled: !loadingSession && !!user?.is_admin, // Only fetch if session is not loading and user is admin
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+  });
 
   if (loadingSubmissions) {
     return (
@@ -87,6 +93,17 @@ const AdminInterestSubmissions: React.FC = () => {
     return null;
   }
 
+  if (fetchError) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl text-center">
+          <CardTitle className="text-2xl font-lora text-destructive">Error Loading Data</CardTitle>
+          <CardDescription className="text-muted-foreground">{fetchError.message}</CardDescription>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 py-8"> {/* Removed container mx-auto */}
       <h1 className="text-4xl font-bold text-center font-lora">Interest Submissions</h1>
@@ -100,7 +117,7 @@ const AdminInterestSubmissions: React.FC = () => {
           <CardDescription>Contact these individuals to follow up on their interest.</CardDescription>
         </CardHeader>
         <CardContent>
-          {submissions.length === 0 ? (
+          {submissions && submissions.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <p className="text-xl font-semibold">No interest submissions found yet.</p>
               <p className="mt-2">Once people express interest, their details will appear here.</p>
@@ -117,7 +134,7 @@ const AdminInterestSubmissions: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {submissions.map((submission) => (
+                  {submissions?.map((submission) => (
                     <TableRow key={submission.id}>
                       <TableCell className="font-medium">
                         {submission.first_name} {submission.last_name}
