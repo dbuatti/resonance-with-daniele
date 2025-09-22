@@ -130,10 +130,10 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
           <Card className="p-4">
             <CardTitle className="text-xl font-lora mb-4">Overall Engagement</CardTitle>
             <CardContent className="p-0 space-y-2 text-muted-foreground">
-              <p>Total Members: <Badge variant="secondary">{totalProfiles}</Badge></p>
-              <p>Members with Responses: <Badge variant="secondary">{totalResponses}</Badge></p>
-              <p>Survey Completion Rate: <Badge variant="secondary">{surveyCompletionRate}%</Badge></p>
-              <p>Avg. Motivations Selected: <Badge variant="secondary">{averageMotivationSelections}</Badge></p>
+              <div>Total Members: <Badge variant="secondary">{totalProfiles}</Badge></div>
+              <div>Members with Responses: <Badge variant="secondary">{totalResponses}</Badge></div>
+              <div>Survey Completion Rate: <Badge variant="secondary">{surveyCompletionRate}%</Badge></div>
+              <div>Avg. Motivations Selected: <Badge variant="secondary">{averageMotivationSelections}</Badge></div>
             </CardContent>
           </Card>
           
