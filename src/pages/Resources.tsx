@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2 } from "lucide-react"; // Import Loader2
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2 } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
@@ -93,8 +93,8 @@ const Resources: React.FC = () => {
   };
 
   const onAddSubmit = async (data: ResourceFormData) => {
-    if (!user) {
-      showError("You must be logged in to add resources.");
+    if (!user || !user.is_admin) { // Check for admin status
+      showError("Only administrators can add resources.");
       return;
     }
 
@@ -118,8 +118,8 @@ const Resources: React.FC = () => {
   };
 
   const onEditSubmit = async (data: ResourceFormData) => {
-    if (!user || !editingResource) {
-      showError("You must be logged in and select a resource to edit.");
+    if (!user || !user.is_admin || !editingResource) { // Check for admin status
+      showError("Only administrators can edit resources.");
       return;
     }
 
@@ -132,8 +132,7 @@ const Resources: React.FC = () => {
         url,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", editingResource.id)
-      .eq("user_id", user.id); // Ensure only the owner can update
+      .eq("id", editingResource.id); // Admin can update any resource, no user_id check needed here due to RLS
 
     if (error) {
       console.error("Error updating resource:", error);
@@ -147,16 +146,15 @@ const Resources: React.FC = () => {
   };
 
   const handleDelete = async (resourceId: string) => {
-    if (!user) {
-      showError("You must be logged in to delete resources.");
+    if (!user || !user.is_admin) { // Check for admin status
+      showError("Only administrators can delete resources.");
       return;
     }
 
     const { error } = await supabase
       .from("resources")
       .delete()
-      .eq("id", resourceId)
-      .eq("user_id", user.id); // Ensure only the owner can delete
+      .eq("id", resourceId); // Admin can delete any resource, no user_id check needed here due to RLS
 
     if (error) {
       console.error("Error deleting resource:", error);
@@ -179,7 +177,7 @@ const Resources: React.FC = () => {
       <div className="flex justify-center">
         {loadingResources ? (
           <Skeleton className="h-10 w-48" />
-        ) : user ? (
+        ) : user?.is_admin ? ( // Only show add button if user is admin
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -225,7 +223,11 @@ const Resources: React.FC = () => {
             </DialogContent>
           </Dialog>
         ) : (
-          <p className="text-md text-muted-foreground">Log in to add new resources.</p>
+          user ? (
+            <p className="text-md text-muted-foreground">Only administrators can add new resources.</p>
+          ) : (
+            <p className="text-md text-muted-foreground">Log in to view and access choir resources.</p>
+          )
         )}
       </div>
 
@@ -250,16 +252,16 @@ const Resources: React.FC = () => {
             <FileText className="h-16 w-16 text-muted-foreground" />
             <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found yet!</p>
             <p className="text-md text-muted-foreground mt-2">
-              {user
+              {user?.is_admin
                 ? "Be the first to add one using the 'Add New Resource' button above!"
-                : "Log in to add and access choir resources."}
+                : "Check back soon for new resources!"}
             </p>
             {!user && (
               <Button asChild className="mt-4">
-                <Link to="/login">Login to Add Resources</Link>
+                <Link to="/login">Login to View Resources</Link>
               </Button>
             )}
-            {user && (
+            {user?.is_admin && (
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="mt-4">
@@ -322,7 +324,7 @@ const Resources: React.FC = () => {
                     <LinkIcon className="mr-2 h-4 w-4" /> View Resource
                   </a>
                 </Button>
-                {user && user.id === resource.user_id && (
+                {user?.is_admin && ( // Only show edit/delete if user is admin
                   <div className="flex justify-end gap-2 mt-4">
                     <Button
                       variant="outline"

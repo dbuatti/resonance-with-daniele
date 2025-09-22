@@ -10,7 +10,7 @@ import { User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BackToTopButton from "./BackToTopButton";
 import FooterSection from "./landing/FooterSection";
-import MobileNav from "./MobileNav"; // Import MobileNav
+import MobileNav from "./MobileNav";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -39,15 +39,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora">
             Resonance with Daniele
           </Link>
-          <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center"> {/* Hidden on small screens */}
+          <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">
             <Button variant="ghost" asChild>
               <Link to="/" className={getNavLinkClass("/")}>Home</Link>
             </Button>
             {!loading && user ? (
               <>
-                <Button variant="ghost" asChild>
-                  <Link to="/resources" className={getNavLinkClass("/resources")}>Resources</Link>
-                </Button>
+                {user.is_admin && ( // Only show Resources if user is admin
+                  <Button variant="ghost" asChild>
+                    <Link to="/resources" className={getNavLinkClass("/resources")}>Resources</Link>
+                  </Button>
+                )}
                 <Button variant="ghost" asChild>
                   <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
                 </Button>
@@ -80,7 +82,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </>
             )}
           </nav>
-          <MobileNav user={user} loading={loading} handleLogout={handleLogout} /> {/* Mobile navigation */}
+          <MobileNav user={user} loading={loading} handleLogout={handleLogout} />
         </div>
       </header>
       <main className="flex-grow container mx-auto py-8 px-4">
