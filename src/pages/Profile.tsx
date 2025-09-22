@@ -39,47 +39,48 @@ const Profile: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      console.log("[Profile Page] useEffect: Fetching profile data.");
-      if (user) {
-        setLoadingProfile(true);
-        console.log(`[Profile Page] Fetching profile for user ID: ${user.id}`);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("first_name, last_name, avatar_url")
-          .eq("id", user.id); // Removed .single()
+  const fetchProfile = async () => {
+    console.log("[Profile Page] fetchProfile: Fetching profile data.");
+    if (user) {
+      setLoadingProfile(true);
+      console.log(`[Profile Page] fetchProfile: Fetching profile for user ID: ${user.id}`);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, avatar_url")
+        .eq("id", user.id)
+        .single(); // Use .single() here as we expect one profile
 
-        if (error) { // Removed error.code !== 'PGRST116' check as it's now handled by data.length
-          console.error("[Profile Page] Error fetching profile:", error);
-          showError("Failed to load profile data.");
-        } else if (data && data.length > 0) {
-          console.log("[Profile Page] Profile data fetched:", data[0]);
-          form.reset({
-            first_name: data[0].first_name || "",
-            last_name: data[0].last_name || "",
-          });
-          setCurrentAvatarUrl(data[0].avatar_url);
-        } else {
-          console.log("[Profile Page] No profile data found for user, initializing with empty values.");
-          form.reset({ first_name: "", last_name: "" });
-          setCurrentAvatarUrl(null);
-        }
-        setLoadingProfile(false);
-        console.log("[Profile Page] Profile loading state set to false.");
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
+        console.error("[Profile Page] fetchProfile: Error fetching profile:", error);
+        showError("Failed to load profile data.");
+      } else if (data) {
+        console.log("[Profile Page] fetchProfile: Profile data fetched:", data);
+        form.reset({
+          first_name: data.first_name || "",
+          last_name: data.last_name || "",
+        });
+        setCurrentAvatarUrl(data.avatar_url);
       } else {
-        console.log("[Profile Page] No user session, skipping profile fetch.");
-        setLoadingProfile(false);
+        console.log("[Profile Page] fetchProfile: No profile data found for user, initializing with empty values.");
+        form.reset({ first_name: "", last_name: "" });
+        setCurrentAvatarUrl(null);
       }
-    };
+      setLoadingProfile(false);
+      console.log("[Profile Page] fetchProfile: Profile loading state set to false.");
+    } else {
+      console.log("[Profile Page] fetchProfile: No user session, skipping profile fetch.");
+      setLoadingProfile(false);
+    }
+  };
 
+  useEffect(() => {
     if (!loadingUserSession) {
-      console.log("[Profile Page] User session loaded, proceeding to fetch profile.");
+      console.log("[Profile Page] useEffect: User session loaded, proceeding to fetch profile.");
       fetchProfile();
     } else {
-      console.log("[Profile Page] User session still loading.");
+      console.log("[Profile Page] useEffect: User session still loading.");
     }
-  }, [user, loadingUserSession, form]);
+  }, [user, loadingUserSession]); // Removed 'form' from dependencies to prevent infinite loops
 
   const handleAvatarFileChange = (file: File | null) => {
     console.log("[Profile Page] Avatar file changed:", file ? file.name : 'null');
@@ -100,9 +101,6 @@ const Profile: React.FC = () => {
       console.error("[Profile Page] Attempted to submit profile without a user.");
       return;
     }
-
-    form.setValue("first_name", data.first_name);
-    form.setValue("last_name", data.last_name);
 
     let newAvatarUrl: string | null = currentAvatarUrl;
     let uploadError: Error | null = null;
@@ -200,17 +198,14 @@ const Profile: React.FC = () => {
     }
     console.log("[Profile Page] Supabase Auth User updated:", updatedAuthUser);
 
+    // Re-fetch profile data to ensure the form is reset with the latest information
+    await fetchProfile(); 
+
     setCurrentAvatarUrl(newAvatarUrl);
     setSelectedAvatarFile(null); // Clear selected file after successful upload
     setRemoveAvatarRequested(false); // Reset removal request
     showSuccess("Profile updated successfully!");
     console.log("[Profile Page] Profile update process completed successfully.");
-    
-    // Reset the form with the newly saved data to clear isDirty and isSubmitting
-    form.reset({
-      first_name: data.first_name,
-      last_name: data.last_name,
-    });
   };
 
   const handleLogout = async () => {
