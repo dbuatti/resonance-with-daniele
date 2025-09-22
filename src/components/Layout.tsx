@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, Shield } from "lucide-react"; // Import Shield icon
+import { User as UserIcon, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BackToTopButton from "./BackToTopButton";
 import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -35,6 +36,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       location.pathname === path && "text-accent font-semibold"
     );
 
+  if (loading) {
+    console.log("[Layout] Session is loading, rendering full-page skeleton.");
+    return (
+      <div className="min-h-screen flex flex-col">
+        <header className="bg-primary text-primary-foreground p-4 shadow-lg">
+          <div className="container mx-auto flex justify-between items-center">
+            <Skeleton className="h-8 w-48 bg-primary-foreground/20" />
+            <div className="hidden sm:flex gap-2">
+              <Skeleton className="h-8 w-20 bg-primary-foreground/20" />
+              <Skeleton className="h-8 w-20 bg-primary-foreground/20" />
+              <Skeleton className="h-8 w-28 bg-primary-foreground/20" />
+            </div>
+            <Skeleton className="h-8 w-8 sm:hidden bg-primary-foreground/20 rounded-md" />
+          </div>
+        </header>
+        <main className="flex-grow container mx-auto py-8 px-4 flex items-center justify-center">
+          <p className="text-lg text-muted-foreground">Loading application...</p>
+        </main>
+        <FooterSection /> {/* Footer can render while loading */}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
@@ -46,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Button variant="ghost" asChild>
               <Link to="/" className={getNavLinkClass("/")}>Home</Link>
             </Button>
-            {!loading && user ? (
+            {user ? (
               <>
                 {console.log("[Layout] User is logged in, rendering authenticated nav links.")}
                 <Button variant="ghost" asChild>
@@ -55,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Button variant="ghost" asChild>
                   <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
                 </Button>
-                {user.is_admin && ( // Conditionally render Admin Zone link
+                {user.is_admin && (
                   <>
                     {console.log("[Layout] User is admin, rendering Admin Zone link.")}
                     <Button variant="ghost" asChild>
