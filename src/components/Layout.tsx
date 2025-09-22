@@ -40,7 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (loading) {
     console.log("[Layout] Session is loading, rendering full-page skeleton.");
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-background text-foreground"> {/* Added bg-background text-foreground */}
         <header className="bg-primary text-primary-foreground p-4 shadow-lg">
           <div className="container mx-auto flex justify-between items-center">
             <Skeleton className="h-8 w-48 bg-primary-foreground/20" />
@@ -61,7 +61,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground"> {/* Added bg-background text-foreground */}
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora">

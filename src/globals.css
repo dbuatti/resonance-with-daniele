@@ -92,12 +92,10 @@
     @apply border-border;
   }
 
-  html { /* Apply base background and text color to html */
-    @apply bg-background text-foreground;
-  }
+  /* Removed: @apply bg-background text-foreground; from html */
 
   body {
-    @apply font-sans; /* Only apply font-sans here, background and text color are on html */
+    @apply font-sans;
   }
 
   h1, h2, h3, h4, h5, h6 {
