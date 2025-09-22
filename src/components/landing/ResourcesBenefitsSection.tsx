@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sheet, Headphones, Mic2, Users } from "lucide-react";
+import { Sheet, Headphones, Mic2, Users, Leaf } from "lucide-react"; // Import Leaf icon
 
 const ResourcesBenefitsSection: React.FC = () => {
   const benefits = [
@@ -20,6 +20,11 @@ const ResourcesBenefitsSection: React.FC = () => {
       icon: <Headphones className="h-8 w-8 text-primary" />,
       title: "Performance Opportunities",
       description: "Showcase your talent in concerts and pop-up events.",
+    },
+    {
+      icon: <Leaf className="h-8 w-8 text-primary" />, // New icon for mindfulness
+      title: "Mindful Breathing & Body Awareness",
+      description: "Develop a deeper connection to your voice through breathwork and body awareness exercises.",
     },
   ];
 
