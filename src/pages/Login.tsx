@@ -31,7 +31,8 @@ const Login: React.FC = () => {
               },
             }}
             theme="light"
-            redirectTo="/" // Changed from window.location.origin
+            redirectTo="/"
+            debug={true} {/* Added debug prop */}
           />
         </CardContent>
       </Card>
