@@ -25,10 +25,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      {/* Temporarily removed Sonner Toaster to diagnose iOS white box issue */}
-      {/* <Sonner /> */}
-      {/* Temporarily removed ThemeProvider to diagnose iOS white box issue */}
-      {/* <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme"> */}
+      <Sonner />
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <BrowserRouter>
           <SessionContextProvider>
             <Routes>
@@ -51,7 +49,7 @@ const App = () => (
             </Routes>
           </SessionContextProvider>
         </BrowserRouter>
-      {/* </ThemeProvider> */}
+      </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
