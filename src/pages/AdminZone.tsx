@@ -42,7 +42,7 @@ const AdminZone: React.FC = () => {
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link to="/"><span>Go to Home</span></Link>
+              <Link to="/">Go to Home</Link>
             </Button>
           </CardContent>
         </Card>
@@ -62,21 +62,21 @@ const AdminZone: React.FC = () => {
           <CardTitle className="text-xl font-lora mb-2">Manage Events</CardTitle>
           <CardDescription>Add, edit, or delete upcoming choir events.</CardDescription>
           <Button asChild className="mt-4">
-            <Link to="/events"><span>Go to Events</span></Link>
+            <Link to="/events">Go to Events</Link>
           </Button>
         </Card>
         <Card className="shadow-lg rounded-xl p-6 text-center">
           <CardTitle className="text-xl font-lora mb-2">Manage Resources</CardTitle>
           <CardDescription>Upload and organize sheet music, audio, and tutorials.</CardDescription>
           <Button asChild className="mt-4">
-            <Link to="/resources"><span>Go to Resources</span></Link>
+            <Link to="/resources">Go to Resources</Link>
           </Button>
         </Card>
         <Card className="shadow-lg rounded-xl p-6 text-center">
           <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
           <CardDescription>Analyze insights from member surveys.</CardDescription>
           <Button asChild className="mt-4">
-            <Link to="/profile"><span>View Profiles</span></Link> {/* Link to profile for now, can be a dedicated survey page later */}
+            <Link to="/profile">View Profiles</Link> {/* Link to profile for now, can be a dedicated survey page later */}
           </Button>
         </Card>
         {/* Add more admin specific cards here */}
