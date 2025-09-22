@@ -5,8 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Music, Mic2, Users, Camera } from "lucide-react";
+import { useSession } from "@/integrations/supabase/auth";
 
 const WelcomeHub: React.FC = () => {
+  const { user } = useSession();
+  const firstName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || "there"; // Fallback to email part
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
       <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 animate-fade-in-up">
@@ -17,7 +21,7 @@ const WelcomeHub: React.FC = () => {
             className="w-32 h-32 rounded-full object-cover shadow-md mx-auto mb-6"
           />
           <CardTitle className="text-4xl md:text-5xl font-extrabold text-center text-primary mb-4 font-lora">
-            Welcome to the Resonance with Daniele Hub!
+            Welcome, {firstName} to the Resonance with Daniele Hub!
           </CardTitle>
           <p className="text-center text-xl md:text-2xl font-semibold text-foreground mb-6 font-lora">
             🎶 Sing. Connect. Shine. 🎶

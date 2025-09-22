@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster as Sonner } "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import Resources from "./pages/Resources";
 import Events from "./pages/Events";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile"; // Import the new Profile page
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 
@@ -21,10 +22,11 @@ const App = () => (
       <BrowserRouter>
         <SessionContextProvider>
           <Routes>
-            <Route path="/" element={<Layout><Index /></Layout>} /> {/* Index now wrapped by Layout */}
+            <Route path="/" element={<Layout><Index /></Layout>} />
             <Route path="/resources" element={<Layout><Resources /></Layout>} />
             <Route path="/events" element={<Layout><Events /></Layout>} />
             <Route path="/login" element={<Layout><Login /></Layout>} />
+            <Route path="/profile" element={<Layout><Profile /></Layout>} /> {/* New Profile route */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
