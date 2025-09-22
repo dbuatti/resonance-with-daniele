@@ -12,22 +12,16 @@ import CallToActionSection from "@/components/landing/CallToActionSection";
 import FooterSection from "@/components/landing/FooterSection";
 import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
+// No need for useDelayedLoading here, as Layout handles the global session loading.
 
 const Index: React.FC = () => {
   const { user, loading } = useSession();
   console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
 
-  if (loading) {
-    console.log("[Index Page] Rendering loading state.");
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
-
+  // The Layout component already handles the global loading state with a skeleton.
+  // We can directly render the content here, and WelcomeHub will manage its own internal delayed loading.
   return (
-    <> {/* Removed Layout wrapper */}
+    <>
       {user ? (
         <>
           {console.log("[Index Page] User is logged in, rendering WelcomeHub.")}

@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge"; // Import Badge for survey status
+import { Badge } from "@/components/ui/badge";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface Profile {
   id: string;
@@ -48,6 +49,9 @@ const AdminMembers: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
 
+  const isLoadingAny = loadingSession || loadingProfiles;
+  const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
+
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
       navigate("/");
@@ -60,7 +64,7 @@ const AdminMembers: React.FC = () => {
       setLoadingProfiles(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("*, email") // Ensure email is selected
+        .select("*, email")
         .order("updated_at", { ascending: false });
 
       if (error) {
@@ -122,7 +126,7 @@ const AdminMembers: React.FC = () => {
     );
   };
 
-  if (loadingSession || loadingProfiles) {
+  if (showDelayedSkeleton) { // Use the delayed skeleton state
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">

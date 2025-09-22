@@ -8,11 +8,13 @@ import { AlertCircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview"; // Import the new component
+import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
+  const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
 
   useEffect(() => {
     if (!loading && (!user || !user.is_admin)) {
@@ -21,7 +23,7 @@ const AdminZone: React.FC = () => {
     }
   }, [user, loading, navigate]);
 
-  if (loading) {
+  if (showDelayedSkeleton) { // Use the delayed skeleton state
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
         <p className="text-lg text-muted-foreground">Loading admin access...</p>
@@ -59,10 +61,9 @@ const AdminZone: React.FC = () => {
         This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.
       </p>
 
-      <AdminDashboardOverview /> {/* New dashboard overview component */}
+      <AdminDashboardOverview />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {/* The "Manage Events" and "Manage Resources" cards are now integrated into AdminDashboardOverview */}
         <Card className="shadow-lg rounded-xl p-6 text-center">
           <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
           <CardDescription>Analyze aggregated insights from member surveys.</CardDescription>
@@ -77,7 +78,6 @@ const AdminZone: React.FC = () => {
             Manage Members
           </Link>
         </Card>
-        {/* Add more admin specific cards here */}
       </div>
     </div>
   );

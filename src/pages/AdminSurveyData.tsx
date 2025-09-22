@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import SurveyMetricsCard from "@/components/admin/SurveyMetricsCard";
 import { showError } from "@/utils/toast";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface Profile {
   id: string;
@@ -34,6 +35,9 @@ const AdminSurveyData: React.FC = () => {
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
+
+  const isLoadingAny = loadingSession || loadingProfiles;
+  const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -66,7 +70,7 @@ const AdminSurveyData: React.FC = () => {
     }
   }, [user, loadingSession]);
 
-  if (loadingSession || loadingProfiles) {
+  if (showDelayedSkeleton) { // Use the delayed skeleton state
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">

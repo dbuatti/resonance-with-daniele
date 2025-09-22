@@ -11,8 +11,9 @@ import { cn } from "@/lib/utils";
 import BackToTopButton from "./BackToTopButton";
 import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
-import { ThemeToggle } from "./ThemeToggle"; // Import ThemeToggle
+import { Skeleton } from "@/components/ui/skeleton";
+import { ThemeToggle } from "./ThemeToggle";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, loading } = useSession();
   const location = useLocation();
+  const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
   console.log("[Layout] User:", user ? user.id : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
@@ -33,14 +35,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const getNavLinkClass = (path: string) =>
     cn(
-      "hover:text-primary-foreground/80", // Default hover for links on primary background
-      location.pathname === path ? "text-accent font-semibold" : "text-primary-foreground" // Active link uses accent, others use primary-foreground
+      "hover:text-primary-foreground/80",
+      location.pathname === path ? "text-accent font-semibold" : "text-primary-foreground"
     );
 
-  if (loading) {
+  if (showDelayedSkeleton) { // Use the delayed skeleton state
     console.log("[Layout] Session is loading, rendering full-page skeleton.");
     return (
-      <div className="min-h-screen flex flex-col"> {/* Removed bg-background text-foreground */}
+      <div className="min-h-screen flex flex-col">
         <header className="bg-primary text-primary-foreground p-4 shadow-lg">
           <div className="container mx-auto flex justify-between items-center">
             <Skeleton className="h-8 w-48 bg-primary-foreground/20" />
@@ -55,13 +57,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <main className="flex-grow container mx-auto py-8 px-4 flex items-center justify-center">
           <p className="text-lg text-muted-foreground">Loading application...</p>
         </main>
-        <FooterSection /> {/* Footer can render while loading */}
+        <FooterSection />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col"> {/* Removed bg-background text-foreground */}
+    <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora text-primary-foreground">
@@ -119,10 +121,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </Button>
               </>
             )}
-            <ThemeToggle /> {/* Add ThemeToggle here */}
+            <ThemeToggle />
           </nav>
-          <div className="flex items-center sm:hidden"> {/* Wrap MobileNav and ThemeToggle for mobile */}
-            <ThemeToggle /> {/* Add ThemeToggle here for mobile */}
+          <div className="flex items-center sm:hidden">
+            <ThemeToggle />
             <MobileNav user={user} loading={loading} handleLogout={handleLogout} />
           </div>
         </div>

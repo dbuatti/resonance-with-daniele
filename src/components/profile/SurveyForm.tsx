@@ -29,26 +29,30 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea"; // Import Textarea
+import { Textarea } from "@/components/ui/textarea";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const surveySchema = z.object({
   how_heard: z.string().optional(),
   motivation: z.array(z.string()).optional(),
   attended_session: z.boolean().optional(),
   singing_experience: z.string().optional(),
-  session_frequency: z.string().optional(), // New field
-  preferred_time: z.string().optional(),    // New field
-  music_genres: z.array(z.string()).optional(), // New field
-  choir_goals: z.string().optional(),       // New field
-  inclusivity_importance: z.string().optional(), // New field
-  suggestions: z.string().optional(),       // New field
+  session_frequency: z.string().optional(),
+  preferred_time: z.string().optional(),
+  music_genres: z.array(z.string()).optional(),
+  choir_goals: z.string().optional(),
+  inclusivity_importance: z.string().optional(),
+  suggestions: z.string().optional(),
 });
 
 type SurveyFormData = z.infer<typeof surveySchema>;
 
 const SurveyForm: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
-  const [surveyDataLoaded, setSurveyDataLoaded] = useState(false); // New state to track if survey data has been loaded
+  const [surveyDataLoaded, setSurveyDataLoaded] = useState(false);
+
+  const isLoadingAny = loadingUserSession || !surveyDataLoaded;
+  const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
@@ -191,7 +195,7 @@ const SurveyForm: React.FC = () => {
   };
 
   // The main loading condition for the component
-  if (loadingUserSession || !surveyDataLoaded) {
+  if (showDelayedSkeleton) { // Use the delayed skeleton state
     return (
       <Card className="p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader>

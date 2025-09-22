@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload";
-// SurveyForm is now on its own page, so it's removed from here.
+import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -24,13 +24,16 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-const ProfileDetails: React.FC = () => { // Renamed component
+const ProfileDetails: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
   const [profileDataLoaded, setProfileDataLoaded] = useState(false);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  const isLoadingAny = loadingUserSession || !profileDataLoaded;
+  const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -247,7 +250,7 @@ const ProfileDetails: React.FC = () => { // Renamed component
     console.log("[ProfileDetails Page] User logged out.");
   };
 
-  if (loadingUserSession || !profileDataLoaded) {
+  if (showDelayedSkeleton) { // Use the delayed skeleton state
     console.log("[ProfileDetails Page] Rendering skeleton due to loadingUserSession or !profileDataLoaded.");
     return (
       <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">

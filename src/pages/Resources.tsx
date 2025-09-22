@@ -17,6 +17,7 @@ import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 // Define the schema for a resource
 const resourceSchema = z.object({
@@ -43,7 +44,10 @@ const Resources: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
-  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const showDelayedSkeleton = useDelayedLoading(loadingResources); // Use the delayed loading hook
+
   console.log("[Resources Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
   const addForm = useForm<ResourceFormData>({
@@ -71,7 +75,7 @@ const Resources: React.FC = () => {
     }, 300); // Debounce search to avoid too many requests
 
     return () => clearTimeout(debounceTimeout);
-  }, [searchTerm, user]); // Re-fetch when search term changes or user changes (for permissions)
+  }, [searchTerm, user]);
 
   useEffect(() => {
     if (editingResource) {
@@ -135,7 +139,7 @@ const Resources: React.FC = () => {
       showSuccess("Resource added successfully!");
       addForm.reset();
       setIsAddDialogOpen(false);
-      fetchResources(searchTerm); // Refresh with current search term
+      fetchResources(searchTerm);
       console.log("[Resources Page] Resource added and list refreshed.");
     }
   };
@@ -159,7 +163,7 @@ const Resources: React.FC = () => {
         updated_at: new Date().toISOString(),
       })
       .eq("id", editingResource.id)
-      .eq("user_id", user.id); // Ensure only the owner can update
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("[Resources Page] Error updating resource:", error);
@@ -168,7 +172,7 @@ const Resources: React.FC = () => {
       showSuccess("Resource updated successfully!");
       setIsEditDialogOpen(false);
       setEditingResource(null);
-      fetchResources(searchTerm); // Refresh with current search term
+      fetchResources(searchTerm);
       console.log("[Resources Page] Resource updated and list refreshed.");
     }
   };
@@ -186,14 +190,14 @@ const Resources: React.FC = () => {
       .from("resources")
       .delete()
       .eq("id", resourceId)
-      .eq("user_id", user.id); // Ensure only the owner can delete
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("[Resources Page] Error deleting resource:", error);
       showError("Failed to delete resource.");
     } else {
       showSuccess("Resource deleted successfully!");
-      fetchResources(searchTerm); // Refresh with current search term
+      fetchResources(searchTerm);
       console.log("[Resources Page] Resource deleted and list refreshed.");
     }
   };
@@ -203,9 +207,9 @@ const Resources: React.FC = () => {
   return (
     <div className="space-y-6 py-8 animate-fade-in-up">
       <h1 className="text-4xl font-bold text-center font-lora">
-        {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
+        {showDelayedSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>
-      {loadingResources ? (
+      {showDelayedSkeleton ? (
         <div className="text-lg text-center text-muted-foreground">
           <Skeleton className="h-6 w-1/2 mx-auto" />
         </div>
@@ -227,9 +231,7 @@ const Resources: React.FC = () => {
             disabled={loadingResources}
           />
         </div>
-        {loadingResources ? (
-          <Skeleton className="h-10 w-48" />
-        ) : user ? (
+        {user ? (
           <>
             {console.log("[Resources Page] User is logged in, showing 'Add New Resource' button.")}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -286,8 +288,7 @@ const Resources: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {loadingResources ? (
-          // Render skeleton cards when loading
+        {showDelayedSkeleton ? (
           [...Array(3)].map((_, i) => (
             <Card key={i} className="shadow-lg rounded-xl">
               <CardHeader>
@@ -423,7 +424,6 @@ const Resources: React.FC = () => {
         )}
       </div>
 
-      {/* Edit Resource Dialog */}
       {editingResource && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">

@@ -21,6 +21,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -50,7 +51,10 @@ const Events: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { user, loading: loadingUserSession } = useSession();
-  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const showDelayedSkeleton = useDelayedLoading(loadingEvents); // Use the delayed loading hook
+
   console.log("[Events Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
   const addForm = useForm<EventFormData>({
@@ -82,7 +86,7 @@ const Events: React.FC = () => {
     }, 300); // Debounce search to avoid too many requests
 
     return () => clearTimeout(debounceTimeout);
-  }, [searchTerm, user]); // Re-fetch when search term changes or user changes (for permissions)
+  }, [searchTerm, user]);
 
   useEffect(() => {
     if (editingEvent) {
@@ -150,7 +154,7 @@ const Events: React.FC = () => {
       showSuccess("Event added successfully!");
       addForm.reset();
       setIsAddDialogOpen(false);
-      fetchEvents(searchTerm); // Refresh with current search term
+      fetchEvents(searchTerm);
       console.log("[Events Page] Event added and list refreshed.");
     }
   };
@@ -158,9 +162,9 @@ const Events: React.FC = () => {
   const onEditSubmit = async (data: EventFormData) => {
     console.log("[Events Page] Edit form submitted. Data:", data, "Editing Event ID:", editingEvent?.id);
     if (!user || !editingEvent) {
-      showError("You must be logged in and select an event to edit.");
-      console.error("[Events Page] Attempted to edit event without user or selected event.");
-      return;
+    showError("You must be logged in and select an event to edit.");
+    console.error("[Events Page] Attempted to edit event without user or selected event.");
+    return;
     }
 
     const { title, date, location, description, humanitix_link } = data;
@@ -173,10 +177,10 @@ const Events: React.FC = () => {
         location,
         description,
         humanitix_link: humanitix_link || null,
-        updated_at: new Date().toISOString(), // Add updated_at for tracking changes
+        updated_at: new Date().toISOString(),
       })
       .eq("id", editingEvent.id)
-      .eq("user_id", user.id); // Ensure only the owner can update
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("[Events Page] Error updating event:", error);
@@ -185,7 +189,7 @@ const Events: React.FC = () => {
       showSuccess("Event updated successfully!");
       setIsEditDialogOpen(false);
       setEditingEvent(null);
-      fetchEvents(searchTerm); // Refresh with current search term
+      fetchEvents(searchTerm);
       console.log("[Events Page] Event updated and list refreshed.");
     }
   };
@@ -203,14 +207,14 @@ const Events: React.FC = () => {
       .from("events")
       .delete()
       .eq("id", eventId)
-      .eq("user_id", user.id); // Ensure only the owner can delete
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("[Events Page] Error deleting event:", error);
       showError("Failed to delete event.");
     } else {
       showSuccess("Event deleted successfully!");
-      fetchEvents(searchTerm); // Refresh with current search term
+      fetchEvents(searchTerm);
       console.log("[Events Page] Event deleted and list refreshed.");
     }
   };
@@ -220,9 +224,9 @@ const Events: React.FC = () => {
   return (
     <div className="space-y-6 py-8 animate-fade-in-up">
       <h1 className="text-4xl font-bold text-center font-lora">
-        {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
+        {showDelayedSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>
-      {loadingEvents ? (
+      {showDelayedSkeleton ? (
         <div className="text-lg text-center text-muted-foreground">
           <Skeleton className="h-6 w-1/2 mx-auto" />
         </div>
@@ -244,9 +248,7 @@ const Events: React.FC = () => {
             disabled={loadingEvents}
           />
         </div>
-        {loadingEvents ? (
-          <Skeleton className="h-10 w-48" />
-        ) : user ? (
+        {user ? (
           <>
             {console.log("[Events Page] User is logged in, showing 'Add New Event' button.")}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -339,8 +341,7 @@ const Events: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {loadingEvents ? (
-          // Render skeleton cards when loading
+        {showDelayedSkeleton ? (
           [...Array(3)].map((_, i) => (
             <Card key={i} className="shadow-lg rounded-xl">
               <CardHeader>
@@ -520,7 +521,6 @@ const Events: React.FC = () => {
         )}
       </div>
 
-      {/* Edit Event Dialog */}
       {editingEvent && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
