@@ -67,7 +67,7 @@
     --muted-foreground: 220 10% 70%; /* Lighter muted foreground */
 
     --accent: 54 85% 70%; /* Brighter Vibrant Yellow */
-    --accent-foreground: 220 10% 15%; /* Dark Blue-Gray (for text on accent background) */
+    --accent-foreground: 0 0% 100%; /* Changed to White for better contrast */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
