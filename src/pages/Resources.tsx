@@ -374,7 +374,7 @@ const Resources: React.FC = () => {
 
       {/* Edit Resource Dialog */}
       {editingResource && (
-        <Dialog open={isEditDialogOpen} onOnOpenChange={setIsEditDialogOpen}>
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Resource</DialogTitle>
