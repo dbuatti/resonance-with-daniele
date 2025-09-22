@@ -57,10 +57,10 @@
     --popover: 220 10% 20%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 220 10% 20%; /* Dark blue-gray for primary backgrounds (e.g., header) */
+    --primary: 220 70% 40%; /* More saturated medium blue for primary backgrounds */
     --primary-foreground: 0 0% 100%; /* White for text on primary backgrounds */
 
-    --secondary: 220 20% 30%; /* Darker secondary for dark mode */
+    --secondary: 220 10% 35%; /* Lighter secondary for dark mode */
     --secondary-foreground: 0 0% 100%; /* White */
 
     --muted: 220 10% 25%; /* Darker muted for dark mode */
@@ -72,18 +72,18 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 10% 30%;
-    --input: 220 10% 30%;
-    --ring: 220 70% 40%;
+    --border: 220 10% 40%; /* Slightly lighter border for better visibility */
+    --input: 220 10% 40%; /* Slightly lighter input border/background */
+    --ring: 220 70% 40%; /* Matches new primary for focus rings */
 
     --sidebar-background: 220 10% 15%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 220 70% 40%;
+    --sidebar-primary: 220 70% 40%; /* Matches new primary */
     --sidebar-primary-foreground: 220 10% 15%;
     --sidebar-accent: 54 85% 70%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 10% 30%;
-    --sidebar-ring: 220 70% 40%;
+    --sidebar-border: 220 10% 40%; /* Matches new border */
+    --sidebar-ring: 220 70% 40%; /* Matches new primary */
   }
 }
 

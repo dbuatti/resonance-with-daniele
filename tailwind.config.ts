@@ -69,11 +69,11 @@ export default {
         // Custom colors for the hero section gradient with dark variants
         'hero-gradient-start': {
           DEFAULT: 'hsl(220 30% 98%)', // Very light blue
-          dark: 'hsl(220 10% 20%)',   // Darker blue-gray for dark mode
+          dark: 'hsl(220 15% 25%)',   // Slightly lighter dark blue-gray for dark mode
         },
         'hero-gradient-end': {
           DEFAULT: 'hsl(54 30% 98%)',   // Very light yellow
-          dark: 'hsl(54 10% 20%)',     // Darker yellow-gray for dark mode
+          dark: 'hsl(54 15% 25%)',     // Slightly lighter yellow-gray for dark mode
         },
         'hero-description-foreground': {
           DEFAULT: 'hsl(220 10% 40%)', // Muted foreground for description
