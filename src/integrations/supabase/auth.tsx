@@ -142,6 +142,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
             return true;
           }
 
+          // Deep compare user_metadata
           const oldMeta = oldUser.user_metadata || {};
           const newMeta = newUser.user_metadata || {};
 
