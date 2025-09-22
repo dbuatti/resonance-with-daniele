@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const Login: React.FC = () => {
+  useEffect(() => {
+    console.log('Current window.location.origin:', window.location.origin);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -31,7 +35,7 @@ const Login: React.FC = () => {
               },
             }}
             theme="light"
-            redirectTo={window.location.origin} // Redirects to the current origin after auth
+            redirectTo={window.location.origin}
           />
         </CardContent>
       </Card>
