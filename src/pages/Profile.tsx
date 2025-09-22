@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,10 +26,11 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const Profile: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileDataLoaded, setProfileDataLoaded] = useState(false); // New state to track if profile data has been loaded
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false); // For the save button spinner
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -39,48 +40,47 @@ const Profile: React.FC = () => {
     },
   });
 
-  const fetchProfile = async () => {
-    console.log("[Profile Page] fetchProfile: Fetching profile data.");
-    if (user) {
-      setLoadingProfile(true);
-      console.log(`[Profile Page] fetchProfile: Fetching profile for user ID: ${user.id}`);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, avatar_url")
-        .eq("id", user.id)
-        .single(); // Use .single() here as we expect one profile
+  const fetchProfileData = useCallback(async (userId: string) => {
+    console.log(`[Profile Page] fetchProfileData: Fetching profile for user ID: ${userId}`);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, avatar_url")
+      .eq("id", userId)
+      .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
-        console.error("[Profile Page] fetchProfile: Error fetching profile:", error);
-        showError("Failed to load profile data.");
-      } else if (data) {
-        console.log("[Profile Page] fetchProfile: Profile data fetched:", data);
-        form.reset({
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-        });
-        setCurrentAvatarUrl(data.avatar_url);
+    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
+      console.error("[Profile Page] fetchProfileData: Error fetching profile:", error);
+      showError("Failed to load profile data.");
+    } else if (data) {
+      console.log("[Profile Page] fetchProfileData: Profile data fetched:", data);
+      form.reset({
+        first_name: data.first_name || "",
+        last_name: data.last_name || "",
+      });
+      setCurrentAvatarUrl(data.avatar_url);
+    } else {
+      console.log("[Profile Page] fetchProfileData: No profile data found for user, initializing with empty values.");
+      form.reset({ first_name: "", last_name: "" });
+      setCurrentAvatarUrl(null);
+    }
+    setProfileDataLoaded(true); // Mark profile data as loaded
+    console.log("[Profile Page] fetchProfileData: Profile data loaded state set to true.");
+  }, [form]); // form is a dependency because form.reset is used
+
+  useEffect(() => {
+    console.log("[Profile Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id);
+    if (!loadingUserSession) {
+      if (user) {
+        // If user session is loaded and a user is present, fetch their profile data.
+        fetchProfileData(user.id);
       } else {
-        console.log("[Profile Page] fetchProfile: No profile data found for user, initializing with empty values.");
+        // If session is loaded but no user (e.g., logged out), reset states
+        setProfileDataLoaded(true); // No user, so no profile data to load, consider it "loaded"
         form.reset({ first_name: "", last_name: "" });
         setCurrentAvatarUrl(null);
       }
-      setLoadingProfile(false);
-      console.log("[Profile Page] fetchProfile: Profile loading state set to false.");
-    } else {
-      console.log("[Profile Page] fetchProfile: No user session, skipping profile fetch.");
-      setLoadingProfile(false);
     }
-  };
-
-  useEffect(() => {
-    if (!loadingUserSession) {
-      console.log("[Profile Page] useEffect: User session loaded, proceeding to fetch profile.");
-      fetchProfile();
-    } else {
-      console.log("[Profile Page] useEffect: User session still loading.");
-    }
-  }, [user, loadingUserSession]); // Removed 'form' from dependencies to prevent infinite loops
+  }, [user, loadingUserSession, fetchProfileData, form]); // Added fetchProfileData to dependencies
 
   const handleAvatarFileChange = (file: File | null) => {
     console.log("[Profile Page] Avatar file changed:", file ? file.name : 'null');
@@ -95,10 +95,12 @@ const Profile: React.FC = () => {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    setIsSavingProfile(true); // Start spinner for save button
     console.log("[Profile Page] Form submitted. Data:", data);
     if (!user) {
       showError("You must be logged in to update your profile.");
       console.error("[Profile Page] Attempted to submit profile without a user.");
+      setIsSavingProfile(false); // Stop spinner on error
       return;
     }
 
@@ -156,6 +158,7 @@ const Profile: React.FC = () => {
       showError("Failed to update avatar. Please try again.");
       form.setError("first_name", { message: "Avatar update failed." }); // Generic error for form
       console.error("[Profile Page] Avatar update failed due to upload/delete error.");
+      setIsSavingProfile(false); // Stop spinner on error
       return;
     }
 
@@ -177,6 +180,7 @@ const Profile: React.FC = () => {
     if (profileUpdateError) {
       console.error("[Profile Page] Error updating profile in DB:", profileUpdateError);
       showError("Failed to update profile: " + profileUpdateError.message);
+      setIsSavingProfile(false); // Stop spinner on error
       return;
     }
     console.log("[Profile Page] Profile table updated successfully.");
@@ -194,17 +198,19 @@ const Profile: React.FC = () => {
     if (authUpdateError) {
       console.error("[Profile Page] Error updating avatar URL in auth user metadata:", authUpdateError);
       showError("Failed to update avatar URL in user session.");
+      setIsSavingProfile(false); // Stop spinner on error
       return;
     }
     console.log("[Profile Page] Supabase Auth User updated:", updatedAuthUser);
 
     // Re-fetch profile data to ensure the form is reset with the latest information
-    await fetchProfile(); 
+    await fetchProfileData(user.id); 
 
     setCurrentAvatarUrl(newAvatarUrl);
     setSelectedAvatarFile(null); // Clear selected file after successful upload
     setRemoveAvatarRequested(false); // Reset removal request
     showSuccess("Profile updated successfully!");
+    setIsSavingProfile(false); // Stop spinner after successful save and re-fetch
     console.log("[Profile Page] Profile update process completed successfully.");
   };
 
@@ -214,8 +220,9 @@ const Profile: React.FC = () => {
     console.log("[Profile Page] User logged out.");
   };
 
-  if (loadingUserSession || loadingProfile) {
-    console.log("[Profile Page] Rendering skeleton due to loadingUserSession or loadingProfile.");
+  // The main loading condition for the component
+  if (loadingUserSession || !profileDataLoaded) {
+    console.log("[Profile Page] Rendering skeleton due to loadingUserSession or !profileDataLoaded.");
     return (
       <div className="container mx-auto px-4 py-8 md:py-12 animate-fade-in-up">
         <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
@@ -304,12 +311,12 @@ const Profile: React.FC = () => {
                 currentAvatarUrl={currentAvatarUrl}
                 onFileChange={handleAvatarFileChange}
                 onRemoveRequested={handleRemoveAvatarRequested}
-                isSaving={form.formState.isSubmitting}
+                isSaving={isSavingProfile} // Use new state for AvatarUpload
                 selectedFile={selectedAvatarFile}
               />
             )}
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? (
+            <Button type="submit" className="w-full" disabled={isSavingProfile}> {/* Use new state for button */}
+              {isSavingProfile ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
                 </>
