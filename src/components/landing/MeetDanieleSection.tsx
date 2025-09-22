@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 const MeetDanieleSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
-      <div className="text-center"> {/* Removed px-4 */}
+      <div className="max-w-4xl mx-auto px-4 text-center"> {/* Added px-4 for consistency */}
         <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora">Meet Daniele</h2>
         <Card className="max-w-3xl mx-auto p-8 shadow-lg rounded-xl flex flex-col md:flex-row items-center gap-8">
           <img
@@ -23,10 +23,10 @@ const MeetDanieleSection: React.FC = () => {
             </CardDescription>
             <CardContent className="p-0 space-y-4 text-muted-foreground">
               <p>
-                Daniele Buatti is a vocal coach, musical director, and lifelong music lover. With a passion for making singing accessible to everyone, Daniele leads the choir with warmth, energy, and a focus on connection through music.
+                I started Resonance with Daniele because I truly believe that singing is a fundamental human joy that should be accessible to everyone, regardless of experience. There's nothing quite like the feeling of creating harmony with others, and I wanted to build a space where that magic could happen for anyone who walks through the door.
               </p>
               <p>
-                His extensive experience in musical theatre and performance ensures a high-quality, yet always fun and supportive, environment for all singers.
+                With years of experience in musical theatre and performance, I lead the choir with warmth, energy, and a focus on connection through music. My goal is to create a high-quality, yet always fun and supportive, environment for all singers.
               </p>
               <Button variant="link" className="p-0 h-auto text-primary hover:underline" asChild>
                 <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer">

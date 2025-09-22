@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Eye } from "lucide-react";
+import { Loader2, Eye, Search } from "lucide-react"; // Added Search icon
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input"; // Added Input for search
 
 interface Profile {
   id: string;
@@ -47,6 +48,8 @@ const AdminMembers: React.FC = () => {
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [surveyStatusFilter, setSurveyStatusFilter] = useState<"all" | "responded" | "pending">("all");
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -54,6 +57,22 @@ const AdminMembers: React.FC = () => {
       showError("Access Denied: You must be an administrator to view this page.");
     }
   }, [user, loadingSession, navigate]);
+
+  // Helper function to determine if a profile has any survey responses
+  const hasSurveyResponses = (profile: Profile) => {
+    return (
+      profile.how_heard !== null ||
+      (profile.motivation && profile.motivation.length > 0) ||
+      profile.attended_session !== null ||
+      profile.singing_experience !== null ||
+      profile.session_frequency !== null ||
+      profile.preferred_time !== null ||
+      (profile.music_genres && profile.music_genres.length > 0) ||
+      profile.choir_goals !== null ||
+      profile.inclusivity_importance !== null ||
+      profile.suggestions !== null
+    );
+  };
 
   const fetchProfiles = async () => {
     if (user && user.is_admin) {
@@ -106,21 +125,18 @@ const AdminMembers: React.FC = () => {
     setIsUpdatingAdminStatus(null);
   };
 
-  // Helper function to determine if a profile has any survey responses
-  const hasSurveyResponses = (profile: Profile) => {
-    return (
-      profile.how_heard !== null ||
-      (profile.motivation && profile.motivation.length > 0) ||
-      profile.attended_session !== null ||
-      profile.singing_experience !== null ||
-      profile.session_frequency !== null ||
-      profile.preferred_time !== null ||
-      (profile.music_genres && profile.music_genres.length > 0) ||
-      profile.choir_goals !== null ||
-      profile.inclusivity_importance !== null ||
-      profile.suggestions !== null
-    );
-  };
+  const filteredProfiles = profiles.filter(profile => {
+    const matchesSearch = searchTerm === "" ||
+      profile.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesSurveyStatus = surveyStatusFilter === "all" ||
+      (surveyStatusFilter === "responded" && hasSurveyResponses(profile)) ||
+      (surveyStatusFilter === "pending" && !hasSurveyResponses(profile));
+
+    return matchesSearch && matchesSurveyStatus;
+  });
 
   if (loadingProfiles) {
     return (
@@ -153,7 +169,7 @@ const AdminMembers: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed container mx-auto */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">Manage Member Profiles</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         View and manage all registered member profiles, including their roles.
@@ -165,10 +181,36 @@ const AdminMembers: React.FC = () => {
           <CardDescription>Change user roles or view their detailed survey responses.</CardDescription>
         </CardHeader>
         <CardContent>
-          {profiles.length === 0 ? (
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <div className="relative w-full sm:w-1/2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 w-full"
+              />
+            </div>
+            <Select
+              value={surveyStatusFilter}
+              onValueChange={(value: "all" | "responded" | "pending") => setSurveyStatusFilter(value)}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by Survey Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Members</SelectItem>
+                <SelectItem value="responded">Responded</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {filteredProfiles.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              <p className="text-xl font-semibold">No profiles found.</p>
-              <p className="mt-2">It looks like no members have registered yet.</p>
+              <p className="text-xl font-semibold">No profiles found matching your criteria.</p>
+              <p className="mt-2">Try adjusting your search or filters.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -183,10 +225,10 @@ const AdminMembers: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {profiles.map((profile) => (
+                  {filteredProfiles.map((profile) => (
                     <TableRow key={profile.id}>
                       <TableCell className="font-medium">
-                        {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}
+                        {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email?.split('@')[0] || "N/A"}
                       </TableCell>
                       <TableCell>
                         {profile.email || "N/A"}
@@ -208,9 +250,9 @@ const AdminMembers: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {hasSurveyResponses(profile) ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">Responded</Badge>
+                          <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Responded</Badge>
                         ) : (
-                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Pending</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-right">

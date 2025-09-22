@@ -9,14 +9,20 @@ const HeroSection: React.FC = () => {
     <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end dark:from-hero-gradient-start-dark dark:to-hero-gradient-end-dark py-24 md:py-40 text-center overflow-hidden rounded-xl shadow-lg">
       <div className="relative z-10"> {/* Removed px-4 */}
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 font-lora text-foreground">
-          Sing. Connect. Shine. <br className="hidden sm:inline" /> Join Melbourne’s Pop-Up Choir with Daniele.
+          Sing. Connect. Shine. <br className="hidden sm:inline" /> Join Melbourne’s Flexible Choir with Daniele.
         </h1>
         <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-foreground">
-          A joyful, welcoming space I've created for anyone who loves to sing — no experience needed.
+          A joyful, welcoming space I've created for all voices, all identities, and anyone who loves to sing — no experience needed!
         </p>
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 flex-wrap">
           <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border border-muted-foreground/30" asChild>
             <Link to="/login">Sign Up Now</Link>
+          </Button>
+          <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 dark:border-primary-foreground dark:text-primary-foreground dark:hover:bg-primary-foreground/10" asChild>
+            <Link to="/#about-choir">Learn More</Link>
+          </Button>
+          <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 dark:border-primary-foreground dark:text-primary-foreground dark:hover:bg-primary-foreground/10" asChild>
+            <Link to="/events">See Upcoming Events</Link>
           </Button>
         </div>
       </div>

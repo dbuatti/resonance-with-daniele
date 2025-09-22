@@ -30,8 +30,8 @@ const ResourcesBenefitsSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground">
-      <div> {/* Removed px-4 */}
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora">What You Get</h2>
+      <div className="max-w-4xl mx-auto px-4"> {/* Added px-4 for consistency */}
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora">Your Benefits as a Member</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {benefits.map((benefit, index) => (
             <Card key={index} className="text-center p-6 shadow-lg rounded-xl">

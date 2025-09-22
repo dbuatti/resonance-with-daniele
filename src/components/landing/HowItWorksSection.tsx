@@ -18,8 +18,8 @@ const HowItWorksSection: React.FC = () => {
     },
     {
       icon: <Calendar className="h-8 w-8 text-primary" />,
-      title: "Attend Rehearsals",
-      description: "Join my weekly sessions or one-off pop-up events, tailored for all levels.",
+      title: "Attend Flexible Sessions",
+      description: "Join my flexible sessions or one-off pop-up events, tailored for all levels.",
     },
     {
       icon: <Mic className="h-8 w-8 text-primary" />,
@@ -30,7 +30,7 @@ const HowItWorksSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground">
-      <div> {/* Removed px-4 */}
+      <div className="max-w-4xl mx-auto px-4"> {/* Added px-4 for consistency */}
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora">How It Works</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => (
