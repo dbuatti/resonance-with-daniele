@@ -8,6 +8,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 } else {
   console.log('Supabase URL loaded:', supabaseUrl ? 'Yes' : 'No');
   console.log('Supabase Anon Key loaded:', supabaseAnonKey ? 'Yes' : 'No');
+  console.log('Supabase URL value:', supabaseUrl); // Added for explicit check
+  console.log('Supabase Anon Key value:', supabaseAnonKey); // Added for explicit check
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
