@@ -10,7 +10,7 @@ const Resources: React.FC = () => {
       <div className="space-y-6 py-8">
         <h1 className="text-4xl font-bold text-center font-lora animate-fade-in-up">Choir Resources</h1>
         <p className="text-lg text-center text-muted-foreground animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          This is where you'll find all the sheet music, practice tracks, and other materials for the choir.
+          This is where you'll find all the sheet music, practice tracks, and other materials I've prepared for the choir.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">

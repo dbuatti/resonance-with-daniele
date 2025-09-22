@@ -70,7 +70,7 @@ const FeaturedSection: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <p className="text-md text-muted-foreground">
-                  {featuredEvent.description || "Join us for this exciting upcoming event!"}
+                  {featuredEvent.description || "Join me for this exciting upcoming event!"}
                 </p>
                 <Button size="lg" asChild>
                   <Link to={featuredEvent.humanitix_link || "/events"}>
@@ -82,7 +82,7 @@ const FeaturedSection: React.FC = () => {
           ) : (
             <CardContent className="space-y-4">
               <p className="text-xl font-semibold text-muted-foreground font-lora">No upcoming events at the moment.</p>
-              <p className="text-md text-muted-foreground">Check back soon or explore our past events!</p>
+              <p className="text-md text-muted-foreground">Check back soon or explore my past events!</p>
               <Button size="lg" asChild>
                 <Link to="/events">View All Events</Link>
               </Button>

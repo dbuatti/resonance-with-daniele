@@ -33,7 +33,7 @@ const WelcomeHub: React.FC = () => {
           <ul className="list-disc list-inside space-y-2 pl-4">
             <li className="flex items-start gap-2">
               <CalendarDays className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-              <span><span className="font-semibold text-foreground">Rehearsals & Events:</span> See our calendar, RSVP, and get updates in real time.</span>
+              <span><span className="font-semibold text-foreground">Rehearsals & Events:</span> See the calendar, RSVP, and get updates in real time.</span>
             </li>
             <li className="flex items-start gap-2">
               <Music className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
@@ -53,7 +53,7 @@ const WelcomeHub: React.FC = () => {
             </li>
           </ul>
           <p>
-            No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. We celebrate all voices and all identities, and everyone is invited to shine their unique light here.
+            No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. I celebrate all voices and all identities, and everyone is invited to shine their unique light here.
           </p>
           <p className="text-center">
             💡 Learn more about me and my work:{" "}

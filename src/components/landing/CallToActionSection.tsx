@@ -12,7 +12,7 @@ const CallToActionSection: React.FC = () => {
           Ready to find your voice?
         </h2>
         <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          Join our choir today — no experience needed!
+          Join my choir today — no experience needed!
         </p>
         <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 animate-fade-in-up" style={{ animationDelay: '0.4s' }} asChild>
           <Link to="/login">Sign Up Now</Link>

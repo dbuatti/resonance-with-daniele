@@ -12,7 +12,7 @@ const FooterSection: React.FC = () => {
         <div>
           <h3 className="text-xl font-bold mb-4">Resonance with Daniele</h3>
           <p className="text-muted-foreground">
-            A joyful, welcoming space for anyone who loves to sing.
+            A joyful, welcoming space I've created for anyone who loves to sing.
           </p>
         </div>
 

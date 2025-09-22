@@ -135,7 +135,7 @@ const Events: React.FC = () => {
       <div className="space-y-6 py-8">
         <h1 className="text-4xl font-bold text-center font-lora animate-fade-in-up">Upcoming Events</h1>
         <p className="text-lg text-center text-muted-foreground animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          Stay up-to-date with all our choir's performances, rehearsals, and social gatherings.
+          Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
         </p>
 
         <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>

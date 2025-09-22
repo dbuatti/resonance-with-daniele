@@ -9,7 +9,7 @@ const HowItWorksSection: React.FC = () => {
     {
       icon: <UserPlus className="h-8 w-8 text-primary" />,
       title: "Sign Up",
-      description: "Join online in seconds and become part of our vibrant community.",
+      description: "Join online in seconds and become part of my vibrant community.",
     },
     {
       icon: <BookOpen className="h-8 w-8 text-primary" />,
@@ -19,7 +19,7 @@ const HowItWorksSection: React.FC = () => {
     {
       icon: <Calendar className="h-8 w-8 text-primary" />,
       title: "Attend Rehearsals",
-      description: "Join our weekly sessions or one-off pop-up events, tailored for all levels.",
+      description: "Join my weekly sessions or one-off pop-up events, tailored for all levels.",
     },
     {
       icon: <Mic className="h-8 w-8 text-primary" />,
