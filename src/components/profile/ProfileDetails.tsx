@@ -113,119 +113,123 @@ const ProfileDetails: React.FC = () => { // Renamed component
   const onSubmit = async (data: ProfileFormData) => {
     setIsSavingProfile(true);
     console.log("[ProfileDetails Page] Form submitted. Data:", data);
-    if (!user) {
-      showError("You must be logged in to update your profile.");
-      console.error("[ProfileDetails Page] Attempted to submit profile without a user.");
-      setIsSavingProfile(false);
-      return;
-    }
 
-    let newAvatarUrl: string | null = currentAvatarUrl;
-    let uploadError: Error | null = null;
-    let deleteError: Error | null = null;
-
-    if (removeAvatarRequested && currentAvatarUrl) {
-      console.log("[ProfileDetails Page] Processing avatar removal.");
-      const urlParts = currentAvatarUrl.split('/');
-      const fileNameWithFolder = urlParts.slice(urlParts.indexOf('avatars') + 1).join('/');
-      const { error } = await supabase.storage
-        .from("avatars")
-        .remove([fileNameWithFolder]);
-
-      if (error) {
-        console.error("[ProfileDetails Page] Error removing avatar:", error);
-        deleteError = error;
-      } else {
-        newAvatarUrl = null;
-        showSuccess("Avatar removed successfully!");
-        console.log("[ProfileDetails Page] Avatar removed from storage.");
+    try {
+      if (!user) {
+        showError("You must be logged in to update your profile.");
+        console.error("[ProfileDetails Page] Attempted to submit profile without a user.");
+        return;
       }
-    }
 
-    if (selectedAvatarFile) {
-      console.log("[ProfileDetails Page] Processing new avatar upload.");
-      const fileExt = selectedAvatarFile.name.split(".").pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      let newAvatarUrl: string | null = currentAvatarUrl;
+      let uploadError: Error | null = null;
+      let deleteError: Error | null = null;
 
-      const { error: uploadErr } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, selectedAvatarFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadErr) {
-        console.error("[ProfileDetails Page] Error uploading avatar:", uploadErr);
-        uploadError = uploadErr;
-      } else {
-        const { data: publicUrlData } = supabase.storage
+      if (removeAvatarRequested && currentAvatarUrl) {
+        console.log("[ProfileDetails Page] Processing avatar removal.");
+        const urlParts = currentAvatarUrl.split('/');
+        const fileNameWithFolder = urlParts.slice(urlParts.indexOf('avatars') + 1).join('/');
+        const { error } = await supabase.storage
           .from("avatars")
-          .getPublicUrl(filePath);
-        newAvatarUrl = publicUrlData?.publicUrl || null;
-        showSuccess("Avatar uploaded successfully!");
-        console.log("[ProfileDetails Page] Avatar uploaded to storage. New URL:", newAvatarUrl);
+          .remove([fileNameWithFolder]);
+
+        if (error) {
+          console.error("[ProfileDetails Page] Error removing avatar:", error);
+          deleteError = error;
+        } else {
+          newAvatarUrl = null;
+          showSuccess("Avatar removed successfully!");
+          console.log("[ProfileDetails Page] Avatar removed from storage.");
+        }
       }
-    }
 
-    if (uploadError || deleteError) {
-      showError("Failed to update avatar. Please try again.");
-      form.setError("first_name", { message: "Avatar update failed." });
-      console.error("[ProfileDetails Page] Avatar update failed due to upload/delete error.");
-      setIsSavingProfile(false);
-      return;
-    }
+      if (selectedAvatarFile) {
+        console.log("[ProfileDetails Page] Processing new avatar upload.");
+        const fileExt = selectedAvatarFile.name.split(".").pop();
+        const fileName = `${user.id}-${Math.random()}.${fileExt}`; // Ensure unique file name within user folder
+        const filePath = `${user.id}/${fileName}`;
 
-    console.log("[ProfileDetails Page] Updating profiles table.");
-    const { error: profileUpdateError } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: user.id,
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(filePath, selectedAvatarFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadErr) {
+          console.error("[ProfileDetails Page] Error uploading avatar:", uploadErr);
+          uploadError = uploadErr;
+        } else {
+          const { data: publicUrlData } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(filePath);
+          newAvatarUrl = publicUrlData?.publicUrl || null;
+          showSuccess("Avatar uploaded successfully!");
+          console.log("[ProfileDetails Page] Avatar uploaded to storage. New URL:", newAvatarUrl);
+        }
+      }
+
+      if (uploadError || deleteError) {
+        showError("Failed to update avatar. Please try again.");
+        form.setError("first_name", { message: "Avatar update failed." });
+        console.error("[ProfileDetails Page] Avatar update failed due to upload/delete error.");
+        return;
+      }
+
+      console.log("[ProfileDetails Page] Updating profiles table.");
+      const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: user.id,
+            first_name: data.first_name || null,
+            last_name: data.last_name || null,
+            avatar_url: newAvatarUrl,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+
+      if (profileUpdateError) {
+        console.error("[ProfileDetails Page] Error updating profile in DB:", profileUpdateError);
+        showError("Failed to update profile: " + profileUpdateError.message);
+        return;
+      }
+      console.log("[ProfileDetails Page] Profile table updated successfully.");
+
+      console.log("[ProfileDetails Page] Updating user metadata in Supabase Auth.");
+      const { data: { user: updatedAuthUser }, error: authUpdateError } = await supabase.auth.updateUser({
+        data: { 
           first_name: data.first_name || null,
           last_name: data.last_name || null,
-          avatar_url: newAvatarUrl,
-          updated_at: new Date().toISOString(),
+          avatar_url: newAvatarUrl 
         },
-        { onConflict: "id" }
-      );
+      });
 
-    if (profileUpdateError) {
-      console.error("[ProfileDetails Page] Error updating profile in DB:", profileUpdateError);
-      showError("Failed to update profile: " + profileUpdateError.message);
+      if (authUpdateError) {
+        console.error("[ProfileDetails Page] Error updating avatar URL in auth user metadata:", authUpdateError);
+        showError("Failed to update avatar URL in user session.");
+        return;
+      }
+      console.log("[ProfileDetails Page] Supabase Auth User updated:", updatedAuthUser);
+
+      form.reset({
+        first_name: data.first_name || "",
+        last_name: data.last_name || "",
+      });
+      setCurrentAvatarUrl(newAvatarUrl);
+      setSelectedAvatarFile(null);
+      setRemoveAvatarRequested(false);
+      setProfileDataLoaded(true);
+      showSuccess("Profile updated successfully!");
+      console.log("[ProfileDetails Page] Profile update process completed successfully.");
+
+    } catch (error: any) {
+      console.error("[ProfileDetails Page] Unexpected error during profile update:", error);
+      showError("An unexpected error occurred: " + error.message);
+    } finally {
       setIsSavingProfile(false);
-      return;
     }
-    console.log("[ProfileDetails Page] Profile table updated successfully.");
-
-    console.log("[ProfileDetails Page] Updating user metadata in Supabase Auth.");
-    const { data: { user: updatedAuthUser }, error: authUpdateError } = await supabase.auth.updateUser({
-      data: { 
-        first_name: data.first_name || null,
-        last_name: data.last_name || null,
-        avatar_url: newAvatarUrl 
-      },
-    });
-
-    if (authUpdateError) {
-      console.error("[ProfileDetails Page] Error updating avatar URL in auth user metadata:", authUpdateError);
-      showError("Failed to update avatar URL in user session.");
-      setIsSavingProfile(false);
-      return;
-    }
-    console.log("[ProfileDetails Page] Supabase Auth User updated:", updatedAuthUser);
-
-    form.reset({
-      first_name: data.first_name || "",
-      last_name: data.last_name || "",
-    });
-    setCurrentAvatarUrl(newAvatarUrl);
-    setSelectedAvatarFile(null);
-    setRemoveAvatarRequested(false);
-    setProfileDataLoaded(true);
-    showSuccess("Profile updated successfully!");
-    setIsSavingProfile(false);
-    console.log("[ProfileDetails Page] Profile update process completed successfully.");
   };
 
   const handleLogout = async () => {

@@ -26,7 +26,7 @@ interface Profile {
 }
 
 interface CustomUser extends User {
-  is_admin?: boolean;
+  is_admin: boolean; // Make it non-optional
 }
 
 interface SessionContextType {
@@ -46,6 +46,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   const userRef = useRef<CustomUser | null>(user);
   const sessionRef = useRef<Session | null>(session);
+  const initialSessionHandledRef = useRef(false); // New ref to track initial session handling
 
   useEffect(() => {
     userRef.current = user;
@@ -98,6 +99,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       
       setUser(userWithAdminStatus); // Set user *once* with correct admin status
       setLoading(false);
+      initialSessionHandledRef.current = true; // Mark initial session as handled
       console.log("[SessionContext] Initial session processed. Loading set to false. User with admin status set.");
 
       // Handle redirects based on initial session and admin status
@@ -116,6 +118,12 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
         console.log(`[SessionContext] Auth state changed (listener): Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
         
+        // If this is an INITIAL_SESSION event and we've already handled it, skip to prevent redundant updates
+        if (event === 'INITIAL_SESSION' && initialSessionHandledRef.current) {
+          console.log("[SessionContext] Skipping redundant INITIAL_SESSION event from listener.");
+          return;
+        }
+
         let newUserWithAdminStatus: CustomUser | null = null;
         if (currentSession?.user) {
           const isAdmin = await fetchIsAdminStatus(currentSession.user.id, currentSession.user.email);
@@ -135,7 +143,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
           if (oldUser.id !== newUser.id) return true;
           if (oldUser.email !== newUser.email) return true;
-          if (oldUser.is_admin !== newUser.is_admin) return true; // Crucial check for admin status change
+          if (oldUser.is_admin !== newUser.is_admin) return true; 
           
           const oldMeta = oldUser.user_metadata || {};
           const newMeta = newUser.user_metadata || {};
@@ -189,7 +197,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     getInitialSessionAndSetupListener();
 
-  }, [navigate, fetchIsAdminStatus, location.pathname]); // Added location.pathname to dependencies for redirect logic
+  }, [navigate, fetchIsAdminStatus, location.pathname]);
 
   const contextValue = { session, user, loading };
   console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin);
