@@ -25,8 +25,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      {/* Removed shadcn/ui Toaster as sonner is used */}
-      <Sonner />
+      {/* Temporarily removed Sonner Toaster to diagnose iOS white box issue */}
+      {/* <Sonner /> */}
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <BrowserRouter>
           <SessionContextProvider>
