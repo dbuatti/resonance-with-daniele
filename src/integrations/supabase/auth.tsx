@@ -119,18 +119,46 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         const processedUser = await processUserAndProfile(currentSession?.user || null);
 
         const userChanged = (oldUser: CustomUser | null, newUser: CustomUser | null) => {
-          if (oldUser === null && newUser === null) return false;
-          if (oldUser === null || newUser === null) return true;
-          if (oldUser.id !== newUser.id) return true;
-          if (oldUser.email !== newUser.email) return true;
-          if (oldUser.is_admin !== newUser.is_admin) return true;
+          console.log("--- userChanged comparison ---");
+          console.log("Old User (ref):", oldUser);
+          console.log("New User (processed):", newUser);
+
+          if (!oldUser && !newUser) return false;
+          if (!oldUser || !newUser) {
+            console.log("[SessionContext] User changed: one is null, other isn't.");
+            return true;
+          }
+
+          if (oldUser.id !== newUser.id) {
+            console.log("[SessionContext] User changed: ID mismatch.");
+            return true;
+          }
+          if (oldUser.email !== newUser.email) {
+            console.log("[SessionContext] User changed: Email mismatch.");
+            return true;
+          }
+          if (oldUser.is_admin !== newUser.is_admin) {
+            console.log("[SessionContext] User changed: Admin status mismatch.");
+            return true;
+          }
 
           const oldMeta = oldUser.user_metadata || {};
           const newMeta = newUser.user_metadata || {};
-          if (oldMeta.first_name !== newMeta.first_name) return true;
-          if (oldMeta.last_name !== newMeta.last_name) return true;
-          if (oldMeta.avatar_url !== newMeta.avatar_url) return true;
 
+          if (oldMeta.first_name !== newMeta.first_name) {
+            console.log(`[SessionContext] User changed: First name mismatch. Old: ${oldMeta.first_name}, New: ${newMeta.first_name}`);
+            return true;
+          }
+          if (oldMeta.last_name !== newMeta.last_name) {
+            console.log(`[SessionContext] User changed: Last name mismatch. Old: ${oldMeta.last_name}, New: ${newMeta.last_name}`);
+            return true;
+          }
+          if (oldMeta.avatar_url !== newMeta.avatar_url) {
+            console.log(`[SessionContext] User changed: Avatar URL mismatch. Old: ${oldMeta.avatar_url}, New: ${newMeta.avatar_url}`);
+            return true;
+          }
+          
+          console.log("[SessionContext] User unchanged.");
           return false;
         };
 
