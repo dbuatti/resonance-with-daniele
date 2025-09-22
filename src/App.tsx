@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster as Sonner } = from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -14,10 +14,10 @@ import React from "react"; // Import React for Fragment
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <React.Fragment> {/* This Fragment is the single child of QueryClientProvider */}
-      <TooltipProvider> {/* TooltipProvider now wraps the main routing logic */}
-        <BrowserRouter>
+  <React.Fragment> {/* This Fragment is the single element returned by the App component */}
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider> {/* TooltipProvider is the single child of QueryClientProvider */}
+        <BrowserRouter> {/* BrowserRouter is the single child of TooltipProvider */}
           <SessionContextProvider>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -30,11 +30,11 @@ const App = () => (
           </SessionContextProvider>
         </BrowserRouter>
       </TooltipProvider>
-      {/* Toaster and Sonner are now siblings to TooltipProvider, at the top level */}
-      <Toaster />
-      <Sonner />
-    </React.Fragment>
-  </QueryClientProvider>
+    </QueryClientProvider>
+    {/* Toaster and Sonner are now siblings to the entire provider chain, at the top level */}
+    <Toaster />
+    <Sonner />
+  </React.Fragment>
 );
 
 export default App;
