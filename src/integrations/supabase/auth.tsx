@@ -33,16 +33,15 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       console.log("[SessionContext] Raw currentUser from session:", currentUser);
 
       if (currentUser) {
-        console.log(`[SessionContext] Fetching is_admin status for user ID: ${currentUser.id}`);
-        // Removed .single() to avoid potential 406 issues if no row is found or multiple are returned
+        console.log(`[SessionContext] Fetching profile data for user ID: ${currentUser.id}`);
+        // Changed to select all columns to debug 406 error
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('is_admin')
+          .select('*') // Select all columns
           .eq('id', currentUser.id);
 
         if (profileError) {
-          console.error("[SessionContext] Error fetching admin status:", profileError);
-          // Even with an error, ensure is_admin is set to false
+          console.error("[SessionContext] Error fetching profile data:", profileError);
           currentUser = { ...currentUser, is_admin: false };
         } else if (profileData && profileData.length > 0) {
           // Access is_admin from the first item in the array
