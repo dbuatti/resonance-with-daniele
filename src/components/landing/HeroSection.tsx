@@ -18,9 +18,6 @@ const HeroSection: React.FC = () => {
           <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
             <Link to="/login">Sign Up Now</Link>
           </Button>
-          <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary" asChild>
-            <Link to="/events">Learn More</Link>
-          </Button>
         </div>
       </div>
       {/* Optional: Add background visuals here */}
