@@ -9,15 +9,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const Index: React.FC = () => {
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-center text-center space-y-8 py-16"> {/* Consistent vertical padding */}
+      <div className="flex flex-col items-center justify-center text-center space-y-8 py-16">
         <h1 className="text-5xl font-extrabold tracking-tight lg:text-6xl">
-          Resonance with Daniele
+          Welcome to the Resonance with Daniele Hub!
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl">
-          Your central hub for all things choir-related: resources, events, and important announcements.
+        <p className="text-2xl font-semibold text-primary">
+          🎶 Sing. Connect. Shine. 🎶
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="max-w-3xl text-lg text-muted-foreground space-y-6 text-left">
+          <p>
+            Welcome! I’m Daniele Buatti, and I’m thrilled to share this space with you. I’ve been working in musical theatre, vocal coaching, and music direction for years, and I believe in the transformative power of singing — not just as performance, but as connection, expression, and joy.
+          </p>
+          <p>
+            This hub is your go-to space for everything choir-related:
+          </p>
+          <ul className="list-disc list-inside space-y-2 pl-4">
+            <li><span className="font-semibold text-foreground">Rehearsals & Events:</span> See our calendar, RSVP, and get updates in real time.</li>
+            <li><span className="font-semibold text-foreground">Songs & Resources:</span> Access sheet music, audio tracks, and video tutorials to guide your practice.</li>
+            <li><span className="font-semibold text-foreground">Vocal Exercises & Warm-Ups:</span> Explore exercises to strengthen, release, and resonate your voice.</li>
+            <li><span className="font-semibold text-foreground">Community & Connection:</span> Chat, share, and celebrate with fellow singers.</li>
+            <li><span className="font-semibold text-foreground">Performance Highlights & Media:</span> Relive moments from past concerts or see what’s coming next.</li>
+          </ul>
+          <p>
+            No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. We celebrate all voices and all identities, and everyone is invited to shine their unique light here.
+          </p>
+          <p className="font-semibold">
+            💡 Learn more about me and my work:{" "}
+            <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              DanieleBuatti.com
+            </a>
+          </p>
+          <p className="text-right font-semibold text-foreground">
+            — Daniele
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <Button size="lg" asChild>
             <Link to="/resources">Explore Resources</Link>
           </Button>
