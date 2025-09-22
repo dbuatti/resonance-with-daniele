@@ -89,14 +89,28 @@
 
 @layer base {
   html {
-    height: 100%; /* Ensure html takes full height */
-    @apply bg-background; /* Apply Tailwind background */
+    height: 100%;
+    @apply bg-background;
   }
   body {
-    height: 100%; /* Ensure body takes full height */
-    background-color: hsl(var(--background)); /* Explicit background-color for iOS Safari */
+    height: 100%;
+    background-color: hsl(var(--background));
     @apply bg-background text-foreground font-sans;
-    min-height: 100vh; /* Ensure body always takes full viewport height */
+    min-height: 100vh;
+    /* Create a fixed background layer to prevent white overscroll on iOS */
+    position: relative;
+    z-index: 0;
+  }
+  /* Fixed background pseudo-element to cover the entire viewport */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: hsl(var(--background));
+    z-index: -1;
   }
 
   * {
