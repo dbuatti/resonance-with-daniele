@@ -72,14 +72,17 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     return () => subscription.unsubscribe();
   }, [queryClient]); // Add queryClient to dependencies
 
+  // Define the queryKey as a const tuple for better type inference
+  const profileQueryKey = ['profile', session?.user?.id] as const;
+
   // Use react-query to fetch and cache the user profile
   const { data: profile, isLoading: profileLoading } = useQuery<
     Profile | null, // TQueryFnData: The type of data returned by the queryFn
     Error,          // TError: The type of error that can be thrown
     Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
-    QueryKey        // TQueryKey: Explicitly define the QueryKey type to allow flexible array elements
+    typeof profileQueryKey // TQueryKey: Use the inferred type of the const tuple
   >({
-    queryKey: ['profile', session?.user?.id],
+    queryKey: profileQueryKey,
     queryFn: async () => {
       if (!session?.user?.id) {
         console.log("[SessionContext] No user ID, skipping profile fetch.");
