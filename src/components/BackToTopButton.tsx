@@ -37,7 +37,7 @@ const BackToTopButton: React.FC = () => {
       onClick={scrollToTop}
       className={cn(
         "fixed bottom-8 right-8 p-3 rounded-full shadow-lg transition-opacity duration-300 z-50",
-        isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+        isVisible ? "opacity-100" : "opacity-0 hidden" // Changed to use 'hidden'
       )}
       size="icon"
     >
