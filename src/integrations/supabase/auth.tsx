@@ -76,6 +76,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const { data: profile, isLoading: profileLoading } = useQuery<
     Profile | null, // TQueryFnData: The type of data returned by the queryFn
     Error,          // TError: The type of error that can be thrown
+    Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
     ['profile', string | null | undefined] // TQueryKey: Explicitly define the tuple type here
   >({
     queryKey: ['profile', session?.user?.id],
