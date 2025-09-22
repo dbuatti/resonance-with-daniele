@@ -132,7 +132,6 @@ const Profile: React.FC = () => {
         <p className="text-lg text-muted-foreground">Please log in to view your profile.</p>
       </div>
     );
-  );
   }
 
   const currentFirstName = form.watch("first_name");
