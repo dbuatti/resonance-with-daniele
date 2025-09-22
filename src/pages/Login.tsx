@@ -8,9 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const Login: React.FC = () => {
-  useEffect(() => {
-    console.log('Current window.location.origin:', window.location.origin);
-  }, []);
+  // Removed console.log as it has served its purpose.
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
