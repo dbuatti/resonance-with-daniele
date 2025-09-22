@@ -186,7 +186,11 @@ const Profile: React.FC = () => {
     // Update user's metadata in Supabase Auth to ensure session sync
     console.log("[Profile Page] Updating user metadata in Supabase Auth.");
     const { data: { user: updatedAuthUser }, error: authUpdateError } = await supabase.auth.updateUser({
-      data: { avatar_url: newAvatarUrl },
+      data: { 
+        first_name: data.first_name || null, // Add first_name to auth metadata
+        last_name: data.last_name || null,   // Add last_name to auth metadata
+        avatar_url: newAvatarUrl 
+      },
     });
 
     if (authUpdateError) {
