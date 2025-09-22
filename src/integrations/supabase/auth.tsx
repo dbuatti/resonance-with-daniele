@@ -32,8 +32,8 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           navigate('/');
         }
       } else {
-        // If user is not logged in and not on the login or home page, redirect to login
-        if (location.pathname !== '/login' && location.pathname !== '/') {
+        // If user is not logged in and not on the login, home, events, or resources page, redirect to login
+        if (location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
           navigate('/login');
         }
       }
