@@ -7,12 +7,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useTheme } from 'next-themes'; // Import useTheme
 
 const Login: React.FC = () => {
   const redirectToUrl = window.location.origin + '/';
+  const { resolvedTheme } = useTheme(); // Get the resolved theme
+
+  // Determine the theme for Supabase Auth UI
+  const authTheme = resolvedTheme === 'dark' ? 'dark' : 'light';
 
   return (
-    <div className="container mx-auto"> {/* Added container mx-auto here */}
+    <div className="container mx-auto">
       <div className="flex flex-col items-center justify-center p-4 min-h-[calc(100vh-80px)]">
         <div className="p-8 max-w-md w-full bg-card rounded-xl shadow-2xl border-2 border-primary/20">
           <h2 className="text-3xl font-bold text-center mb-8 text-foreground font-lora">Login to Resonance with Daniele</h2>
@@ -30,7 +35,7 @@ const Login: React.FC = () => {
                 },
               },
             }}
-            theme="light"
+            theme={authTheme} {/* Use the dynamically determined theme */}
             redirectTo={redirectToUrl}
           />
           <div className="mt-6 text-center">

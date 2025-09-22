@@ -9,7 +9,7 @@ const HUMANITIX_EVENT_URL = "https://events.humanitix.com/melbourne-pop-up-choir
 
 const CurrentEventPage: React.FC = () => {
   return (
-    <div className="py-8 md:py-12 space-y-6">
+    <div className="container mx-auto py-8 md:py-12 space-y-6"> {/* Added container mx-auto here */}
       <Card className="p-6 md:p-8 shadow-lg rounded-xl border-2 border-primary">
         <CardHeader className="text-center">
           <CardTitle className="text-4xl font-bold font-lora">COMING UP!</CardTitle>
@@ -18,7 +18,7 @@ const CurrentEventPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-xl border border-border h-[80vh]"> {/* Changed: Removed aspect-video and min-h-[300px], added h-[80vh] */}
+          <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-xl border border-border aspect-video max-h-[80vh]"> {/* Changed: Added aspect-video and max-h-[80vh] */}
             <iframe
               src={HUMANITIX_EVENT_URL}
               title="Humanitix Current Event"

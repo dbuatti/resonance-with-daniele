@@ -26,8 +26,9 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
       location.pathname === path ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-primary/5"
     );
 
+  // Prioritize profile data for display name and avatar
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
+  const avatarUrl = profile?.avatar_url; // Use profile.avatar_url directly
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
