@@ -55,11 +55,12 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     return () => subscription.unsubscribe();
   }, [navigate, location.pathname]);
 
-  // Temporarily return a simple div to check JSX parsing
+  const contextValue = { session, user, loading };
+
   return (
-    <div>
+    <SessionContext.Provider value={contextValue}>
       {children}
-    </div>
+    </SessionContext.Provider>
   );
 };
 

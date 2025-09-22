@@ -8,7 +8,7 @@ import NotFound from "./pages/NotFound";
 import Resources from "./pages/Resources";
 import Events from "./pages/Events";
 import Login from "./pages/Login"; // Import the new Login page
-import { SessionContextProvider } from "./integrations/supabase/auth"; // Import the SessionContextProvider
+import { SessionContextProvider } from "./integrations/supabase/auth"; // Update import to .tsx
 
 const queryClient = new QueryClient();
 

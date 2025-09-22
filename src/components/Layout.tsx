@@ -4,7 +4,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { useSession } from "@/integrations/supabase/auth"; // Import useSession hook
+import { useSession } from "@/integrations/supabase/auth"; // Update import to .tsx
 import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 
 interface LayoutProps {
