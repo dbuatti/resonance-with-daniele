@@ -177,7 +177,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     getInitialSessionAndSetupListener();
 
-  }, []); // Empty dependency array for the main useEffect
+  }, [navigate, processUserAndProfile]); // Removed location.pathname from dependencies
 
   const contextValue = { session, user, loading };
   console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null');
