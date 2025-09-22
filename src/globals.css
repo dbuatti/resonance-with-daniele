@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 30 20% 98%; /* Very light warm beige (Sand) */
+    --background: 30 20% 98%; /* Light sand */
     --foreground: 210 10% 20%; /* Dark blue-gray for text */
 
     --card: 0 0% 100%; /* White */
@@ -13,38 +13,38 @@
     --popover: 0 0% 100%;
     --popover-foreground: 210 10% 20%;
 
-    --primary: 350 45% 55%; /* Muted Rose/Berry (from B15261) */
+    --primary: 200 60% 60%; /* Soft blue */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 200 60% 60%; /* Soft Blue */
+    --secondary: 15 80% 85%; /* Light coral/peach */
     --secondary-foreground: 210 10% 20%;
 
     --muted: 30 20% 95%; /* Slightly darker sand */
     --muted-foreground: 210 10% 40%; /* Medium gray */
 
-    --accent: 350 55% 45%; /* Deeper Rose */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 15 80% 75%; /* Deeper coral */
+    --accent-foreground: 210 10% 20%;
 
     --destructive: 0 84.2% 60.2%; /* Keep default red */
     --destructive-foreground: 210 40% 98%; /* Keep default white */
 
-    --border: 30 20% 90%; /* Light sand border */
+    --border: 30 20% 90%; /* Lighter sand border */
     --input: 30 20% 90%;
-    --ring: 350 45% 55%; /* Primary color for focus rings */
+    --ring: 200 60% 60%; /* Primary blue for focus rings */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 350 45% 55%; /* Primary color */
+    --sidebar-background: 200 60% 60%; /* Soft blue */
     --sidebar-foreground: 0 0% 100%; /* White */
 
     --sidebar-primary: 210 10% 20%; /* Dark blue-gray */
     --sidebar-primary-foreground: 0 0% 100%;
 
-    --sidebar-accent: 350 55% 45%; /* Deeper Rose */
+    --sidebar-accent: 15 80% 75%; /* Deeper coral */
     --sidebar-accent-foreground: 0 0% 100%;
 
     --sidebar-border: 30 20% 90%;
-    --sidebar-ring: 350 45% 55%;
+    --sidebar-ring: 200 60% 60%;
   }
 
   .dark {
@@ -57,16 +57,16 @@
     --popover: 210 20% 18%;
     --popover-foreground: 30 20% 90%;
 
-    --primary: 350 45% 65%; /* Lighter Rose */
+    --primary: 200 60% 70%; /* Lighter soft blue */
     --primary-foreground: 210 20% 15%; /* Dark background for text on primary */
 
-    --secondary: 200 60% 70%; /* Lighter Blue */
+    --secondary: 15 80% 70%; /* Darker coral */
     --secondary-foreground: 30 20% 90%;
 
     --muted: 210 20% 25%;
     --muted-foreground: 210 10% 60%;
 
-    --accent: 350 55% 55%; /* Lighter Deep Rose */
+    --accent: 15 80% 60%;
     --accent-foreground: 30 20% 90%;
 
     --destructive: 0 62.8% 30.6%;
@@ -74,16 +74,16 @@
 
     --border: 210 20% 25%;
     --input: 210 20% 25%;
-    --ring: 350 45% 65%;
+    --ring: 200 60% 70%;
 
     --sidebar-background: 210 20% 15%;
     --sidebar-foreground: 30 20% 90%;
-    --sidebar-primary: 350 45% 65%;
+    --sidebar-primary: 200 60% 70%;
     --sidebar-primary-foreground: 210 20% 15%;
-    --sidebar-accent: 350 55% 55%;
+    --sidebar-accent: 15 80% 60%;
     --sidebar-accent-foreground: 30 20% 90%;
     --sidebar-border: 210 20% 25%;
-    --sidebar-ring: 350 45% 65%;
+    --sidebar-ring: 200 60% 70%;
   }
 }
 

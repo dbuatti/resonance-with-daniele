@@ -11,7 +11,7 @@ const HeroSection: React.FC = () => {
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 animate-fade-in-up font-lora">
           Sing. Connect. Shine. Join Melbourne’s Pop-Up Choir with Daniele.
         </h1>
-        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto animate-fade-in-up text-hero-description-foreground" style={{ animationDelay: '0.2s' }}>
+        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           A joyful, welcoming space I've created for anyone who loves to sing — no experience needed.
         </p>
         <div className="flex justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
