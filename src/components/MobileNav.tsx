@@ -44,11 +44,9 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
           </Link>
           {!loading && user ? (
             <>
-              {user.is_admin && ( // Only show Resources if user is admin
-                <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>
-                  Resources
-                </Link>
-              )}
+              <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>
+                Resources
+              </Link>
               <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
                 Events
               </Link>

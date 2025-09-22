@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
+import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react"; // Import Loader2
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -106,8 +106,8 @@ const Events: React.FC = () => {
   };
 
   const onAddSubmit = async (data: EventFormData) => {
-    if (!user || !user.is_admin) { // Check for admin status
-      showError("Only administrators can add events.");
+    if (!user) {
+      showError("You must be logged in to add events.");
       return;
     }
 
@@ -133,8 +133,8 @@ const Events: React.FC = () => {
   };
 
   const onEditSubmit = async (data: EventFormData) => {
-    if (!user || !user.is_admin || !editingEvent) { // Check for admin status
-      showError("Only administrators can edit events.");
+    if (!user || !editingEvent) {
+      showError("You must be logged in and select an event to edit.");
       return;
     }
 
@@ -147,9 +147,10 @@ const Events: React.FC = () => {
         location,
         description,
         humanitix_link: humanitix_link || null,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(), // Add updated_at for tracking changes
       })
-      .eq("id", editingEvent.id); // Admin can update any event, no user_id check needed here due to RLS
+      .eq("id", editingEvent.id)
+      .eq("user_id", user.id); // Ensure only the owner can update
 
     if (error) {
       console.error("Error updating event:", error);
@@ -163,15 +164,16 @@ const Events: React.FC = () => {
   };
 
   const handleDelete = async (eventId: string) => {
-    if (!user || !user.is_admin) { // Check for admin status
-      showError("Only administrators can delete events.");
+    if (!user) {
+      showError("You must be logged in to delete events.");
       return;
     }
 
     const { error } = await supabase
       .from("events")
       .delete()
-      .eq("id", eventId); // Admin can delete any event, no user_id check needed here due to RLS
+      .eq("id", eventId)
+      .eq("user_id", user.id); // Ensure only the owner can delete
 
     if (error) {
       console.error("Error deleting event:", error);
@@ -194,7 +196,7 @@ const Events: React.FC = () => {
       <div className="flex justify-center">
         {loadingEvents ? (
           <Skeleton className="h-10 w-48" />
-        ) : user?.is_admin ? ( // Only show add button if user is admin
+        ) : user ? (
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -276,11 +278,7 @@ const Events: React.FC = () => {
             </DialogContent>
           </Dialog>
         ) : (
-          user ? (
-            <p className="text-md text-muted-foreground">Only administrators can add new events.</p>
-          ) : (
-            <p className="text-md text-muted-foreground">Log in to view upcoming events.</p>
-          )
+          <p className="text-md text-muted-foreground">Log in to add new events.</p>
         )}
       </div>
 
@@ -305,16 +303,16 @@ const Events: React.FC = () => {
             <CalendarDays className="h-16 w-16 text-muted-foreground" />
             <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
             <p className="text-md text-muted-foreground mt-2">
-              {user?.is_admin
+              {user
                 ? "Be the first to add one using the 'Add New Event' button above!"
-                : "Check back soon for upcoming events!"}
+                : "Log in to add and view upcoming events."}
             </p>
             {!user && (
               <Button asChild className="mt-4">
-                <Link to="/login">Login to View Events</Link>
+                <Link to="/login">Login to Add Events</Link>
               </Button>
             )}
-            {user?.is_admin && (
+            {user && (
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="mt-4">
@@ -421,7 +419,7 @@ const Events: React.FC = () => {
                     No Humanitix Link
                   </Button>
                 )}
-                {user?.is_admin && ( // Only show edit/delete if user is admin
+                {user && user.id === event.user_id && (
                   <div className="flex justify-end gap-2 mt-4">
                     <Button
                       variant="outline"
