@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
 import { useSession } from "@/integrations/supabase/auth";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading states
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -112,7 +113,24 @@ const Events: React.FC = () => {
   if (loadingUserSession || loadingEvents) {
     return (
       <Layout>
-        <div className="text-center text-lg py-8">Loading...</div> {/* Added vertical padding */}
+        <div className="text-center text-lg py-8">
+          <p className="mb-4">Loading events...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i} className="shadow-lg rounded-xl">
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-10 w-full mt-4" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </Layout>
     );
   }
@@ -120,7 +138,7 @@ const Events: React.FC = () => {
   if (!user) {
     return (
       <Layout>
-        <div className="text-center text-lg text-muted-foreground py-8"> {/* Added vertical padding */}
+        <div className="text-center text-lg text-muted-foreground py-8">
           Please log in to view and manage events.
         </div>
       </Layout>
@@ -129,7 +147,7 @@ const Events: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 py-8"> {/* Added vertical padding */}
+      <div className="space-y-6 py-8">
         <h1 className="text-4xl font-bold text-center">Upcoming Events</h1>
         <p className="text-lg text-center text-muted-foreground">
           Stay up-to-date with all our choir's performances, rehearsals, and social gatherings.
@@ -147,49 +165,53 @@ const Events: React.FC = () => {
                 <DialogTitle>Add New Event</DialogTitle>
                 <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
               </DialogHeader>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" {...form.register("title")} />
-                  {form.formState.errors.title && (
-                    <p className="text-red-500 text-sm">{form.formState.errors.title.message}</p>
-                  )}
+              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 py-4"> {/* Increased gap */}
+                <div className="space-y-2"> {/* Grouping for title and date */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" {...form.register("title")} />
+                    {form.formState.errors.title && (
+                      <p className="text-red-500 text-sm">{form.formState.errors.title.message}</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !form.watch("date") && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={form.watch("date")}
+                          onSelect={(date) => form.setValue("date", date!)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {form.formState.errors.date && (
+                      <p className="text-red-500 text-sm">{form.formState.errors.date.message}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !form.watch("date") && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={form.watch("date")}
-                        onSelect={(date) => form.setValue("date", date!)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  {form.formState.errors.date && (
-                    <p className="text-red-500 text-sm">{form.formState.errors.date.message}</p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input id="location" {...form.register("location")} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" {...form.register("description")} />
+                <div className="space-y-2"> {/* Grouping for location and description */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" {...form.register("location")} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea id="description" {...form.register("description")} />
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>

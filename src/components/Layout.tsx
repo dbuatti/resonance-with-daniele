@@ -21,11 +21,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold">
+        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2"> {/* Adjusted for better stacking on small screens */}
+          <Link to="/" className="text-2xl font-bold whitespace-nowrap">
             Resonance with Daniele
           </Link>
-          <nav className="space-x-4 flex items-center">
+          <nav className="flex flex-wrap justify-center sm:justify-end gap-2"> {/* Used gap-2 for consistent spacing */}
             <Button variant="ghost" asChild>
               <Link to="/">Home</Link>
             </Button>
@@ -49,7 +49,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
         </div>
       </header>
-      <main className="flex-grow container mx-auto py-8 px-4"> {/* Consistent vertical and horizontal padding */}
+      <main className="flex-grow container mx-auto py-8 px-4">
         {children}
       </main>
       <MadeWithDyad />
