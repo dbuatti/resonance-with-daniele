@@ -189,9 +189,7 @@ const AdminMembers: React.FC = () => {
                         {profile.first_name || profile.last_name
                           ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
                           : profile.email || "N/A"} {/* Fallback to email */}
-                      </TableCell>
-                      <TableCell>{profile.email || "N/A"}</TableCell>
-                      <TableCell>
+                      </TableCell><TableCell>{profile.email || "N/A"}</TableCell><TableCell>
                         <Select
                           value={profile.is_admin ? "admin" : "user"}
                           onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
@@ -205,15 +203,13 @@ const AdminMembers: React.FC = () => {
                             <SelectItem value="user">User</SelectItem>
                           </SelectContent>
                         </Select>
-                      </TableCell>
-                      <TableCell> {/* New Survey Status Cell */}
+                      </TableCell><TableCell> {/* New Survey Status Cell */}
                         {hasSurveyResponses(profile) ? (
                           <Badge variant="secondary" className="bg-green-100 text-green-800">Responded</Badge>
                         ) : (
                           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>
                         )}
-                      </TableCell>
-                      <TableCell className="text-right">
+                      </TableCell><TableCell className="text-right">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button variant="outline" size="sm" onClick={() => setSelectedProfile(profile)}>
