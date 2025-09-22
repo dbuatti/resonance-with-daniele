@@ -15,47 +15,44 @@ import CurrentEventPage from "./pages/CurrentEventPage";
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "@/components/theme-provider";
-import React from "react"; // Import React for Fragment
 
 import ProfileLayoutPage from "./pages/ProfileLayoutPage";
 import ProfileDetails from "./components/profile/ProfileDetails";
 import SurveyPage from "./pages/SurveyPage";
-import LearnMore from "./pages/LearnMore";
+import LearnMore from "./pages/LearnMore"; // Import the new LearnMore page
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <React.Fragment> {/* This Fragment now acts as the single child for QueryClientProvider */}
+    <TooltipProvider>
+      <Sonner />
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <BrowserRouter>
           <SessionContextProvider>
-            <TooltipProvider>
-              <Routes>
-                <Route path="/" element={<Layout><Index /></Layout>} />
-                <Route path="/resources" element={<Layout><Resources /></Layout>} />
-                <Route path="/events" element={<Layout><Events /></Layout>} />
-                <Route path="/login" element={<Layout><Login /></Layout>} />
-                <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
-                <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} />
-                
-                <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
-                  <Route index element={<ProfileDetails />} />
-                  <Route path="survey" element={<SurveyPage />} />
-                </Route>
+            <Routes>
+              <Route path="/" element={<Layout><Index /></Layout>} />
+              <Route path="/resources" element={<Layout><Resources /></Layout>} />
+              <Route path="/events" element={<Layout><Events /></Layout>} />
+              <Route path="/login" element={<Layout><Login /></Layout>} />
+              <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
+              <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} /> {/* New Learn More route */}
+              
+              <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
+                <Route index element={<ProfileDetails />} />
+                <Route path="survey" element={<SurveyPage />} />
+              </Route>
 
-                <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
-                <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
-                <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
-                <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </TooltipProvider>
+              <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
+              <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
+              <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
+              <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </SessionContextProvider>
         </BrowserRouter>
       </ThemeProvider>
-      <Sonner />
-    </React.Fragment>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
