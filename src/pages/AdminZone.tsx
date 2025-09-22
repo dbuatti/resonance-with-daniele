@@ -5,9 +5,9 @@ import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button"; // Import buttonVariants
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils"; // Import cn utility
+import { cn } from "@/lib/utils";
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
@@ -74,10 +74,10 @@ const AdminZone: React.FC = () => {
           </Link>
         </Card>
         <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
-          <CardDescription>Analyze insights from member surveys.</CardDescription>
-          <Link to="/profile" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            View Profiles
+          <CardTitle className="text-xl font-lora mb-2">View Member Data</CardTitle>
+          <CardDescription>Analyze insights from member surveys and manage profiles.</CardDescription>
+          <Link to="/admin/profiles" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+            View Member Data
           </Link>
         </Card>
         {/* Add more admin specific cards here */}
