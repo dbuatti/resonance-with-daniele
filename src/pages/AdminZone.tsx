@@ -9,12 +9,10 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
-  // Removed: const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
 
   useEffect(() => {
     if (!loading && (!user || !user.is_admin)) {
@@ -23,7 +21,7 @@ const AdminZone: React.FC = () => {
     }
   }, [user, loading, navigate]);
 
-  if (loading) { // Directly use loading
+  if (loading) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
         <p className="text-lg text-muted-foreground">Loading admin access...</p>
@@ -55,7 +53,7 @@ const AdminZone: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">Welcome to the Admin Zone, Daniele!</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.

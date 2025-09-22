@@ -15,7 +15,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -25,16 +24,10 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const ProfileDetails: React.FC = () => {
-  const { user, loading: loadingUserSession } = useSession();
-  const [profileDataLoaded, setProfileDataLoaded] = useState(false);
-  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
+  const { user, profile, loading: loadingSession } = useSession(); // Get profile from context
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-
-  // Only consider if profile data itself is loaded, as session loading is handled by Layout
-  const isLoadingAny = !profileDataLoaded; 
-  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -44,63 +37,28 @@ const ProfileDetails: React.FC = () => {
     },
   });
 
-  const previousUserIdRef = useRef<string | undefined>(undefined);
-
+  // Effect to set form values when profile data from context becomes available
   useEffect(() => {
-    console.log("[ProfileDetails Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id, "Profile data loaded:", profileDataLoaded, "Previous User ID Ref:", previousUserIdRef.current);
+    console.log("[ProfileDetails Page] useEffect: loadingSession:", loadingSession, "User:", user?.id, "Profile from context:", profile ? 'present' : 'null');
 
-    if (loadingUserSession) {
-      return;
-    }
-
-    if (user?.id !== previousUserIdRef.current) {
-      console.log("[ProfileDetails Page] User ID changed, resetting profileDataLoaded.");
-      setProfileDataLoaded(false);
-      previousUserIdRef.current = user?.id;
+    if (!loadingSession && user && profile) {
+      console.log("[ProfileDetails Page] Setting form values from context profile:", profile);
+      form.reset({
+        first_name: profile.first_name || "",
+        last_name: profile.last_name || "",
+      });
+      // Set current avatar URL from profile context, but only if no new file is selected
+      if (!selectedAvatarFile) {
+        // This ensures that if a user selects a new file, the preview doesn't revert to old URL
+        // until the save operation is complete.
+      }
+    } else if (!loadingSession && !user) {
+      // If no user, reset form and avatar
       form.reset({ first_name: "", last_name: "" });
-      setCurrentAvatarUrl(null);
       setSelectedAvatarFile(null);
       setRemoveAvatarRequested(false);
     }
-
-    if (!user) {
-      console.log("[ProfileDetails Page] useEffect: No user, resetting profile states.");
-      form.reset({ first_name: "", last_name: "" });
-      setCurrentAvatarUrl(null);
-      setProfileDataLoaded(true);
-      return;
-    }
-
-    if (user && !profileDataLoaded) {
-      const loadProfile = async () => {
-        console.log(`[ProfileDetails Page] loadProfile: Fetching profile for user ID: ${user.id}`);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("first_name, last_name, avatar_url")
-          .eq("id", user.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error("[ProfileDetails Page] loadProfile: Error fetching profile:", error);
-          showError("Failed to load profile data.");
-        } else if (data) {
-          console.log("[ProfileDetails Page] loadProfile: Profile data fetched:", data);
-          form.reset({
-            first_name: data.first_name || "",
-            last_name: data.last_name || "",
-          });
-          setCurrentAvatarUrl(data.avatar_url);
-        } else {
-          console.log("[ProfileDetails Page] loadProfile: No profile data found for user, initializing with empty values.");
-          form.reset({ first_name: "", last_name: "" });
-          setCurrentAvatarUrl(null);
-        }
-        setProfileDataLoaded(true);
-        console.log("[ProfileDetails Page] loadProfile: Profile data loaded state set to true.");
-      };
-      loadProfile();
-    }
-  }, [user?.id, loadingUserSession, profileDataLoaded]);
+  }, [loadingSession, user, profile, form, selectedAvatarFile]);
 
   const handleAvatarFileChange = (file: File | null) => {
     console.log("[ProfileDetails Page] Avatar file changed:", file ? file.name : 'null');
@@ -125,16 +83,14 @@ const ProfileDetails: React.FC = () => {
         return;
       }
 
-      let newAvatarUrl: string | null = currentAvatarUrl;
+      let newAvatarUrl: string | null = profile?.avatar_url || null; // Start with current profile avatar URL
       let uploadError: Error | null = null;
       let deleteError: Error | null = null;
 
       // --- Step 1: Handle Avatar Upload/Removal ---
-      if (removeAvatarRequested && currentAvatarUrl) {
+      if (removeAvatarRequested && profile?.avatar_url) {
         console.log("[ProfileDetails Page] Processing avatar removal.");
-        const urlParts = currentAvatarUrl.split('/');
-        // The path in storage is typically 'user_id/filename.ext'
-        // We need to extract 'user_id/filename.ext' from the full public URL
+        const urlParts = profile.avatar_url.split('/');
         const pathInStorage = urlParts.slice(urlParts.indexOf('avatars') + 1).join('/');
         const { error } = await supabase.storage
           .from("avatars")
@@ -153,8 +109,8 @@ const ProfileDetails: React.FC = () => {
       if (selectedAvatarFile) {
         console.log("[ProfileDetails Page] Processing new avatar upload.");
         const fileExt = selectedAvatarFile.name.split(".").pop();
-        const fileName = `${user.id}/${Math.random()}.${fileExt}`; // Ensure unique file name within user folder
-        const filePath = fileName; // filePath is already user.id/filename
+        const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+        const filePath = fileName;
 
         const { error: uploadErr } = await supabase.storage
           .from("avatars")
@@ -229,10 +185,8 @@ const ProfileDetails: React.FC = () => {
         first_name: data.first_name || "",
         last_name: data.last_name || "",
       });
-      setCurrentAvatarUrl(newAvatarUrl);
       setSelectedAvatarFile(null);
       setRemoveAvatarRequested(false);
-      setProfileDataLoaded(true);
       showSuccess("Profile updated successfully!");
       console.log("[ProfileDetails Page] Profile update process completed successfully.");
 
@@ -251,8 +205,8 @@ const ProfileDetails: React.FC = () => {
     console.log("[ProfileDetails Page] User logged out.");
   };
 
-  if (isLoadingAny) { // Directly use isLoadingAny
-    console.log("[ProfileDetails Page] Rendering skeleton due to !profileDataLoaded.");
+  if (loadingSession) {
+    console.log("[ProfileDetails Page] Rendering skeleton due to loadingSession.");
     return (
       <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader className="text-center">
@@ -296,14 +250,16 @@ const ProfileDetails: React.FC = () => {
 
   const currentFirstName = form.watch("first_name");
   const currentLastName = form.watch("last_name");
+  const displayAvatarUrl = selectedAvatarFile ? URL.createObjectURL(selectedAvatarFile) : profile?.avatar_url;
+
   console.log("[ProfileDetails Page] Rendering profile form for user:", user.id);
 
   return (
     <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
       <CardHeader className="text-center">
         <Avatar className="w-24 h-24 mx-auto mb-4">
-          {(selectedAvatarFile && URL.createObjectURL(selectedAvatarFile)) || currentAvatarUrl ? (
-            <AvatarImage src={(selectedAvatarFile && URL.createObjectURL(selectedAvatarFile)) || currentAvatarUrl || ""} alt={`${currentFirstName || user.email}'s avatar`} className="object-cover" />
+          {displayAvatarUrl ? (
+            <AvatarImage src={displayAvatarUrl} alt={`${currentFirstName || user.email}'s avatar`} className="object-cover" />
           ) : (
             <AvatarFallback className="bg-primary text-primary-foreground">
               <UserIcon className="h-12 w-12" />
@@ -335,7 +291,7 @@ const ProfileDetails: React.FC = () => {
           </div>
           {user && (
             <AvatarUpload
-              currentAvatarUrl={currentAvatarUrl}
+              currentAvatarUrl={profile?.avatar_url || null} // Pass current avatar from context
               onFileChange={handleAvatarFileChange}
               onRemoveRequested={handleRemoveAvatarRequested}
               isSaving={isSavingProfile}

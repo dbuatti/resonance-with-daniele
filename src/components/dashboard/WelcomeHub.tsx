@@ -10,22 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
-interface Profile {
-  first_name: string | null;
-  last_name: string | null;
-  avatar_url: string | null;
-  how_heard: string | null;
-  motivation: string[] | null;
-  attended_session: boolean | null;
-  singing_experience: string | null;
-  session_frequency: string | null;
-  preferred_time: string | null;
-  music_genres: string[] | null;
-  choir_goals: string | null;
-  inclusivity_importance: string | null;
-  suggestions: string | null;
-}
-
 interface Event {
   id: string;
   title: string;
@@ -43,61 +27,22 @@ interface Resource {
 }
 
 const WelcomeHub: React.FC = () => {
-  const { user, loading: loadingUserSession } = useSession();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { user, profile, loading: loadingSession } = useSession(); // Get profile from context
   const [upcomingEvent, setUpcomingEvent] = useState<Event | null>(null);
   const [recentResources, setRecentResources] = useState<Resource[]>([]);
-  const [isSurveyCompleted, setIsSurveyCompleted] = useState(false);
-  const [loadingData, setLoadingData] = useState(true); // Single loading state for all data
+  const [loadingOtherData, setLoadingOtherData] = useState(true); // Loading state for events/resources
 
   useEffect(() => {
-    console.log("[WelcomeHub] useEffect triggered. User session loading:", loadingUserSession);
+    console.log("[WelcomeHub] useEffect triggered. User session loading:", loadingSession);
 
-    const fetchAllData = async () => {
-      if (loadingUserSession) {
-        console.log("[WelcomeHub] User session still loading, delaying data fetches.");
+    const fetchOtherData = async () => {
+      if (loadingSession) {
+        console.log("[WelcomeHub] User session still loading, delaying other data fetches.");
         return;
       }
 
-      setLoadingData(true); // Start loading all data
-      console.log("[WelcomeHub] User session loaded, initiating all data fetches.");
-
-      const profilePromise = (async () => {
-        if (user) {
-          console.log(`[WelcomeHub] Fetching profile for user ID: ${user.id}`);
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("first_name, last_name, avatar_url, how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
-            .eq("id", user.id);
-
-          if (error) {
-            console.error("[WelcomeHub] Error fetching profile for WelcomeHub:", error);
-            return null;
-          } else if (data && data.length > 0) {
-            console.log("[WelcomeHub] Profile data fetched:", data[0]);
-            const completed = data[0].how_heard !== null ||
-                              (data[0].motivation !== null && data[0].motivation.length > 0) ||
-                              data[0].attended_session !== null ||
-                              data[0].singing_experience !== null ||
-                              data[0].session_frequency !== null ||
-                              data[0].preferred_time !== null ||
-                              (data[0].music_genres !== null && data[0].music_genres.length > 0) ||
-                              data[0].choir_goals !== null ||
-                              data[0].inclusivity_importance !== null ||
-                              data[0].suggestions !== null;
-            setIsSurveyCompleted(completed);
-            console.log("[WelcomeHub] Survey completion status:", completed);
-            return data[0];
-          } else {
-            console.log("[WelcomeHub] No profile data found for user, survey not completed.");
-            setIsSurveyCompleted(false);
-            return null;
-          }
-        }
-        console.log("[WelcomeHub] No user, skipping profile fetch.");
-        setIsSurveyCompleted(false);
-        return null;
-      })();
+      setLoadingOtherData(true); // Start loading other data
+      console.log("[WelcomeHub] User session loaded, initiating other data fetches.");
 
       const eventPromise = (async () => {
         console.log("[WelcomeHub] Fetching upcoming event.");
@@ -138,24 +83,36 @@ const WelcomeHub: React.FC = () => {
       })();
 
       // Wait for all promises to resolve
-      const [profileResult, eventResult, resourcesResult] = await Promise.all([
-        profilePromise,
+      const [eventResult, resourcesResult] = await Promise.all([
         eventPromise,
         resourcesPromise,
       ]);
 
-      setProfile(profileResult);
       setUpcomingEvent(eventResult);
       setRecentResources(resourcesResult);
-      setLoadingData(false); // All data loaded
-      console.log("[WelcomeHub] All data loaded. Loading state set to false.");
+      setLoadingOtherData(false); // All other data loaded
+      console.log("[WelcomeHub] Other data loaded. Loading state set to false.");
     };
 
-    fetchAllData();
-  }, [user, loadingUserSession]); // Re-run when user or session loading changes
+    fetchOtherData();
+  }, [loadingSession, user]); // Re-run when user or session loading changes
 
-  if (loadingData) {
-    console.log("[WelcomeHub] Rendering skeleton due to loadingData being true.");
+  // Determine if survey is completed based on the profile from context
+  const isSurveyCompleted = profile ? (
+    profile.how_heard !== null ||
+    (profile.motivation !== null && profile.motivation.length > 0) ||
+    profile.attended_session !== null ||
+    profile.singing_experience !== null ||
+    profile.session_frequency !== null ||
+    profile.preferred_time !== null ||
+    (profile.music_genres !== null && profile.music_genres.length > 0) ||
+    profile.choir_goals !== null ||
+    profile.inclusivity_importance !== null ||
+    profile.suggestions !== null
+  ) : false;
+
+  if (loadingSession || loadingOtherData) {
+    console.log("[WelcomeHub] Rendering skeleton due to loadingSession or loadingOtherData being true.");
     return (
       <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
         <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">

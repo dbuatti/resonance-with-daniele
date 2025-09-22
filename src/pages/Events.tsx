@@ -21,7 +21,6 @@ import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -52,8 +51,6 @@ const Events: React.FC = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { user, loading: loadingUserSession } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Removed: const showDelayedSkeleton = useDelayedLoading(loadingEvents); // Use the delayed loading hook
 
   console.log("[Events Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
@@ -222,7 +219,7 @@ const Events: React.FC = () => {
   console.log("[Events Page] Rendering Events component. Loading Events:", loadingEvents, "Events count:", events.length);
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>

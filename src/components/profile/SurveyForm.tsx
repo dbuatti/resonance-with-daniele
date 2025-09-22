@@ -30,7 +30,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const surveySchema = z.object({
   how_heard: z.string().optional(),
@@ -48,12 +47,7 @@ const surveySchema = z.object({
 type SurveyFormData = z.infer<typeof surveySchema>;
 
 const SurveyForm: React.FC = () => {
-  const { user, loading: loadingUserSession } = useSession();
-  const [surveyDataLoaded, setSurveyDataLoaded] = useState(false);
-
-  // Only consider if survey data itself is loaded, as session loading is handled by Layout
-  const isLoadingAny = !surveyDataLoaded;
-  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
+  const { user, profile, loading: loadingSession } = useSession(); // Get profile from context
 
   const form = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
@@ -71,81 +65,33 @@ const SurveyForm: React.FC = () => {
     },
   });
 
-  const previousUserIdRef = useRef<string | undefined>(undefined);
-
-  // Effect to fetch survey data when user or session loading state changes
+  // Effect to set form values when profile data from context becomes available
   useEffect(() => {
-    console.log("[SurveyForm] useEffect: User session loading:", loadingUserSession, "User:", user?.id, "Survey data loaded:", surveyDataLoaded, "Previous User ID Ref:", previousUserIdRef.current);
+    console.log("[SurveyForm] useEffect: loadingSession:", loadingSession, "User:", user?.id, "Profile from context:", profile ? 'present' : 'null');
 
-    if (loadingUserSession) {
-      return;
-    }
-
-    // If user ID changes, reset surveyDataLoaded to trigger a new fetch
-    if (user?.id !== previousUserIdRef.current) {
-      console.log("[SurveyForm] User ID changed, resetting surveyDataLoaded.");
-      setSurveyDataLoaded(false);
-      previousUserIdRef.current = user?.id; // Update ref
-      // Also reset form states immediately to avoid showing old data
+    if (!loadingSession && user && profile) {
+      console.log("[SurveyForm] Setting form values from context profile:", profile);
+      form.reset({
+        how_heard: profile.how_heard || "",
+        motivation: profile.motivation || [],
+        attended_session: profile.attended_session ?? undefined,
+        singing_experience: profile.singing_experience || "",
+        session_frequency: profile.session_frequency || "",
+        preferred_time: profile.preferred_time || "",
+        music_genres: profile.music_genres || [],
+        choir_goals: profile.choir_goals || "",
+        inclusivity_importance: profile.inclusivity_importance || "",
+        suggestions: profile.suggestions || "",
+      });
+    } else if (!loadingSession && !user) {
+      // If no user, reset form
       form.reset({
         how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
         session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
         inclusivity_importance: "", suggestions: "",
       });
     }
-
-    if (!user) {
-      console.log("[SurveyForm] useEffect: No user, resetting survey states.");
-      setSurveyDataLoaded(true); // No user, so no survey data to load, consider it "loaded"
-      form.reset({
-        how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
-        session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
-        inclusivity_importance: "", suggestions: "",
-      });
-      return;
-    }
-
-    // Only load survey if user is present AND survey data hasn't been loaded yet
-    if (user && !surveyDataLoaded) {
-      const loadSurveyData = async () => {
-        console.log(`[SurveyForm] loadSurveyData: Fetching survey data for user ID: ${user.id}`);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
-          .eq("id", user.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error("[SurveyForm] loadSurveyData: Error fetching survey data:", error);
-          showError("Failed to load survey data.");
-        } else if (data) {
-          console.log("[SurveyForm] loadSurveyData: Survey data fetched:", data);
-          form.reset({
-            how_heard: data.how_heard || "",
-            motivation: data.motivation || [],
-            attended_session: data.attended_session ?? undefined,
-            singing_experience: data.singing_experience || "",
-            session_frequency: data.session_frequency || "",
-            preferred_time: data.preferred_time || "",
-            music_genres: data.music_genres || [],
-            choir_goals: data.choir_goals || "",
-            inclusivity_importance: data.inclusivity_importance || "",
-            suggestions: data.suggestions || "",
-          });
-        } else {
-          console.log("[SurveyForm] loadSurveyData: No survey data found for user, initializing with empty values.");
-          form.reset({
-            how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
-            session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
-            inclusivity_importance: "", suggestions: "",
-          });
-        }
-        setSurveyDataLoaded(true); // Mark survey data as loaded
-        console.log("[SurveyForm] loadSurveyData: Survey data loaded state set to true.");
-      };
-      loadSurveyData();
-    }
-  }, [user?.id, loadingUserSession, surveyDataLoaded]); // Dependencies: user?.id, loadingUserSession, and surveyDataLoaded
+  }, [loadingSession, user, profile, form]); // Dependencies: loadingSession, user, profile, and form
 
   const onSubmit = async (data: SurveyFormData) => {
     if (!user) {
@@ -178,25 +124,13 @@ const SurveyForm: React.FC = () => {
       showError("Failed to update survey data: " + error.message);
     } else {
       showSuccess("Survey data updated successfully!");
-      // Manually update form state after successful save
-      form.reset({
-        how_heard: data.how_heard || "",
-        motivation: data.motivation || [],
-        attended_session: data.attended_session ?? undefined,
-        singing_experience: data.singing_experience || "",
-        session_frequency: data.session_frequency || "",
-        preferred_time: data.preferred_time || "",
-        music_genres: data.music_genres || [],
-        choir_goals: data.choir_goals || "",
-        inclusivity_importance: data.inclusivity_importance || "",
-        suggestions: data.suggestions || "",
-      });
-      setSurveyDataLoaded(true); // Mark survey data as loaded to prevent re-fetch by useEffect
+      // The SessionContextProvider will re-fetch the profile on auth state change (USER_UPDATED)
+      // which will then update the form via the useEffect.
     }
   };
 
   // The main loading condition for the component
-  if (isLoadingAny) { // Directly use isLoadingAny
+  if (loadingSession) {
     return (
       <Card className="p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader>

@@ -17,7 +17,6 @@ import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 // Define the schema for a resource
 const resourceSchema = z.object({
@@ -45,8 +44,6 @@ const Resources: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Removed: const showDelayedSkeleton = useDelayedLoading(loadingResources); // Use the delayed loading hook
 
   console.log("[Resources Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
@@ -205,7 +202,7 @@ const Resources: React.FC = () => {
   console.log("[Resources Page] Rendering Resources component. Loading Resources:", loadingResources, "Resources count:", resources.length);
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>

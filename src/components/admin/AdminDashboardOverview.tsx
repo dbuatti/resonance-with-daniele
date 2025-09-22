@@ -8,15 +8,12 @@ import { Users, CalendarDays, FileText, PlusCircle, Loader2 } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showError } from "@/utils/toast";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const AdminDashboardOverview: React.FC = () => {
   const [memberCount, setMemberCount] = useState<number | null>(null);
   const [eventCount, setEventCount] = useState<number | null>(null);
   const [resourceCount, setResourceCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Removed: const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -54,7 +51,7 @@ const AdminDashboardOverview: React.FC = () => {
     fetchCounts();
   }, []);
 
-  if (loading) { // Directly use loading
+  if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(3)].map((_, i) => (

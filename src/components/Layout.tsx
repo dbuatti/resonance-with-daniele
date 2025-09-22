@@ -19,9 +19,9 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, loading } = useSession();
+  const { user, profile, loading } = useSession(); // Get profile from context
   const location = useLocation();
-  console.log("[Layout] User:", user ? user.id : 'null', "Loading:", loading, "Path:", location.pathname);
+  console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
     console.log("[Layout] Attempting to log out user.");
@@ -29,7 +29,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     console.log("[Layout] User logged out.");
   };
 
-  const displayName = user?.user_metadata?.first_name || user?.email || "Guest";
+  const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url; // Prioritize profile.avatar_url
 
   const getNavLinkClass = (path: string) =>
     cn(
@@ -93,8 +94,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))}>
                     <Avatar className="h-6 w-6">
-                      {user.user_metadata?.avatar_url ? (
-                        <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
+                      {avatarUrl ? (
+                        <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
                       ) : (
                         <AvatarFallback className="bg-primary-foreground text-primary">
                           <UserIcon className="h-4 w-4" />
@@ -123,7 +124,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           <div className="flex items-center sm:hidden">
             <ThemeToggle />
-            <MobileNav user={user} loading={loading} handleLogout={handleLogout} />
+            <MobileNav user={user} loading={loading} handleLogout={handleLogout} profile={profile} />
           </div>
         </div>
       </header>

@@ -19,7 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface Profile {
   id: string;
@@ -48,10 +47,6 @@ const AdminMembers: React.FC = () => {
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
-
-  // Only consider if profiles data itself is loading, as session loading is handled by Layout
-  const isLoadingAny = loadingProfiles;
-  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -127,7 +122,7 @@ const AdminMembers: React.FC = () => {
     );
   };
 
-  if (isLoadingAny) { // Directly use isLoadingAny
+  if (loadingProfiles) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">
@@ -158,7 +153,7 @@ const AdminMembers: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">Manage Member Profiles</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         View and manage all registered member profiles, including their roles.

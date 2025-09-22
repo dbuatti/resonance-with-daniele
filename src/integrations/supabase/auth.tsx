@@ -23,6 +23,7 @@ interface Profile {
   choir_goals: string | null;
   inclusivity_importance: string | null;
   suggestions: string | null;
+  email: string | null; // Added email to profile for convenience
 }
 
 interface CustomUser extends User {
@@ -32,20 +33,22 @@ interface CustomUser extends User {
 interface SessionContextType {
   session: Session | null;
   user: CustomUser | null;
+  profile: Profile | null; // Added full profile to context
   loading: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
-  // Use a single state object to manage session, user, and loading
+  // Use a single state object to manage session, user, profile, and loading
   const [contextState, setContextState] = useState<SessionContextType>({
     session: null,
     user: null,
+    profile: null, // Initialize profile as null
     loading: true,
   });
 
-  const { session, user, loading } = contextState; // Destructure for easier access
+  const { session, user, profile, loading } = contextState; // Destructure for easier access
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,6 +56,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   // Refs to keep track of the *current* user and session for comparison in the listener
   const userRef = useRef<CustomUser | null>(user);
   const sessionRef = useRef<Session | null>(session);
+  const profileRef = useRef<Profile | null>(profile); // Ref for profile
   const initialSessionHandledRef = useRef(false);
 
   useEffect(() => {
@@ -63,24 +67,27 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     sessionRef.current = session;
   }, [session]);
 
-  const fetchIsAdminStatus = useCallback(async (userId: string, userEmail: string | undefined): Promise<boolean> => {
-    console.log(`[SessionContext] Fetching is_admin status for user ID: ${userId}`);
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  const fetchProfileData = useCallback(async (userId: string, userEmail: string | undefined): Promise<Profile | null> => {
+    console.log(`[SessionContext] Fetching full profile data for user ID: ${userId}`);
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('is_admin')
+      .select('*') // Select all profile fields
       .eq('id', userId)
       .single();
 
     if (profileError && profileError.code !== 'PGRST116') {
-      console.error("[SessionContext] Error fetching profile data for is_admin:", profileError);
-      return false;
+      console.error("[SessionContext] Error fetching profile data:", profileError);
+      return null;
     } else if (profileData) {
-      console.log("[SessionContext] is_admin status fetched:", profileData.is_admin);
-      return profileData.is_admin;
+      console.log("[SessionContext] Full profile data fetched:", profileData);
+      return profileData as Profile;
     } else {
-      const isAdminByEmail = userEmail === 'daniele.buatti@gmail.com' || userEmail === 'resonancewithdaniele@gmail.com';
-      console.log("[SessionContext] No profile found for user. Setting is_admin based on email:", isAdminByEmail);
-      return isAdminByEmail;
+      console.log("[SessionContext] No profile found for user. Returning null profile.");
+      return null;
     }
   }, []);
 
@@ -96,20 +103,25 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       }
 
       let userWithAdminStatus: CustomUser | null = null;
+      let fullProfile: Profile | null = null;
+
       if (initialSession?.user) {
-        const isAdmin = await fetchIsAdminStatus(initialSession.user.id, initialSession.user.email);
+        fullProfile = await fetchProfileData(initialSession.user.id, initialSession.user.email);
+        const isAdmin = fullProfile?.is_admin ?? (initialSession.user.email === 'daniele.buatti@gmail.com' || initialSession.user.email === 'resonancewithdaniele@gmail.com');
         userWithAdminStatus = { ...initialSession.user, is_admin: isAdmin };
         console.log("[SessionContext] Initial user with admin status:", userWithAdminStatus);
+        console.log("[SessionContext] Initial full profile:", fullProfile);
       }
       
       // Update all relevant states in a single call to prevent multiple renders
       setContextState({
         session: initialSession,
         user: userWithAdminStatus,
+        profile: fullProfile, // Set the full profile here
         loading: false,
       });
       initialSessionHandledRef.current = true; 
-      console.log("[SessionContext] Initial session processed. Loading set to false. User with admin status set.");
+      console.log("[SessionContext] Initial session processed. Loading set to false. User and Profile set.");
 
       // Handle redirects based on initial session and admin status
       if (userWithAdminStatus) {
@@ -134,29 +146,17 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         }
 
         let newUserWithAdminStatus: CustomUser | null = null;
+        let newFullProfile: Profile | null = null;
+
         if (currentSession?.user) {
-          const existingUser = userRef.current;
-          let isAdmin = false;
-          if (existingUser && existingUser.id === currentSession.user.id && typeof existingUser.is_admin === 'boolean') {
-            isAdmin = existingUser.is_admin;
-            console.log("[SessionContext] Reusing existing is_admin status for same user.");
-          } else {
-            isAdmin = await fetchIsAdminStatus(currentSession.user.id, currentSession.user.email);
-          }
+          newFullProfile = await fetchProfileData(currentSession.user.id, currentSession.user.email);
+          const isAdmin = newFullProfile?.is_admin ?? (currentSession.user.email === 'daniele.buatti@gmail.com' || currentSession.user.email === 'resonancewithdaniele@gmail.com');
           newUserWithAdminStatus = { ...currentSession.user, is_admin: isAdmin };
         }
 
         const userChanged = (oldUser: CustomUser | null, newUser: CustomUser | null) => {
-          console.log("--- userChanged comparison ---");
-          console.log("Old User (ref):", oldUser);
-          console.log("New User (from currentSession):", newUser);
-
           if (!oldUser && !newUser) return false;
-          if (!oldUser || !newUser) {
-            console.log("[SessionContext] User changed: one is null, other isn't.");
-            return true;
-          }
-
+          if (!oldUser || !newUser) return true;
           if (oldUser.id !== newUser.id) return true;
           if (oldUser.email !== newUser.email) return true;
           if (oldUser.is_admin !== newUser.is_admin) return true; 
@@ -167,8 +167,14 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           if (oldMeta.last_name !== newMeta.last_name) return true;
           if (oldMeta.avatar_url !== newMeta.avatar_url) return true;
           
-          console.log("[SessionContext] Core User (Auth) unchanged.");
           return false;
+        };
+
+        const profileChanged = (oldProfile: Profile | null, newProfile: Profile | null) => {
+          if (!oldProfile && !newProfile) return false;
+          if (!oldProfile || !newProfile) return true;
+          // Deep comparison for profile fields (simplified for brevity, can be more thorough)
+          return JSON.stringify(oldProfile) !== JSON.stringify(newProfile);
         };
 
         const sessionChanged = (oldSession: Session | null, newSession: Session | null) => {
@@ -179,17 +185,19 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
         const shouldUpdateSession = sessionChanged(sessionRef.current, currentSession);
         const shouldUpdateCoreUser = userChanged(userRef.current, newUserWithAdminStatus);
+        const shouldUpdateProfile = profileChanged(profileRef.current, newFullProfile);
 
-        if (shouldUpdateSession || shouldUpdateCoreUser) {
+        if (shouldUpdateSession || shouldUpdateCoreUser || shouldUpdateProfile) {
           setContextState(prevState => ({
             ...prevState,
             session: currentSession,
             user: newUserWithAdminStatus,
+            profile: newFullProfile, // Update the full profile here
             loading: false, // Ensure loading is false after any auth state change
           }));
-          console.log("[SessionContext] Listener processed. Session and/or User state updated.");
+          console.log("[SessionContext] Listener processed. Session, User, and/or Profile state updated.");
         } else {
-          console.log("[SessionContext] Listener processed. User and Session state unchanged (no significant diff).");
+          console.log("[SessionContext] Listener processed. User, Session, and Profile state unchanged (no significant diff).");
         }
 
         // Handle redirects after auth state change
@@ -214,11 +222,11 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     getInitialSessionAndSetupListener();
 
-  }, [navigate, fetchIsAdminStatus, location.pathname]);
+  }, [navigate, fetchProfileData, location.pathname]);
 
   // Provide the destructured values from the single state object
-  const contextValue = { session, user, loading };
-  console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin);
+  const contextValue = { session, user, profile, loading };
+  console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin, "profile:", profile ? 'present' : 'null');
 
   return (
     <SessionContext.Provider value={contextValue}>

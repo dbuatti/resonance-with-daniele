@@ -7,14 +7,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Menu, User as UserIcon, LogOut, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Profile } from "@/integrations/supabase/auth"; // Import Profile type
 
 interface MobileNavProps {
   user: any; // Supabase User object
+  profile: Profile | null; // Added profile prop
   loading: boolean;
   handleLogout: () => void;
 }
 
-const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) => {
+const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -24,7 +26,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
       location.pathname === path ? "bg-primary/10 text-primary font-semibold" : "text-foreground"
     );
 
-  const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || "Guest";
+  const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url; // Prioritize profile.avatar_url
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -60,8 +63,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
               <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                 <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))} onClick={() => setIsOpen(false)}>
                   <Avatar className="h-7 w-7">
-                    {user.user_metadata?.avatar_url ? (
-                      <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
+                    {avatarUrl ? (
+                      <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
                     ) : (
                       <AvatarFallback className="bg-primary text-primary-foreground">
                         <UserIcon className="h-4 w-4" />
