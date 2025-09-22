@@ -17,6 +17,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton"; // Added import for Skeleton
 
 interface Profile {
   id: string;

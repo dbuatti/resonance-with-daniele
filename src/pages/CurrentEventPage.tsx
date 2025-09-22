@@ -24,7 +24,7 @@ const CurrentEventPage: React.FC = () => {
               title="Humanitix Current Event"
               className="absolute top-0 left-0 w-full h-full border-0"
               allowFullScreen
-              allow="payment" {/* Added allow="payment" here */}
+              allow="payment" /* Added allow="payment" here */
             ></iframe>
           </div>
           <div className="text-center">

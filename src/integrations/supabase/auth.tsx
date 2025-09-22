@@ -6,7 +6,7 @@ import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PostgrestError } from '@supabase/supabase-js';
 
-interface Profile {
+export interface Profile { // Exported Profile interface
   id: string;
   first_name: string | null;
   last_name: string | null;
@@ -185,10 +185,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           if (oldSession === null || newSession === null) return true;
           return oldSession.access_token !== newSession.access_token || oldSession.expires_at !== newSession.expires_at;
         };
-
-        const shouldUpdateSession = sessionChanged(sessionRef.current, currentSession);
-        const shouldUpdateCoreUser = userChanged(userRef.current, newUserWithAdminStatus);
-        const shouldUpdateProfile = profileChanged(profileRef.current, newFullProfile);
 
         if (shouldUpdateSession || shouldUpdateCoreUser || shouldUpdateProfile) {
           setContextState(prevState => ({
