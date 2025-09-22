@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText } from "lucide-react";
+import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText, User as UserIcon, Settings } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -105,9 +105,9 @@ const WelcomeHub: React.FC = () => {
 
   if (loadingUserSession || loadingProfile || loadingEvent || loadingResources) {
     return (
-      <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
-        <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 animate-fade-in-up">
-          <CardHeader>
+      <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in-up">
+        <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+          <CardHeader className="text-center">
             <Skeleton className="w-32 h-32 rounded-full mx-auto mb-6" />
             <Skeleton className="h-10 w-3/4 mx-auto mb-4" />
             <Skeleton className="h-6 w-1/2 mx-auto mb-6" />
@@ -116,8 +116,21 @@ const WelcomeHub: React.FC = () => {
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+              <Card className="shadow-md border border-border p-4 space-y-2">
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </Card>
+              <Card className="shadow-md border border-border p-4 space-y-2">
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </Card>
+            </div>
+            <Skeleton className="h-10 w-48 mx-auto" />
           </CardContent>
         </Card>
       </div>
@@ -127,9 +140,9 @@ const WelcomeHub: React.FC = () => {
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
-      <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 animate-fade-in-up">
-        <CardHeader>
+    <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in-up">
+      <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+        <CardHeader className="text-center">
           <img
             src="/images/daniele-buatti-headshot.jpeg"
             alt="Daniele Buatti"
@@ -149,29 +162,46 @@ const WelcomeHub: React.FC = () => {
           <p>
             This hub is your go-to space for everything choir-related:
           </p>
-          <ul className="list-disc list-inside space-y-2 pl-4">
-            <li className="flex items-start gap-2">
-              <CalendarDays className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-              <span><span className="font-semibold text-foreground">Rehearsals & Events:</span> See the calendar, RSVP, and get updates in real time.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Music className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-              <span><span className="font-semibold text-foreground">Songs & Resources:</span> Access sheet music, audio tracks, and video tutorials to guide your practice.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Mic2 className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-              <span><span className="font-semibold text-foreground">Vocal Exercises & Warm-Ups:</span> Explore exercises to strengthen, release, and resonate your voice.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Users className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-              <span><span className="font-semibold text-foreground">Community & Connection:</span> Chat, share, and celebrate with fellow singers.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Camera className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-              <span><span className="font-semibold text-foreground">Performance Highlights & Media:</span> Relive moments from past concerts or see what’s coming next.</span>
-            </li>
-          </ul>
-          <p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="flex items-start gap-3">
+              <CalendarDays className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-semibold text-foreground text-xl font-lora">Rehearsals & Events</h3>
+                <p className="text-base">See the calendar, RSVP, and get updates in real time.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Music className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-semibold text-foreground text-xl font-lora">Songs & Resources</h3>
+                <p className="text-base">Access sheet music, audio tracks, and video tutorials to guide your practice.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Mic2 className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-semibold text-foreground text-xl font-lora">Vocal Exercises & Warm-Ups</h3>
+                <p className="text-base">Explore exercises to strengthen, release, and resonate your voice.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Users className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-semibold text-foreground text-xl font-lora">Community & Connection</h3>
+                <p className="text-base">Chat, share, and celebrate with fellow singers.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Camera className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-semibold text-foreground text-xl font-lora">Performance Highlights & Media</h3>
+                <p className="text-base">Relive moments from past concerts or see what’s coming next.</p>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-6">
             No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. I celebrate all voices and all identities, and everyone is invited to shine their unique light here.
           </p>
 
@@ -250,6 +280,14 @@ const WelcomeHub: React.FC = () => {
                 )}
               </CardContent>
             </Card>
+          </div>
+
+          <div className="flex justify-center mt-8">
+            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
+              <Link to="/profile">
+                <Settings className="mr-2 h-5 w-5" /> Manage My Profile
+              </Link>
+            </Button>
           </div>
 
           <p className="text-center">
