@@ -17,7 +17,7 @@ import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
 
 // Define the schema for a resource
 const resourceSchema = z.object({
@@ -39,14 +39,13 @@ interface Resource {
 
 const Resources: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
+  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
   const [resources, setResources] = useState<Resource[]>([]);
   const [loadingResources, setLoadingResources] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Removed: const showDelayedSkeleton = useDelayedLoading(loadingResources); // Use the delayed loading hook
 
   console.log("[Resources Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
@@ -70,12 +69,21 @@ const Resources: React.FC = () => {
 
   useEffect(() => {
     console.log("[Resources Page] useEffect: Initial fetch resources or search term changed.");
+    if (loadingUserSession) {
+      setPageLoading(true); // Keep page loading true while session is loading
+      return;
+    }
+
+    setPageLoading(true); // Indicate that page is loading its data
     const debounceTimeout = setTimeout(() => {
       fetchResources(searchTerm);
     }, 300); // Debounce search to avoid too many requests
 
-    return () => clearTimeout(debounceTimeout);
-  }, [searchTerm, user]);
+    return () => {
+      clearTimeout(debounceTimeout);
+      setPageLoading(false); // Clean up by setting page loading to false
+    };
+  }, [searchTerm, user, loadingUserSession, setPageLoading]);
 
   useEffect(() => {
     if (editingResource) {
@@ -112,7 +120,8 @@ const Resources: React.FC = () => {
       console.log("[Resources Page] Resources fetched successfully:", data?.length, "resources.");
     }
     setLoadingResources(false);
-    console.log("[Resources Page] Resources loading state set to false.");
+    setPageLoading(false); // Data loaded, set page loading to false
+    console.log("[Resources Page] Resources loading state set to false. Page loading set to false.");
   };
 
   const onAddSubmit = async (data: ResourceFormData) => {
@@ -204,8 +213,10 @@ const Resources: React.FC = () => {
 
   console.log("[Resources Page] Rendering Resources component. Loading Resources:", loadingResources, "Resources count:", resources.length);
 
+  // The page itself will render its content/skeleton based on its internal loading state.
+  // The global Layout will handle the overall pageLoading state.
   return (
-    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>

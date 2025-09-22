@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +17,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
 
 interface Profile {
   id: string;
@@ -46,6 +47,14 @@ interface SurveyMetricsCardProps {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ffc658", "#d0ed57"];
 
 const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading }) => { // Accept loading prop
+  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
+
+  useEffect(() => {
+    // This component receives its loading state from its parent (AdminSurveyData)
+    // It should propagate this up to the PageLoadingContext
+    setPageLoading(loading);
+  }, [loading, setPageLoading]);
+
   const totalProfiles = profiles.length;
   const profilesWithResponses = profiles.filter(p => 
     p.how_heard || 

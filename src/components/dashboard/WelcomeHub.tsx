@@ -9,6 +9,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
 
 interface Profile {
   first_name: string | null;
@@ -44,6 +45,7 @@ interface Resource {
 
 const WelcomeHub: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
+  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
   const [profile, setProfile] = useState<Profile | null>(null);
   const [upcomingEvent, setUpcomingEvent] = useState<Event | null>(null);
   const [recentResources, setRecentResources] = useState<Resource[]>([]);
@@ -56,10 +58,13 @@ const WelcomeHub: React.FC = () => {
     const fetchAllData = async () => {
       if (loadingUserSession) {
         console.log("[WelcomeHub] User session still loading, delaying data fetches.");
+        setLoadingData(true); // Keep internal loading true while session is loading
+        setPageLoading(true); // Propagate to global page loading
         return;
       }
 
-      setLoadingData(true); // Start loading all data
+      setLoadingData(true); // Start internal loading for all data
+      setPageLoading(true); // Propagate to global page loading
       console.log("[WelcomeHub] User session loaded, initiating all data fetches.");
 
       const profilePromise = (async () => {
@@ -147,14 +152,15 @@ const WelcomeHub: React.FC = () => {
       setProfile(profileResult);
       setUpcomingEvent(eventResult);
       setRecentResources(resourcesResult);
-      setLoadingData(false); // All data loaded
-      console.log("[WelcomeHub] All data loaded. Loading state set to false.");
+      setLoadingData(false); // All internal data loaded
+      setPageLoading(false); // Propagate to global page loading
+      console.log("[WelcomeHub] All data loaded. Internal loading set to false. Page loading set to false.");
     };
 
     fetchAllData();
-  }, [user, loadingUserSession]); // Re-run when user or session loading changes
+  }, [user, loadingUserSession, setPageLoading]); // Re-run when user or session loading changes
 
-  if (loadingData) {
+  if (loadingData) { // Use internal loadingData for skeleton
     console.log("[WelcomeHub] Rendering skeleton due to loadingData being true.");
     return (
       <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">

@@ -21,7 +21,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -51,9 +51,8 @@ const Events: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { user, loading: loadingUserSession } = useSession();
+  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Removed: const showDelayedSkeleton = useDelayedLoading(loadingEvents); // Use the delayed loading hook
 
   console.log("[Events Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
@@ -81,12 +80,21 @@ const Events: React.FC = () => {
 
   useEffect(() => {
     console.log("[Events Page] useEffect: Initial fetch events or search term changed.");
+    if (loadingUserSession) {
+      setPageLoading(true); // Keep page loading true while session is loading
+      return;
+    }
+
+    setPageLoading(true); // Indicate that page is loading its data
     const debounceTimeout = setTimeout(() => {
       fetchEvents(searchTerm);
     }, 300); // Debounce search to avoid too many requests
 
-    return () => clearTimeout(debounceTimeout);
-  }, [searchTerm, user]);
+    return () => {
+      clearTimeout(debounceTimeout);
+      setPageLoading(false); // Clean up by setting page loading to false
+    };
+  }, [searchTerm, user, loadingUserSession, setPageLoading]);
 
   useEffect(() => {
     if (editingEvent) {
@@ -125,7 +133,8 @@ const Events: React.FC = () => {
       console.log("[Events Page] Events fetched successfully:", data?.length, "events.");
     }
     setLoadingEvents(false);
-    console.log("[Events Page] Events loading state set to false.");
+    setPageLoading(false); // Data loaded, set page loading to false
+    console.log("[Events Page] Events loading state set to false. Page loading set to false.");
   };
 
   const onAddSubmit = async (data: EventFormData) => {
@@ -222,7 +231,7 @@ const Events: React.FC = () => {
   console.log("[Events Page] Rendering Events component. Loading Events:", loadingEvents, "Events count:", events.length);
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>

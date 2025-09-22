@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import SurveyMetricsCard from "@/components/admin/SurveyMetricsCard";
 import { showError } from "@/utils/toast";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
 
 interface Profile {
   id: string;
@@ -32,24 +32,28 @@ interface Profile {
 
 const AdminSurveyData: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
+  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
 
-  // Only consider if profiles data itself is loading, as session loading is handled by Layout
-  const isLoadingAny = loadingProfiles;
-  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
-
   useEffect(() => {
+    console.log("[AdminSurveyData] useEffect: Session loading:", loadingSession);
     if (!loadingSession && (!user || !user.is_admin)) {
       navigate("/");
+      setPageLoading(false); // Page is not loading if redirected
       showError("Access Denied: You must be an administrator to view this page.");
+    } else if (!loadingSession && user?.is_admin) {
+      fetchProfiles();
+    } else {
+      setPageLoading(true); // Keep page loading true while session is loading
     }
-  }, [user, loadingSession, navigate]);
+  }, [user, loadingSession, navigate, setPageLoading]);
 
   const fetchProfiles = async () => {
     if (user && user.is_admin) {
       setLoadingProfiles(true);
+      setPageLoading(true); // Indicate that page is loading its data
       const { data, error } = await supabase
         .from("profiles")
         .select("*, email")
@@ -62,16 +66,11 @@ const AdminSurveyData: React.FC = () => {
         setProfiles(data as Profile[]);
       }
       setLoadingProfiles(false);
+      setPageLoading(false); // Data loaded, set page loading to false
     }
   };
 
-  useEffect(() => {
-    if (!loadingSession && user?.is_admin) {
-      fetchProfiles();
-    }
-  }, [user, loadingSession]);
-
-  if (isLoadingAny) { // Directly use isLoadingAny
+  if (loadingProfiles) { // Only use internal loading for skeleton
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">
@@ -93,12 +92,12 @@ const AdminSurveyData: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">Member Survey Data & Insights</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Explore aggregated survey responses to understand your community's preferences and feedback.
       </p>
-      <SurveyMetricsCard profiles={profiles} loading={loadingProfiles} /> {/* Pass loadingProfiles */}
+      <SurveyMetricsCard profiles={profiles} loading={loadingProfiles} />
     </div>
   );
 };

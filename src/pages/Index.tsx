@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import HeroSection from "@/components/landing/HeroSection";
 import VideoSection from "@/components/landing/VideoSection";
 import AboutChoirSection from "@/components/landing/AboutChoirSection";
@@ -12,14 +12,28 @@ import CallToActionSection from "@/components/landing/CallToActionSection";
 import FooterSection from "@/components/landing/FooterSection";
 import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
-// No need for useDelayedLoading here, as Layout handles the global session loading.
+import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
 
 const Index: React.FC = () => {
-  const { user, loading } = useSession();
-  console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
+  const { user, loading: loadingSession } = useSession();
+  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
 
-  // If the session is still loading, render nothing. The Layout component will show a global skeleton if needed.
-  if (loading) {
+  useEffect(() => {
+    console.log("[Index Page] useEffect: Session loading:", loadingSession);
+    // Index page itself doesn't fetch data, its children do.
+    // We can set pageLoading to false once session is resolved,
+    // and children will manage their own loading.
+    if (!loadingSession) {
+      setPageLoading(false);
+      console.log("[Index Page] Page loading set to false (session resolved).");
+    } else {
+      setPageLoading(true); // Keep page loading true while session is loading
+      console.log("[Index Page] Page loading set to true (session loading).");
+    }
+  }, [loadingSession, setPageLoading]);
+
+  // If the session is still loading, render nothing. The Layout component will show a global skeleton.
+  if (loadingSession) {
     return null;
   }
 

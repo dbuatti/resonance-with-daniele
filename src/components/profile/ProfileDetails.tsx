@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -26,15 +26,14 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const ProfileDetails: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
+  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
   const [profileDataLoaded, setProfileDataLoaded] = useState(false);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  // Only consider if profile data itself is loaded, as session loading is handled by Layout
   const isLoadingAny = !profileDataLoaded; 
-  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -50,6 +49,7 @@ const ProfileDetails: React.FC = () => {
     console.log("[ProfileDetails Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id, "Profile data loaded:", profileDataLoaded, "Previous User ID Ref:", previousUserIdRef.current);
 
     if (loadingUserSession) {
+      setPageLoading(true); // Keep page loading true while session is loading
       return;
     }
 
@@ -68,10 +68,12 @@ const ProfileDetails: React.FC = () => {
       form.reset({ first_name: "", last_name: "" });
       setCurrentAvatarUrl(null);
       setProfileDataLoaded(true);
+      setPageLoading(false); // No user, no data to load, so page is not loading
       return;
     }
 
     if (user && !profileDataLoaded) {
+      setPageLoading(true); // Indicate that page is loading its data
       const loadProfile = async () => {
         console.log(`[ProfileDetails Page] loadProfile: Fetching profile for user ID: ${user.id}`);
         const { data, error } = await supabase
@@ -96,11 +98,12 @@ const ProfileDetails: React.FC = () => {
           setCurrentAvatarUrl(null);
         }
         setProfileDataLoaded(true);
-        console.log("[ProfileDetails Page] loadProfile: Profile data loaded state set to true.");
+        setPageLoading(false); // Data loaded, set page loading to false
+        console.log("[ProfileDetails Page] loadProfile: Profile data loaded state set to true. Page loading set to false.");
       };
       loadProfile();
     }
-  }, [user?.id, loadingUserSession, profileDataLoaded]);
+  }, [user?.id, loadingUserSession, profileDataLoaded, setPageLoading]);
 
   const handleAvatarFileChange = (file: File | null) => {
     console.log("[ProfileDetails Page] Avatar file changed:", file ? file.name : 'null');
