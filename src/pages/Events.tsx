@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
 import { useSession } from "@/integrations/supabase/auth";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading states
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -59,13 +59,8 @@ const Events: React.FC = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      fetchEvents();
-    } else {
-      setEvents([]);
-      setLoadingEvents(false);
-    }
-  }, [user]);
+    fetchEvents(); // Fetch events regardless of user login status
+  }, []);
 
   const fetchEvents = async () => {
     setLoadingEvents(true);
@@ -110,7 +105,7 @@ const Events: React.FC = () => {
     }
   };
 
-  if (loadingUserSession || loadingEvents) {
+  if (loadingEvents) { // Only check for loading events, not user session for initial display
     return (
       <Layout>
         <div className="text-center text-lg py-8">
@@ -135,16 +130,6 @@ const Events: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return (
-      <Layout>
-        <div className="text-center text-lg text-muted-foreground py-8">
-          Please log in to view and manage events.
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="space-y-6 py-8">
@@ -154,87 +139,92 @@ const Events: React.FC = () => {
         </p>
 
         <div className="flex justify-center">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Event
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Add New Event</DialogTitle>
-                <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
-              </DialogHeader>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 py-4"> {/* Increased gap */}
-                <div className="space-y-2"> {/* Grouping for title and date */}
+          {user ? ( // Only show "Add New Event" button if user is logged in
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Event
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Event</DialogTitle>
+                  <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
+                </DialogHeader>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 py-4">
+                  <div className="space-y-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="title">Title</Label>
+                      <Input id="title" {...form.register("title")} />
+                      {form.formState.errors.title && (
+                        <p className="text-red-500 text-sm">{form.formState.errors.title.message}</p>
+                      )}
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="date">Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !form.watch("date") && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={form.watch("date")}
+                            onSelect={(date) => form.setValue("date", date!)}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {form.formState.errors.date && (
+                        <p className="text-red-500 text-sm">{form.formState.errors.date.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="location">Location</Label>
+                      <Input id="location" {...form.register("location")} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea id="description" {...form.register("description")} />
+                    </div>
+                  </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input id="title" {...form.register("title")} />
-                    {form.formState.errors.title && (
-                      <p className="text-red-500 text-sm">{form.formState.errors.title.message}</p>
+                    <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
+                    <Input id="humanitix_link" {...form.register("humanitix_link")} />
+                    {form.formState.errors.humanitix_link && (
+                      <p className="text-red-500 text-sm">{form.formState.errors.humanitix_link.message}</p>
                     )}
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !form.watch("date") && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarDays className="mr-2 h-4 w-4" />
-                          {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={form.watch("date")}
-                          onSelect={(date) => form.setValue("date", date!)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {form.formState.errors.date && (
-                      <p className="text-red-500 text-sm">{form.formState.errors.date.message}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2"> {/* Grouping for location and description */}
-                  <div className="grid gap-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input id="location" {...form.register("location")} />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" {...form.register("description")} />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
-                  <Input id="humanitix_link" {...form.register("humanitix_link")} />
-                  {form.formState.errors.humanitix_link && (
-                    <p className="text-red-500 text-sm">{form.formState.errors.humanitix_link.message}</p>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? "Adding..." : "Add Event"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  <DialogFooter>
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                      {form.formState.isSubmitting ? "Adding..." : "Add Event"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <p className="text-md text-muted-foreground">Log in to add new events.</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.length === 0 ? (
             <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg">
               <p className="text-xl text-muted-foreground font-semibold">No events found.</p>
-              <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>
+              {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new events.</p>}
+              {user && <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>}
             </div>
           ) : (
             events.map((event) => (
