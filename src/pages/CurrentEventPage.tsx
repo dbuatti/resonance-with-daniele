@@ -19,7 +19,7 @@ const CurrentEventPage: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-lg overflow-hidden shadow-xl border border-border">
+            <div className="relative w-full mx-auto aspect-video rounded-lg overflow-hidden shadow-xl border border-border min-h-[300px]">
               <iframe
                 src={HUMANITIX_EVENT_URL}
                 title="Humanitix Current Event"
