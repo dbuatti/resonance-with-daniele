@@ -1,18 +1,53 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+"use client";
 
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import React from "react";
+import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const Index = () => {
+const Index: React.FC = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">
-          Start building your amazing project here!
+    <Layout>
+      <div className="flex flex-col items-center justify-center text-center space-y-8 py-12">
+        <h1 className="text-5xl font-extrabold tracking-tight lg:text-6xl">
+          Welcome to Your Choir Companion
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-2xl">
+          Your central hub for all things choir-related: resources, events, and important announcements.
         </p>
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button size="lg" asChild>
+            <Link to="/resources">Explore Resources</Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild>
+            <Link to="/events">View Upcoming Events</Link>
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl pt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Easy Resource Access</CardTitle>
+              <CardDescription>Find sheet music, practice tracks, and notes in one place.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">No more searching through emails or scattered files. Everything you need is here.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Stay Informed</CardTitle>
+              <CardDescription>Keep track of all rehearsals, performances, and social events.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Direct links to Humanitix events make booking and sharing simple.</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-      <MadeWithDyad />
-    </div>
+    </Layout>
   );
 };
 
