@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
-import BackToTopButton from "./BackToTopButton";
+// import BackToTopButton from "./BackToTopButton"; // Temporarily removed
 import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -137,7 +137,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </main>
       <FooterSection />
-      <BackToTopButton />
+      {/* <BackToTopButton /> */} {/* Temporarily removed */}
     </div>
   );
 };
