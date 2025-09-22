@@ -48,20 +48,25 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     let ignore = false;
 
     const initializeSession = async () => {
-      setLoading(true); // Ensure loading is true at the start of initialization
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      if (ignore) return;
+      setLoading(true); 
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (ignore) return;
 
-      setSession(initialSession);
-      await processUser(initialSession?.user || null); // Wait for user processing
-      
-      setLoading(false); // Set loading to false only after user is fully processed
-
-      // Handle redirects after initial load
-      if (initialSession?.user && location.pathname === '/login') {
-        navigate('/');
-      } else if (!initialSession?.user && location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
-        navigate('/login');
+        setSession(initialSession);
+        await processUser(initialSession?.user || null); 
+        
+        // Handle redirects after initial load
+        if (initialSession?.user && location.pathname === '/login') {
+          navigate('/');
+        } else if (!initialSession?.user && location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error("Error during session initialization:", error);
+        // Optionally handle error state for user, e.g., show a toast
+      } finally {
+        setLoading(false); // Always set loading to false after initial attempt
       }
     };
 
@@ -69,21 +74,15 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
       if (ignore) return;
-      // For subsequent changes, we might not need to set loading to true again
-      // unless it's a full sign-in/sign-out that requires re-processing
       setSession(currentSession);
       await processUser(currentSession?.user || null);
-      // No setLoading(false) here, as initial load already handled it.
-      // If a user signs out, processUser will set user to null, and components will react.
-      // If a user signs in, processUser will set user, and components will react.
-      // The loading state is primarily for the *initial* render.
     });
 
     return () => {
       ignore = true;
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname, processUser]); // Added processUser to dependencies
+  }, [navigate, location.pathname, processUser]);
 
   const contextValue = { session, user, loading };
 
