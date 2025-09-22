@@ -153,7 +153,7 @@ const AdminProfiles: React.FC = () => {
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                              <DialogTitle className="font-lora">Survey Responses for {profile.first_name || profile.email}</CardTitle>
+                              <DialogTitle className="font-lora">Survey Responses for {profile.first_name || profile.email}</DialogTitle>
                               <CardDescription>Last updated: {profile.updated_at ? new Date(profile.updated_at).toLocaleString() : "N/A"}</CardDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
