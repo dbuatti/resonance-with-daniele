@@ -59,28 +59,26 @@ const AdminInterestSubmissions: React.FC = () => {
 
   if (loadingSubmissions) {
     return (
-      <div className="container mx-auto"> {/* Added container mx-auto here */}
-        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-          <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">
-            <CardHeader>
-              <Skeleton className="h-8 w-1/2 mb-2" />
-              <Skeleton className="h-5 w-3/4" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-10 w-full mb-4" />
-              <div className="space-y-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center space-x-4 p-2 border-b last:border-b-0">
-                    <Skeleton className="h-6 w-1/4" />
-                    <Skeleton className="h-6 w-1/4" />
-                    <Skeleton className="h-6 w-1/4" />
-                    <Skeleton className="h-6 w-1/6 ml-auto" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">
+          <CardHeader>
+            <Skeleton className="h-8 w-1/2 mb-2" />
+            <Skeleton className="h-5 w-3/4" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-10 w-full mb-4" />
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4 p-2 border-b last:border-b-0">
+                  <Skeleton className="h-6 w-1/4" />
+                  <Skeleton className="h-6 w-1/4" />
+                  <Skeleton className="h-6 w-1/4" />
+                  <Skeleton className="h-6 w-1/6 ml-auto" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -90,65 +88,63 @@ const AdminInterestSubmissions: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto"> {/* Added container mx-auto here */}
-      <div className="space-y-6 py-8">
-        <h1 className="text-4xl font-bold text-center font-lora">Interest Submissions</h1>
-        <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-          View all individuals who have expressed interest in Resonance with Daniele.
-        </p>
+    <div className="space-y-6 py-8">
+      <h1 className="text-4xl font-bold text-center font-lora">Interest Submissions</h1>
+      <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
+        View all individuals who have expressed interest in Resonance with Daniele.
+      </p>
 
-        <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl font-lora">Submissions List</CardTitle>
-            <CardDescription>Contact these individuals to follow up on their interest.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {submissions.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                <p className="text-xl font-semibold">No interest submissions found yet.</p>
-                <p className="mt-2">Once people express interest, their details will appear here.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Mobile</TableHead>
-                      <TableHead>Submitted On</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {submissions.map((submission) => (
-                      <TableRow key={submission.id}>
-                        <TableCell className="font-medium">
-                          {submission.first_name} {submission.last_name}
-                        </TableCell>
-                        <TableCell>
-                          <a href={`mailto:${submission.email}`} className="text-primary hover:underline flex items-center gap-1">
-                            <Mail className="h-4 w-4" /> {submission.email}
+      <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-lora">Submissions List</CardTitle>
+          <CardDescription>Contact these individuals to follow up on their interest.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {submissions.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              <p className="text-xl font-semibold">No interest submissions found yet.</p>
+              <p className="mt-2">Once people express interest, their details will appear here.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Mobile</TableHead>
+                    <TableHead>Submitted On</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {submissions.map((submission) => (
+                    <TableRow key={submission.id}>
+                      <TableCell className="font-medium">
+                        {submission.first_name} {submission.last_name}
+                      </TableCell>
+                      <TableCell>
+                        <a href={`mailto:${submission.email}`} className="text-primary hover:underline flex items-center gap-1">
+                          <Mail className="h-4 w-4" /> {submission.email}
+                        </a>
+                      </TableCell>
+                      <TableCell>
+                        {submission.mobile ? (
+                          <a href={`tel:${submission.mobile}`} className="text-primary hover:underline flex items-center gap-1">
+                            <Phone className="h-4 w-4" /> {submission.mobile}
                           </a>
-                        </TableCell>
-                        <TableCell>
-                          {submission.mobile ? (
-                            <a href={`tel:${submission.mobile}`} className="text-primary hover:underline flex items-center gap-1">
-                              <Phone className="h-4 w-4" /> {submission.mobile}
-                            </a>
-                          ) : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          {format(new Date(submission.created_at), "PPP p")}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                        ) : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(submission.created_at), "PPP p")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

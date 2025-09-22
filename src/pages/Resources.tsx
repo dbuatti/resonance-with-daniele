@@ -202,268 +202,266 @@ const Resources: React.FC = () => {
   console.log("[Resources Page] Rendering Resources component. Loading Resources:", loadingResources, "Resources count:", resources.length);
 
   return (
-    <div className="container mx-auto"> {/* Added container mx-auto here */}
-      <div className="space-y-6 py-8">
-        <h1 className="text-4xl font-bold text-center font-lora">
-          {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
-        </h1>
-        {loadingResources ? (
-          <div className="text-lg text-center text-muted-foreground">
-            <Skeleton className="h-6 w-1/2 mx-auto" />
-          </div>
-        ) : (
-          <p className="text-lg text-center text-muted-foreground">
-            This is where you'll find all the sheet music, practice tracks, and other materials I've prepared for the choir.
-          </p>
-        )}
-
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search resources by title or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full"
-              disabled={loadingResources}
-            />
-          </div>
-          {user ? (
-            <>
-              {console.log("[Resources Page] User is logged in, showing 'Add New Resource' button.")}
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Resource
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle className="font-lora">Add New Resource</DialogTitle>
-                    <CardDescription>Provide details for a new choir resource.</CardDescription>
-                  </DialogHeader>
-                  <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input id="title" {...addForm.register("title")} />
-                      {addForm.formState.errors.title && (
-                        <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
-                      )}
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="url">URL</Label>
-                      <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
-                      {addForm.formState.errors.url && (
-                        <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
-                      )}
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Description (Optional)</Label>
-                      <Textarea id="description" {...addForm.register("description")} />
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                        {addForm.formState.isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                          </>
-                        ) : (
-                          "Add Resource"
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </>
-          ) : (
-            <>
-              {console.log("[Resources Page] User is NOT logged in, showing 'Log in to add resources' message.")}
-              <p className="text-md text-muted-foreground">Log in to add new resources.</p>
-            </>
-          )}
+    <div className="space-y-6 py-8">
+      <h1 className="text-4xl font-bold text-center font-lora">
+        {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
+      </h1>
+      {loadingResources ? (
+        <div className="text-lg text-center text-muted-foreground">
+          <Skeleton className="h-6 w-1/2 mx-auto" />
         </div>
+      ) : (
+        <p className="text-lg text-center text-muted-foreground">
+          This is where you'll find all the sheet music, practice tracks, and other materials I've prepared for the choir.
+        </p>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          {loadingResources ? (
-            [...Array(3)].map((_, i) => (
-              <Card key={i} className="shadow-lg rounded-xl">
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-10 w-full mt-4" />
-                </CardContent>
-              </Card>
-            ))
-          ) : resources.length === 0 ? (
-            <>
-              {console.log("[Resources Page] No resources found, displaying empty state.")}
-              <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
-                <FileText className="h-16 w-16 text-muted-foreground" />
-                <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found yet!</p>
-                <p className="text-md text-muted-foreground mt-2">
-                  {user
-                    ? "Be the first to add one using the 'Add New Resource' button above!"
-                    : "Log in to add and access choir resources."}
-                </p>
-                {!user && (
-                  <Button asChild className="mt-4">
-                    <Link to="/login">Login to Add Resources</Link>
-                  </Button>
-                )}
-                {user && (
-                  <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="mt-4">
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Resource
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle className="font-lora">Add New Resource</DialogTitle>
-                        <CardDescription>Provide details for a new choir resource.</CardDescription>
-                      </DialogHeader>
-                      <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="title">Title</Label>
-                          <Input id="title" {...addForm.register("title")} />
-                          {addForm.formState.errors.title && (
-                            <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
-                          )}
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="url">URL</Label>
-                          <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
-                          {addForm.formState.errors.url && (
-                            <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
-                          )}
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="description">Description (Optional)</Label>
-                          <Textarea id="description" {...addForm.register("description")} />
-                        </div>
-                        <DialogFooter>
-                          <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                            {addForm.formState.isSubmitting ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                              </>
-                            ) : (
-                              "Add Resource"
-                            )}
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
-            </>
-          ) : (
-            resources.map((resource) => (
-              <Card key={resource.id} className="shadow-lg rounded-xl hover:shadow-xl">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-2xl font-medium font-lora">
-                    {resource.title}
-                  </CardTitle>
-                  <FileText className="h-6 w-6 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {resource.description && <p className="text-sm text-muted-foreground">{resource.description}</p>}
-                  <Button asChild className="w-full">
-                    <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                      <LinkIcon className="mr-2 h-4 w-4" /> View Resource
-                    </a>
-                  </Button>
-                  {user && user.id === resource.user_id && (
-                    <div className="flex justify-end gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingResource(resource);
-                          setIsEditDialogOpen(true);
-                          console.log("[Resources Page] Editing resource:", resource.id);
-                        }}
-                      >
-                        <Edit className="h-4 w-4 mr-2" /> Edit
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete your resource.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(resource.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          )}
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search resources by title or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-4 py-2 w-full"
+            disabled={loadingResources}
+          />
         </div>
-
-        {editingResource && (
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle className="font-lora">Edit Resource</DialogTitle>
-                <CardDescription>Update the details for your choir resource.</CardDescription>
-              </DialogHeader>
-              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-title">Title</Label>
-                  <Input id="edit-title" {...editForm.register("title")} />
-                  {editForm.formState.errors.title && (
-                    <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-url">URL</Label>
-                  <Input id="edit-url" type="url" {...editForm.register("url")} />
-                  {editForm.formState.errors.url && (
-                    <p className="text-red-500 text-sm">{editForm.formState.errors.url.message}</p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-description">Description (Optional)</Label>
-                  <Textarea id="edit-description" {...editForm.register("description")} />
-                </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={editForm.formState.isSubmitting}>
-                    {editForm.formState.isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                      </>
-                    ) : (
-                      "Save Changes"
+        {user ? (
+          <>
+            {console.log("[Resources Page] User is logged in, showing 'Add New Resource' button.")}
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Resource
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="font-lora">Add New Resource</DialogTitle>
+                  <CardDescription>Provide details for a new choir resource.</CardDescription>
+                </DialogHeader>
+                <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" {...addForm.register("title")} />
+                    {addForm.formState.errors.title && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
                     )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="url">URL</Label>
+                    <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
+                    {addForm.formState.errors.url && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Textarea id="description" {...addForm.register("description")} />
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                      {addForm.formState.isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                        </>
+                      ) : (
+                        "Add Resource"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </>
+        ) : (
+          <>
+            {console.log("[Resources Page] User is NOT logged in, showing 'Log in to add resources' message.")}
+            <p className="text-md text-muted-foreground">Log in to add new resources.</p>
+          </>
         )}
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        {loadingResources ? (
+          [...Array(3)].map((_, i) => (
+            <Card key={i} className="shadow-lg rounded-xl">
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-10 w-full mt-4" />
+              </CardContent>
+            </Card>
+          ))
+        ) : resources.length === 0 ? (
+          <>
+            {console.log("[Resources Page] No resources found, displaying empty state.")}
+            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
+              <FileText className="h-16 w-16 text-muted-foreground" />
+              <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found yet!</p>
+              <p className="text-md text-muted-foreground mt-2">
+                {user
+                  ? "Be the first to add one using the 'Add New Resource' button above!"
+                  : "Log in to add and access choir resources."}
+              </p>
+              {!user && (
+                <Button asChild className="mt-4">
+                  <Link to="/login">Login to Add Resources</Link>
+                </Button>
+              )}
+              {user && (
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="mt-4">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Resource
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle className="font-lora">Add New Resource</DialogTitle>
+                      <CardDescription>Provide details for a new choir resource.</CardDescription>
+                    </DialogHeader>
+                    <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input id="title" {...addForm.register("title")} />
+                        {addForm.formState.errors.title && (
+                          <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
+                        )}
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="url">URL</Label>
+                        <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
+                        {addForm.formState.errors.url && (
+                          <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
+                        )}
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="description">Description (Optional)</Label>
+                        <Textarea id="description" {...addForm.register("description")} />
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                          {addForm.formState.isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                            </>
+                          ) : (
+                            "Add Resource"
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          </>
+        ) : (
+          resources.map((resource) => (
+            <Card key={resource.id} className="shadow-lg rounded-xl hover:shadow-xl">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-medium font-lora">
+                  {resource.title}
+                </CardTitle>
+                <FileText className="h-6 w-6 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {resource.description && <p className="text-sm text-muted-foreground">{resource.description}</p>}
+                <Button asChild className="w-full">
+                  <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                    <LinkIcon className="mr-2 h-4 w-4" /> View Resource
+                  </a>
+                </Button>
+                {user && user.id === resource.user_id && (
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingResource(resource);
+                        setIsEditDialogOpen(true);
+                        console.log("[Resources Page] Editing resource:", resource.id);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your resource.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(resource.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {editingResource && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-lora">Edit Resource</DialogTitle>
+              <CardDescription>Update the details for your choir resource.</CardDescription>
+            </DialogHeader>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-title">Title</Label>
+                <Input id="edit-title" {...editForm.register("title")} />
+                {editForm.formState.errors.title && (
+                  <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-url">URL</Label>
+                <Input id="edit-url" type="url" {...editForm.register("url")} />
+                {editForm.formState.errors.url && (
+                  <p className="text-red-500 text-sm">{editForm.formState.errors.url.message}</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description (Optional)</Label>
+                <Textarea id="edit-description" {...editForm.register("description")} />
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                  {editForm.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

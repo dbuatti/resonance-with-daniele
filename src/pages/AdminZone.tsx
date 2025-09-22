@@ -50,38 +50,36 @@ const AdminZone: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto"> {/* Added container mx-auto here */}
-      <div className="space-y-6 py-8">
-        <h1 className="text-4xl font-bold text-center font-lora">Welcome to the Admin Zone, Daniele!</h1>
-        <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-          This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.
-        </p>
+    <div className="space-y-6 py-8">
+      <h1 className="text-4xl font-bold text-center font-lora">Welcome to the Admin Zone, Daniele!</h1>
+      <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
+        This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.
+      </p>
 
-        <AdminDashboardOverview />
+      <AdminDashboardOverview />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          <Card className="shadow-lg rounded-xl p-6 text-center">
-            <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
-            <CardDescription>Analyze aggregated insights from member surveys.</CardDescription>
-            <Link to="/admin/survey-data" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-              View Survey Data
-            </Link>
-          </Card>
-          <Card className="shadow-lg rounded-xl p-6 text-center">
-            <CardTitle className="text-xl font-lora mb-2">Manage Members</CardTitle>
-            <CardDescription>View all member profiles and manage their roles.</CardDescription>
-            <Link to="/admin/members" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-              Manage Members
-            </Link>
-          </Card>
-          <Card className="shadow-lg rounded-xl p-6 text-center">
-            <CardTitle className="text-xl font-lora mb-2">Interest Submissions</CardTitle>
-            <CardDescription>View contact details of interested individuals.</CardDescription>
-            <Link to="/admin/interest-submissions" className={cn(buttonVariants({ variant: "default" }), "mt-4 flex items-center justify-center")}>
-              <Mail className="mr-2 h-4 w-4" /> View Submissions
-            </Link>
-          </Card>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        <Card className="shadow-lg rounded-xl p-6 text-center">
+          <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
+          <CardDescription>Analyze aggregated insights from member surveys.</CardDescription>
+          <Link to="/admin/survey-data" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+            View Survey Data
+          </Link>
+        </Card>
+        <Card className="shadow-lg rounded-xl p-6 text-center">
+          <CardTitle className="text-xl font-lora mb-2">Manage Members</CardTitle>
+          <CardDescription>View all member profiles and manage their roles.</CardDescription>
+          <Link to="/admin/members" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+            Manage Members
+          </Link>
+        </Card>
+        <Card className="shadow-lg rounded-xl p-6 text-center">
+          <CardTitle className="text-xl font-lora mb-2">Interest Submissions</CardTitle>
+          <CardDescription>View contact details of interested individuals.</CardDescription>
+          <Link to="/admin/interest-submissions" className={cn(buttonVariants({ variant: "default" }), "mt-4 flex items-center justify-center")}>
+            <Mail className="mr-2 h-4 w-4" /> View Submissions
+          </Link>
+        </Card>
       </div>
     </div>
   );

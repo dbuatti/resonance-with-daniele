@@ -132,7 +132,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
       <main className="flex-grow bg-background">
-        {children}
+        <div className="container mx-auto"> {/* Centralized container for all page content */}
+          {children}
+        </div>
       </main>
       <FooterSection />
       <BackToTopButton />

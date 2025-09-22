@@ -47,18 +47,13 @@ const ProfileDetails: React.FC = () => {
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
       });
-      // Set current avatar URL from profile context, but only if no new file is selected
-      if (!selectedAvatarFile) {
-        // This ensures that if a user selects a new file, the preview doesn't revert to old URL
-        // until the save operation is complete.
-      }
     } else if (!loadingSession && !user) {
       // If no user, reset form and avatar
       form.reset({ first_name: "", last_name: "" });
       setSelectedAvatarFile(null);
       setRemoveAvatarRequested(false);
     }
-  }, [loadingSession, user, profile, form, selectedAvatarFile]);
+  }, [loadingSession, user, profile, form]);
 
   const handleAvatarFileChange = (file: File | null) => {
     console.log("[ProfileDetails Page] Avatar file changed:", file ? file.name : 'null');
@@ -250,6 +245,7 @@ const ProfileDetails: React.FC = () => {
 
   const currentFirstName = form.watch("first_name");
   const currentLastName = form.watch("last_name");
+  // Simplified logic: if a new file is selected, use its preview. Otherwise, use the profile's current avatar URL.
   const displayAvatarUrl = selectedAvatarFile ? URL.createObjectURL(selectedAvatarFile) : profile?.avatar_url;
 
   console.log("[ProfileDetails Page] Rendering profile form for user:", user.id);

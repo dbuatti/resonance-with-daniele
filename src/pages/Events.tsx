@@ -225,301 +225,299 @@ const Events: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto"> {/* Added container mx-auto here */}
-      <div className="space-y-6 py-8">
-        <h1 className="text-4xl font-bold text-center font-lora">
-          {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
-        </h1>
+    <div className="space-y-6 py-8">
+      <h1 className="text-4xl font-bold text-center font-lora">
+        {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
+      </h1>
+      
+      {loadingEvents ? (
+        <div className="text-lg text-center text-muted-foreground">
+          <Skeleton className="h-6 w-1/2 mx-auto" />
+        </div>
+      ) : (
+        <p className="text-lg text-center text-muted-foreground">
+          Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
+        </p>
+      )}
+
+      {fetchError && (
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{fetchError}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search events by title, description, or location..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-4 py-2 w-full"
+            disabled={loadingEvents}
+          />
+        </div>
         
-        {loadingEvents ? (
-          <div className="text-lg text-center text-muted-foreground">
-            <Skeleton className="h-6 w-1/2 mx-auto" />
-          </div>
-        ) : (
-          <p className="text-lg text-center text-muted-foreground">
-            Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
-          </p>
-        )}
-
-        {fetchError && (
-          <Alert variant="destructive" className="max-w-2xl mx-auto">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{fetchError}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search events by title, description, or location..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full"
-              disabled={loadingEvents}
-            />
-          </div>
-          
-          {user ? (
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Event
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle className="font-lora">Add New Event</DialogTitle>
-                  <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
-                </DialogHeader>
-                <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-                  <div className="space-y-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input id="title" {...addForm.register("title")} />
-                      {addForm.formState.errors.title && (
-                        <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
-                      )}
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="date">Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !addForm.watch("date") && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarDays className="mr-2 h-4 w-4" />
-                            {addForm.watch("date") ? format(addForm.watch("date"), "PPP") : <span>Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={addForm.watch("date")}
-                            onSelect={(date) => addForm.setValue("date", date!)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {addForm.formState.errors.date && (
-                        <p className="text-red-500 text-sm">{addForm.formState.errors.date.message}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="location">Location</Label>
-                      <Input id="location" {...addForm.register("location")} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea id="description" {...addForm.register("description")} />
-                    </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
-                    <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
-                    {addForm.formState.errors.humanitix_link && (
-                      <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
-                    )}
-                  </div>
-                  <DialogFooter>
-                    <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                      {addForm.formState.isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                        </>
-                      ) : (
-                        "Add Event"
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          ) : (
-            <p className="text-md text-muted-foreground">Log in to add new events.</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          {loadingEvents ? (
-            [...Array(6)].map((_, i) => (
-              <Card key={i} className="shadow-lg rounded-xl">
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-10 w-full mt-4" />
-                </CardContent>
-              </Card>
-            ))
-          ) : events.length === 0 ? (
-            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
-              <CalendarDays className="h-16 w-16 text-muted-foreground" />
-              <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
-              <p className="text-md text-muted-foreground mt-2">
-                {user
-                  ? "Be the first to add one using the 'Add New Event' button above!"
-                  : "Log in to add and view upcoming events."}
-              </p>
-              {!user && (
-                <Button asChild className="mt-4">
-                  <Link to="/login">Login to Add Events</Link>
-                </Button>
-              )}
-            </div>
-          ) : (
-            events.map((event) => (
-              <Card key={event.id} className="shadow-lg rounded-xl hover:shadow-xl">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-2xl font-medium font-lora">
-                    {event.title}
-                  </CardTitle>
-                  <CalendarDays className="h-6 w-6 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Date: {format(new Date(event.date), "PPP")}</p>
-                  {event.location && <p className="text-sm text-muted-foreground">Location: {event.location}</p>}
-                  {event.description && <p className="text-sm text-muted-foreground">{event.description}</p>}
-                  {event.humanitix_link ? (
-                    <Button asChild className="w-full">
-                      <a href={event.humanitix_link} target="_blank" rel="noopener noreferrer">
-                        <LinkIcon className="mr-2 h-4 w-4" /> View on Humanitix
-                      </a>
-                    </Button>
-                  ) : (
-                    <Button variant="outline" className="w-full" disabled>
-                      No Humanitix Link
-                    </Button>
-                  )}
-                  {user && user.id === event.user_id && (
-                    <div className="flex justify-end gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingEvent(event);
-                          setIsEditDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4 mr-2" /> Edit
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete your event.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(event.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        {editingEvent && (
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        {user ? (
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add New Event
+              </Button>
+            </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle className="font-lora">Edit Event</DialogTitle>
-                <CardDescription>Update the details for your choir event.</CardDescription>
+                <DialogTitle className="font-lora">Add New Event</DialogTitle>
+                <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
               </DialogHeader>
-              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
+              <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
                 <div className="space-y-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="edit-title">Title</Label>
-                    <Input id="edit-title" {...editForm.register("title")} />
-                    {editForm.formState.errors.title && (
-                      <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" {...addForm.register("title")} />
+                    {addForm.formState.errors.title && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
                     )}
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="edit-date">Date</Label>
+                    <Label htmlFor="date">Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant={"outline"}
                           className={cn(
                             "w-full justify-start text-left font-normal",
-                            !editForm.watch("date") && "text-muted-foreground"
+                            !addForm.watch("date") && "text-muted-foreground"
                           )}
                         >
                           <CalendarDays className="mr-2 h-4 w-4" />
-                          {editForm.watch("date") ? format(editForm.watch("date"), "PPP") : <span>Pick a date</span>}
+                          {addForm.watch("date") ? format(addForm.watch("date"), "PPP") : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"
-                          selected={editForm.watch("date")}
-                          onSelect={(date) => editForm.setValue("date", date!)}
+                          selected={addForm.watch("date")}
+                          onSelect={(date) => addForm.setValue("date", date!)}
                           initialFocus
                         />
                       </PopoverContent>
                     </Popover>
-                    {editForm.formState.errors.date && (
-                      <p className="text-red-500 text-sm">{editForm.formState.errors.date.message}</p>
+                    {addForm.formState.errors.date && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.date.message}</p>
                     )}
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="edit-location">Location</Label>
-                    <Input id="edit-location" {...editForm.register("location")} />
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" {...addForm.register("location")} />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="edit-description">Description</Label>
-                    <Textarea id="edit-description" {...editForm.register("description")} />
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea id="description" {...addForm.register("description")} />
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-humanitix_link">Humanitix Link (Optional)</Label>
-                  <Input id="edit-humanitix_link" {...editForm.register("humanitix_link")} />
-                  {editForm.formState.errors.humanitix_link && (
-                    <p className="text-red-500 text-sm">{editForm.formState.errors.humanitix_link.message}</p>
+                  <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
+                  <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
+                  {addForm.formState.errors.humanitix_link && (
+                    <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
                   )}
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={editForm.formState.isSubmitting}>
-                    {editForm.formState.isSubmitting ? (
+                  <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                    {addForm.formState.isSubmitting ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
                       </>
                     ) : (
-                      "Save Changes"
-                    )}
+                        "Add Event"
+                      )}
                   </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
           </Dialog>
+        ) : (
+          <p className="text-md text-muted-foreground">Log in to add new events.</p>
         )}
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        {loadingEvents ? (
+          [...Array(6)].map((_, i) => (
+            <Card key={i} className="shadow-lg rounded-xl">
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-10 w-full mt-4" />
+              </CardContent>
+            </Card>
+          ))
+        ) : events.length === 0 ? (
+          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
+            <CalendarDays className="h-16 w-16 text-muted-foreground" />
+            <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
+            <p className="text-md text-muted-foreground mt-2">
+              {user
+                ? "Be the first to add one using the 'Add New Event' button above!"
+                : "Log in to add and view upcoming events."}
+            </p>
+            {!user && (
+              <Button asChild className="mt-4">
+                <Link to="/login">Login to Add Events</Link>
+              </Button>
+            )}
+          </div>
+        ) : (
+          events.map((event) => (
+            <Card key={event.id} className="shadow-lg rounded-xl hover:shadow-xl">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-medium font-lora">
+                  {event.title}
+                </CardTitle>
+                <CalendarDays className="h-6 w-6 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-sm text-muted-foreground">Date: {format(new Date(event.date), "PPP")}</p>
+                {event.location && <p className="text-sm text-muted-foreground">Location: {event.location}</p>}
+                {event.description && <p className="text-sm text-muted-foreground">{event.description}</p>}
+                {event.humanitix_link ? (
+                  <Button asChild className="w-full">
+                    <a href={event.humanitix_link} target="_blank" rel="noopener noreferrer">
+                      <LinkIcon className="mr-2 h-4 w-4" /> View on Humanitix
+                    </a>
+                  </Button>
+                ) : (
+                  <Button variant="outline" className="w-full" disabled>
+                    No Humanitix Link
+                  </Button>
+                )}
+                {user && user.id === event.user_id && (
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingEvent(event);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your event.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(event.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {editingEvent && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-lora">Edit Event</DialogTitle>
+              <CardDescription>Update the details for your choir event.</CardDescription>
+            </DialogHeader>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
+              <div className="space-y-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-title">Title</Label>
+                  <Input id="edit-title" {...editForm.register("title")} />
+                  {editForm.formState.errors.title && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-date">Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !editForm.watch("date") && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {editForm.watch("date") ? format(editForm.watch("date"), "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={editForm.watch("date")}
+                        onSelect={(date) => editForm.setValue("date", date!)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {editForm.formState.errors.date && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.date.message}</p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-location">Location</Label>
+                  <Input id="edit-location" {...editForm.register("location")} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea id="edit-description" {...editForm.register("description")} />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-humanitix_link">Humanitix Link (Optional)</Label>
+                <Input id="edit-humanitix_link" {...editForm.register("humanitix_link")} />
+                {editForm.formState.errors.humanitix_link && (
+                  <p className="text-red-500 text-sm">{editForm.formState.errors.humanitix_link.message}</p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                  {editForm.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                      "Save Changes"
+                    )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

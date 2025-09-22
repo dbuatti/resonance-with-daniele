@@ -12,17 +12,27 @@ import CallToActionSection from "@/components/landing/CallToActionSection";
 import InterestFormSection from "@/components/landing/InterestFormSection";
 import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
 
 const Index: React.FC = () => {
   const { user, loading } = useSession();
   console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
 
   if (loading) {
-    return null;
+    return (
+      <div className="py-24 md:py-40 text-center">
+        <Skeleton className="h-16 w-3/4 mx-auto mb-4" />
+        <Skeleton className="h-8 w-1/2 mx-auto" />
+        <div className="flex justify-center gap-4 mt-8">
+          <Skeleton className="h-12 w-32" />
+          <Skeleton className="h-12 w-32" />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto"> {/* Added container mx-auto here */}
+    <>
       {user ? (
         <>
           {console.log("[Index Page] User is logged in, rendering WelcomeHub.")}
@@ -42,7 +52,7 @@ const Index: React.FC = () => {
           <CallToActionSection />
         </>
       )}
-    </div>
+    </>
   );
 };
 
