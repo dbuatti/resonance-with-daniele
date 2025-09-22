@@ -94,7 +94,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
       if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means "no rows found"
         console.error("[SessionContext] Error fetching profile data:", profileError);
-        return null;
+        throw profileError; // Re-throw to be caught by react-query's error handling
       } else if (profileData) {
         console.log("[SessionContext] Full profile data fetched:", profileData);
         // Add email to profile for convenience
@@ -120,9 +120,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes (renamed from cacheTime in v5)
     refetchOnWindowFocus: true, // Refetch when window regains focus
-    onError: (error) => {
-      console.error("[SessionContext] React Query profile fetch error:", error);
-    },
   });
 
   // Derived user object with admin status
