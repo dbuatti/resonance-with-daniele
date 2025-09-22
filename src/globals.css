@@ -90,13 +90,13 @@
 @layer base {
   html {
     height: 100%;
-    @apply bg-background;
+    /* Removed @apply bg-background; */
   }
   body {
     height: 100%;
     background-color: hsl(var(--background));
     @apply bg-background text-foreground font-sans;
-    min-height: 100vh;
+    /* Removed min-height: 100vh; */
     /* Removed fixed background pseudo-element to fix iOS white box issue */
   }
 
