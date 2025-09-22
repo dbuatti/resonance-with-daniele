@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -24,70 +24,102 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    console.log("[SessionContext] Initializing auth state change listener.");
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log(`[SessionContext] Auth state changed: Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
-      setSession(currentSession);
-      let currentUser: CustomUser | null = currentSession?.user || null;
-      console.log("[SessionContext] Raw currentUser from session:", currentUser);
+  // Memoized function to process user and profile data
+  const processUserAndProfile = useCallback(async (currentUser: User | null) => {
+    let processedUser: CustomUser | null = currentUser;
 
-      if (currentUser) {
-        console.log(`[SessionContext] Ensuring profile exists for user ID: ${currentUser.id}`);
-        // Use upsert to either insert a new profile or update an existing one
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .upsert(
-            {
-              id: currentUser.id,
-              first_name: currentUser.user_metadata?.first_name || null,
-              last_name: currentUser.user_metadata?.last_name || null,
-              avatar_url: currentUser.user_metadata?.avatar_url || null,
-              is_admin: currentUser.email === 'daniele.buatti@gmail.com' || currentUser.email === 'resonancewithdaniele@gmail.com',
-            },
-            { onConflict: 'id' } // If a row with this 'id' exists, update it; otherwise, insert it.
-          );
+    if (processedUser) {
+      console.log(`[SessionContext] Processing profile for user ID: ${processedUser.id}`);
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id: processedUser.id,
+            first_name: processedUser.user_metadata?.first_name || null,
+            last_name: processedUser.user_metadata?.last_name || null,
+            avatar_url: processedUser.user_metadata?.avatar_url || null,
+            is_admin: processedUser.email === 'daniele.buatti@gmail.com' || processedUser.email === 'resonancewithdaniele@gmail.com',
+          },
+          { onConflict: 'id' }
+        );
 
-        if (profileError) {
-          console.error("[SessionContext] Error upserting profile data:", profileError);
-          currentUser = { ...currentUser, is_admin: false }; // Default to false on error
-        } else if (profileData && profileData.length > 0) {
-          // Profile exists or was created/updated, get is_admin status from the returned data
-          currentUser = { ...currentUser, is_admin: profileData[0].is_admin };
-          console.log("[SessionContext] User profile upserted. is_admin status:", profileData[0].is_admin);
-        } else {
-          // Fallback if upsert didn't return data (should ideally not happen with upsert)
-          currentUser = { ...currentUser, is_admin: currentUser.email === 'daniele.buatti@gmail.com' || currentUser.email === 'resonancewithdaniele@gmail.com' };
-          console.log("[SessionContext] Profile upserted, but no data returned. Setting is_admin based on email.");
-        }
+      if (profileError) {
+        console.error("[SessionContext] Error upserting profile data:", profileError);
+        processedUser = { ...processedUser, is_admin: false };
+      } else if (profileData && profileData.length > 0) {
+        processedUser = { ...processedUser, is_admin: profileData[0].is_admin };
+        console.log("[SessionContext] User profile upserted. is_admin status:", profileData[0].is_admin);
+      } else {
+        processedUser = { ...processedUser, is_admin: processedUser.email === 'daniele.buatti@gmail.com' || processedUser.email === 'resonancewithdaniele@gmail.com' };
+        console.log("[SessionContext] Profile upserted, but no data returned. Setting is_admin based on email.");
       }
-      
-      setUser(currentUser);
-      setLoading(false); // Ensure loading is set to false after all async operations
-      console.log("[SessionContext] Final user state:", currentUser);
-      console.log("[SessionContext] Loading state set to false.");
+    }
+    return processedUser;
+  }, []); // No dependencies, as supabase is stable
 
-      if (currentUser) {
-        console.log(`[SessionContext] User is logged in. Current path: ${location.pathname}`);
+  useEffect(() => {
+    console.log("[SessionContext] Initializing session and auth state listener.");
+
+    const getInitialSessionAndSetupListener = async () => {
+      // 1. Get initial session immediately
+      console.log("[SessionContext] Attempting to get initial session.");
+      const { data: { session: initialSession }, error: initialSessionError } = await supabase.auth.getSession();
+
+      if (initialSessionError) {
+        console.error("[SessionContext] Error getting initial session:", initialSessionError);
+      }
+
+      const processedInitialUser = await processUserAndProfile(initialSession?.user || null);
+      setSession(initialSession);
+      setUser(processedInitialUser);
+      setLoading(false); // Set loading to false after initial session is processed
+      console.log("[SessionContext] Initial session processed. Loading set to false.");
+
+      // Handle redirects after initial session is processed
+      if (processedInitialUser) {
         if (location.pathname === '/login') {
-          console.log("[SessionContext] Redirecting from /login to /.");
+          console.log("[SessionContext] Redirecting from /login to / after initial session.");
           navigate('/');
         }
       } else {
-        console.log(`[SessionContext] User is NOT logged in. Current path: ${location.pathname}`);
-        // Only redirect if not already on a public page
         if (location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
-          console.log(`[SessionContext] Redirecting from ${location.pathname} to /login.`);
+          console.log(`[SessionContext] Redirecting from ${location.pathname} to /login after initial session.`);
           navigate('/login');
         }
       }
-    });
 
-    return () => {
-      console.log("[SessionContext] Unsubscribing from auth state changes.");
-      subscription.unsubscribe();
+      // 2. Set up auth state change listener for subsequent changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+        console.log(`[SessionContext] Auth state changed (listener): Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
+        setSession(currentSession);
+        const processedUser = await processUserAndProfile(currentSession?.user || null);
+        setUser(processedUser);
+        // No need to setLoading(false) here again, as it's already false from initial fetch
+        console.log("[SessionContext] Listener processed. Final user state:", processedUser);
+
+        // Handle redirects for subsequent auth state changes
+        if (processedUser) {
+          if (location.pathname === '/login') {
+            console.log("[SessionContext] Redirecting from /login to / after listener update.");
+            navigate('/');
+          }
+        } else {
+          if (location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
+            console.log(`[SessionContext] Redirecting from ${location.pathname} to /login after listener update.`);
+            navigate('/login');
+          }
+        }
+      });
+
+      return () => {
+        console.log("[SessionContext] Unsubscribing from auth state changes.");
+        subscription.unsubscribe();
+      };
     };
-  }, [navigate, location.pathname]);
+
+    getInitialSessionAndSetupListener();
+
+  }, [navigate, location.pathname, processUserAndProfile]); // Added processUserAndProfile to dependencies
 
   const contextValue = { session, user, loading };
   console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null');
