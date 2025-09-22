@@ -14,12 +14,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
-import AvatarUpload from "@/components/AvatarUpload"; // Import the new AvatarUpload component
+import AvatarUpload from "@/components/AvatarUpload";
+import SurveyForm from "@/components/profile/SurveyForm"; // Import the new SurveyForm component
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
   last_name: z.string().min(1, "Last name is required").optional().or(z.literal("")),
-  // avatar_url is now managed by the AvatarUpload component, not directly by this form
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -186,7 +186,7 @@ const Profile: React.FC = () => {
   const currentLastName = form.watch("last_name");
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12 animate-fade-in-up">
+    <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in-up"> {/* Added space-y-8 for separation */}
       <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader className="text-center">
           <Avatar className="w-24 h-24 mx-auto mb-4">
@@ -244,6 +244,11 @@ const Profile: React.FC = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* Survey Form Section */}
+      <div className="max-w-2xl mx-auto">
+        <SurveyForm />
+      </div>
     </div>
   );
 };
