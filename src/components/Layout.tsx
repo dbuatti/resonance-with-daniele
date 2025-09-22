@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon } from "lucide-react";
+import { User as UserIcon, Shield } from "lucide-react"; // Import Shield icon
 import { cn } from "@/lib/utils";
 import BackToTopButton from "./BackToTopButton";
 import FooterSection from "./landing/FooterSection";
-import MobileNav from "./MobileNav"; // Import MobileNav
+import MobileNav from "./MobileNav";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -39,7 +39,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora">
             Resonance with Daniele
           </Link>
-          <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center"> {/* Hidden on small screens */}
+          <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">
             <Button variant="ghost" asChild>
               <Link to="/" className={getNavLinkClass("/")}>Home</Link>
             </Button>
@@ -51,6 +51,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Button variant="ghost" asChild>
                   <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
                 </Button>
+                {user.is_admin && ( // Conditionally render Admin Zone link
+                  <Button variant="ghost" asChild>
+                    <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))}>
+                      <Shield className="h-4 w-4" /> Admin Zone
+                    </Link>
+                  </Button>
+                )}
                 <Button variant="ghost" asChild>
                   <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))}>
                     <Avatar className="h-6 w-6">
@@ -80,7 +87,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </>
             )}
           </nav>
-          <MobileNav user={user} loading={loading} handleLogout={handleLogout} /> {/* Mobile navigation */}
+          <MobileNav user={user} loading={loading} handleLogout={handleLogout} />
         </div>
       </header>
       <main className="flex-grow container mx-auto py-8 px-4">

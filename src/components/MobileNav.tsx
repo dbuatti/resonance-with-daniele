@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, User as UserIcon, LogOut } from "lucide-react";
+import { Menu, User as UserIcon, LogOut, Shield } from "lucide-react"; // Import Shield icon
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +50,11 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
               <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
                 Events
               </Link>
+              {user.is_admin && ( // Conditionally render Admin Zone link
+                <Link to="/admin" className={cn(getNavLinkClass("/admin"), "flex items-center gap-2")} onClick={() => setIsOpen(false)}>
+                  <Shield className="h-5 w-5" /> Admin Zone
+                </Link>
+              )}
               <Link to="/profile" className={cn(getNavLinkClass("/profile"), "flex items-center gap-2")} onClick={() => setIsOpen(false)}>
                 <Avatar className="h-7 w-7">
                   {user.user_metadata?.avatar_url ? (

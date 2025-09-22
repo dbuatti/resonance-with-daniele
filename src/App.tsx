@@ -8,7 +8,8 @@ import NotFound from "./pages/NotFound";
 import Resources from "./pages/Resources";
 import Events from "./pages/Events";
 import Login from "./pages/Login";
-import Profile from "./pages/Profile"; // Import the new Profile page
+import Profile from "./pages/Profile";
+import AdminZone from "./pages/AdminZone"; // Import the new AdminZone page
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 
@@ -26,7 +27,8 @@ const App = () => (
             <Route path="/resources" element={<Layout><Resources /></Layout>} />
             <Route path="/events" element={<Layout><Events /></Layout>} />
             <Route path="/login" element={<Layout><Login /></Layout>} />
-            <Route path="/profile" element={<Layout><Profile /></Layout>} /> {/* New Profile route */}
+            <Route path="/profile" element={<Layout><Profile /></Layout>} />
+            <Route path="/admin" element={<Layout><AdminZone /></Layout>} /> {/* New AdminZone route */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
