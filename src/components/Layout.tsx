@@ -1,15 +1,16 @@
 "use client";
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom"; // Import useLocation
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
-import { cn } from "@/lib/utils"; // Import cn for conditional class names
-import BackToTopButton from "./BackToTopButton"; // Import the new BackToTopButton
-import FooterSection from "./landing/FooterSection"; // Added missing import
+import { cn } from "@/lib/utils";
+import BackToTopButton from "./BackToTopButton";
+import FooterSection from "./landing/FooterSection";
+import MobileNav from "./MobileNav"; // Import MobileNav
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,7 +18,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, loading } = useSession();
-  const location = useLocation(); // Get current location
+  const location = useLocation();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -28,17 +29,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const getNavLinkClass = (path: string) =>
     cn(
       "hover:text-primary-foreground/80",
-      location.pathname === path && "text-accent font-semibold" // Apply accent color and bold for active link
+      location.pathname === path && "text-accent font-semibold"
     );
 
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
-        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora">
             Resonance with Daniele
           </Link>
-          <nav className="flex flex-wrap justify-center sm:justify-end gap-2 items-center">
+          <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center"> {/* Hidden on small screens */}
             <Button variant="ghost" asChild>
               <Link to="/" className={getNavLinkClass("/")}>Home</Link>
             </Button>
@@ -79,13 +80,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </>
             )}
           </nav>
+          <MobileNav user={user} loading={loading} handleLogout={handleLogout} /> {/* Mobile navigation */}
         </div>
       </header>
       <main className="flex-grow container mx-auto py-8 px-4">
         {children}
       </main>
-      <FooterSection /> {/* Ensure FooterSection is included */}
-      <BackToTopButton /> {/* Add the BackToTopButton here */}
+      <FooterSection />
+      <BackToTopButton />
     </div>
   );
 };

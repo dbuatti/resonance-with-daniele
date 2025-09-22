@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2 } from "lucide-react"; // Import Loader2
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Link } from "react-router-dom"; // Added missing import
+import { Link } from "react-router-dom";
 
 // Define the schema for a resource
 const resourceSchema = z.object({
@@ -212,7 +212,13 @@ const Resources: React.FC = () => {
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                    {addForm.formState.isSubmitting ? "Adding..." : "Add Resource"}
+                    {addForm.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                      </>
+                    ) : (
+                      "Add Resource"
+                    )}
                   </Button>
                 </DialogFooter>
               </form>
@@ -286,7 +292,13 @@ const Resources: React.FC = () => {
                     </div>
                     <DialogFooter>
                       <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                        {addForm.formState.isSubmitting ? "Adding..." : "Add Resource"}
+                        {addForm.formState.isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                          </>
+                        ) : (
+                          "Add Resource"
+                        )}
                       </Button>
                     </DialogFooter>
                   </form>
@@ -380,7 +392,13 @@ const Resources: React.FC = () => {
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={editForm.formState.isSubmitting}>
-                  {editForm.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                  {editForm.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </Button>
               </DialogFooter>
             </form>

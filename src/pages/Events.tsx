@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react"; // Import Loader2
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Link } from "react-router-dom"; // Added missing import
+import { Link } from "react-router-dom";
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -265,7 +265,13 @@ const Events: React.FC = () => {
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                    {addForm.formState.isSubmitting ? "Adding..." : "Add Event"}
+                    {addForm.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                      </>
+                    ) : (
+                      "Add Event"
+                    )}
                   </Button>
                 </DialogFooter>
               </form>
@@ -375,7 +381,13 @@ const Events: React.FC = () => {
                     </div>
                     <DialogFooter>
                       <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                        {addForm.formState.isSubmitting ? "Adding..." : "Add Event"}
+                        {addForm.formState.isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                          </>
+                        ) : (
+                          "Add Event"
+                        )}
                       </Button>
                     </DialogFooter>
                   </form>
@@ -513,7 +525,13 @@ const Events: React.FC = () => {
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={editForm.formState.isSubmitting}>
-                  {editForm.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                  {editForm.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </Button>
               </DialogFooter>
             </form>
