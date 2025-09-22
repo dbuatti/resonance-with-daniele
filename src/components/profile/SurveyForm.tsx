@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -66,10 +66,42 @@ const SurveyForm: React.FC = () => {
     },
   });
 
+  const previousUserIdRef = useRef<string | undefined>(undefined);
+
   // Effect to fetch survey data when user or session loading state changes
   useEffect(() => {
-    console.log("[SurveyForm] useEffect: User session loading:", loadingUserSession, "User:", user?.id);
-    if (!loadingUserSession && user) {
+    console.log("[SurveyForm] useEffect: User session loading:", loadingUserSession, "User:", user?.id, "Survey data loaded:", surveyDataLoaded, "Previous User ID Ref:", previousUserIdRef.current);
+
+    if (loadingUserSession) {
+      return;
+    }
+
+    // If user ID changes, reset surveyDataLoaded to trigger a new fetch
+    if (user?.id !== previousUserIdRef.current) {
+      console.log("[SurveyForm] User ID changed, resetting surveyDataLoaded.");
+      setSurveyDataLoaded(false);
+      previousUserIdRef.current = user?.id; // Update ref
+      // Also reset form states immediately to avoid showing old data
+      form.reset({
+        how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
+        session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
+        inclusivity_importance: "", suggestions: "",
+      });
+    }
+
+    if (!user) {
+      console.log("[SurveyForm] useEffect: No user, resetting survey states.");
+      setSurveyDataLoaded(true); // No user, so no survey data to load, consider it "loaded"
+      form.reset({
+        how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
+        session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
+        inclusivity_importance: "", suggestions: "",
+      });
+      return;
+    }
+
+    // Only load survey if user is present AND survey data hasn't been loaded yet
+    if (user && !surveyDataLoaded) {
       const loadSurveyData = async () => {
         console.log(`[SurveyForm] loadSurveyData: Fetching survey data for user ID: ${user.id}`);
         const { data, error } = await supabase
@@ -107,17 +139,8 @@ const SurveyForm: React.FC = () => {
         console.log("[SurveyForm] loadSurveyData: Survey data loaded state set to true.");
       };
       loadSurveyData();
-    } else if (!loadingUserSession && !user) {
-      // If session is loaded but no user (e.g., logged out), reset states
-      console.log("[SurveyForm] useEffect: No user, resetting survey states.");
-      setSurveyDataLoaded(true); // No user, so no survey data to load, consider it "loaded"
-      form.reset({
-        how_heard: "", motivation: [], attended_session: undefined, singing_experience: "",
-        session_frequency: "", preferred_time: "", music_genres: [], choir_goals: "",
-        inclusivity_importance: "", suggestions: "",
-      });
     }
-  }, [user, loadingUserSession]); // Dependencies: user and loadingUserSession
+  }, [user?.id, loadingUserSession, surveyDataLoaded]); // Dependencies: user?.id, loadingUserSession, and surveyDataLoaded
 
   const onSubmit = async (data: SurveyFormData) => {
     if (!user) {
@@ -163,6 +186,7 @@ const SurveyForm: React.FC = () => {
         inclusivity_importance: data.inclusivity_importance || "",
         suggestions: data.suggestions || "",
       });
+      setSurveyDataLoaded(true); // Mark survey data as loaded to prevent re-fetch by useEffect
     }
   };
 
