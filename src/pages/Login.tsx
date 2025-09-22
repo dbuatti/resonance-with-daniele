@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React from 'react'; // Added React import
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +32,7 @@ const Login: React.FC = () => {
             }}
             theme="light"
             redirectTo="/"
-            debug={true} {/* Added debug prop */}
+            debug={true}
           />
         </CardContent>
       </Card>
