@@ -23,38 +23,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   useEffect(() => {
     console.log('SessionContextProvider: Initializing auth state listener.');
 
-    const getInitialSession = async () => {
-      const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('SessionContextProvider: Error getting initial session:', error);
-      }
-      console.log('SessionContextProvider: Initial session data:', { initialSession });
-      setSession(initialSession);
-      setUser(initialSession?.user || null);
-      setLoading(false);
-
-      if (initialSession?.user) {
-        console.log('SessionContextProvider: Initial check found user, redirecting from login if applicable.');
-        if (location.pathname === '/login') {
-          navigate('/');
-        }
-      } else {
-        console.log('SessionContextProvider: Initial check found no user, redirecting to login if not already there.');
-        if (location.pathname !== '/login') {
-          navigate('/login');
-        }
-      }
-    };
-
-    getInitialSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession, error) => {
-      console.log('SessionContextProvider: Auth state changed!', { event, currentSession, error });
-      
-      // Check for errors in the auth state change
-      if (error) {
-        console.error('SessionContextProvider: Error in onAuthStateChange:', error);
-      }
+    // Rely solely on onAuthStateChange for initial session and subsequent changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log('SessionContextProvider: Auth state changed!', { event, currentSession });
       
       setSession(currentSession);
       setUser(currentSession?.user || null);
