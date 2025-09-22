@@ -15,11 +15,13 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <React.Fragment> {/* Wrap multiple children in a Fragment */}
-        <Toaster />
-        <Sonner />
-      </React.Fragment>
+    <React.Fragment> {/* New Fragment to wrap TooltipProvider and BrowserRouter */}
+      <TooltipProvider>
+        <React.Fragment>
+          <Toaster />
+          <Sonner />
+        </React.Fragment>
+      </TooltipProvider>
       <BrowserRouter>
         <SessionContextProvider>
           <Routes>
@@ -32,7 +34,7 @@ const App = () => (
           </Routes>
         </SessionContextProvider>
       </BrowserRouter>
-    </TooltipProvider>
+    </React.Fragment>
   </QueryClientProvider>
 );
 
