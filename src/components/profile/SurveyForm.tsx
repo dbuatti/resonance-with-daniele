@@ -29,12 +29,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea"; // Import Textarea
 
 const surveySchema = z.object({
   how_heard: z.string().optional(),
   motivation: z.array(z.string()).optional(),
   attended_session: z.boolean().optional(),
   singing_experience: z.string().optional(),
+  session_frequency: z.string().optional(), // New field
+  preferred_time: z.string().optional(),    // New field
+  music_genres: z.array(z.string()).optional(), // New field
+  choir_goals: z.string().optional(),       // New field
+  inclusivity_importance: z.string().optional(), // New field
+  suggestions: z.string().optional(),       // New field
 });
 
 type SurveyFormData = z.infer<typeof surveySchema>;
@@ -50,6 +57,12 @@ const SurveyForm: React.FC = () => {
       motivation: [],
       attended_session: undefined,
       singing_experience: "",
+      session_frequency: "",
+      preferred_time: "",
+      music_genres: [],
+      choir_goals: "",
+      inclusivity_importance: "",
+      suggestions: "",
     },
   });
 
@@ -59,7 +72,7 @@ const SurveyForm: React.FC = () => {
         setLoadingSurvey(true);
         const { data, error } = await supabase
           .from("profiles")
-          .select("how_heard, motivation, attended_session, singing_experience")
+          .select("how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
           .eq("id", user.id)
           .single();
 
@@ -72,6 +85,12 @@ const SurveyForm: React.FC = () => {
             motivation: data.motivation || [],
             attended_session: data.attended_session ?? undefined,
             singing_experience: data.singing_experience || "",
+            session_frequency: data.session_frequency || "",
+            preferred_time: data.preferred_time || "",
+            music_genres: data.music_genres || [],
+            choir_goals: data.choir_goals || "",
+            inclusivity_importance: data.inclusivity_importance || "",
+            suggestions: data.suggestions || "",
           });
         }
         setLoadingSurvey(false);
@@ -98,6 +117,12 @@ const SurveyForm: React.FC = () => {
           motivation: data.motivation && data.motivation.length > 0 ? data.motivation : null,
           attended_session: data.attended_session ?? null,
           singing_experience: data.singing_experience || null,
+          session_frequency: data.session_frequency || null,
+          preferred_time: data.preferred_time || null,
+          music_genres: data.music_genres && data.music_genres.length > 0 ? data.music_genres : null,
+          choir_goals: data.choir_goals || null,
+          inclusivity_importance: data.inclusivity_importance || null,
+          suggestions: data.suggestions || null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "id" }
@@ -124,6 +149,12 @@ const SurveyForm: React.FC = () => {
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" /> {/* New skeleton for frequency */}
+          <Skeleton className="h-10 w-full" /> {/* New skeleton for preferred time */}
+          <Skeleton className="h-24 w-full" /> {/* New skeleton for music genres */}
+          <Skeleton className="h-24 w-full" /> {/* New skeleton for goals */}
+          <Skeleton className="h-10 w-full" /> {/* New skeleton for inclusivity */}
+          <Skeleton className="h-24 w-full" /> {/* New skeleton for suggestions */}
         </CardContent>
       </Card>
     );
@@ -173,7 +204,7 @@ const SurveyForm: React.FC = () => {
                 <FormItem>
                   <FormLabel>What is your primary motivation for joining a choir? (Select all that apply)</FormLabel>
                   <div className="space-y-2">
-                    {["Socializing", "Improving vocal skills", "Stress relief", "Performance opportunities", "Learning new music", "Community connection", "Other"].map((item) => (
+                    {["Socialising", "Improving vocal skills", "Stress relief", "Performance opportunities", "Learning new music", "Community connection", "Other"].map((item) => (
                       <FormField
                         key={item}
                         control={form.control}
@@ -261,6 +292,180 @@ const SurveyForm: React.FC = () => {
                       <SelectItem value="Advanced">Advanced (Experienced singer, comfortable with harmonies)</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* New Questions */}
+            <FormField
+              control={form.control}
+              name="session_frequency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How often would you like to attend choir sessions?</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Weekly">Weekly</SelectItem>
+                      <SelectItem value="Fortnightly">Fortnightly</SelectItem>
+                      <SelectItem value="Monthly">Monthly</SelectItem>
+                      <SelectItem value="Occasionally">Occasionally</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="preferred_time"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>What time of day works best for you to attend choir sessions?</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select preferred time" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Morning">Morning</SelectItem>
+                      <SelectItem value="Afternoon">Afternoon</SelectItem>
+                      <SelectItem value="Evening">Evening</SelectItem>
+                      <SelectItem value="Weekends">Weekends</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="music_genres"
+              render={() => (
+                <FormItem>
+                  <FormLabel>What types of music would you most enjoy singing in the choir? (Select all that apply)</FormLabel>
+                  <div className="space-y-2">
+                    {["Pop", "Musical Theatre", "Classical", "Jazz", "Folk", "Other"].map((item) => (
+                      <FormField
+                        key={item}
+                        control={form.control}
+                        name="music_genres"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={item}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(item)}
+                                  onCheckedChange={(checked) => {
+                                    return checked
+                                      ? field.onChange([...(field.value || []), item])
+                                      : field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== item
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {item}
+                              </FormLabel>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="choir_goals"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>What are you hoping to get out of the choir experience?</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Share your goals and expectations..."
+                      className="resize-y min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="inclusivity_importance"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>How important is it for you to attend a welcoming and inclusive environment?</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Very important" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Very important</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Somewhat important" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Somewhat important</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Neutral" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Neutral</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Not important" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Not important</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="suggestions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Do you have any suggestions for making Resonance with Daniele better?</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Share your suggestions..."
+                      className="resize-y min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
