@@ -269,7 +269,7 @@ const AdminMembers: React.FC = () => {
                             </div>
                           </DialogContent>
                         </Dialog>
-                      </td>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
