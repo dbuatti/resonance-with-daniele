@@ -26,7 +26,7 @@ const MeetDanieleSection: React.FC = () => {
                 Daniele Buatti is a vocal coach, musical director, and lifelong music lover. With a passion for making singing accessible to everyone, Daniele leads the choir with warmth, energy, and a focus on connection through music.
               </p>
               <p>
-                Her extensive experience in musical theatre and performance ensures a high-quality, yet always fun and supportive, environment for all singers.
+                His extensive experience in musical theatre and performance ensures a high-quality, yet always fun and supportive, environment for all singers.
               </p>
               <Button variant="link" className="p-0 h-auto text-primary hover:underline" asChild>
                 <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer">
