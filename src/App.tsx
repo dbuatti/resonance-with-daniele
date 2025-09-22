@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -12,7 +11,7 @@ import AdminZone from "./pages/AdminZone";
 import AdminMembers from "./pages/AdminMembers";
 import AdminSurveyData from "./pages/AdminSurveyData";
 import AdminInterestSubmissions from "./pages/AdminInterestSubmissions";
-import CurrentEventPage from "./pages/CurrentEventPage"; // New import
+import CurrentEventPage from "./pages/CurrentEventPage";
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -26,7 +25,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
+      {/* Removed shadcn/ui Toaster as sonner is used */}
       <Sonner />
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <BrowserRouter>
@@ -36,7 +35,7 @@ const App = () => (
               <Route path="/resources" element={<Layout><Resources /></Layout>} />
               <Route path="/events" element={<Layout><Events /></Layout>} />
               <Route path="/login" element={<Layout><Login /></Layout>} />
-              <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} /> {/* New Route */}
+              <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
               
               <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
                 <Route index element={<ProfileDetails />} />

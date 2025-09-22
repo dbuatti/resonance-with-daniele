@@ -4,9 +4,8 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { PostgrestError } from '@supabase/supabase-js';
 
-export interface Profile { // Exported Profile interface
+export interface Profile {
   id: string;
   first_name: string | null;
   last_name: string | null;
@@ -23,63 +22,42 @@ export interface Profile { // Exported Profile interface
   choir_goals: string | null;
   inclusivity_importance: string | null;
   suggestions: string | null;
-  email: string | null; // Added email to profile for convenience
+  email: string | null;
 }
 
 interface CustomUser extends User {
-  is_admin: boolean; // Make it non-optional
+  is_admin: boolean;
 }
 
 interface SessionContextType {
   session: Session | null;
   user: CustomUser | null;
-  profile: Profile | null; // Added full profile to context
+  profile: Profile | null;
   loading: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
-  // Use a single state object to manage session, user, profile, and loading
   const [contextState, setContextState] = useState<SessionContextType>({
     session: null,
     user: null,
-    profile: null, // Initialize profile as null
+    profile: null,
     loading: true,
   });
-
-  const { session, user, profile, loading } = contextState; // Destructure for easier access
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Refs to keep track of the *current* user and session for comparison in the listener
-  const userRef = useRef<CustomUser | null>(user);
-  const sessionRef = useRef<Session | null>(session);
-  const profileRef = useRef<Profile | null>(profile); // Ref for profile
-  const initialSessionHandledRef = useRef(false);
-
-  useEffect(() => {
-    userRef.current = user;
-  }, [user]);
-
-  useEffect(() => {
-    sessionRef.current = session;
-  }, [session]);
-
-  useEffect(() => {
-    profileRef.current = profile;
-  }, [profile]);
-
-  const fetchProfileData = useCallback(async (userId: string, userEmail: string | undefined): Promise<Profile | null> => {
+  const fetchProfileData = useCallback(async (userId: string): Promise<Profile | null> => {
     console.log(`[SessionContext] Fetching full profile data for user ID: ${userId}`);
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('*') // Select all profile fields
+      .select('*')
       .eq('id', userId)
       .single();
 
-    if (profileError && profileError.code !== 'PGRST116') {
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means "no rows found"
       console.error("[SessionContext] Error fetching profile data:", profileError);
       return null;
     } else if (profileData) {
@@ -91,117 +69,76 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     }
   }, []);
 
+  const determineAdminStatus = useCallback((userEmail: string | undefined, profileAdminStatus: boolean | undefined): boolean => {
+    return profileAdminStatus ?? (userEmail === 'daniele.buatti@gmail.com' || userEmail === 'resonancewithdaniele@gmail.com');
+  }, []);
+
   useEffect(() => {
-    console.log("[SessionContext] Initializing session and auth state listener.");
+    console.log("[SessionContext] Initializing auth state listener.");
 
-    const getInitialSessionAndSetupListener = async () => {
-      console.log("[SessionContext] Attempting to get initial session.");
-      const { data: { session: initialSession }, error: initialSessionError } = await supabase.auth.getSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log(`[SessionContext] Auth state changed: Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
 
-      if (initialSessionError) {
-        console.error("[SessionContext] Error getting initial session:", initialSessionError);
+      let newUser: CustomUser | null = null;
+      let newProfile: Profile | null = null;
+
+      if (currentSession?.user) {
+        newProfile = await fetchProfileData(currentSession.user.id);
+        const isAdmin = determineAdminStatus(currentSession.user.email, newProfile?.is_admin);
+        newUser = { ...currentSession.user, is_admin: isAdmin };
+        // Ensure profile also has the email for convenience, even if not directly from DB
+        if (newProfile) {
+          newProfile.email = currentSession.user.email;
+        } else {
+          // If no profile exists, create a minimal one for context
+          newProfile = {
+            id: currentSession.user.id,
+            first_name: null,
+            last_name: null,
+            avatar_url: null,
+            is_admin: isAdmin,
+            updated_at: new Date().toISOString(),
+            how_heard: null, motivation: null, attended_session: null, singing_experience: null,
+            session_frequency: null, preferred_time: null, music_genres: null, choir_goals: null,
+            inclusivity_importance: null, suggestions: null,
+            email: currentSession.user.email,
+          };
+        }
       }
 
-      let userWithAdminStatus: CustomUser | null = null;
-      let fullProfile: Profile | null = null;
-
-      if (initialSession?.user) {
-        fullProfile = await fetchProfileData(initialSession.user.id, initialSession.user.email);
-        const isAdmin = fullProfile?.is_admin ?? (initialSession.user.email === 'daniele.buatti@gmail.com' || initialSession.user.email === 'resonancewithdaniele@gmail.com');
-        userWithAdminStatus = { ...initialSession.user, is_admin: isAdmin };
-        console.log("[SessionContext] Initial user with admin status:", userWithAdminStatus);
-        console.log("[SessionContext] Initial full profile:", fullProfile);
-      }
-      
-      // Update all relevant states in a single call to prevent multiple renders
       setContextState({
-        session: initialSession,
-        user: userWithAdminStatus,
-        profile: fullProfile, // Set the full profile here
+        session: currentSession,
+        user: newUser,
+        profile: newProfile,
         loading: false,
       });
-      initialSessionHandledRef.current = true; 
-      console.log("[SessionContext] Initial session processed. Loading set to false. User and Profile set.");
+      console.log("[SessionContext] State updated. Loading set to false. User and Profile set.");
 
       // Define publicly accessible paths
-      const publicPaths = ['/', '/events', '/resources', '/current-event'];
+      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login'];
 
-      // Handle redirects based on initial session and admin status
-      if (userWithAdminStatus) {
+      // Handle redirects after auth state change
+      if (newUser) {
         if (location.pathname === '/login') {
-          console.log("[SessionContext] Redirecting from /login to / after initial session.");
+          console.log("[SessionContext] Redirecting from /login to / after login.");
           navigate('/');
         }
       } else {
         if (!publicPaths.includes(location.pathname)) {
-          console.log(`[SessionContext] Redirecting from ${location.pathname} to /login after initial session.`);
+          console.log(`[SessionContext] Redirecting from ${location.pathname} to /login after logout or unauthenticated access.`);
           navigate('/login');
         }
       }
+    });
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-        console.log(`[SessionContext] Auth state changed (listener): Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
-        
-        // If this is an INITIAL_SESSION event and we've already handled it, skip to prevent redundant updates
-        if (event === 'INITIAL_SESSION' && initialSessionHandledRef.current) {
-          console.log("[SessionContext] Skipping redundant INITIAL_SESSION event from listener.");
-          return;
-        }
-
-        let newUserWithAdminStatus: CustomUser | null = null;
-        let newFullProfile: Profile | null = null;
-
-        if (currentSession?.user) {
-          newFullProfile = await fetchProfileData(currentSession.user.id, currentSession.user.email);
-          const isAdmin = newFullProfile?.is_admin ?? (currentSession.user.email === 'daniele.buatti@gmail.com' || currentSession.user.email === 'resonancewithdaniele@gmail.com');
-          newUserWithAdminStatus = { ...currentSession.user, is_admin: isAdmin };
-        }
-
-        // Define these variables *before* the if condition
-        const shouldUpdateSession = sessionRef.current?.access_token !== currentSession?.access_token || sessionRef.current?.expires_at !== currentSession?.expires_at;
-        const shouldUpdateCoreUser = userRef.current?.id !== newUserWithAdminStatus?.id || userRef.current?.email !== newUserWithAdminStatus?.email || userRef.current?.is_admin !== newUserWithAdminStatus?.is_admin;
-        const shouldUpdateProfile = JSON.stringify(profileRef.current) !== JSON.stringify(newFullProfile);
-
-        if (shouldUpdateSession || shouldUpdateCoreUser || shouldUpdateProfile) {
-          setContextState(prevState => ({
-            ...prevState,
-            session: currentSession,
-            user: newUserWithAdminStatus,
-            profile: newFullProfile, // Update the full profile here
-            loading: false, // Ensure loading is false after any auth state change
-          }));
-          console.log("[SessionContext] Listener processed. Session, User, and/or Profile state updated.");
-        } else {
-          console.log("[SessionContext] Listener processed. User, Session, and Profile state unchanged (no significant diff).");
-        }
-
-        // Handle redirects after auth state change
-        if (newUserWithAdminStatus) {
-          if (location.pathname === '/login') {
-            console.log("[SessionContext] Redirecting from /login to / after listener update.");
-            navigate('/');
-          }
-        } else {
-          if (!publicPaths.includes(location.pathname)) {
-            console.log(`[SessionContext] Redirecting from ${location.pathname} to /login after listener update.`);
-            navigate('/login');
-          }
-        }
-      });
-
-      return () => {
-        console.log("[SessionContext] Unsubscribing from auth state changes.");
-        subscription.unsubscribe();
-      };
+    return () => {
+      console.log("[SessionContext] Unsubscribing from auth state changes.");
+      subscription.unsubscribe();
     };
+  }, [navigate, fetchProfileData, determineAdminStatus, location.pathname]);
 
-    getInitialSessionAndSetupListener();
-
-  }, [navigate, fetchProfileData, location.pathname]);
-
-  // Provide the destructured values from the single state object
-  const contextValue = { session, user, profile, loading };
-  console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin, "profile:", profile ? 'present' : 'null');
+  const contextValue = { ...contextState };
+  console.log("[SessionContext] Rendering SessionContextProvider with loading:", contextState.loading, "user:", contextState.user ? contextState.user.id : 'null', "is_admin:", contextState.user?.is_admin, "profile:", contextState.profile ? 'present' : 'null');
 
   return (
     <SessionContext.Provider value={contextValue}>
