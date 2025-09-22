@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,12 +40,38 @@ const Profile: React.FC = () => {
     },
   });
 
+  const previousUserIdRef = useRef<string | undefined>(undefined);
+
   // Effect to fetch profile data when user or session loading state changes
   useEffect(() => {
-    console.log("[Profile Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id, "Profile data loaded:", profileDataLoaded);
-    // Only load profile if user is present, session is not loading, AND profile data hasn't been loaded yet
-    // OR if the user ID changes (e.g., a different user logs in)
-    if (!loadingUserSession && user && (!profileDataLoaded || user.id !== form.getValues().id)) { // Added user.id !== form.getValues().id check
+    console.log("[Profile Page] useEffect: User session loading:", loadingUserSession, "User:", user?.id, "Profile data loaded:", profileDataLoaded, "Previous User ID Ref:", previousUserIdRef.current);
+
+    if (loadingUserSession) {
+      return;
+    }
+
+    // If user ID changes, reset profileDataLoaded to trigger a new fetch
+    if (user?.id !== previousUserIdRef.current) {
+      console.log("[Profile Page] User ID changed, resetting profileDataLoaded.");
+      setProfileDataLoaded(false);
+      previousUserIdRef.current = user?.id; // Update ref
+      // Also reset form and avatar states immediately to avoid showing old data
+      form.reset({ first_name: "", last_name: "" });
+      setCurrentAvatarUrl(null);
+      setSelectedAvatarFile(null);
+      setRemoveAvatarRequested(false);
+    }
+
+    if (!user) {
+      console.log("[Profile Page] useEffect: No user, resetting profile states.");
+      form.reset({ first_name: "", last_name: "" });
+      setCurrentAvatarUrl(null);
+      setProfileDataLoaded(true); // No user, so no profile data to load, consider it "loaded"
+      return;
+    }
+
+    // Only load profile if user is present AND profile data hasn't been loaded yet
+    if (user && !profileDataLoaded) {
       const loadProfile = async () => {
         console.log(`[Profile Page] loadProfile: Fetching profile for user ID: ${user.id}`);
         const { data, error } = await supabase
@@ -73,12 +99,6 @@ const Profile: React.FC = () => {
         console.log("[Profile Page] loadProfile: Profile data loaded state set to true.");
       };
       loadProfile();
-    } else if (!loadingUserSession && !user) {
-      // If session is loaded but no user (e.g., logged out), reset states
-      console.log("[Profile Page] useEffect: No user, resetting profile states.");
-      setProfileDataLoaded(true); // No user, so no profile data to load, consider it "loaded"
-      form.reset({ first_name: "", last_name: "" });
-      setCurrentAvatarUrl(null);
     }
   }, [user?.id, loadingUserSession, profileDataLoaded]); // Dependencies: user?.id, loadingUserSession, and profileDataLoaded
 
