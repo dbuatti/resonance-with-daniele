@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -45,14 +46,12 @@ interface Event {
 }
 
 const Events: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loadingEvents, setLoadingEvents] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { user, loading: loadingUserSession } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const queryClient = useQueryClient(); // Initialize query client
 
   const addForm = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -76,13 +75,45 @@ const Events: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    const debounceTimeout = setTimeout(() => {
-      fetchEvents(searchTerm);
-    }, 300);
+  // Query function for fetching events
+  const fetchEvents = async (currentSearchTerm: string): Promise<Event[]> => {
+    console.log("[Events Page] Fetching all events from Supabase with search term:", currentSearchTerm);
+    let query = supabase
+      .from("events")
+      .select("*")
+      .order("date", { ascending: true });
 
-    return () => clearTimeout(debounceTimeout);
-  }, [searchTerm, user]);
+    if (currentSearchTerm) {
+      query = query.or(
+        `title.ilike.%${currentSearchTerm}%,description.ilike.%${currentSearchTerm}%,location.ilike.%${currentSearchTerm}%`
+      );
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("[Events Page] Error fetching events:", error);
+      throw new Error("Failed to load events.");
+    }
+    console.log("[Events Page] Events fetched successfully:", data?.length, "events.");
+    return data || [];
+  };
+
+  // Use react-query for events data
+  const { data: events, isLoading, isFetching, error: fetchError } = useQuery<Event[], Error>(
+    ['events', searchTerm], // Query key includes search term
+    () => fetchEvents(searchTerm),
+    {
+      enabled: !loadingUserSession, // Only fetch if user session is not loading
+      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+      refetchOnWindowFocus: true, // Refetch when window regains focus
+      onError: (queryError) => {
+        console.error("[Events Page] React Query error:", queryError);
+        showError("An error occurred while loading events.");
+      },
+    }
+  );
 
   useEffect(() => {
     if (editingEvent) {
@@ -95,40 +126,6 @@ const Events: React.FC = () => {
       });
     }
   }, [editingEvent, editForm]);
-
-  const fetchEvents = async (currentSearchTerm: string) => {
-    setLoadingEvents(true);
-    setFetchError(null);
-    
-    try {
-      let query = supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true });
-
-      if (currentSearchTerm) {
-        query = query.or(
-          `title.ilike.%${currentSearchTerm}%,description.ilike.%${currentSearchTerm}%,location.ilike.%${currentSearchTerm}%`
-        );
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching events:", error);
-        setFetchError("Failed to load events. Please try again.");
-        showError("Failed to load events.");
-      } else {
-        setEvents(data || []);
-      }
-    } catch (error) {
-      console.error("Unexpected error fetching events:", error);
-      setFetchError("An unexpected error occurred while loading events.");
-      showError("An unexpected error occurred.");
-    } finally {
-      setLoadingEvents(false);
-    }
-  };
 
   const onAddSubmit = async (data: EventFormData) => {
     if (!user) {
@@ -154,7 +151,7 @@ const Events: React.FC = () => {
         showSuccess("Event added successfully!");
         addForm.reset();
         setIsAddDialogOpen(false);
-        fetchEvents(searchTerm);
+        queryClient.invalidateQueries(['events']); // Invalidate to refetch and update UI
       }
     } catch (error) {
       console.error("Unexpected error adding event:", error);
@@ -190,7 +187,7 @@ const Events: React.FC = () => {
         showSuccess("Event updated successfully!");
         setIsEditDialogOpen(false);
         setEditingEvent(null);
-        fetchEvents(searchTerm);
+        queryClient.invalidateQueries(['events']); // Invalidate to refetch and update UI
       }
     } catch (error) {
       console.error("Unexpected error updating event:", error);
@@ -216,7 +213,7 @@ const Events: React.FC = () => {
         showError("Failed to delete event. Please try again.");
       } else {
         showSuccess("Event deleted successfully!");
-        fetchEvents(searchTerm);
+        queryClient.invalidateQueries(['events']); // Invalidate to refetch and update UI
       }
     } catch (error) {
       console.error("Unexpected error deleting event:", error);
@@ -224,13 +221,16 @@ const Events: React.FC = () => {
     }
   };
 
+  // Determine if skeleton should be shown: only if loading AND no data is available
+  const showSkeleton = isLoading && !events;
+
   return (
     <div className="space-y-6 py-8"> {/* Removed container mx-auto */}
       <h1 className="text-4xl font-bold text-center font-lora">
-        {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
+        {showSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>
       
-      {loadingEvents ? (
+      {showSkeleton ? (
         <div className="text-lg text-center text-muted-foreground">
           <Skeleton className="h-6 w-1/2 mx-auto" />
         </div>
@@ -243,7 +243,7 @@ const Events: React.FC = () => {
       {fetchError && (
         <Alert variant="destructive" className="max-w-2xl mx-auto">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{fetchError}</AlertDescription>
+          <AlertDescription>{fetchError.message}</AlertDescription>
         </Alert>
       )}
 
@@ -256,7 +256,7 @@ const Events: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 pr-4 py-2 w-full"
-            disabled={loadingEvents}
+            disabled={isLoading}
           />
         </div>
         
@@ -347,7 +347,7 @@ const Events: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {loadingEvents ? (
+        {showSkeleton ? (
           [...Array(6)].map((_, i) => (
             <Card key={i} className="shadow-lg rounded-xl">
               <CardHeader>
@@ -361,7 +361,7 @@ const Events: React.FC = () => {
               </CardContent>
             </Card>
           ))
-        ) : events.length === 0 ? (
+        ) : events && events.length === 0 ? (
           <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
             <CalendarDays className="h-16 w-16 text-muted-foreground" />
             <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
@@ -377,7 +377,7 @@ const Events: React.FC = () => {
             )}
           </div>
         ) : (
-          events.map((event) => (
+          events?.map((event) => (
             <Card key={event.id} className="shadow-lg rounded-xl hover:shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-medium font-lora">
