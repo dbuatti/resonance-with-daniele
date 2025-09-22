@@ -16,6 +16,14 @@ const AboutChoirSection: React.FC = () => {
           </p>
         </div>
 
+        {/* Image of Daniele conducting */}
+        <img
+          src="/images/daniele-conduct.jpeg"
+          alt="Daniele Buatti conducting the choir"
+          className="w-full max-w-3xl mx-auto rounded-xl shadow-lg mb-12 object-cover animate-fade-in-up"
+          style={{ animationDelay: '0.3s' }}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Card className="text-center p-6 shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             <CardHeader className="flex flex-col items-center">
