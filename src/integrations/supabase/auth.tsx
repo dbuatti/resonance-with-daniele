@@ -21,38 +21,57 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const location = useLocation();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    console.log('SessionContextProvider: Initializing auth state listener.');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('SessionContextProvider: Auth state changed!', { event, session });
       setSession(session);
       setUser(session?.user || null);
       setLoading(false);
 
-      if (session?.user && location.pathname === '/login') {
-        navigate('/'); // Redirect authenticated users from login page to home
-      } else if (!session?.user && location.pathname !== '/login') {
-        navigate('/login'); // Redirect unauthenticated users to login page
+      if (session?.user) {
+        console.log('SessionContextProvider: User found, redirecting from login if applicable.');
+        if (location.pathname === '/login') {
+          navigate('/'); // Redirect authenticated users from login page to home
+        }
+      } else {
+        console.log('SessionContextProvider: No user found, redirecting to login if not already there.');
+        if (location.pathname !== '/login') {
+          navigate('/login'); // Redirect unauthenticated users to login page
+        }
       }
     });
 
     // Initial session check
-    const getSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
+    const getInitialSession = async () => {
+      console.log('SessionContextProvider: Performing initial session check.');
+      const { data: { session: initialSession }, error } = await supabase.auth.getSession();
       if (error) {
-        console.error("Error getting session:", error);
+        console.error("SessionContextProvider: Error getting initial session:", error);
       }
-      setSession(session);
-      setUser(session?.user || null);
+      console.log('SessionContextProvider: Initial session data:', { initialSession });
+      setSession(initialSession);
+      setUser(initialSession?.user || null);
       setLoading(false);
 
-      if (session?.user && location.pathname === '/login') {
-        navigate('/');
-      } else if (!session?.user && location.pathname !== '/login') {
-        navigate('/login');
+      if (initialSession?.user) {
+        console.log('SessionContextProvider: Initial check found user, redirecting from login if applicable.');
+        if (location.pathname === '/login') {
+          navigate('/');
+        }
+      } else {
+        console.log('SessionContextProvider: Initial check found no user, redirecting to login if not already there.');
+        if (location.pathname !== '/login') {
+          navigate('/login');
+        }
       }
     };
 
-    getSession();
+    getInitialSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('SessionContextProvider: Unsubscribing from auth state changes.');
+      subscription.unsubscribe();
+    };
   }, [navigate, location.pathname]);
 
   const contextValue = { session, user, loading };
