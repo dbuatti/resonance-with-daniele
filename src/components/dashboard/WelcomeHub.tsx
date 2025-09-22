@@ -31,9 +31,14 @@ const WelcomeHub: React.FC = () => {
   const { user, profile, loading: loadingSession } = useSession();
 
   // Fetch upcoming event using react-query
-  const { data: upcomingEvent, isLoading: loadingEvent } = useQuery<Event | null, Error>(
-    ['upcomingEvent'],
-    async () => {
+  const { data: upcomingEvent, isLoading: loadingEvent } = useQuery<
+    Event | null, // TQueryFnData
+    Error,          // TError
+    Event | null, // TData (the type of the 'data' property)
+    ['upcomingEvent'] // TQueryKey
+  >({
+    queryKey: ['upcomingEvent'],
+    queryFn: async () => {
       console.log("[WelcomeHub] Fetching upcoming event.");
       const { data, error } = await supabase
         .from("events")
@@ -50,17 +55,20 @@ const WelcomeHub: React.FC = () => {
       console.log("[WelcomeHub] Upcoming event fetched:", data);
       return data || null;
     },
-    {
-      enabled: !loadingSession, // Only fetch if session is not loading
-      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-    }
-  );
+    enabled: !loadingSession, // Only fetch if session is not loading
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+  });
 
   // Fetch recent resources using react-query
-  const { data: recentResources, isLoading: loadingResources } = useQuery<Resource[], Error>(
-    ['recentResources'],
-    async () => {
+  const { data: recentResources, isLoading: loadingResources } = useQuery<
+    Resource[], // TQueryFnData
+    Error,          // TError
+    Resource[], // TData (the type of the 'data' property)
+    ['recentResources'] // TQueryKey
+  >({
+    queryKey: ['recentResources'],
+    queryFn: async () => {
       console.log("[WelcomeHub] Fetching recent resources.");
       const { data, error } = await supabase
         .from("resources")
@@ -75,12 +83,10 @@ const WelcomeHub: React.FC = () => {
       console.log("[WelcomeHub] Recent resources fetched:", data);
       return data || [];
     },
-    {
-      enabled: !loadingSession, // Only fetch if session is not loading
-      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-    }
-  );
+    enabled: !loadingSession, // Only fetch if session is not loading
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+  });
 
   // Determine if survey is completed based on the profile from context
   const isSurveyCompleted = profile ? (
