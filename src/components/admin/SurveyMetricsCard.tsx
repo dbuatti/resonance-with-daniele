@@ -130,6 +130,8 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
   }));
 
   const renderChart = (data: any[], title: string, fill: string, type: 'bar' | 'pie' = 'bar') => {
+    const chartMargin = { top: 5, right: 5, left: 5, bottom: 5 }; // Consistent margin
+
     if (data.length === 0) {
       return (
         <Card className="p-4 flex flex-col items-center justify-center h-[250px]">
@@ -144,14 +146,14 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
         <CardTitle className="text-xl font-lora mb-4">{title}</CardTitle>
         <ResponsiveContainer width="100%" height={200}>
           {type === 'bar' ? (
-            <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+            <BarChart data={data} margin={chartMargin}>
               <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
               <YAxis />
               <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
               <Bar dataKey="value" fill={fill} />
             </BarChart>
           ) : (
-            <PieChart>
+            <PieChart margin={chartMargin}>
               <Pie
                 data={data}
                 cx="50%"
@@ -182,9 +184,12 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
         <CardDescription className="text-muted-foreground">
           Overview of member survey responses ({totalResponses} out of {totalProfiles} members have responded). Last updated: {formattedLatestUpdate}
         </CardDescription>
+        <p className="text-sm text-muted-foreground mt-2">
+          Use these insights to understand your choir members' preferences, motivations, and feedback, helping you tailor the Resonance with Daniele experience.
+        </p>
       </CardHeader>
       <CardContent className="space-y-8">
-        <Card className="p-4">
+        <Card className="p-4 border-l-4 border-primary"> {/* Added border-l-4 for emphasis */}
           <CardTitle className="text-xl font-lora mb-4">Overall Engagement</CardTitle>
           <CardContent className="p-0 space-y-2 text-muted-foreground">
             <div>Total Members: <Badge variant="secondary">{totalProfiles}</Badge></div>
