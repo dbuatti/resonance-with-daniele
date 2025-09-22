@@ -53,9 +53,14 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   }, []);
 
   // Use react-query to fetch and cache the user profile
-  const { data: profile, isLoading: profileLoading } = useQuery({ // Removed explicit generics
+  const { data: profile, isLoading: profileLoading } = useQuery<
+    Profile | null, // TQueryFnData: The type of data returned by the queryFn
+    Error,          // TError: The type of error that can be thrown
+    Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
+    ['profile', string | undefined] // TQueryKey: Explicitly define the QueryKey type
+  >({
     queryKey: ['profile', session?.user?.id],
-    queryFn: async (): Promise<Profile | null> => { // Explicitly typed queryFn return
+    queryFn: async () => {
       if (!session?.user?.id) {
         console.log("[SessionContext] No user ID, skipping profile fetch.");
         return null;
