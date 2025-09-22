@@ -19,7 +19,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, profile, loading } = useSession(); // Get profile from context
+  const { user, profile, loading } = useSession();
   const location = useLocation();
   console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
 
@@ -30,7 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url; // Prioritize profile.avatar_url
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   const getNavLinkClass = (path: string) =>
     cn(
@@ -71,6 +71,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">
             <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
               <Link to="/" className={getNavLinkClass("/")}><span>Home</span></Link>
+            </Button>
+            <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
+              <Link to="/current-event" className={getNavLinkClass("/current-event")}><span>Current Event</span></Link> {/* New Link */}
             </Button>
             {user ? (
               <>

@@ -7,11 +7,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Menu, User as UserIcon, LogOut, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Profile } from "@/integrations/supabase/auth"; // Import Profile type
+import { Profile } from "@/integrations/supabase/auth";
 
 interface MobileNavProps {
-  user: any; // Supabase User object
-  profile: Profile | null; // Added profile prop
+  user: any;
+  profile: Profile | null;
   loading: boolean;
   handleLogout: () => void;
 }
@@ -27,7 +27,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
     );
 
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url; // Prioritize profile.avatar_url
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -45,6 +45,9 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
           <Link to="/" className={getNavLinkClass("/")} onClick={() => setIsOpen(false)}>
             <span>Home</span>
           </Link>
+          <Link to="/current-event" className={getNavLinkClass("/current-event")} onClick={() => setIsOpen(false)}>
+            <span>Current Event</span>
+          </Link> {/* New Link */}
           {!loading && user ? (
             <>
               <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>
