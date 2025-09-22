@@ -136,7 +136,7 @@ const AdminProfiles: React.FC = () => {
                       <TableCell className="font-medium">
                         {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : "N/A"}
                       </TableCell>
-                      <TableCell>{profile.email || "N/A"}</TableCell> {/* Display email from profiles table */}
+                      <TableCell>{profile.email || "N/A"}</TableCell>
                       <TableCell>{profile.is_admin ? "Yes" : "No"}</TableCell>
                       <TableCell className="text-right">
                         <Dialog>
