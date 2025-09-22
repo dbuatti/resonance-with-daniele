@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2, Search } from "lucide-react";
+import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2, Search, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -35,9 +36,9 @@ type EventFormData = z.infer<typeof eventSchema>;
 
 interface Event {
   id: string;
-  user_id: string; // Added user_id to identify event creator
+  user_id: string;
   title: string;
-  date: string; // ISO date string
+  date: string;
   location?: string;
   description?: string;
   humanitix_link?: string;
@@ -51,8 +52,7 @@ const Events: React.FC = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { user, loading: loadingUserSession } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
-
-  console.log("[Events Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const addForm = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -77,17 +77,15 @@ const Events: React.FC = () => {
   });
 
   useEffect(() => {
-    console.log("[Events Page] useEffect: Initial fetch events or search term changed.");
     const debounceTimeout = setTimeout(() => {
       fetchEvents(searchTerm);
-    }, 300); // Debounce search to avoid too many requests
+    }, 300);
 
     return () => clearTimeout(debounceTimeout);
   }, [searchTerm, user]);
 
   useEffect(() => {
     if (editingEvent) {
-      console.log("[Events Page] useEffect: Setting edit form defaults for event:", editingEvent.id);
       editForm.reset({
         title: editingEvent.title,
         date: new Date(editingEvent.date),
@@ -100,129 +98,138 @@ const Events: React.FC = () => {
 
   const fetchEvents = async (currentSearchTerm: string) => {
     setLoadingEvents(true);
-    console.log("[Events Page] Fetching all events from Supabase with search term:", currentSearchTerm);
-    let query = supabase
-      .from("events")
-      .select("*")
-      .order("date", { ascending: true });
+    setFetchError(null);
+    
+    try {
+      let query = supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: true });
 
-    if (currentSearchTerm) {
-      query = query.or(
-        `title.ilike.%${currentSearchTerm}%,description.ilike.%${currentSearchTerm}%,location.ilike.%${currentSearchTerm}%`
-      );
+      if (currentSearchTerm) {
+        query = query.or(
+          `title.ilike.%${currentSearchTerm}%,description.ilike.%${currentSearchTerm}%,location.ilike.%${currentSearchTerm}%`
+        );
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching events:", error);
+        setFetchError("Failed to load events. Please try again.");
+        showError("Failed to load events.");
+      } else {
+        setEvents(data || []);
+      }
+    } catch (error) {
+      console.error("Unexpected error fetching events:", error);
+      setFetchError("An unexpected error occurred while loading events.");
+      showError("An unexpected error occurred.");
+    } finally {
+      setLoadingEvents(false);
     }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("[Events Page] Error fetching events:", error);
-      showError("Failed to load events.");
-    } else {
-      setEvents(data || []);
-      console.log("[Events Page] Events fetched successfully:", data?.length, "events.");
-    }
-    setLoadingEvents(false);
-    console.log("[Events Page] Events loading state set to false.");
   };
 
   const onAddSubmit = async (data: EventFormData) => {
-    console.log("[Events Page] Add form submitted. Data:", data);
     if (!user) {
       showError("You must be logged in to add events.");
-      console.error("[Events Page] Attempted to add event without a user.");
       return;
     }
 
-    const { title, date, location, description, humanitix_link } = data;
-    console.log(`[Events Page] Inserting new event for user ${user.id}:`, { title, date, location });
-    const { error } = await supabase.from("events").insert({
-      user_id: user.id,
-      title,
-      date: format(date, "yyyy-MM-dd"),
-      location,
-      description,
-      humanitix_link: humanitix_link || null,
-    });
-
-    if (error) {
-      console.error("[Events Page] Error adding event:", error);
-      showError("Failed to add event.");
-    } else {
-      showSuccess("Event added successfully!");
-      addForm.reset();
-      setIsAddDialogOpen(false);
-      fetchEvents(searchTerm);
-      console.log("[Events Page] Event added and list refreshed.");
-    }
-  };
-
-  const onEditSubmit = async (data: EventFormData) => {
-    console.log("[Events Page] Edit form submitted. Data:", data, "Editing Event ID:", editingEvent?.id);
-    if (!user || !editingEvent) {
-    showError("You must be logged in and select an event to edit.");
-    console.error("[Events Page] Attempted to edit event without user or selected event.");
-    return;
-    }
-
-    const { title, date, location, description, humanitix_link } = data;
-    console.log(`[Events Page] Updating event ${editingEvent.id} for user ${user.id}:`, { title, date, location });
-    const { error } = await supabase
-      .from("events")
-      .update({
+    try {
+      const { title, date, location, description, humanitix_link } = data;
+      const { error } = await supabase.from("events").insert({
+        user_id: user.id,
         title,
         date: format(date, "yyyy-MM-dd"),
         location,
         description,
         humanitix_link: humanitix_link || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", editingEvent.id)
-      .eq("user_id", user.id);
+      });
 
-    if (error) {
-      console.error("[Events Page] Error updating event:", error);
-      showError("Failed to update event.");
-    } else {
-      showSuccess("Event updated successfully!");
-      setIsEditDialogOpen(false);
-      setEditingEvent(null);
-      fetchEvents(searchTerm);
-      console.log("[Events Page] Event updated and list refreshed.");
+      if (error) {
+        console.error("Error adding event:", error);
+        showError("Failed to add event. Please try again.");
+      } else {
+        showSuccess("Event added successfully!");
+        addForm.reset();
+        setIsAddDialogOpen(false);
+        fetchEvents(searchTerm);
+      }
+    } catch (error) {
+      console.error("Unexpected error adding event:", error);
+      showError("An unexpected error occurred while adding the event.");
+    }
+  };
+
+  const onEditSubmit = async (data: EventFormData) => {
+    if (!user || !editingEvent) {
+      showError("You must be logged in and select an event to edit.");
+      return;
+    }
+
+    try {
+      const { title, date, location, description, humanitix_link } = data;
+      const { error } = await supabase
+        .from("events")
+        .update({
+          title,
+          date: format(date, "yyyy-MM-dd"),
+          location,
+          description,
+          humanitix_link: humanitix_link || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", editingEvent.id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error updating event:", error);
+        showError("Failed to update event. Please try again.");
+      } else {
+        showSuccess("Event updated successfully!");
+        setIsEditDialogOpen(false);
+        setEditingEvent(null);
+        fetchEvents(searchTerm);
+      }
+    } catch (error) {
+      console.error("Unexpected error updating event:", error);
+      showError("An unexpected error occurred while updating the event.");
     }
   };
 
   const handleDelete = async (eventId: string) => {
-    console.log("[Events Page] Delete requested for event ID:", eventId);
     if (!user) {
       showError("You must be logged in to delete events.");
-      console.error("[Events Page] Attempted to delete event without a user.");
       return;
     }
 
-    console.log(`[Events Page] Deleting event ${eventId} for user ${user.id}.`);
-    const { error } = await supabase
-      .from("events")
-      .delete()
-      .eq("id", eventId)
-      .eq("user_id", user.id);
+    try {
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", eventId)
+        .eq("user_id", user.id);
 
-    if (error) {
-      console.error("[Events Page] Error deleting event:", error);
-      showError("Failed to delete event.");
-    } else {
-      showSuccess("Event deleted successfully!");
-      fetchEvents(searchTerm);
-      console.log("[Events Page] Event deleted and list refreshed.");
+      if (error) {
+        console.error("Error deleting event:", error);
+        showError("Failed to delete event. Please try again.");
+      } else {
+        showSuccess("Event deleted successfully!");
+        fetchEvents(searchTerm);
+      }
+    } catch (error) {
+      console.error("Unexpected error deleting event:", error);
+      showError("An unexpected error occurred while deleting the event.");
     }
   };
-
-  console.log("[Events Page] Rendering Events component. Loading Events:", loadingEvents, "Events count:", events.length);
 
   return (
     <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>
+      
       {loadingEvents ? (
         <div className="text-lg text-center text-muted-foreground">
           <Skeleton className="h-6 w-1/2 mx-auto" />
@@ -231,6 +238,13 @@ const Events: React.FC = () => {
         <p className="text-lg text-center text-muted-foreground">
           Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
         </p>
+      )}
+
+      {fetchError && (
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{fetchError}</AlertDescription>
+        </Alert>
       )}
 
       <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
@@ -245,101 +259,96 @@ const Events: React.FC = () => {
             disabled={loadingEvents}
           />
         </div>
+        
         {user ? (
-          <>
-            {console.log("[Events Page] User is logged in, showing 'Add New Event' button.")}
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Event
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle className="font-lora">Add New Event</DialogTitle>
-                  <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
-                </DialogHeader>
-                <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-                  <div className="space-y-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input id="title" {...addForm.register("title")} />
-                      {addForm.formState.errors.title && (
-                        <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
-                      )}
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="date">Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !addForm.watch("date") && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarDays className="mr-2 h-4 w-4" />
-                            {addForm.watch("date") ? format(addForm.watch("date"), "PPP") : <span>Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={addForm.watch("date")}
-                            onSelect={(date) => addForm.setValue("date", date!)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {addForm.formState.errors.date && (
-                        <p className="text-red-500 text-sm">{addForm.formState.errors.date.message}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="location">Location</Label>
-                      <Input id="location" {...addForm.register("location")} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea id="description" {...addForm.register("description")} />
-                    </div>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add New Event
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle className="font-lora">Add New Event</DialogTitle>
+                <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
+              </DialogHeader>
+              <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                <div className="space-y-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" {...addForm.register("title")} />
+                    {addForm.formState.errors.title && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
+                    )}
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
-                    <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
-                    {addForm.formState.errors.humanitix_link && (
-                          <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
-                        )}
+                    <Label htmlFor="date">Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !addForm.watch("date") && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {addForm.watch("date") ? format(addForm.watch("date"), "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={addForm.watch("date")}
+                          onSelect={(date) => addForm.setValue("date", date!)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {addForm.formState.errors.date && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.date.message}</p>
+                    )}
                   </div>
-                  <DialogFooter>
-                    <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                      {addForm.formState.isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                        </>
-                      ) : (
-                        "Add Event"
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </>
+                </div>
+                <div className="space-y-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" {...addForm.register("location")} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea id="description" {...addForm.register("description")} />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
+                  <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
+                  {addForm.formState.errors.humanitix_link && (
+                    <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                    {addForm.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                      </>
+                    ) : (
+                      "Add Event"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         ) : (
-          <>
-            {console.log("[Events Page] User is NOT logged in, showing 'Log in to add events' message.")}
-            <p className="text-md text-muted-foreground">Log in to add new events.</p>
-          </>
+          <p className="text-md text-muted-foreground">Log in to add new events.</p>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {loadingEvents ? (
-          [...Array(3)].map((_, i) => (
+          [...Array(6)].map((_, i) => (
             <Card key={i} className="shadow-lg rounded-xl">
               <CardHeader>
                 <Skeleton className="h-6 w-3/4 mb-2" />
@@ -353,105 +362,20 @@ const Events: React.FC = () => {
             </Card>
           ))
         ) : events.length === 0 ? (
-          <>
-            {console.log("[Events Page] No events found, displaying empty state.")}
-            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
-              <CalendarDays className="h-16 w-16 text-muted-foreground" />
-              <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
-              <p className="text-md text-muted-foreground mt-2">
-                {user
-                  ? "Be the first to add one using the 'Add New Event' button above!"
-                  : "Log in to add and view upcoming events."}
-              </p>
-              {!user && (
-                <Button asChild className="mt-4">
-                  <Link to="/login">Login to Add Events</Link>
-                </Button>
-              )}
-              {user && (
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Event
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle className="font-lora">Add New Event</DialogTitle>
-                      <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
-                    </DialogHeader>
-                    <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-                      <div className="space-y-2">
-                        <div className="grid gap-2">
-                          <Label htmlFor="title">Title</Label>
-                          <Input id="title" {...addForm.register("title")} />
-                          {addForm.formState.errors.title && (
-                            <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
-                          )}
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="date">Date</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !addForm.watch("date") && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarDays className="mr-2 h-4 w-4" />
-                                {addForm.watch("date") ? format(addForm.watch("date"), "PPP") : <span>Pick a date</span>}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <Calendar
-                                mode="single"
-                                selected={addForm.watch("date")}
-                                onSelect={(date) => addForm.setValue("date", date!)}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          {addForm.formState.errors.date && (
-                            <p className="text-red-500 text-sm">{addForm.formState.errors.date.message}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="grid gap-2">
-                          <Label htmlFor="location">Location</Label>
-                          <Input id="location" {...addForm.register("location")} />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="description">Description</Label>
-                          <Textarea id="description" {...addForm.register("description")} />
-                        </div>
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
-                        <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
-                        {addForm.formState.errors.humanitix_link && (
-                          <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
-                        )}
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                          {addForm.formState.isSubmitting ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                            </>
-                          ) : (
-                            "Add Event"
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </div>
-          </>
+          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
+            <CalendarDays className="h-16 w-16 text-muted-foreground" />
+            <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
+            <p className="text-md text-muted-foreground mt-2">
+              {user
+                ? "Be the first to add one using the 'Add New Event' button above!"
+                : "Log in to add and view upcoming events."}
+            </p>
+            {!user && (
+              <Button asChild className="mt-4">
+                <Link to="/login">Login to Add Events</Link>
+              </Button>
+            )}
+          </div>
         ) : (
           events.map((event) => (
             <Card key={event.id} className="shadow-lg rounded-xl hover:shadow-xl">
@@ -484,7 +408,6 @@ const Events: React.FC = () => {
                       onClick={() => {
                         setEditingEvent(event);
                         setIsEditDialogOpen(true);
-                        console.log("[Events Page] Editing event:", event.id);
                       }}
                     >
                       <Edit className="h-4 w-4 mr-2" /> Edit
