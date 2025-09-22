@@ -19,8 +19,9 @@ const CurrentEventPage: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="relative w-full max-w-4xl mx-auto h-[400px] md:h-[600px] rounded-lg overflow-hidden shadow-xl border border-border">
+            {/* Removed ?widget=popup from HUMANITIX_EVENT_URL */}
             <iframe
-              src={HUMANITIX_EVENT_URL} {/* Removed ?widget=popup */}
+              src={HUMANITIX_EVENT_URL}
               title="Humanitix Current Event"
               className="absolute top-0 left-0 w-full h-full border-0"
               allowFullScreen
