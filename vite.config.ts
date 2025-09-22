@@ -14,4 +14,8 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ['@supabase/supabase-js'], // Ensure Supabase client is pre-bundled
+    dedupe: ['react', 'react-dom'], // Deduplicate React and React DOM
+  },
 }));
