@@ -92,10 +92,8 @@
     @apply border-border;
   }
 
-  /* Removed: @apply bg-background text-foreground; from html */
-
   body {
-    @apply font-sans;
+    @apply bg-background text-foreground font-sans; /* Re-added bg-background text-foreground to body */
   }
 
   h1, h2, h3, h4, h5, h6 {
