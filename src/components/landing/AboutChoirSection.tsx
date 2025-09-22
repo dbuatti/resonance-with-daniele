@@ -6,9 +6,15 @@ import { Users, Heart, Sparkles } from "lucide-react";
 
 const AboutChoirSection: React.FC = () => {
   return (
-    <section id="about-choir" className="py-16 md:py-24 bg-background text-foreground">
-      <div className="max-w-4xl mx-auto px-4"> {/* Added px-4 for consistency */}
+    <section className="py-16 md:py-24 bg-background text-foreground">
+      <div> {/* Removed px-4 */}
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora">About My Choir</h2>
+
+        <div className="max-w-3xl mx-auto text-lg text-muted-foreground space-y-6 mb-12">
+          <p>
+            Led by me, Daniele Buatti, a musical director and vocal coach with years of experience in musical theatre and performance, my choir is all about connecting through music. I celebrate all voices, all backgrounds, and all identities.
+          </p>
+        </div>
 
         {/* Image of Daniele conducting */}
         <img
@@ -16,15 +22,6 @@ const AboutChoirSection: React.FC = () => {
           alt="Daniele Buatti conducting the choir"
           className="w-full max-w-3xl mx-auto rounded-xl shadow-lg mb-12 object-cover"
         />
-
-        <div className="max-w-3xl mx-auto text-lg text-muted-foreground space-y-6 mb-12">
-          <p>
-            Led by me, Daniele Buatti, a musical director and vocal coach with years of experience in musical theatre and performance, my choir is all about connecting through music. I celebrate all voices, all backgrounds, and all identities, including our beautiful LGBTQIA+ community. Everyone is truly welcome here.
-          </p>
-          <p>
-            Our community connection happens not just in rehearsals, but through shared laughter, post-choir gatherings, and social events. It's a space to sing, share, and shine together.
-          </p>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Card className="text-center p-6 shadow-lg rounded-xl">

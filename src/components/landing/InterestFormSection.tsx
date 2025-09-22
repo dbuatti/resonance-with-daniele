@@ -71,7 +71,7 @@ const InterestFormSection: React.FC = () => {
   if (isSubmitted) {
     return (
       <section className="py-16 md:py-24 bg-muted text-foreground">
-        <div className="max-w-2xl mx-auto"> {/* Removed px-4 */}
+        <div className="max-w-2xl"> {/* Removed px-4 */}
           <Card className="p-6 md:p-8 shadow-lg rounded-xl text-center">
             <CardHeader>
               <CardTitle className="text-3xl font-bold font-lora">Thank You!</CardTitle>
@@ -90,12 +90,12 @@ const InterestFormSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground">
-      <div className="max-w-2xl mx-auto"> {/* Removed px-4 */}
+      <div className="max-w-2xl"> {/* Removed px-4 */}
         <Card className="p-6 md:p-8 shadow-lg rounded-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold font-lora">Don’t Miss a Beat! Get Choir Updates</CardTitle>
+            <CardTitle className="text-3xl font-bold font-lora">Stay Up-to-Date on the Choir!</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
-              Express your interest to receive exclusive updates on upcoming sessions, special events, and behind-the-scenes news from Daniele.
+              Express your interest to receive updates on upcoming sessions, events, and news.
             </CardDescription>
           </CardHeader>
           <CardContent>

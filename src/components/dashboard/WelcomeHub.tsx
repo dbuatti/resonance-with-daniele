@@ -193,7 +193,7 @@ const WelcomeHub: React.FC = () => {
               <Users className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-foreground text-xl font-lora">Community & Connection</h3>
-                <p className="text-base">Connect with fellow singers at rehearsals, post-choir gatherings, and social events.</p>
+                <p className="text-base">Chat, share, and celebrate with fellow singers.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -218,7 +218,7 @@ const WelcomeHub: React.FC = () => {
               </CardHeader>
               <CardContent className="p-0 space-y-4">
                 <p className="text-base">
-                  Help shape the choir’s future — your input matters! By filling out this quick market research survey, you help me tailor the choir experience to your needs and preferences. It only takes a few minutes!
+                  Help me tailor the choir experience to your needs and preferences by filling out a quick market research survey. It only takes a few minutes!
                 </p>
                 <Button 
                   size="sm" 
