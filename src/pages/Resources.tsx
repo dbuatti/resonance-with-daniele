@@ -167,19 +167,12 @@ const Resources: React.FC = () => {
 
   return (
     <div className="space-y-6 py-8 animate-fade-in-up">
-      {loadingResources ? (
-        <div className="text-center">
-          <Skeleton className="h-10 w-3/4 mx-auto mb-4" />
-          <Skeleton className="h-6 w-1/2 mx-auto" />
-        </div>
-      ) : (
-        <>
-          <h1 className="text-4xl font-bold text-center font-lora">Choir Resources</h1>
-          <p className="text-lg text-center text-muted-foreground">
-            This is where you'll find all the sheet music, practice tracks, and other materials I've prepared for the choir.
-          </p>
-        </>
-      )}
+      <h1 className="text-4xl font-bold text-center font-lora">
+        {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
+      </h1>
+      <p className="text-lg text-center text-muted-foreground">
+        {loadingResources ? <Skeleton className="h-6 w-1/2 mx-auto" /> : "This is where you'll find all the sheet music, practice tracks, and other materials I've prepared for the choir."}
+      </p>
 
       <div className="flex justify-center">
         {loadingResources ? (
