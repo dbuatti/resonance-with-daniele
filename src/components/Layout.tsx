@@ -73,7 +73,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Link to="/" className={getNavLinkClass("/")}><span>Home</span></Link>
             </Button>
             <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
-              <Link to="/current-event" className={getNavLinkClass("/current-event")}><span>Current Event</span></Link> {/* New Link */}
+              <Link to="/current-event" className={getNavLinkClass("/current-event")}><span>Current Event</span></Link>
             </Button>
             {user ? (
               <>
@@ -89,23 +89,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     {console.log("[Layout] User is admin, rendering Admin Zone link.")}
                     <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                       <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))}>
-                        <Shield className="h-4 w-4" /> Admin Zone
+                        <span><Shield className="h-4 w-4" /> Admin Zone</span>
                       </Link>
                     </Button>
                   </>
                 )}
                 <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))}>
-                    <Avatar className="h-6 w-6">
-                      {avatarUrl ? (
-                        <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
-                      ) : (
-                        <AvatarFallback className="bg-primary-foreground text-primary">
-                          <UserIcon className="h-4 w-4" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    My Profile
+                    <span>
+                      <Avatar className="h-6 w-6">
+                        {avatarUrl ? (
+                          <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
+                        ) : (
+                          <AvatarFallback className="bg-primary-foreground text-primary">
+                            <UserIcon className="h-4 w-4" />
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      My Profile
+                    </span>
                   </Link>
                 </Button>
                 <Button variant="ghost" onClick={handleLogout} className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">

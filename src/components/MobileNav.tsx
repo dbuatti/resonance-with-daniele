@@ -47,7 +47,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
           </Link>
           <Link to="/current-event" className={getNavLinkClass("/current-event")} onClick={() => setIsOpen(false)}>
             <span>Current Event</span>
-          </Link> {/* New Link */}
+          </Link>
           {!loading && user ? (
             <>
               <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>
@@ -59,22 +59,24 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
               {user.is_admin && (
                 <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))} onClick={() => setIsOpen(false)}>
-                    <Shield className="h-5 w-5" /> Admin Zone
+                    <span><Shield className="h-5 w-5" /> Admin Zone</span>
                   </Link>
                 </Button>
               )}
               <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                 <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))} onClick={() => setIsOpen(false)}>
-                  <Avatar className="h-7 w-7">
-                    {avatarUrl ? (
-                      <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
-                    ) : (
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        <UserIcon className="h-4 w-4" />
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  My Profile
+                  <span>
+                    <Avatar className="h-7 w-7">
+                      {avatarUrl ? (
+                        <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
+                      ) : (
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          <UserIcon className="h-4 w-4" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    My Profile
+                  </span>
                 </Link>
               </Button>
               <Button
