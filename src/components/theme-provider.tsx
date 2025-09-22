@@ -22,8 +22,10 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 
   return (
     <NextThemesProvider {...props}>
-      <ThemeLogger />
-      {children}
+      <React.Fragment> {/* Wrap ThemeLogger and children in a Fragment */}
+        <ThemeLogger />
+        {children}
+      </React.Fragment>
     </NextThemesProvider>
   );
 }
