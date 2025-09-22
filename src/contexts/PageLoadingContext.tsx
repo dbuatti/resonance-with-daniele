@@ -10,7 +10,7 @@ interface PageLoadingContextType {
 const PageLoadingContext = createContext<PageLoadingContextType | undefined>(undefined);
 
 export const PageLoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [pageLoading, setPageLoading] = useState(true); // Default to true for initial page load
+  const [pageLoading, setPageLoading] = useState(false); // Default to false
 
   return (
     <PageLoadingContext.Provider value={{ pageLoading, setPageLoading }}>
