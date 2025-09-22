@@ -18,7 +18,12 @@ const Index: React.FC = () => {
   const { user, loading } = useSession();
   console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
 
-  if (loading) {
+  // Only show skeleton if there's no user data AND it's currently loading for the first time
+  // If 'user' is present, it means we have at least stale data, so render the content.
+  const showSkeleton = loading && !user;
+
+  if (showSkeleton) {
+    console.log("[Index Page] Showing skeleton: loading is true and no user data.");
     return (
       <div className="py-24 md:py-40 text-center"> {/* Keep vertical padding for skeleton */}
         <Skeleton className="h-16 w-3/4 mx-auto mb-4" />
