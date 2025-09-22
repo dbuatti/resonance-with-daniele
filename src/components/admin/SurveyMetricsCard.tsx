@@ -17,7 +17,8 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { usePageLoading } from "@/contexts/PageLoadingContext"; // Import usePageLoading
+import { usePageLoading } from "@/contexts/PageLoadingContext";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton component
 
 interface Profile {
   id: string;
