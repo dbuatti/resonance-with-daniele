@@ -8,10 +8,10 @@ const HeroSection: React.FC = () => {
   return (
     <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end text-primary-foreground py-24 md:py-40 text-center overflow-hidden rounded-xl shadow-lg">
       <div className="container mx-auto px-4 relative z-10">
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 animate-fade-in-up font-lora">
+        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 animate-fade-in-up font-lora text-white">
           Sing. Connect. Shine. Join Melbourne’s Pop-Up Choir with Daniele.
         </h1>
-        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto animate-fade-in-up text-hero-description-foreground" style={{ animationDelay: '0.2s' }}>
           A joyful, welcoming space I've created for anyone who loves to sing — no experience needed.
         </p>
         <div className="flex justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>

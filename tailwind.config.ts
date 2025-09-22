@@ -67,9 +67,9 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         // Custom colors for the hero section gradient
-        'hero-gradient-start': 'hsl(218 70% 91%)', // Light Blue (from D6E4FA)
-        'hero-gradient-end': 'hsl(350 20% 81%)',   // Muted Pink (from D7C4C7)
-        'hero-description-foreground': 'hsl(0 0% 90%)', // Very light gray for description
+        'hero-gradient-start': 'hsl(220 30% 98%)', // Very light, desaturated blue
+        'hero-gradient-end': 'hsl(30 40% 98%)',   // Very light, desaturated peach
+        'hero-description-foreground': 'hsl(0 0% 95%)', // Very light gray for description
       },
       borderRadius: {
         lg: "var(--radius)",
