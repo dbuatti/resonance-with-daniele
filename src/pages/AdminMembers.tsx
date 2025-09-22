@@ -188,7 +188,7 @@ const AdminMembers: React.FC = () => {
                       <TableCell className="font-medium">
                         {profile.first_name || profile.last_name
                           ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
-                          : profile.email || "N/A"} {/* Fallback to email */}
+                          : profile.email || "N/A"}
                       </TableCell><TableCell>{profile.email || "N/A"}</TableCell><TableCell>
                         <Select
                           value={profile.is_admin ? "admin" : "user"}
@@ -203,7 +203,7 @@ const AdminMembers: React.FC = () => {
                             <SelectItem value="user">User</SelectItem>
                           </SelectContent>
                         </Select>
-                      </TableCell><TableCell> {/* New Survey Status Cell */}
+                      </TableCell><TableCell>
                         {hasSurveyResponses(profile) ? (
                           <Badge variant="secondary" className="bg-green-100 text-green-800">Responded</Badge>
                         ) : (
