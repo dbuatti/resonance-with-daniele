@@ -89,6 +89,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
       setSession(initialSession);
       let initialUserWithoutAdmin: CustomUser | null = initialSession?.user || null;
+      if (initialUserWithoutAdmin) {
+        initialUserWithoutAdmin = { ...initialUserWithoutAdmin, is_admin: false }; // Default to false
+      }
       setUser(initialUserWithoutAdmin); // Set user immediately without waiting for is_admin
       setLoading(false);
       console.log("[SessionContext] Initial session processed. Loading set to false. User without admin set.");
@@ -120,6 +123,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         console.log(`[SessionContext] Auth state changed (listener): Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
         
         let newUserWithoutAdmin: CustomUser | null = currentSession?.user || null;
+        if (newUserWithoutAdmin) {
+          newUserWithoutAdmin = { ...newUserWithoutAdmin, is_admin: false }; // Default to false
+        }
         
         const userChanged = (oldUser: CustomUser | null, newUser: CustomUser | null) => {
           console.log("--- userChanged comparison ---");
