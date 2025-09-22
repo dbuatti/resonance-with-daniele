@@ -20,21 +20,11 @@ const Login: React.FC = () => {
                 colors: {
                   brand: 'hsl(var(--primary))',
                   brandAccent: 'hsl(var(--accent))',
-                  // You can add more specific color overrides here if needed
-                  // For example:
-                  // defaultButtonBackground: 'hsl(var(--primary))',
-                  // defaultButtonBackgroundHover: 'hsl(var(--primary-foreground))',
-                  // defaultButtonBorder: 'hsl(var(--primary))',
-                  // defaultButtonText: 'hsl(var(--primary-foreground))',
-                  // inputBackground: 'hsl(var(--input))',
-                  // inputBorder: 'hsl(var(--border))',
-                  // inputText: 'hsl(var(--foreground))',
                 },
               },
             },
           }}
           theme="light"
-          debug={false} // Set to false for production
           redirectTo="http://localhost:32100/"
         />
       </div>
