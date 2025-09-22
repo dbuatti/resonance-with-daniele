@@ -5,8 +5,9 @@ import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button"; // Import buttonVariants
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils"; // Import cn utility
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
@@ -41,9 +42,9 @@ const AdminZone: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild>
-              <Link to="/"><span>Go to Home</span></Link>
-            </Button>
+            <Link to="/" className={cn(buttonVariants({ variant: "default" }))}>
+              Go to Home
+            </Link>
           </CardContent>
         </Card>
       </div>
@@ -61,23 +62,23 @@ const AdminZone: React.FC = () => {
         <Card className="shadow-lg rounded-xl p-6 text-center">
           <CardTitle className="text-xl font-lora mb-2">Manage Events</CardTitle>
           <CardDescription>Add, edit, or delete upcoming choir events.</CardDescription>
-          <Button asChild className="mt-4">
-            <Link to="/events"><span>Go to Events</span></Link>
-          </Button>
+          <Link to="/events" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+            Go to Events
+          </Link>
         </Card>
         <Card className="shadow-lg rounded-xl p-6 text-center">
           <CardTitle className="text-xl font-lora mb-2">Manage Resources</CardTitle>
           <CardDescription>Upload and organize sheet music, audio, and tutorials.</CardDescription>
-          <Button asChild className="mt-4">
-            <Link to="/resources"><span>Go to Resources</span></Link>
-          </Button>
+          <Link to="/resources" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+            Go to Resources
+          </Link>
         </Card>
         <Card className="shadow-lg rounded-xl p-6 text-center">
           <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
           <CardDescription>Analyze insights from member surveys.</CardDescription>
-          <Button asChild className="mt-4">
-            <Link to="/profile"><span>View Profiles</span></Link> {/* Link to profile for now, can be a dedicated survey page later */}
-          </Button>
+          <Link to="/profile" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+            View Profiles
+          </Link>
         </Card>
         {/* Add more admin specific cards here */}
       </div>
