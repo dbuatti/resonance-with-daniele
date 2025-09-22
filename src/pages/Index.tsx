@@ -15,8 +15,10 @@ import { useSession } from "@/integrations/supabase/auth";
 
 const Index: React.FC = () => {
   const { user, loading } = useSession();
+  console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
 
   if (loading) {
+    console.log("[Index Page] Rendering loading state.");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg text-muted-foreground">Loading...</p>
@@ -27,9 +29,13 @@ const Index: React.FC = () => {
   return (
     <> {/* Removed Layout wrapper */}
       {user ? (
-        <WelcomeHub />
+        <>
+          {console.log("[Index Page] User is logged in, rendering WelcomeHub.")}
+          <WelcomeHub />
+        </>
       ) : (
         <>
+          {console.log("[Index Page] User is NOT logged in, rendering landing sections.")}
           <HeroSection />
           <VideoSection />
           <AboutChoirSection />

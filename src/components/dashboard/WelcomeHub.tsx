@@ -53,9 +53,12 @@ const WelcomeHub: React.FC = () => {
   const [isSurveyCompleted, setIsSurveyCompleted] = useState(false);
 
   useEffect(() => {
+    console.log("[WelcomeHub] useEffect triggered. User session loading:", loadingUserSession);
+
     const fetchProfileAndSurvey = async () => {
       if (user) {
         setLoadingProfile(true);
+        console.log(`[WelcomeHub] Fetching profile for user ID: ${user.id}`);
         const { data, error } = await supabase
           .from("profiles")
           .select("first_name, last_name, avatar_url, how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
@@ -63,8 +66,9 @@ const WelcomeHub: React.FC = () => {
           .single();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
-          console.error("Error fetching profile for WelcomeHub:", error);
+          console.error("[WelcomeHub] Error fetching profile for WelcomeHub:", error);
         } else if (data) {
+          console.log("[WelcomeHub] Profile data fetched:", data);
           setProfile(data);
           // Check if key survey fields are filled to determine completion
           const completed = data.how_heard !== null ||
@@ -78,11 +82,15 @@ const WelcomeHub: React.FC = () => {
                             data.inclusivity_importance !== null ||
                             data.suggestions !== null;
           setIsSurveyCompleted(completed);
+          console.log("[WelcomeHub] Survey completion status:", completed);
         } else {
+          console.log("[WelcomeHub] No profile data found for user, survey not completed.");
           setIsSurveyCompleted(false); // No profile data means survey is not completed
         }
         setLoadingProfile(false);
+        console.log("[WelcomeHub] Profile loading state set to false.");
       } else {
+        console.log("[WelcomeHub] No user, skipping profile fetch.");
         setProfile(null);
         setLoadingProfile(false);
         setIsSurveyCompleted(false);
@@ -91,6 +99,7 @@ const WelcomeHub: React.FC = () => {
 
     const fetchUpcomingEvent = async () => {
       setLoadingEvent(true);
+      console.log("[WelcomeHub] Fetching upcoming event.");
       const { data, error } = await supabase
         .from("events")
         .select("*")
@@ -99,15 +108,21 @@ const WelcomeHub: React.FC = () => {
         .limit(1);
 
       if (error) {
-        console.error("Error fetching upcoming event:", error);
+        console.error("[WelcomeHub] Error fetching upcoming event:", error);
       } else if (data && data.length > 0) {
         setUpcomingEvent(data[0]);
+        console.log("[WelcomeHub] Upcoming event fetched:", data[0]);
+      } else {
+        console.log("[WelcomeHub] No upcoming events found.");
+        setUpcomingEvent(null);
       }
       setLoadingEvent(false);
+      console.log("[WelcomeHub] Event loading state set to false.");
     };
 
     const fetchRecentResources = async () => {
       setLoadingResources(true);
+      console.log("[WelcomeHub] Fetching recent resources.");
       const { data, error } = await supabase
         .from("resources")
         .select("id, title, description, url")
@@ -115,21 +130,27 @@ const WelcomeHub: React.FC = () => {
         .limit(3);
 
       if (error) {
-        console.error("Error fetching recent resources:", error);
+        console.error("[WelcomeHub] Error fetching recent resources:", error);
       } else {
         setRecentResources(data || []);
+        console.log("[WelcomeHub] Recent resources fetched:", data);
       }
       setLoadingResources(false);
+      console.log("[WelcomeHub] Resources loading state set to false.");
     };
 
     if (!loadingUserSession) {
+      console.log("[WelcomeHub] User session loaded, initiating data fetches.");
       fetchProfileAndSurvey();
       fetchUpcomingEvent();
       fetchRecentResources();
+    } else {
+      console.log("[WelcomeHub] User session still loading, delaying data fetches.");
     }
   }, [user, loadingUserSession]);
 
   if (loadingUserSession || loadingProfile || loadingEvent || loadingResources) {
+    console.log("[WelcomeHub] Rendering skeleton due to loading states.");
     return (
       <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in-up">
         <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
@@ -164,6 +185,7 @@ const WelcomeHub: React.FC = () => {
   }
 
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
+  console.log("[WelcomeHub] Rendering content for user:", user?.id, "First Name:", firstName);
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in-up">

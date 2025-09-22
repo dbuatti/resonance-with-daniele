@@ -43,6 +43,7 @@ const Resources: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
+  console.log("[Resources Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
   const addForm = useForm<ResourceFormData>({
     resolver: zodResolver(resourceSchema),
@@ -63,11 +64,13 @@ const Resources: React.FC = () => {
   });
 
   useEffect(() => {
+    console.log("[Resources Page] useEffect: Initial fetch resources.");
     fetchResources();
   }, []);
 
   useEffect(() => {
     if (editingResource) {
+      console.log("[Resources Page] useEffect: Setting edit form defaults for resource:", editingResource.id);
       editForm.reset({
         title: editingResource.title,
         description: editingResource.description || "",
@@ -78,27 +81,33 @@ const Resources: React.FC = () => {
 
   const fetchResources = async () => {
     setLoadingResources(true);
+    console.log("[Resources Page] Fetching all resources from Supabase.");
     const { data, error } = await supabase
       .from("resources")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching resources:", error);
+      console.error("[Resources Page] Error fetching resources:", error);
       showError("Failed to load resources.");
     } else {
       setResources(data || []);
+      console.log("[Resources Page] Resources fetched successfully:", data?.length, "resources.");
     }
     setLoadingResources(false);
+    console.log("[Resources Page] Resources loading state set to false.");
   };
 
   const onAddSubmit = async (data: ResourceFormData) => {
+    console.log("[Resources Page] Add form submitted. Data:", data);
     if (!user) {
       showError("You must be logged in to add resources.");
+      console.error("[Resources Page] Attempted to add resource without a user.");
       return;
     }
 
     const { title, description, url } = data;
+    console.log(`[Resources Page] Inserting new resource for user ${user.id}:`, { title, url });
     const { error } = await supabase.from("resources").insert({
       user_id: user.id,
       title,
@@ -107,23 +116,27 @@ const Resources: React.FC = () => {
     });
 
     if (error) {
-      console.error("Error adding resource:", error);
+      console.error("[Resources Page] Error adding resource:", error);
       showError("Failed to add resource.");
     } else {
       showSuccess("Resource added successfully!");
       addForm.reset();
       setIsAddDialogOpen(false);
       fetchResources();
+      console.log("[Resources Page] Resource added and list refreshed.");
     }
   };
 
   const onEditSubmit = async (data: ResourceFormData) => {
+    console.log("[Resources Page] Edit form submitted. Data:", data, "Editing Resource ID:", editingResource?.id);
     if (!user || !editingResource) {
       showError("You must be logged in and select a resource to edit.");
+      console.error("[Resources Page] Attempted to edit resource without user or selected resource.");
       return;
     }
 
     const { title, description, url } = data;
+    console.log(`[Resources Page] Updating resource ${editingResource.id} for user ${user.id}:`, { title, url });
     const { error } = await supabase
       .from("resources")
       .update({
@@ -136,22 +149,26 @@ const Resources: React.FC = () => {
       .eq("user_id", user.id); // Ensure only the owner can update
 
     if (error) {
-      console.error("Error updating resource:", error);
+      console.error("[Resources Page] Error updating resource:", error);
       showError("Failed to update resource.");
     } else {
       showSuccess("Resource updated successfully!");
       setIsEditDialogOpen(false);
       setEditingResource(null);
       fetchResources();
+      console.log("[Resources Page] Resource updated and list refreshed.");
     }
   };
 
   const handleDelete = async (resourceId: string) => {
+    console.log("[Resources Page] Delete requested for resource ID:", resourceId);
     if (!user) {
       showError("You must be logged in to delete resources.");
+      console.error("[Resources Page] Attempted to delete resource without a user.");
       return;
     }
 
+    console.log(`[Resources Page] Deleting resource ${resourceId} for user ${user.id}.`);
     const { error } = await supabase
       .from("resources")
       .delete()
@@ -159,13 +176,16 @@ const Resources: React.FC = () => {
       .eq("user_id", user.id); // Ensure only the owner can delete
 
     if (error) {
-      console.error("Error deleting resource:", error);
+      console.error("[Resources Page] Error deleting resource:", error);
       showError("Failed to delete resource.");
     } else {
       showSuccess("Resource deleted successfully!");
       fetchResources();
+      console.log("[Resources Page] Resource deleted and list refreshed.");
     }
   };
+
+  console.log("[Resources Page] Rendering Resources component. Loading Resources:", loadingResources, "Resources count:", resources.length);
 
   return (
     <div className="space-y-6 py-8 animate-fade-in-up">
@@ -180,52 +200,58 @@ const Resources: React.FC = () => {
         {loadingResources ? (
           <Skeleton className="h-10 w-48" />
         ) : user ? (
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Resource
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle className="font-lora">Add New Resource</DialogTitle>
-                <CardDescription>Provide details for a new choir resource.</CardDescription>
-              </DialogHeader>
-              <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" {...addForm.register("title")} />
-                  {addForm.formState.errors.title && (
-                    <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="url">URL</Label>
-                  <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
-                  {addForm.formState.errors.url && (
-                    <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description (Optional)</Label>
-                  <Textarea id="description" {...addForm.register("description")} />
-                </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                    {addForm.formState.isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                      </>
-                    ) : (
-                      "Add Resource"
+          <>
+            {console.log("[Resources Page] User is logged in, showing 'Add New Resource' button.")}
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Resource
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="font-lora">Add New Resource</DialogTitle>
+                  <CardDescription>Provide details for a new choir resource.</CardDescription>
+                </DialogHeader>
+                <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" {...addForm.register("title")} />
+                    {addForm.formState.errors.title && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
                     )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="url">URL</Label>
+                    <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
+                    {addForm.formState.errors.url && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Textarea id="description" {...addForm.register("description")} />
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                      {addForm.formState.isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                        </>
+                      ) : (
+                        "Add Resource"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </>
         ) : (
-          <p className="text-md text-muted-foreground">Log in to add new resources.</p>
+          <>
+            {console.log("[Resources Page] User is NOT logged in, showing 'Log in to add resources' message.")}
+            <p className="text-md text-muted-foreground">Log in to add new resources.</p>
+          </>
         )}
       </div>
 
@@ -246,66 +272,69 @@ const Resources: React.FC = () => {
             </Card>
           ))
         ) : resources.length === 0 ? (
-          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
-            <FileText className="h-16 w-16 text-muted-foreground" />
-            <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found yet!</p>
-            <p className="text-md text-muted-foreground mt-2">
-              {user
-                ? "Be the first to add one using the 'Add New Resource' button above!"
-                : "Log in to add and access choir resources."}
-            </p>
-            {!user && (
-              <Button asChild className="mt-4">
-                <Link to="/login">Login to Add Resources</Link>
-              </Button>
-            )}
-            {user && (
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="mt-4">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Resource
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle className="font-lora">Add New Resource</DialogTitle>
-                    <CardDescription>Provide details for a new choir resource.</CardDescription>
-                  </DialogHeader>
-                  <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input id="title" {...addForm.register("title")} />
-                      {addForm.formState.errors.title && (
-                        <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
-                      )}
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="url">URL</Label>
-                      <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
-                      {addForm.formState.errors.url && (
-                        <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
-                      )}
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Description (Optional)</Label>
-                      <Textarea id="description" {...addForm.register("description")} />
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                        {addForm.formState.isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                          </>
-                        ) : (
-                          "Add Resource"
+          <>
+            {console.log("[Resources Page] No resources found, displaying empty state.")}
+            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
+              <FileText className="h-16 w-16 text-muted-foreground" />
+              <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found yet!</p>
+              <p className="text-md text-muted-foreground mt-2">
+                {user
+                  ? "Be the first to add one using the 'Add New Resource' button above!"
+                  : "Log in to add and access choir resources."}
+              </p>
+              {!user && (
+                <Button asChild className="mt-4">
+                  <Link to="/login">Login to Add Resources</Link>
+                </Button>
+              )}
+              {user && (
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="mt-4">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Resource
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle className="font-lora">Add New Resource</DialogTitle>
+                      <CardDescription>Provide details for a new choir resource.</CardDescription>
+                    </DialogHeader>
+                    <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input id="title" {...addForm.register("title")} />
+                        {addForm.formState.errors.title && (
+                          <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
                         )}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="url">URL</Label>
+                        <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
+                        {addForm.formState.errors.url && (
+                          <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
+                        )}
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="description">Description (Optional)</Label>
+                        <Textarea id="description" {...addForm.register("description")} />
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                          {addForm.formState.isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                            </>
+                          ) : (
+                            "Add Resource"
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          </>
         ) : (
           resources.map((resource) => (
             <Card key={resource.id} className="shadow-lg rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-[1.01]">
@@ -330,6 +359,7 @@ const Resources: React.FC = () => {
                       onClick={() => {
                         setEditingResource(resource);
                         setIsEditDialogOpen(true);
+                        console.log("[Resources Page] Editing resource:", resource.id);
                       }}
                     >
                       <Edit className="h-4 w-4 mr-2" /> Edit

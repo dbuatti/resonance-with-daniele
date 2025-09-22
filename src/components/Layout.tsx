@@ -19,9 +19,12 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, loading } = useSession();
   const location = useLocation();
+  console.log("[Layout] User:", user ? user.id : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
+    console.log("[Layout] Attempting to log out user.");
     await supabase.auth.signOut();
+    console.log("[Layout] User logged out.");
   };
 
   const displayName = user?.user_metadata?.first_name || user?.email || "Guest";
@@ -45,6 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Button>
             {!loading && user ? (
               <>
+                {console.log("[Layout] User is logged in, rendering authenticated nav links.")}
                 <Button variant="ghost" asChild>
                   <Link to="/resources" className={getNavLinkClass("/resources")}>Resources</Link>
                 </Button>
@@ -52,11 +56,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
                 </Button>
                 {user.is_admin && ( // Conditionally render Admin Zone link
-                  <Button variant="ghost" asChild>
-                    <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))}>
-                      <Shield className="h-4 w-4" /> Admin Zone
-                    </Link>
-                  </Button>
+                  <>
+                    {console.log("[Layout] User is admin, rendering Admin Zone link.")}
+                    <Button variant="ghost" asChild>
+                      <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))}>
+                        <Shield className="h-4 w-4" /> Admin Zone
+                      </Link>
+                    </Button>
+                  </>
                 )}
                 <Button variant="ghost" asChild>
                   <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))}>
@@ -78,6 +85,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </>
             ) : (
               <>
+                {console.log("[Layout] User is NOT logged in, rendering public nav links.")}
                 <Button variant="ghost" asChild>
                   <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
                 </Button>

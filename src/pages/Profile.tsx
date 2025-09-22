@@ -41,8 +41,10 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      console.log("[Profile Page] useEffect: Fetching profile data.");
       if (user) {
         setLoadingProfile(true);
+        console.log(`[Profile Page] Fetching profile for user ID: ${user.id}`);
         const { data, error } = await supabase
           .from("profiles")
           .select("first_name, last_name, avatar_url")
@@ -50,37 +52,53 @@ const Profile: React.FC = () => {
           .single();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
-          console.error("Error fetching profile:", error);
+          console.error("[Profile Page] Error fetching profile:", error);
           showError("Failed to load profile data.");
         } else if (data) {
+          console.log("[Profile Page] Profile data fetched:", data);
           form.reset({
             first_name: data.first_name || "",
             last_name: data.last_name || "",
           });
           setCurrentAvatarUrl(data.avatar_url);
+        } else {
+          console.log("[Profile Page] No profile data found for user, initializing with empty values.");
+          form.reset({ first_name: "", last_name: "" });
+          setCurrentAvatarUrl(null);
         }
+        setLoadingProfile(false);
+        console.log("[Profile Page] Profile loading state set to false.");
+      } else {
+        console.log("[Profile Page] No user session, skipping profile fetch.");
         setLoadingProfile(false);
       }
     };
 
     if (!loadingUserSession) {
+      console.log("[Profile Page] User session loaded, proceeding to fetch profile.");
       fetchProfile();
+    } else {
+      console.log("[Profile Page] User session still loading.");
     }
   }, [user, loadingUserSession, form]);
 
   const handleAvatarFileChange = (file: File | null) => {
+    console.log("[Profile Page] Avatar file changed:", file ? file.name : 'null');
     setSelectedAvatarFile(file);
     setRemoveAvatarRequested(false); // If a new file is selected, cancel removal request
   };
 
   const handleRemoveAvatarRequested = () => {
+    console.log("[Profile Page] Avatar removal requested.");
     setSelectedAvatarFile(null); // Clear any selected new file
     setRemoveAvatarRequested(true);
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    console.log("[Profile Page] Form submitted. Data:", data);
     if (!user) {
       showError("You must be logged in to update your profile.");
+      console.error("[Profile Page] Attempted to submit profile without a user.");
       return;
     }
 
@@ -93,6 +111,7 @@ const Profile: React.FC = () => {
 
     // Handle avatar removal
     if (removeAvatarRequested && currentAvatarUrl) {
+      console.log("[Profile Page] Processing avatar removal.");
       const urlParts = currentAvatarUrl.split('/');
       const fileNameWithFolder = urlParts.slice(urlParts.indexOf('avatars') + 1).join('/');
       const { error } = await supabase.storage
@@ -100,16 +119,18 @@ const Profile: React.FC = () => {
         .remove([fileNameWithFolder]);
 
       if (error) {
-        console.error("Error removing avatar:", error);
+        console.error("[Profile Page] Error removing avatar:", error);
         deleteError = error;
       } else {
         newAvatarUrl = null; // Successfully removed
         showSuccess("Avatar removed successfully!");
+        console.log("[Profile Page] Avatar removed from storage.");
       }
     }
 
     // Handle new avatar upload
     if (selectedAvatarFile) {
+      console.log("[Profile Page] Processing new avatar upload.");
       const fileExt = selectedAvatarFile.name.split(".").pop();
       const fileName = `${user.id}-${Math.random()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
@@ -122,7 +143,7 @@ const Profile: React.FC = () => {
         });
 
       if (uploadErr) {
-        console.error("Error uploading avatar:", uploadErr);
+        console.error("[Profile Page] Error uploading avatar:", uploadErr);
         uploadError = uploadErr;
       } else {
         const { data: publicUrlData } = supabase.storage
@@ -130,16 +151,19 @@ const Profile: React.FC = () => {
           .getPublicUrl(filePath);
         newAvatarUrl = publicUrlData?.publicUrl || null;
         showSuccess("Avatar uploaded successfully!");
+        console.log("[Profile Page] Avatar uploaded to storage. New URL:", newAvatarUrl);
       }
     }
 
     if (uploadError || deleteError) {
       showError("Failed to update avatar. Please try again.");
       form.setError("first_name", { message: "Avatar update failed." }); // Generic error for form
+      console.error("[Profile Page] Avatar update failed due to upload/delete error.");
       return;
     }
 
     // Update profile table with new name and avatar URL
+    console.log("[Profile Page] Updating profiles table.");
     const { error: profileUpdateError } = await supabase
       .from("profiles")
       .upsert(
@@ -154,33 +178,40 @@ const Profile: React.FC = () => {
       );
 
     if (profileUpdateError) {
-      console.error("Error updating profile:", profileUpdateError);
+      console.error("[Profile Page] Error updating profile in DB:", profileUpdateError);
       showError("Failed to update profile: " + profileUpdateError.message);
       return;
     }
+    console.log("[Profile Page] Profile table updated successfully.");
 
     // Update user's metadata in Supabase Auth to ensure session sync
+    console.log("[Profile Page] Updating user metadata in Supabase Auth.");
     const { data: { user: updatedAuthUser }, error: authUpdateError } = await supabase.auth.updateUser({
       data: { avatar_url: newAvatarUrl },
     });
 
     if (authUpdateError) {
-      console.error("Error updating avatar URL in auth user metadata:", authUpdateError);
+      console.error("[Profile Page] Error updating avatar URL in auth user metadata:", authUpdateError);
       showError("Failed to update avatar URL in user session.");
       return;
     }
+    console.log("[Profile Page] Supabase Auth User updated:", updatedAuthUser);
 
     setCurrentAvatarUrl(newAvatarUrl);
     setSelectedAvatarFile(null); // Clear selected file after successful upload
     setRemoveAvatarRequested(false); // Reset removal request
     showSuccess("Profile updated successfully!");
+    console.log("[Profile Page] Profile update process completed successfully.");
   };
 
   const handleLogout = async () => {
+    console.log("[Profile Page] Attempting to log out.");
     await supabase.auth.signOut();
+    console.log("[Profile Page] User logged out.");
   };
 
   if (loadingUserSession || loadingProfile) {
+    console.log("[Profile Page] Rendering skeleton due to loadingUserSession or loadingProfile.");
     return (
       <div className="container mx-auto px-4 py-8 md:py-12 animate-fade-in-up">
         <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
@@ -216,6 +247,7 @@ const Profile: React.FC = () => {
   }
 
   if (!user) {
+    console.log("[Profile Page] No user found, displaying login prompt.");
     return (
       <div className="min-h-screen flex items-center justify-center animate-fade-in-up">
         <p className="text-lg text-muted-foreground">Please log in to view your profile.</p>
@@ -225,6 +257,7 @@ const Profile: React.FC = () => {
 
   const currentFirstName = form.watch("first_name");
   const currentLastName = form.watch("last_name");
+  console.log("[Profile Page] Rendering profile form for user:", user.id);
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in-up"> {/* Added space-y-8 for separation */}
