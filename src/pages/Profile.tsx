@@ -28,6 +28,8 @@ const Profile: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+  const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -66,44 +68,14 @@ const Profile: React.FC = () => {
     }
   }, [user, loadingUserSession, form]);
 
-  const updateAvatarUrlInProfile = async (url: string | null) => {
-    if (!user) return;
+  const handleAvatarFileChange = (file: File | null) => {
+    setSelectedAvatarFile(file);
+    setRemoveAvatarRequested(false); // If a new file is selected, cancel removal request
+  };
 
-    // 1. Update the 'profiles' table
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: user.id,
-          avatar_url: url,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      );
-
-    if (profileError) {
-      console.error("Error updating avatar URL in profile table:", profileError);
-      showError("Failed to update avatar URL in profile.");
-      return;
-    }
-
-    // 2. Update the user's metadata in Supabase Auth to ensure session sync
-    // This is crucial for the `useSession` hook to reflect the change immediately
-    const { data: { user: updatedAuthUser }, error: authError } = await supabase.auth.updateUser({
-      data: { avatar_url: url },
-    });
-
-    if (authError) {
-      console.error("Error updating avatar URL in auth user metadata:", authError);
-      showError("Failed to update avatar URL in user session.");
-      return;
-    }
-
-    // Log the updated user object to confirm the metadata change
-    console.log("Supabase Auth User updated:", updatedAuthUser);
-
-    setCurrentAvatarUrl(url);
-    showSuccess("Avatar updated successfully!");
+  const handleRemoveAvatarRequested = () => {
+    setSelectedAvatarFile(null); // Clear any selected new file
+    setRemoveAvatarRequested(true);
   };
 
   const onSubmit = async (data: ProfileFormData) => {
@@ -112,27 +84,96 @@ const Profile: React.FC = () => {
       return;
     }
 
-    const { first_name, last_name } = data;
-    const { error } = await supabase
+    form.setValue("first_name", data.first_name);
+    form.setValue("last_name", data.last_name);
+
+    let newAvatarUrl: string | null = currentAvatarUrl;
+    let uploadError: Error | null = null;
+    let deleteError: Error | null = null;
+
+    // Handle avatar removal
+    if (removeAvatarRequested && currentAvatarUrl) {
+      const urlParts = currentAvatarUrl.split('/');
+      const fileNameWithFolder = urlParts.slice(urlParts.indexOf('avatars') + 1).join('/');
+      const { error } = await supabase.storage
+        .from("avatars")
+        .remove([fileNameWithFolder]);
+
+      if (error) {
+        console.error("Error removing avatar:", error);
+        deleteError = error;
+      } else {
+        newAvatarUrl = null; // Successfully removed
+        showSuccess("Avatar removed successfully!");
+      }
+    }
+
+    // Handle new avatar upload
+    if (selectedAvatarFile) {
+      const fileExt = selectedAvatarFile.name.split(".").pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, selectedAvatarFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadErr) {
+        console.error("Error uploading avatar:", uploadErr);
+        uploadError = uploadErr;
+      } else {
+        const { data: publicUrlData } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(filePath);
+        newAvatarUrl = publicUrlData?.publicUrl || null;
+        showSuccess("Avatar uploaded successfully!");
+      }
+    }
+
+    if (uploadError || deleteError) {
+      showError("Failed to update avatar. Please try again.");
+      form.setError("first_name", { message: "Avatar update failed." }); // Generic error for form
+      return;
+    }
+
+    // Update profile table with new name and avatar URL
+    const { error: profileUpdateError } = await supabase
       .from("profiles")
       .upsert(
         {
           id: user.id,
-          first_name: first_name || null,
-          last_name: last_name || null,
+          first_name: data.first_name || null,
+          last_name: data.last_name || null,
+          avatar_url: newAvatarUrl,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "id" }
       );
 
-    if (error) {
-      console.error("Error updating profile:", error);
-      showError("Failed to update profile.");
-    } else {
-      showSuccess("Profile updated successfully!");
-      // Optionally, refresh user session to update user_metadata if needed
-      // await supabase.auth.refreshSession();
+    if (profileUpdateError) {
+      console.error("Error updating profile:", profileUpdateError);
+      showError("Failed to update profile: " + profileUpdateError.message);
+      return;
     }
+
+    // Update user's metadata in Supabase Auth to ensure session sync
+    const { data: { user: updatedAuthUser }, error: authUpdateError } = await supabase.auth.updateUser({
+      data: { avatar_url: newAvatarUrl },
+    });
+
+    if (authUpdateError) {
+      console.error("Error updating avatar URL in auth user metadata:", authUpdateError);
+      showError("Failed to update avatar URL in user session.");
+      return;
+    }
+
+    setCurrentAvatarUrl(newAvatarUrl);
+    setSelectedAvatarFile(null); // Clear selected file after successful upload
+    setRemoveAvatarRequested(false); // Reset removal request
+    showSuccess("Profile updated successfully!");
   };
 
   const handleLogout = async () => {
@@ -190,8 +231,8 @@ const Profile: React.FC = () => {
       <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader className="text-center">
           <Avatar className="w-24 h-24 mx-auto mb-4">
-            {currentAvatarUrl ? (
-              <AvatarImage src={currentAvatarUrl} alt={`${currentFirstName || user.email}'s avatar`} className="object-cover" />
+            {(selectedAvatarFile && URL.createObjectURL(selectedAvatarFile)) || currentAvatarUrl ? (
+              <AvatarImage src={(selectedAvatarFile && URL.createObjectURL(selectedAvatarFile)) || currentAvatarUrl || ""} alt={`${currentFirstName || user.email}'s avatar`} className="object-cover" />
             ) : (
               <AvatarFallback className="bg-primary text-primary-foreground">
                 <UserIcon className="h-12 w-12" />
@@ -223,10 +264,11 @@ const Profile: React.FC = () => {
             </div>
             {user && (
               <AvatarUpload
-                userId={user.id}
                 currentAvatarUrl={currentAvatarUrl}
-                onUploadSuccess={updateAvatarUrlInProfile}
-                onRemoveSuccess={() => updateAvatarUrlInProfile(null)}
+                onFileChange={handleAvatarFileChange}
+                onRemoveRequested={handleRemoveAvatarRequested}
+                isSaving={form.formState.isSubmitting}
+                selectedFile={selectedAvatarFile}
               />
             )}
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
