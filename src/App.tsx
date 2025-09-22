@@ -10,7 +10,8 @@ import Events from "./pages/Events";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import AdminZone from "./pages/AdminZone";
-import AdminProfiles from "./pages/AdminProfiles"; // Import the new AdminProfiles page
+import AdminMembers from "./pages/AdminMembers"; // Import the new AdminMembers page
+import AdminSurveyData from "./pages/AdminSurveyData"; // Import the new AdminSurveyData page
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 
@@ -30,7 +31,8 @@ const App = () => (
             <Route path="/login" element={<Layout><Login /></Layout>} />
             <Route path="/profile" element={<Layout><Profile /></Layout>} />
             <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
-            <Route path="/admin/profiles" element={<Layout><AdminProfiles /></Layout>} /> {/* New AdminProfiles route */}
+            <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} /> {/* New AdminMembers route */}
+            <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} /> {/* New AdminSurveyData route */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

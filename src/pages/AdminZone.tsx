@@ -74,10 +74,17 @@ const AdminZone: React.FC = () => {
           </Link>
         </Card>
         <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">View Member Data</CardTitle>
-          <CardDescription>Analyze insights from member surveys and manage profiles.</CardDescription>
-          <Link to="/admin/profiles" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            View Member Data
+          <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
+          <CardDescription>Analyze aggregated insights from member surveys.</CardDescription>
+          <Link to="/admin/survey-data" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+            View Survey Data
+          </Link>
+        </Card>
+        <Card className="shadow-lg rounded-xl p-6 text-center">
+          <CardTitle className="text-xl font-lora mb-2">Manage Members</CardTitle>
+          <CardDescription>View all member profiles and manage their roles.</CardDescription>
+          <Link to="/admin/members" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+            Manage Members
           </Link>
         </Card>
         {/* Add more admin specific cards here */}
