@@ -5,7 +5,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader } from "@/components/ui/table"; // Removed TableRow, TableHead
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, Eye } from "lucide-react";
@@ -174,13 +174,13 @@ const AdminMembers: React.FC = () => {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Survey Status</TableHead> {/* New column */}
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
+                  <tr> {/* Replaced TableRow with native tr */}
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Name</th> {/* Replaced TableHead with native th */}
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Email</th> {/* Replaced TableHead with native th */}
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Role</th> {/* Replaced TableHead with native th */}
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Survey Status</th> {/* Replaced TableHead with native th */}
+                    <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Actions</th> {/* Replaced TableHead with native th */}
+                  </tr>
                 </TableHeader>
                 <TableBody>
                   {profiles.map((profile) => (
