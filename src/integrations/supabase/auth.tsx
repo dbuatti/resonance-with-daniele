@@ -48,8 +48,14 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     getInitialSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log('SessionContextProvider: Auth state changed!', { event, currentSession });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession, error) => {
+      console.log('SessionContextProvider: Auth state changed!', { event, currentSession, error });
+      
+      // Check for errors in the auth state change
+      if (error) {
+        console.error('SessionContextProvider: Error in onAuthStateChange:', error);
+      }
+      
       setSession(currentSession);
       setUser(currentSession?.user || null);
       setLoading(false); // Ensure loading is false after any state change

@@ -1,42 +1,33 @@
 "use client";
 
-import React from 'react'; // Added React import
+import React, { useEffect } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const Login: React.FC = () => {
+  useEffect(() => {
+    console.log("Login page mounted. Supabase client initialized:", !!supabase);
+  }, []);
+
+  const handleAuthError = (error: any) => {
+    console.error("Supabase Auth Error:", error);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Welcome to Choir Companion</CardTitle>
-          <CardDescription>Sign in to manage your events and resources.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Auth
-            supabaseClient={supabase}
-            providers={['google']}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: 'hsl(var(--primary))',
-                    brandAccent: 'hsl(var(--primary-foreground))',
-                  },
-                },
-              },
-            }}
-            theme="light"
-            redirectTo="/"
-            debug={true}
-          />
-        </CardContent>
-      </Card>
-      <MadeWithDyad />
+    <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
+      <h2 style={{ textAlign: 'center' }}>Login to Choir Companion</h2>
+      <Auth
+        supabaseClient={supabase}
+        providers={['google']}
+        appearance={{
+          theme: ThemeSupa,
+        }}
+        theme="light"
+        redirectTo="http://localhost:8080" // Explicitly set redirect URL
+        onError={handleAuthError} // Attempt to capture errors
+        debug={true}
+      />
     </div>
   );
 };
