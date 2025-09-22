@@ -9,7 +9,7 @@ import Resources from "./pages/Resources";
 import Events from "./pages/Events";
 import Login from "./pages/Login";
 import { SessionContextProvider } from "./integrations/supabase/auth";
-import Layout from "./components/Layout"; // Import the Layout component
+import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
 
@@ -21,11 +21,11 @@ const App = () => (
       <BrowserRouter>
         <SessionContextProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/" element={<Layout><Index /></Layout>} /> {/* Index now wrapped by Layout */}
             <Route path="/resources" element={<Layout><Resources /></Layout>} />
             <Route path="/events" element={<Layout><Events /></Layout>} />
-            <Route path="/login" element={<Layout><Login /></Layout>} /> {/* Wrap Login with Layout */}
+            <Route path="/login" element={<Layout><Login /></Layout>} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </SessionContextProvider>

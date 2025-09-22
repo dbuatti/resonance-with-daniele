@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import Layout from "@/components/Layout";
 import HeroSection from "@/components/landing/HeroSection";
-import VideoSection from "@/components/landing/VideoSection"; // Import the new VideoSection
+import VideoSection from "@/components/landing/VideoSection";
 import AboutChoirSection from "@/components/landing/AboutChoirSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import FeaturedSection from "@/components/landing/FeaturedSection";
@@ -19,22 +18,20 @@ const Index: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-lg text-muted-foreground">Loading...</p>
-        </div>
-      </Layout>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Loading...</p>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <> {/* Removed Layout wrapper */}
       {user ? (
         <WelcomeHub />
       ) : (
         <>
           <HeroSection />
-          <VideoSection /> {/* Add the VideoSection here */}
+          <VideoSection />
           <AboutChoirSection />
           <HowItWorksSection />
           <FeaturedSection />
@@ -44,7 +41,7 @@ const Index: React.FC = () => {
           <FooterSection />
         </>
       )}
-    </Layout>
+    </>
   );
 };
 
