@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ExternalLink, CalendarDays, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { showSuccess, showError } from "@/utils/toast";
+import { showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
 
 interface Event {
   id: string;
@@ -20,35 +21,43 @@ interface Event {
 }
 
 const CurrentEventPage: React.FC = () => {
-  const [currentEvent, setCurrentEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCurrentEvent = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
+  // Use react-query to fetch and cache the current event
+  const { data: currentEvent, isLoading, isFetching, error } = useQuery<Event | null, Error>(
+    ['currentEvent'],
+    async () => {
+      console.log("[CurrentEventPage] Fetching current event.");
+      const { data, error: fetchError } = await supabase
         .from("events")
         .select("*")
         .gte("date", format(new Date(), "yyyy-MM-dd")) // Only future events
         .order("date", { ascending: true })
-        .limit(1); // Get only the next upcoming event
+        .limit(1)
+        .single(); // Use single to get one object or null
 
-      if (error) {
-        console.error("Error fetching current event:", error);
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+        console.error("[CurrentEventPage] Error fetching current event:", fetchError);
         showError("Failed to load current event details.");
-        setCurrentEvent(null);
-      } else if (data && data.length > 0) {
-        setCurrentEvent(data[0]);
-      } else {
-        setCurrentEvent(null); // No upcoming event found
+        throw fetchError; // Re-throw to be caught by react-query's error handling
       }
-      setLoading(false);
-    };
+      console.log("[CurrentEventPage] Current event fetched:", data);
+      return data || null;
+    },
+    {
+      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+      refetchOnWindowFocus: true, // Refetch when window regains focus
+      onError: (queryError) => {
+        console.error("[CurrentEventPage] React Query error:", queryError);
+        showError("An error occurred while loading event data.");
+      },
+    }
+  );
 
-    fetchCurrentEvent();
-  }, []);
+  // Only show skeleton if there's no data in cache AND it's currently loading for the first time
+  const showSkeleton = isLoading && !currentEvent;
 
-  if (loading) {
+  if (showSkeleton) {
+    console.log("[CurrentEventPage] Showing skeleton: isLoading is true and no cached data.");
     return (
       <div className="py-8 md:py-12 space-y-6">
         <Card className="p-4 sm:p-6 md:p-8 shadow-lg rounded-xl border-2 border-primary">
@@ -64,6 +73,8 @@ const CurrentEventPage: React.FC = () => {
       </div>
     );
   }
+
+  console.log("[CurrentEventPage] Rendering content: currentEvent is", currentEvent ? 'present' : 'null', "isFetching:", isFetching);
 
   return (
     <div className="py-8 md:py-12 space-y-6">
