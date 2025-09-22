@@ -239,10 +239,15 @@ const Resources: React.FC = () => {
             </Card>
           ))
         ) : resources.length === 0 ? (
-          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg">
+          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
+            <FileText className="h-16 w-16 text-muted-foreground" />
             <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found.</p>
             {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new resources.</p>}
-            {user && <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>}
+            {user && (
+              <p className="text-md text-muted-foreground mt-2">
+                Be the first to add one using the "Add New Resource" button above!
+              </p>
+            )}
           </div>
         ) : (
           resources.map((resource) => (
@@ -303,7 +308,7 @@ const Resources: React.FC = () => {
 
       {/* Edit Resource Dialog */}
       {editingResource && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog open={isEditDialogOpen} onOnpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Resource</DialogTitle>

@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom"; // Import useLocation
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
+import { cn } from "@/lib/utils"; // Import cn for conditional class names
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,12 +15,19 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, loading } = useSession();
+  const location = useLocation(); // Get current location
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
 
   const displayName = user?.user_metadata?.first_name || user?.email || "Guest";
+
+  const getNavLinkClass = (path: string) =>
+    cn(
+      "hover:text-primary-foreground/80",
+      location.pathname === path && "text-accent font-semibold" // Apply accent color and bold for active link
+    );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -30,18 +38,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Link>
           <nav className="flex flex-wrap justify-center sm:justify-end gap-2 items-center">
             <Button variant="ghost" asChild>
-              <Link to="/">Home</Link>
+              <Link to="/" className={getNavLinkClass("/")}>Home</Link>
             </Button>
             {!loading && user ? (
               <>
                 <Button variant="ghost" asChild>
-                  <Link to="/resources">Resources</Link>
+                  <Link to="/resources" className={getNavLinkClass("/resources")}>Resources</Link>
                 </Button>
                 <Button variant="ghost" asChild>
-                  <Link to="/events">Events</Link>
+                  <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
                 </Button>
                 <Button variant="ghost" asChild>
-                  <Link to="/profile" className="flex items-center gap-2">
+                  <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))}>
                     <Avatar className="h-6 w-6">
                       {user.user_metadata?.avatar_url ? (
                         <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
@@ -61,7 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             ) : (
               <>
                 <Button variant="ghost" asChild>
-                  <Link to="/events">Events</Link>
+                  <Link to="/events" className={getNavLinkClass("/events")}>Events</Link>
                 </Button>
                 <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
                   <Link to="/login">Sign Up Now</Link>

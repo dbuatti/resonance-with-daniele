@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import *s z from "zod";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -292,10 +292,15 @@ const Events: React.FC = () => {
             </Card>
           ))
         ) : events.length === 0 ? (
-          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg">
+          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
+            <CalendarDays className="h-16 w-16 text-muted-foreground" />
             <p className="text-xl text-muted-foreground font-semibold font-lora">No events found.</p>
             {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new events.</p>}
-            {user && <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>}
+            {user && (
+              <p className="text-md text-muted-foreground mt-2">
+                Be the first to add one using the "Add New Event" button above!
+              </p>
+            )}
           </div>
         ) : (
           events.map((event) => (
