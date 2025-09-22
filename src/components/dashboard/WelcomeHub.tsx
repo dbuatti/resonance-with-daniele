@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,122 +45,146 @@ interface Resource {
 
 const WelcomeHub: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
-  const { setPageLoading } = usePageLoading(); // Consume setPageLoading
+  const { setPageLoading } = usePageLoading();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [upcomingEvent, setUpcomingEvent] = useState<Event | null>(null);
   const [recentResources, setRecentResources] = useState<Resource[]>([]);
   const [isSurveyCompleted, setIsSurveyCompleted] = useState(false);
-  const [loadingData, setLoadingData] = useState(true); // Single loading state for all data
+  const [loadingData, setLoadingData] = useState(true); // Internal loading for WelcomeHub's data
+
+  const hasFetchedForUserRef = useRef<string | null>(null); // Tracks if data has been fetched for the current user ID
 
   useEffect(() => {
-    console.log("[WelcomeHub] useEffect triggered. User session loading:", loadingUserSession);
+    console.log("[WelcomeHub] useEffect triggered. User session loading:", loadingUserSession, "Current User ID:", user?.id, "Has fetched for user ref:", hasFetchedForUserRef.current);
 
-    const fetchAllData = async () => {
-      if (loadingUserSession) {
-        console.log("[WelcomeHub] User session still loading, delaying data fetches.");
-        setLoadingData(true); // Keep internal loading true while session is loading
+    // If session is still loading, ensure global and local loading states are true
+    if (loadingUserSession) {
+      setPageLoading(true);
+      setLoadingData(true); // Keep internal loading true
+      console.log("[WelcomeHub] User session still loading. Global and internal loading set to true.");
+      return;
+    }
+
+    // If session is NOT loading
+    if (!user) {
+      // No user, so no data to fetch. Ensure all loading states are false.
+      setPageLoading(false);
+      setLoadingData(false);
+      hasFetchedForUserRef.current = null; // Reset ref if user logs out
+      console.log("[WelcomeHub] No user. Global and internal loading set to false. Ref reset.");
+      return;
+    }
+
+    // If there's a user and data hasn't been fetched for this specific user yet
+    if (user && user.id !== hasFetchedForUserRef.current) {
+      console.log(`[WelcomeHub] User present (${user.id}) and data not yet fetched for this user. Initiating fetch.`);
+      hasFetchedForUserRef.current = user.id; // Mark that we are fetching for this user
+
+      const fetchAllData = async () => {
+        setLoadingData(true); // Start internal loading for WelcomeHub's data
         setPageLoading(true); // Propagate to global page loading
-        return;
-      }
 
-      setLoadingData(true); // Start internal loading for all data
-      setPageLoading(true); // Propagate to global page loading
-      console.log("[WelcomeHub] User session loaded, initiating all data fetches.");
+        try {
+          const profilePromise = (async () => {
+            console.log(`[WelcomeHub] Fetching profile for user ID: ${user.id}`);
+            const { data, error } = await supabase
+              .from("profiles")
+              .select("first_name, last_name, avatar_url, how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
+              .eq("id", user.id);
 
-      const profilePromise = (async () => {
-        if (user) {
-          console.log(`[WelcomeHub] Fetching profile for user ID: ${user.id}`);
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("first_name, last_name, avatar_url, how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
-            .eq("id", user.id);
+            if (error) {
+              console.error("[WelcomeHub] Error fetching profile for WelcomeHub:", error);
+              return null;
+            } else if (data && data.length > 0) {
+              console.log("[WelcomeHub] Profile data fetched:", data[0]);
+              const completed = data[0].how_heard !== null ||
+                                (data[0].motivation !== null && data[0].motivation.length > 0) ||
+                                data[0].attended_session !== null ||
+                                data[0].singing_experience !== null ||
+                                data[0].session_frequency !== null ||
+                                data[0].preferred_time !== null ||
+                                (data[0].music_genres !== null && data[0].music_genres.length > 0) ||
+                                data[0].choir_goals !== null ||
+                                data[0].inclusivity_importance !== null ||
+                                data[0].suggestions !== null;
+              setIsSurveyCompleted(completed);
+              console.log("[WelcomeHub] Survey completion status:", completed);
+              return data[0];
+            } else {
+              console.log("[WelcomeHub] No profile data found for user, survey not completed.");
+              setIsSurveyCompleted(false);
+              return null;
+            }
+          })();
 
-          if (error) {
-            console.error("[WelcomeHub] Error fetching profile for WelcomeHub:", error);
-            return null;
-          } else if (data && data.length > 0) {
-            console.log("[WelcomeHub] Profile data fetched:", data[0]);
-            const completed = data[0].how_heard !== null ||
-                              (data[0].motivation !== null && data[0].motivation.length > 0) ||
-                              data[0].attended_session !== null ||
-                              data[0].singing_experience !== null ||
-                              data[0].session_frequency !== null ||
-                              data[0].preferred_time !== null ||
-                              (data[0].music_genres !== null && data[0].music_genres.length > 0) ||
-                              data[0].choir_goals !== null ||
-                              data[0].inclusivity_importance !== null ||
-                              data[0].suggestions !== null;
-            setIsSurveyCompleted(completed);
-            console.log("[WelcomeHub] Survey completion status:", completed);
-            return data[0];
-          } else {
-            console.log("[WelcomeHub] No profile data found for user, survey not completed.");
-            setIsSurveyCompleted(false);
-            return null;
-          }
+          const eventPromise = (async () => {
+            console.log("[WelcomeHub] Fetching upcoming event.");
+            const { data, error } = await supabase
+              .from("events")
+              .select("*")
+              .gte("date", format(new Date(), "yyyy-MM-dd"))
+              .order("date", { ascending: true })
+              .limit(1);
+
+            if (error) {
+              console.error("[WelcomeHub] Error fetching upcoming event:", error);
+              return null;
+            } else if (data && data.length > 0) {
+              console.log("[WelcomeHub] Upcoming event fetched:", data[0]);
+              return data[0];
+            } else {
+              console.log("[WelcomeHub] No upcoming events found.");
+              return null;
+            }
+          })();
+
+          const resourcesPromise = (async () => {
+            console.log("[WelcomeHub] Fetching recent resources.");
+            const { data, error } = await supabase
+              .from("resources")
+              .select("id, title, description, url")
+              .order("created_at", { ascending: false })
+              .limit(3);
+
+            if (error) {
+              console.error("[WelcomeHub] Error fetching recent resources:", error);
+              return [];
+            } else {
+              console.log("[WelcomeHub] Recent resources fetched:", data);
+              return data || [];
+            }
+          })();
+
+          const [profileResult, eventResult, resourcesResult] = await Promise.all([
+            profilePromise,
+            eventPromise,
+            resourcesPromise,
+          ]);
+
+          setProfile(profileResult);
+          setUpcomingEvent(eventResult);
+          setRecentResources(resourcesResult);
+        } catch (error) {
+          console.error("[WelcomeHub] Error during data fetching:", error);
+          // Optionally show an error toast here
+        } finally {
+          setLoadingData(false); // All internal data loaded
+          setPageLoading(false); // Propagate to global page loading
+          console.log("[WelcomeHub] All data loaded. Internal loading set to false. Page loading set to false.");
         }
-        console.log("[WelcomeHub] No user, skipping profile fetch.");
-        setIsSurveyCompleted(false);
-        return null;
-      })();
+      };
 
-      const eventPromise = (async () => {
-        console.log("[WelcomeHub] Fetching upcoming event.");
-        const { data, error } = await supabase
-          .from("events")
-          .select("*")
-          .gte("date", format(new Date(), "yyyy-MM-dd"))
-          .order("date", { ascending: true })
-          .limit(1);
+      fetchAllData();
+    }
+    // If user is present and hasFetchedForUserRef.current === user.id, it means data is already loaded or being loaded.
+    // In this case, we don't need to do anything in this useEffect.
+    // The `loadingData` state will correctly reflect if the data is still being fetched.
 
-        if (error) {
-          console.error("[WelcomeHub] Error fetching upcoming event:", error);
-          return null;
-        } else if (data && data.length > 0) {
-          console.log("[WelcomeHub] Upcoming event fetched:", data[0]);
-          return data[0];
-        } else {
-          console.log("[WelcomeHub] No upcoming events found.");
-          return null;
-        }
-      })();
+  }, [user, loadingUserSession, setPageLoading]); // Dependencies: user and loadingUserSession
 
-      const resourcesPromise = (async () => {
-        console.log("[WelcomeHub] Fetching recent resources.");
-        const { data, error } = await supabase
-          .from("resources")
-          .select("id, title, description, url")
-          .order("created_at", { ascending: false })
-          .limit(3);
-
-        if (error) {
-          console.error("[WelcomeHub] Error fetching recent resources:", error);
-          return [];
-        } else {
-          console.log("[WelcomeHub] Recent resources fetched:", data);
-          return data || [];
-        }
-      })();
-
-      // Wait for all promises to resolve
-      const [profileResult, eventResult, resourcesResult] = await Promise.all([
-        profilePromise,
-        eventPromise,
-        resourcesPromise,
-      ]);
-
-      setProfile(profileResult);
-      setUpcomingEvent(eventResult);
-      setRecentResources(resourcesResult);
-      setLoadingData(false); // All internal data loaded
-      setPageLoading(false); // Propagate to global page loading
-      console.log("[WelcomeHub] All data loaded. Internal loading set to false. Page loading set to false.");
-    };
-
-    fetchAllData();
-  }, [user, loadingUserSession, setPageLoading]); // Re-run when user or session loading changes
-
-  if (loadingData) { // Use internal loadingData for skeleton
+  // The `loadingData` state is now correctly managed by the useEffect and fetchAllData.
+  // The component will render its skeleton if `loadingData` is true.
+  if (loadingData) {
     console.log("[WelcomeHub] Rendering skeleton due to loadingData being true.");
     return (
       <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
