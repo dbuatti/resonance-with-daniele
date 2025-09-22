@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
 import BackToTopButton from "./BackToTopButton"; // Import the new BackToTopButton
+import FooterSection from "./landing/FooterSection"; // Added missing import
 
 interface LayoutProps {
   children: React.ReactNode;
