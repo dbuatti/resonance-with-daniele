@@ -27,9 +27,9 @@ const CurrentEventPage: React.FC = () => {
             ></iframe>
           </div>
           <div className="text-center">
-            <Button asChild>
+            <Button asChild size="lg"> {/* Added size="lg" for prominence */}
               <a href={HUMANITIX_EVENT_URL} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" /> View on Humanitix
+                <ExternalLink className="mr-2 h-4 w-4" /> View Event Details
               </a>
             </Button>
           </div>
