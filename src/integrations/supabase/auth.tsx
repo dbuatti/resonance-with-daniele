@@ -88,26 +88,20 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       }
 
       setSession(initialSession);
-      let initialUserWithoutAdmin: CustomUser | null = initialSession?.user || null;
-      if (initialUserWithoutAdmin) {
-        initialUserWithoutAdmin = { ...initialUserWithoutAdmin, is_admin: false }; // Default to false
+      let userWithAdminStatus: CustomUser | null = null;
+
+      if (initialSession?.user) {
+        const isAdmin = await fetchIsAdminStatus(initialSession.user.id, initialSession.user.email);
+        userWithAdminStatus = { ...initialSession.user, is_admin: isAdmin };
+        console.log("[SessionContext] Initial user with admin status:", userWithAdminStatus);
       }
-      setUser(initialUserWithoutAdmin); // Set user immediately without waiting for is_admin
+      
+      setUser(userWithAdminStatus); // Set user *once* with correct admin status
       setLoading(false);
-      console.log("[SessionContext] Initial session processed. Loading set to false. User without admin set.");
+      console.log("[SessionContext] Initial session processed. Loading set to false. User with admin status set.");
 
-      if (initialUserWithoutAdmin) {
-        const isAdmin = await fetchIsAdminStatus(initialUserWithoutAdmin.id, initialUserWithoutAdmin.email);
-        setUser(prevUser => {
-          if (prevUser && prevUser.id === initialUserWithoutAdmin?.id) {
-            return { ...prevUser, is_admin: isAdmin };
-          }
-          return prevUser;
-        });
-        console.log("[SessionContext] Initial user's is_admin status updated asynchronously.");
-      }
-
-      if (initialUserWithoutAdmin) {
+      // Handle redirects based on initial session and admin status
+      if (userWithAdminStatus) {
         if (location.pathname === '/login') {
           console.log("[SessionContext] Redirecting from /login to / after initial session.");
           navigate('/');
@@ -122,11 +116,12 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
         console.log(`[SessionContext] Auth state changed (listener): Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
         
-        let newUserWithoutAdmin: CustomUser | null = currentSession?.user || null;
-        if (newUserWithoutAdmin) {
-          newUserWithoutAdmin = { ...newUserWithoutAdmin, is_admin: false }; // Default to false
+        let newUserWithAdminStatus: CustomUser | null = null;
+        if (currentSession?.user) {
+          const isAdmin = await fetchIsAdminStatus(currentSession.user.id, currentSession.user.email);
+          newUserWithAdminStatus = { ...currentSession.user, is_admin: isAdmin };
         }
-        
+
         const userChanged = (oldUser: CustomUser | null, newUser: CustomUser | null) => {
           console.log("--- userChanged comparison ---");
           console.log("Old User (ref):", oldUser);
@@ -140,6 +135,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
           if (oldUser.id !== newUser.id) return true;
           if (oldUser.email !== newUser.email) return true;
+          if (oldUser.is_admin !== newUser.is_admin) return true; // Crucial check for admin status change
           
           const oldMeta = oldUser.user_metadata || {};
           const newMeta = newUser.user_metadata || {};
@@ -158,31 +154,21 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         };
 
         const shouldUpdateSession = sessionChanged(sessionRef.current, currentSession);
-        const shouldUpdateCoreUser = userChanged(userRef.current, newUserWithoutAdmin);
+        const shouldUpdateCoreUser = userChanged(userRef.current, newUserWithAdminStatus);
 
         if (shouldUpdateSession) {
           setSession(currentSession);
           console.log("[SessionContext] Listener processed. Session state updated.");
         }
         if (shouldUpdateCoreUser) {
-          setUser(newUserWithoutAdmin);
+          setUser(newUserWithAdminStatus);
           console.log("[SessionContext] Listener processed. Core User (Auth) state updated.");
         } else if (!shouldUpdateSession && !shouldUpdateCoreUser) {
           console.log("[SessionContext] Listener processed. User and Session state unchanged (no significant diff).");
         }
 
-        if (newUserWithoutAdmin) {
-          const isAdmin = await fetchIsAdminStatus(newUserWithoutAdmin.id, newUserWithoutAdmin.email);
-          setUser(prevUser => {
-            if (prevUser && prevUser.id === newUserWithoutAdmin?.id && prevUser.is_admin !== isAdmin) {
-              console.log("[SessionContext] Async update: is_admin status changed, updating user state.");
-              return { ...prevUser, is_admin: isAdmin };
-            }
-            return prevUser;
-          });
-        }
-
-        if (newUserWithoutAdmin) {
+        // Handle redirects after auth state change
+        if (newUserWithAdminStatus) {
           if (location.pathname === '/login') {
             console.log("[SessionContext] Redirecting from /login to / after listener update.");
             navigate('/');
@@ -203,7 +189,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     getInitialSessionAndSetupListener();
 
-  }, [navigate, fetchIsAdminStatus]);
+  }, [navigate, fetchIsAdminStatus, location.pathname]); // Added location.pathname to dependencies for redirect logic
 
   const contextValue = { session, user, loading };
   console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin);
