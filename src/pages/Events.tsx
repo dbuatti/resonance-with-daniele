@@ -18,7 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
-import { useSession } from "@/integrations/supabase/auth"; // Import useSession
+import { useSession } from "@/integrations/supabase/auth";
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -42,9 +42,9 @@ interface Event {
 
 const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [loadingEvents, setLoadingEvents] = useState(true); // Renamed to avoid conflict with session loading
+  const [loadingEvents, setLoadingEvents] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { user, loading: loadingUserSession } = useSession(); // Use useSession hook
+  const { user, loading: loadingUserSession } = useSession();
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -61,7 +61,7 @@ const Events: React.FC = () => {
     if (user) {
       fetchEvents();
     } else {
-      setEvents([]); // Clear events if no user is logged in
+      setEvents([]);
       setLoadingEvents(false);
     }
   }, [user]);
@@ -105,7 +105,7 @@ const Events: React.FC = () => {
       showSuccess("Event added successfully!");
       form.reset();
       setIsDialogOpen(false);
-      fetchEvents(); // Re-fetch events to update the list
+      fetchEvents();
     }
   };
 
@@ -210,10 +210,13 @@ const Events: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.length === 0 ? (
-            <p className="col-span-full text-center text-muted-foreground">No events found. Add one above!</p>
+            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg"> {/* Enhanced styling */}
+              <p className="text-xl text-muted-foreground font-semibold">No events found.</p>
+              <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>
+            </div>
           ) : (
             events.map((event) => (
-              <Card key={event.id}>
+              <Card key={event.id} className="shadow-lg rounded-xl"> {/* Added shadow-lg and rounded-xl */}
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-2xl font-medium">
                     {event.title}

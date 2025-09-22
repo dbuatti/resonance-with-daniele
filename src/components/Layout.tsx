@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-primary text-primary-foreground p-4 shadow-md">
+      <header className="bg-primary text-primary-foreground p-4 shadow-lg"> {/* Added shadow-lg */}
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold">
             Resonance with Daniele
@@ -49,7 +49,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
         </div>
       </header>
-      <main className="flex-grow container mx-auto p-4">
+      <main className="flex-grow container mx-auto py-8 px-4"> {/* Adjusted vertical padding */}
         {children}
       </main>
       <MadeWithDyad />

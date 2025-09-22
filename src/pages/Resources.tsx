@@ -14,7 +14,7 @@ const Resources: React.FC = () => {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
+          <Card className="shadow-lg rounded-xl"> {/* Added shadow-lg and rounded-xl */}
             <CardHeader>
               <CardTitle>Sheet Music</CardTitle>
             </CardHeader>
@@ -22,7 +22,7 @@ const Resources: React.FC = () => {
               <p className="text-muted-foreground">Upload and organise all your sheet music here.</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="shadow-lg rounded-xl"> {/* Added shadow-lg and rounded-xl */}
             <CardHeader>
               <CardTitle>Practice Tracks</CardTitle>
             </CardHeader>
@@ -30,7 +30,7 @@ const Resources: React.FC = () => {
               <p className="text-muted-foreground">Share audio tracks for members to practice with.</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="shadow-lg rounded-xl"> {/* Added shadow-lg and rounded-xl */}
             <CardHeader>
               <CardTitle>Rehearsal Notes</CardTitle>
             </CardHeader>
