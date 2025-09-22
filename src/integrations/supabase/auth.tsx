@@ -20,13 +20,16 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<CustomUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Keep loading true initially
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const getAndSetSession = async (initial = false) => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
+    let ignore = false; // Flag to prevent state updates on unmounted component
+
+    const handleAuthStateChange = async (currentSession: Session | null) => {
+      if (ignore) return;
+
       setSession(currentSession);
 
       if (currentSession?.user) {
@@ -36,6 +39,8 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           .eq('id', currentSession.user.id)
           .single();
 
+        if (ignore) return; // Check again after async operation
+
         if (profileError && profileError.code !== 'PGRST116') {
           console.error("Error fetching user profile for admin status:", profileError);
           setUser({ ...currentSession.user, is_admin: false });
@@ -43,35 +48,37 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           setUser({ ...currentSession.user, is_admin: profileData?.is_admin || false });
         }
 
-        if (initial && location.pathname === '/login') {
+        if (location.pathname === '/login') {
           navigate('/');
         }
       } else {
         setUser(null);
-        if (initial && location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
+        if (location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
           navigate('/login');
         }
       }
-      setLoading(false);
+      setLoading(false); // Set loading to false only after user state is fully determined
     };
 
     // Fetch initial session on mount
-    getAndSetSession(true);
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!ignore) {
+        handleAuthStateChange(initialSession);
+      }
+    });
 
     // Set up listener for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      // Only update if the session actually changed or if it's a USER_UPDATED event
-      if (currentSession?.user?.id !== user?.id || event === 'USER_UPDATED') {
-        getAndSetSession(); // Re-fetch and set session/user on change
-      } else if (!currentSession) {
-        getAndSetSession(); // Handle sign-out
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (!ignore) {
+        handleAuthStateChange(currentSession);
       }
     });
 
     return () => {
+      ignore = true; // Cleanup to prevent memory leaks
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname, user?.id]); // Added user?.id to dependency array to react to user changes
+  }, [navigate, location.pathname]); // Removed user?.id from dependencies to avoid unnecessary re-runs
 
   const contextValue = { session, user, loading };
 
