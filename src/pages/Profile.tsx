@@ -12,7 +12,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { User as UserIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import *s z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload"; // Import the new AvatarUpload component
 
@@ -153,8 +153,6 @@ const Profile: React.FC = () => {
 
   const currentFirstName = form.watch("first_name");
   const currentLastName = form.watch("last_name");
-
-  console.log("Profile.tsx - currentAvatarUrl for main avatar:", currentAvatarUrl); // Added log
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">

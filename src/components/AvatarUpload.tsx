@@ -138,8 +138,6 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     };
   }, [handlePaste]);
 
-  console.log("AvatarUpload.tsx - preview URL:", preview); // Added log
-
   return (
     <div className="space-y-4">
       <Label htmlFor="avatar-upload">Avatar Image</Label>

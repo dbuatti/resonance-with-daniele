@@ -21,8 +21,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const displayName = user?.user_metadata?.first_name || user?.email || "Guest";
 
-  console.log("Layout.tsx - user?.user_metadata?.avatar_url:", user?.user_metadata?.avatar_url); // Added log
-
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
