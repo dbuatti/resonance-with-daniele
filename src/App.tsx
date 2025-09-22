@@ -15,25 +15,24 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <React.Fragment> {/* New Fragment to wrap TooltipProvider and BrowserRouter */}
-      <TooltipProvider>
-        <React.Fragment>
-          <Toaster />
-          <Sonner />
-        </React.Fragment>
+    <React.Fragment> {/* This Fragment is the single child of QueryClientProvider */}
+      <TooltipProvider> {/* TooltipProvider now wraps the main routing logic */}
+        <BrowserRouter>
+          <SessionContextProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SessionContextProvider>
+        </BrowserRouter>
       </TooltipProvider>
-      <BrowserRouter>
-        <SessionContextProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </SessionContextProvider>
-      </BrowserRouter>
+      {/* Toaster and Sonner are now siblings to TooltipProvider, at the top level */}
+      <Toaster />
+      <Sonner />
     </React.Fragment>
   </QueryClientProvider>
 );
