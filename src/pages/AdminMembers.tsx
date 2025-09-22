@@ -173,17 +173,14 @@ const AdminMembers: React.FC = () => {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <thead className="[&_tr]:border-b"> {/* Replaced TableHeader with native thead */}
-                  <tr>
+                <thead className="[&_tr]:border-b"><tr>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Name</th>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Email</th>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Role</th>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Survey Status</th>
                     <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="[&_tr:last-child]:border-0"> {/* Replaced TableBody with native tbody */}
-                  {profiles.map((profile) => (
+                  </tr></thead>
+                <tbody className="[&_tr:last-child]:border-0">{profiles.map((profile) => (
                     <tr key={profile.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                       <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 font-medium">
                         {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}
@@ -271,8 +268,7 @@ const AdminMembers: React.FC = () => {
                         </Dialog>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
+                  ))}</tbody>
               </Table>
             </div>
           )}
