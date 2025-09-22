@@ -182,8 +182,7 @@ const AdminMembers: React.FC = () => {
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {profiles.map((profile) => (
+                <TableBody>{profiles.map((profile) => (
                     <TableRow key={profile.id}>
                       <TableCell className="font-medium">
                         {profile.first_name || profile.last_name
@@ -267,8 +266,7 @@ const AdminMembers: React.FC = () => {
                         </Dialog>
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
+                  ))}</TableBody>
               </Table>
             </div>
           )}
