@@ -51,12 +51,14 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
                 <span>Events</span>
               </Link>
               {user.is_admin && ( // Conditionally render Admin Zone link
-                <Link to="/admin" className={cn(getNavLinkClass("/admin"), "flex items-center gap-2")} onClick={() => setIsOpen(false)}>
-                  <span><Shield className="h-5 w-5" /> Admin Zone</span>
-                </Link>
+                <Button variant="ghost" asChild>
+                  <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))} onClick={() => setIsOpen(false)}>
+                    <Shield className="h-5 w-5" /> Admin Zone
+                  </Link>
+                </Button>
               )}
-              <Link to="/profile" className={cn(getNavLinkClass("/profile"), "flex items-center gap-2")} onClick={() => setIsOpen(false)}>
-                <span>
+              <Button variant="ghost" asChild>
+                <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))} onClick={() => setIsOpen(false)}>
                   <Avatar className="h-7 w-7">
                     {user.user_metadata?.avatar_url ? (
                       <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
@@ -67,8 +69,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
                     )}
                   </Avatar>
                   My Profile
-                </span>
-              </Link>
+                </Link>
+              </Button>
               <Button variant="ghost" className={cn(getNavLinkClass(""), "mt-auto text-destructive hover:bg-destructive/10 hover:text-destructive")} onClick={() => { handleLogout(); setIsOpen(false); }}>
                 <LogOut className="mr-2 h-5 w-5" /> Logout
               </Button>
