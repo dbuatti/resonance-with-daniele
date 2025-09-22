@@ -183,38 +183,19 @@ const Events: React.FC = () => {
     }
   };
 
-  if (loadingEvents) {
-    return (
-      <div className="text-center text-lg py-8">
-        <p className="mb-4">Loading events...</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="shadow-lg rounded-xl">
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-5/6" />
-                <Skeleton className="h-10 w-full mt-4" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora animate-fade-in-up">Upcoming Events</h1>
+      <h1 className="text-4xl font-bold text-center font-lora animate-fade-in-up">
+        {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
+      </h1>
       <p className="text-lg text-center text-muted-foreground animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-        Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
+        {loadingEvents ? <Skeleton className="h-6 w-1/2 mx-auto" /> : "Stay up-to-date with all my choir's performances, rehearsals, and social gatherings."}
       </p>
 
       <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-        {user ? (
+        {loadingEvents ? (
+          <Skeleton className="h-10 w-48" />
+        ) : user ? (
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -295,7 +276,22 @@ const Events: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {events.length === 0 ? (
+        {loadingEvents ? (
+          // Render skeleton cards when loading
+          [...Array(3)].map((_, i) => (
+            <Card key={i} className="shadow-lg rounded-xl">
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-10 w-full mt-4" />
+              </CardContent>
+            </Card>
+          ))
+        ) : events.length === 0 ? (
           <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
             <p className="text-xl text-muted-foreground font-semibold font-lora">No events found.</p>
             {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new events.</p>}
