@@ -53,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Skeleton className="h-8 w-8 sm:hidden bg-primary-foreground/20 rounded-md" />
           </div>
         </header>
-        <main className="flex-grow container mx-auto flex items-center justify-center">
+        <main className="flex-grow bg-background flex items-center justify-center"> {/* Added bg-background here */}
           <p className="text-lg text-muted-foreground">Loading application...</p>
         </main>
         <FooterSection />
@@ -131,8 +131,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
       </header>
-      <main className="flex-grow container mx-auto">
-        {children}
+      <main className="flex-grow bg-background"> {/* Added bg-background here */}
+        <div className="container mx-auto"> {/* Wrapped children in a container */}
+          {children}
+        </div>
       </main>
       <FooterSection />
       <BackToTopButton />
