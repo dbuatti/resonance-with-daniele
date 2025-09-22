@@ -205,7 +205,12 @@ const Profile: React.FC = () => {
     setRemoveAvatarRequested(false); // Reset removal request
     showSuccess("Profile updated successfully!");
     console.log("[Profile Page] Profile update process completed successfully.");
-    form.reset(); // Changed from form.reset(data) to form.reset()
+    
+    // Reset the form with the newly saved data to clear isDirty and isSubmitting
+    form.reset({
+      first_name: data.first_name,
+      last_name: data.last_name,
+    });
   };
 
   const handleLogout = async () => {
