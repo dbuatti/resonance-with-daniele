@@ -1,19 +1,193 @@
 "use client";
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
-import { showSuccess } from "@/utils/toast"; // Assuming you have a toast utility
+import { supabase } from "@/integrations/supabase/client";
+import { showSuccess, showError } from "@/utils/toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
+// Define the schema for a resource
+const resourceSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  url: z.string().url("Must be a valid URL").min(1, "URL is required"),
+});
+
+type ResourceFormData = z.infer<typeof resourceSchema>;
+
+interface Resource {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  url: string;
+  created_at: string;
+}
 
 const Resources: React.FC = () => {
-  const { user } = useSession();
+  const { user, loading: loadingUserSession } = useSession();
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [loadingResources, setLoadingResources] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingResource, setEditingResource] = useState<Resource | null>(null);
 
-  const handleAddResource = () => {
-    showSuccess("Add Resource functionality coming soon!");
-    // In a real app, this would open a dialog or navigate to a form
+  const addForm = useForm<ResourceFormData>({
+    resolver: zodResolver(resourceSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      url: "",
+    },
+  });
+
+  const editForm = useForm<ResourceFormData>({
+    resolver: zodResolver(resourceSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      url: "",
+    },
+  });
+
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  useEffect(() => {
+    if (editingResource) {
+      editForm.reset({
+        title: editingResource.title,
+        description: editingResource.description || "",
+        url: editingResource.url,
+      });
+    }
+  }, [editingResource, editForm]);
+
+  const fetchResources = async () => {
+    setLoadingResources(true);
+    const { data, error } = await supabase
+      .from("resources")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching resources:", error);
+      showError("Failed to load resources.");
+    } else {
+      setResources(data || []);
+    }
+    setLoadingResources(false);
   };
+
+  const onAddSubmit = async (data: ResourceFormData) => {
+    if (!user) {
+      showError("You must be logged in to add resources.");
+      return;
+    }
+
+    const { title, description, url } = data;
+    const { error } = await supabase.from("resources").insert({
+      user_id: user.id,
+      title,
+      description,
+      url,
+    });
+
+    if (error) {
+      console.error("Error adding resource:", error);
+      showError("Failed to add resource.");
+    } else {
+      showSuccess("Resource added successfully!");
+      addForm.reset();
+      setIsAddDialogOpen(false);
+      fetchResources();
+    }
+  };
+
+  const onEditSubmit = async (data: ResourceFormData) => {
+    if (!user || !editingResource) {
+      showError("You must be logged in and select a resource to edit.");
+      return;
+    }
+
+    const { title, description, url } = data;
+    const { error } = await supabase
+      .from("resources")
+      .update({
+        title,
+        description,
+        url,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", editingResource.id)
+      .eq("user_id", user.id); // Ensure only the owner can update
+
+    if (error) {
+      console.error("Error updating resource:", error);
+      showError("Failed to update resource.");
+    } else {
+      showSuccess("Resource updated successfully!");
+      setIsEditDialogOpen(false);
+      setEditingResource(null);
+      fetchResources();
+    }
+  };
+
+  const handleDelete = async (resourceId: string) => {
+    if (!user) {
+      showError("You must be logged in to delete resources.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("resources")
+      .delete()
+      .eq("id", resourceId)
+      .eq("user_id", user.id); // Ensure only the owner can delete
+
+    if (error) {
+      console.error("Error deleting resource:", error);
+      showError("Failed to delete resource.");
+    } else {
+      showSuccess("Resource deleted successfully!");
+      fetchResources();
+    }
+  };
+
+  if (loadingResources) {
+    return (
+      <div className="text-center text-lg py-8">
+        <p className="mb-4">Loading resources...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="shadow-lg rounded-xl">
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-10 w-full mt-4" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 py-8">
@@ -23,41 +197,150 @@ const Resources: React.FC = () => {
       </p>
 
       <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-        {user ? ( // Only show "Add New Resource" button if user is logged in
-          <Button onClick={handleAddResource}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Resource
-          </Button>
+        {user ? (
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add New Resource
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle className="font-lora">Add New Resource</DialogTitle>
+                <CardDescription>Provide details for a new choir resource.</CardDescription>
+              </DialogHeader>
+              <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input id="title" {...addForm.register("title")} />
+                  {addForm.formState.errors.title && (
+                    <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="url">URL</Label>
+                  <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
+                  {addForm.formState.errors.url && (
+                    <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea id="description" {...addForm.register("description")} />
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                    {addForm.formState.isSubmitting ? "Adding..." : "Add Resource"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         ) : (
-          <p className="text-md text-muted-foreground">Log in to access more resources and features.</p>
+          <p className="text-md text-muted-foreground">Log in to add new resources.</p>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        <Card className="shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-          <CardHeader>
-            <CardTitle className="font-lora">Sheet Music</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Upload and organise all your sheet music here.</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-          <CardHeader>
-            <CardTitle className="font-lora">Practice Tracks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Share audio tracks for members to practice with.</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-          <CardHeader>
-            <CardTitle className="font-lora">Rehearsal Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Keep track of important notes from rehearsals.</p>
-          </CardContent>
-        </Card>
+        {resources.length === 0 ? (
+          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+            <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found.</p>
+            {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new resources.</p>}
+            {user && <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>}
+          </div>
+        ) : (
+          resources.map((resource, index) => (
+            <Card key={resource.id} className="shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-medium font-lora">
+                  {resource.title}
+                </CardTitle>
+                <FileText className="h-6 w-6 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {resource.description && <p className="text-sm text-muted-foreground">{resource.description}</p>}
+                <Button asChild className="w-full">
+                  <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                    <LinkIcon className="mr-2 h-4 w-4" /> View Resource
+                  </a>
+                </Button>
+                {user && user.id === resource.user_id && (
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingResource(resource);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your resource.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(resource.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
+
+      {/* Edit Resource Dialog */}
+      {editingResource && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-lora">Edit Resource</DialogTitle>
+              <CardDescription>Update the details for your choir resource.</CardDescription>
+            </DialogHeader>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-title">Title</Label>
+                <Input id="edit-title" {...editForm.register("title")} />
+                {editForm.formState.errors.title && (
+                  <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-url">URL</Label>
+                <Input id="edit-url" type="url" {...editForm.register("url")} />
+                {editForm.formState.errors.url && (
+                  <p className="text-red-500 text-sm">{editForm.formState.errors.url.message}</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description (Optional)</Label>
+                <Textarea id="edit-description" {...editForm.register("description")} />
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                  {editForm.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
