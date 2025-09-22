@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2 } from "lucide-react"; // Import Loader2
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2 } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
@@ -192,9 +192,15 @@ const Resources: React.FC = () => {
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>
-      <p className="text-lg text-center text-muted-foreground">
-        {loadingResources ? <Skeleton className="h-6 w-1/2 mx-auto" /> : "This is where you'll find all the sheet music, practice tracks, and other materials I've prepared for the choir."}
-      </p>
+      {loadingResources ? (
+        <div className="text-lg text-center text-muted-foreground">
+          <Skeleton className="h-6 w-1/2 mx-auto" />
+        </div>
+      ) : (
+        <p className="text-lg text-center text-muted-foreground">
+          This is where you'll find all the sheet music, practice tracks, and other materials I've prepared for the choir.
+        </p>
+      )}
 
       <div className="flex justify-center">
         {loadingResources ? (

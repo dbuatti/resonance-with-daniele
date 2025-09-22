@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react"; // Import Loader2
+import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -209,9 +209,15 @@ const Events: React.FC = () => {
       <h1 className="text-4xl font-bold text-center font-lora">
         {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>
-      <p className="text-lg text-center text-muted-foreground">
-        {loadingEvents ? <Skeleton className="h-6 w-1/2 mx-auto" /> : "Stay up-to-date with all my choir's performances, rehearsals, and social gatherings."}
-      </p>
+      {loadingEvents ? (
+        <div className="text-lg text-center text-muted-foreground">
+          <Skeleton className="h-6 w-1/2 mx-auto" />
+        </div>
+      ) : (
+        <p className="text-lg text-center text-muted-foreground">
+          Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
+        </p>
+      )}
 
       <div className="flex justify-center">
         {loadingEvents ? (
