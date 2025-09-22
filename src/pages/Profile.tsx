@@ -80,7 +80,7 @@ const Profile: React.FC = () => {
         setCurrentAvatarUrl(null);
       }
     }
-  }, [user, loadingUserSession, fetchProfileData, form]); // Added fetchProfileData to dependencies
+  }, [user, loadingUserSession, fetchProfileData]); // Removed 'form' from dependencies
 
   const handleAvatarFileChange = (file: File | null) => {
     console.log("[Profile Page] Avatar file changed:", file ? file.name : 'null');

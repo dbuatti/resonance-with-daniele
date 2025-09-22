@@ -119,7 +119,7 @@ const SurveyForm: React.FC = () => {
         });
       }
     }
-  }, [user, loadingUserSession, fetchSurveyData, form]);
+  }, [user, loadingUserSession, fetchSurveyData]); // Removed 'form' from dependencies
 
   const onSubmit = async (data: SurveyFormData) => {
     if (!user) {

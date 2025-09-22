@@ -106,11 +106,36 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       // 2. Set up auth state change listener for subsequent changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
         console.log(`[SessionContext] Auth state changed (listener): Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
-        setSession(currentSession);
+        
         const processedUser = await processUserAndProfile(currentSession?.user || null);
-        setUser(processedUser);
-        // No need to setLoading(false) here again, as it's already false from initial fetch
-        console.log("[SessionContext] Listener processed. Final user state:", processedUser);
+
+        // Deep compare relevant user properties to avoid unnecessary re-renders
+        const userChanged = (oldUser: CustomUser | null, newUser: CustomUser | null) => {
+          if (oldUser === null && newUser === null) return false;
+          if (oldUser === null || newUser === null) return true; // Transition from logged in/out
+
+          // Compare core properties
+          if (oldUser.id !== newUser.id) return true;
+          if (oldUser.email !== newUser.email) return true;
+          if (oldUser.is_admin !== newUser.is_admin) return true; // Compare custom property
+
+          // Compare user_metadata (shallow comparison for simplicity, can be deeper if needed)
+          const oldMeta = oldUser.user_metadata || {};
+          const newMeta = newUser.user_metadata || {};
+          if (oldMeta.first_name !== newMeta.first_name) return true;
+          if (oldMeta.last_name !== newMeta.last_name) return true;
+          if (oldMeta.avatar_url !== newMeta.avatar_url) return true;
+
+          return false; // No significant change detected
+        };
+
+        if (userChanged(user, processedUser)) {
+          setSession(currentSession); // Only update session if user changed
+          setUser(processedUser);
+          console.log("[SessionContext] Listener processed. User state updated.");
+        } else {
+          console.log("[SessionContext] Listener processed. User state unchanged (no significant diff).");
+        }
 
         // Handle redirects for subsequent auth state changes
         if (processedUser) {
@@ -134,7 +159,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     getInitialSessionAndSetupListener();
 
-  }, [navigate, location.pathname, processUserAndProfile]); // Added processUserAndProfile to dependencies
+  }, [navigate, location.pathname, processUserAndProfile, user]); // Added 'user' to dependencies for userChanged comparison
 
   const contextValue = { session, user, loading };
   console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null');
