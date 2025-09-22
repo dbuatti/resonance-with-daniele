@@ -72,8 +72,13 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     return () => subscription.unsubscribe();
   }, [queryClient]); // Add queryClient to dependencies
 
-  // Define the options object with explicit UseQueryOptions type
-  const profileQueryOptions: UseQueryOptions<Profile | null, Error, Profile | null, ['profile', string | undefined]> = {
+  // Use react-query to fetch and cache the user profile
+  const { data: profile, isLoading: profileLoading } = useQuery<
+    Profile | null, // TQueryFnData: The type of data returned by the queryFn
+    Error,          // TError: The type of error that can be thrown
+    Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
+    QueryKey        // TQueryKey: Explicitly define the QueryKey type to allow flexible array elements
+  >({
     queryKey: ['profile', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) {
@@ -118,10 +123,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     onError: (error) => {
       console.error("[SessionContext] React Query profile fetch error:", error);
     },
-  };
-
-  // Use react-query to fetch and cache the user profile
-  const { data: profile, isLoading: profileLoading } = useQuery(profileQueryOptions);
+  });
 
   // Derived user object with admin status
   const user: CustomUser | null = session?.user ? {
