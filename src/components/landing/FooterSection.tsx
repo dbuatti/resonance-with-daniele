@@ -3,7 +3,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Facebook, Instagram, Youtube, Mail } from "lucide-react";
+import { Facebook, Instagram, Mail } from "lucide-react"; // Removed Youtube
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const FooterSection: React.FC = () => {
@@ -38,20 +38,23 @@ const FooterSection: React.FC = () => {
         <div>
           <h3 className="text-xl font-bold mb-4">Connect</h3>
           <div className="flex justify-center md:justify-start space-x-4 mb-4">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-              <Facebook className="h-6 w-6" />
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
+              <a href="https://www.facebook.com/danielebuatti" target="_blank" rel="noopener noreferrer">
+                <Facebook className="h-6 w-6" />
+              </a>
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-              <Instagram className="h-6 w-6" />
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
+              <a href="https://www.instagram.com/daniele.buatti/" target="_blank" rel="noopener noreferrer">
+                <Instagram className="h-6 w-6" />
+              </a>
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-              <Youtube className="h-6 w-6" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-              <Mail className="h-6 w-6" />
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
+              <a href="mailto:resonancewithdaniele@gmail.com">
+                <Mail className="h-6 w-6" />
+              </a>
             </Button>
           </div>
-          <p className="text-muted-foreground">Email: info@danielebuatti.com</p>
+          <p className="text-muted-foreground">Email: resonancewithdaniele@gmail.com</p>
         </div>
       </div>
       <div className="mt-8 text-center text-sm text-muted-foreground">
