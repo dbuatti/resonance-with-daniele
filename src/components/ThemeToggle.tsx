@@ -13,7 +13,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function ThemeToggle() {
-  const { setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+
+  React.useEffect(() => {
+    console.log("[ThemeToggle] Rendered. Current theme:", theme, "Resolved theme:", resolvedTheme);
+  }, [theme, resolvedTheme]);
+
+  const handleSetTheme = (newTheme: string) => {
+    console.log("[ThemeToggle] Setting theme to:", newTheme);
+    setTheme(newTheme);
+  };
 
   return (
     <DropdownMenu>
@@ -25,13 +34,13 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
+        <DropdownMenuItem onClick={() => handleSetTheme("light")}>
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
+        <DropdownMenuItem onClick={() => handleSetTheme("dark")}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
+        <DropdownMenuItem onClick={() => handleSetTheme("system")}>
           System
         </DropdownMenuItem>
       </DropdownMenuContent>
