@@ -25,12 +25,11 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const location = useLocation();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    const getAndSetSession = async (initial = false) => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       setSession(currentSession);
-      setLoading(false);
 
       if (currentSession?.user) {
-        // Fetch profile data including is_admin
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('is_admin')
@@ -39,28 +38,40 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
         if (profileError && profileError.code !== 'PGRST116') {
           console.error("Error fetching user profile for admin status:", profileError);
-          setUser({ ...currentSession.user, is_admin: false }); // Default to not admin on error
+          setUser({ ...currentSession.user, is_admin: false });
         } else {
           setUser({ ...currentSession.user, is_admin: profileData?.is_admin || false });
         }
 
-        // If user is logged in and on the login page, redirect to home
-        if (location.pathname === '/login') {
+        if (initial && location.pathname === '/login') {
           navigate('/');
         }
       } else {
         setUser(null);
-        // If user is not logged in and not on the login, home, events, or resources page, redirect to login
-        if (location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
+        if (initial && location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
           navigate('/login');
         }
+      }
+      setLoading(false);
+    };
+
+    // Fetch initial session on mount
+    getAndSetSession(true);
+
+    // Set up listener for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      // Only update if the session actually changed or if it's a USER_UPDATED event
+      if (currentSession?.user?.id !== user?.id || event === 'USER_UPDATED') {
+        getAndSetSession(); // Re-fetch and set session/user on change
+      } else if (!currentSession) {
+        getAndSetSession(); // Handle sign-out
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, user?.id]); // Added user?.id to dependency array to react to user changes
 
   const contextValue = { session, user, loading };
 
