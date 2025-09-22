@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge"; // Import Badge for survey status
 
 interface Profile {
   id: string;
@@ -59,7 +60,7 @@ const AdminMembers: React.FC = () => {
       setLoadingProfiles(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("*, email")
+        .select("*, email") // Ensure email is selected
         .order("updated_at", { ascending: false });
 
       if (error) {
@@ -103,6 +104,22 @@ const AdminMembers: React.FC = () => {
       fetchProfiles();
     }
     setIsUpdatingAdminStatus(null);
+  };
+
+  // Helper function to determine if a profile has any survey responses
+  const hasSurveyResponses = (profile: Profile) => {
+    return (
+      profile.how_heard !== null ||
+      (profile.motivation && profile.motivation.length > 0) ||
+      profile.attended_session !== null ||
+      profile.singing_experience !== null ||
+      profile.session_frequency !== null ||
+      profile.preferred_time !== null ||
+      (profile.music_genres && profile.music_genres.length > 0) ||
+      profile.choir_goals !== null ||
+      profile.inclusivity_importance !== null ||
+      profile.suggestions !== null
+    );
   };
 
   if (loadingSession || loadingProfiles) {
@@ -161,6 +178,7 @@ const AdminMembers: React.FC = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Survey Status</TableHead> {/* New column */}
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -168,7 +186,9 @@ const AdminMembers: React.FC = () => {
                   {profiles.map((profile) => (
                     <TableRow key={profile.id}>
                       <TableCell className="font-medium">
-                        {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : "N/A"}
+                        {profile.first_name || profile.last_name
+                          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
+                          : profile.email || "N/A"} {/* Fallback to email */}
                       </TableCell>
                       <TableCell>{profile.email || "N/A"}</TableCell>
                       <TableCell>
@@ -185,6 +205,13 @@ const AdminMembers: React.FC = () => {
                             <SelectItem value="user">User</SelectItem>
                           </SelectContent>
                         </Select>
+                      </TableCell>
+                      <TableCell> {/* New Survey Status Cell */}
+                        {hasSurveyResponses(profile) ? (
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">Responded</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <Dialog>
