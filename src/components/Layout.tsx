@@ -73,6 +73,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Link to="/" className={getNavLinkClass("/")}><span>Home</span></Link>
             </Button>
             <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
+              <Link to="/learn-more" className={getNavLinkClass("/learn-more")}><span>Learn More</span></Link>
+            </Button>
+            <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
               <Link to="/current-event" className={cn(getNavLinkClass("/current-event"), "text-accent font-bold")}><span>COMING UP!</span></Link>
             </Button>
             {user ? (
