@@ -66,10 +66,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom colors for the hero section gradient
-        'hero-gradient-start': 'hsl(220 30% 98%)', // Very light blue
-        'hero-gradient-end': 'hsl(54 30% 98%)',   // Very light yellow
-        'hero-description-foreground': 'hsl(220 10% 40%)', // Muted foreground for description
+        // Custom colors for the hero section gradient with dark variants
+        'hero-gradient-start': {
+          DEFAULT: 'hsl(220 30% 98%)', // Very light blue
+          dark: 'hsl(220 10% 20%)',   // Darker blue-gray for dark mode
+        },
+        'hero-gradient-end': {
+          DEFAULT: 'hsl(54 30% 98%)',   // Very light yellow
+          dark: 'hsl(54 10% 20%)',     // Darker yellow-gray for dark mode
+        },
+        'hero-description-foreground': {
+          DEFAULT: 'hsl(220 10% 40%)', // Muted foreground for description
+          dark: 'hsl(220 10% 70%)',    // Lighter muted foreground for dark mode
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
