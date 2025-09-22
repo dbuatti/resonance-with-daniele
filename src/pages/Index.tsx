@@ -9,8 +9,6 @@ import FeaturedSection from "@/components/landing/FeaturedSection";
 import ResourcesBenefitsSection from "@/components/landing/ResourcesBenefitsSection";
 import MeetDanieleSection from "@/components/landing/MeetDanieleSection";
 import CallToActionSection from "@/components/landing/CallToActionSection";
-import FooterSection from "@/components/landing/FooterSection";
-import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
 // No need for useDelayedLoading here, as Layout handles the global session loading.
 
@@ -42,7 +40,6 @@ const Index: React.FC = () => {
           <ResourcesBenefitsSection />
           <MeetDanieleSection />
           <CallToActionSection />
-          <FooterSection />
         </>
       )}
     </>
