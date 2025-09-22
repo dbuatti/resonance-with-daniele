@@ -454,7 +454,7 @@ const Events: React.FC = () => {
           </>
         ) : (
           events.map((event) => (
-            <Card key={event.id} className="shadow-lg rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-[1.01]">
+            <Card key={event.id} className="shadow-lg rounded-xl hover:shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-medium font-lora">
                   {event.title}

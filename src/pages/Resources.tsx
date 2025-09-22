@@ -365,7 +365,7 @@ const Resources: React.FC = () => {
           </>
         ) : (
           resources.map((resource) => (
-            <Card key={resource.id} className="shadow-lg rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-[1.01]">
+            <Card key={resource.id} className="shadow-lg rounded-xl hover:shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-medium font-lora">
                   {resource.title}
