@@ -38,15 +38,22 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<CustomUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Use a single state object to manage session, user, and loading
+  const [contextState, setContextState] = useState<SessionContextType>({
+    session: null,
+    user: null,
+    loading: true,
+  });
+
+  const { session, user, loading } = contextState; // Destructure for easier access
+
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Refs to keep track of the *current* user and session for comparison in the listener
   const userRef = useRef<CustomUser | null>(user);
   const sessionRef = useRef<Session | null>(session);
-  const initialSessionHandledRef = useRef(false); // New ref to track initial session handling
+  const initialSessionHandledRef = useRef(false);
 
   useEffect(() => {
     userRef.current = user;
@@ -88,18 +95,20 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         console.error("[SessionContext] Error getting initial session:", initialSessionError);
       }
 
-      setSession(initialSession);
       let userWithAdminStatus: CustomUser | null = null;
-
       if (initialSession?.user) {
         const isAdmin = await fetchIsAdminStatus(initialSession.user.id, initialSession.user.email);
         userWithAdminStatus = { ...initialSession.user, is_admin: isAdmin };
         console.log("[SessionContext] Initial user with admin status:", userWithAdminStatus);
       }
       
-      setUser(userWithAdminStatus); // Set user *once* with correct admin status
-      setLoading(false);
-      initialSessionHandledRef.current = true; // Mark initial session as handled
+      // Update all relevant states in a single call to prevent multiple renders
+      setContextState({
+        session: initialSession,
+        user: userWithAdminStatus,
+        loading: false,
+      });
+      initialSessionHandledRef.current = true; 
       console.log("[SessionContext] Initial session processed. Loading set to false. User with admin status set.");
 
       // Handle redirects based on initial session and admin status
@@ -126,11 +135,10 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
         let newUserWithAdminStatus: CustomUser | null = null;
         if (currentSession?.user) {
-          // Only fetch is_admin if it's a new user, or if the existing user's admin status is unknown/different
           const existingUser = userRef.current;
           let isAdmin = false;
           if (existingUser && existingUser.id === currentSession.user.id && typeof existingUser.is_admin === 'boolean') {
-            isAdmin = existingUser.is_admin; // Use existing admin status if available and same user
+            isAdmin = existingUser.is_admin;
             console.log("[SessionContext] Reusing existing is_admin status for same user.");
           } else {
             isAdmin = await fetchIsAdminStatus(currentSession.user.id, currentSession.user.email);
@@ -172,14 +180,15 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         const shouldUpdateSession = sessionChanged(sessionRef.current, currentSession);
         const shouldUpdateCoreUser = userChanged(userRef.current, newUserWithAdminStatus);
 
-        if (shouldUpdateSession) {
-          setSession(currentSession);
-          console.log("[SessionContext] Listener processed. Session state updated.");
-        }
-        if (shouldUpdateCoreUser) {
-          setUser(newUserWithAdminStatus);
-          console.log("[SessionContext] Listener processed. Core User (Auth) state updated.");
-        } else if (!shouldUpdateSession && !shouldUpdateCoreUser) {
+        if (shouldUpdateSession || shouldUpdateCoreUser) {
+          setContextState(prevState => ({
+            ...prevState,
+            session: currentSession,
+            user: newUserWithAdminStatus,
+            loading: false, // Ensure loading is false after any auth state change
+          }));
+          console.log("[SessionContext] Listener processed. Session and/or User state updated.");
+        } else {
           console.log("[SessionContext] Listener processed. User and Session state unchanged (no significant diff).");
         }
 
@@ -207,6 +216,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   }, [navigate, fetchIsAdminStatus, location.pathname]);
 
+  // Provide the destructured values from the single state object
   const contextValue = { session, user, loading };
   console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin);
 
