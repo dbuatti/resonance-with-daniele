@@ -17,7 +17,7 @@ import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 // Define the schema for a resource
 const resourceSchema = z.object({
@@ -46,7 +46,7 @@ const Resources: React.FC = () => {
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const showDelayedSkeleton = useDelayedLoading(loadingResources); // Use the delayed loading hook
+  // Removed: const showDelayedSkeleton = useDelayedLoading(loadingResources); // Use the delayed loading hook
 
   console.log("[Resources Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
@@ -207,9 +207,9 @@ const Resources: React.FC = () => {
   return (
     <div className="space-y-6 py-8"> {/* Removed animate-fade-in-up */}
       <h1 className="text-4xl font-bold text-center font-lora">
-        {showDelayedSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
+        {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>
-      {showDelayedSkeleton ? (
+      {loadingResources ? (
         <div className="text-lg text-center text-muted-foreground">
           <Skeleton className="h-6 w-1/2 mx-auto" />
         </div>
@@ -288,7 +288,7 @@ const Resources: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {showDelayedSkeleton ? (
+        {loadingResources ? (
           [...Array(3)].map((_, i) => (
             <Card key={i} className="shadow-lg rounded-xl">
               <CardHeader>

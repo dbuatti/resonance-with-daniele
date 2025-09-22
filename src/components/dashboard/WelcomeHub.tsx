@@ -9,7 +9,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface Profile {
   first_name: string | null;
@@ -54,7 +54,7 @@ const WelcomeHub: React.FC = () => {
   const [isSurveyCompleted, setIsSurveyCompleted] = useState(false);
 
   const isLoadingAny = loadingUserSession || loadingProfile || loadingEvent || loadingResources;
-  const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
+  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   useEffect(() => {
     console.log("[WelcomeHub] useEffect triggered. User session loading:", loadingUserSession);
@@ -152,7 +152,7 @@ const WelcomeHub: React.FC = () => {
     }
   }, [user, loadingUserSession]);
 
-  if (showDelayedSkeleton) { // Use the delayed skeleton state
+  if (isLoadingAny) { // Directly use isLoadingAny
     console.log("[WelcomeHub] Rendering skeleton due to loading states.");
     return (
       <div className="container mx-auto px-4 py-8 md:py-12 space-y-8"> {/* Removed animate-fade-in-up */}

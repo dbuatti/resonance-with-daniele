@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -33,7 +33,7 @@ const ProfileDetails: React.FC = () => {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const isLoadingAny = loadingUserSession || !profileDataLoaded;
-  const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
+  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -250,7 +250,7 @@ const ProfileDetails: React.FC = () => {
     console.log("[ProfileDetails Page] User logged out.");
   };
 
-  if (showDelayedSkeleton) { // Use the delayed skeleton state
+  if (isLoadingAny) { // Directly use isLoadingAny
     console.log("[ProfileDetails Page] Rendering skeleton due to loadingUserSession or !profileDataLoaded.");
     return (
       <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">

@@ -40,11 +40,12 @@ interface Profile {
 
 interface SurveyMetricsCardProps {
   profiles: Profile[];
+  loading: boolean; // Add loading prop
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ffc658", "#d0ed57"];
 
-const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
+const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading }) => { // Accept loading prop
   const totalProfiles = profiles.length;
   const profilesWithResponses = profiles.filter(p => 
     p.how_heard || 
@@ -73,6 +74,21 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles }) => {
   }, null);
 
   const formattedLatestUpdate = latestUpdate ? latestUpdate.toLocaleString() : "N/A";
+
+  if (loading) { // Use the loading prop directly
+    return (
+      <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
+        <CardHeader>
+          <Skeleton className="h-8 w-1/2 mb-2" />
+          <Skeleton className="h-5 w-3/4" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-48 w-full mb-4" />
+          <Skeleton className="h-48 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (totalResponses === 0) {
     return (

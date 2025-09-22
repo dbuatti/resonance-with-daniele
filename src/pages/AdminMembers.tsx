@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface Profile {
   id: string;
@@ -50,7 +50,7 @@ const AdminMembers: React.FC = () => {
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
 
   const isLoadingAny = loadingSession || loadingProfiles;
-  const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
+  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -126,7 +126,7 @@ const AdminMembers: React.FC = () => {
     );
   };
 
-  if (showDelayedSkeleton) { // Use the delayed skeleton state
+  if (isLoadingAny) { // Directly use isLoadingAny
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">

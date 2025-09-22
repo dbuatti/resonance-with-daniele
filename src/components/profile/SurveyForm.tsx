@@ -30,7 +30,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const surveySchema = z.object({
   how_heard: z.string().optional(),
@@ -52,7 +52,7 @@ const SurveyForm: React.FC = () => {
   const [surveyDataLoaded, setSurveyDataLoaded] = useState(false);
 
   const isLoadingAny = loadingUserSession || !surveyDataLoaded;
-  const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
+  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
 
   const form = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
@@ -195,7 +195,7 @@ const SurveyForm: React.FC = () => {
   };
 
   // The main loading condition for the component
-  if (showDelayedSkeleton) { // Use the delayed skeleton state
+  if (isLoadingAny) { // Directly use isLoadingAny
     return (
       <Card className="p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader>
@@ -407,7 +407,7 @@ const SurveyForm: React.FC = () => {
             <FormField
               control={form.control}
               name="music_genres"
-              render={() => (
+  render={() => (
                 <FormItem>
                   <FormLabel>What types of music would you most enjoy singing in the choir? (Select all that apply)</FormLabel>
                   <div className="space-y-2">

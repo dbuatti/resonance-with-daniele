@@ -9,12 +9,12 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
-  const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
+  // Removed: const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
 
   useEffect(() => {
     if (!loading && (!user || !user.is_admin)) {
@@ -23,7 +23,7 @@ const AdminZone: React.FC = () => {
     }
   }, [user, loading, navigate]);
 
-  if (showDelayedSkeleton) { // Use the delayed skeleton state
+  if (loading) { // Directly use loading
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
         <p className="text-lg text-muted-foreground">Loading admin access...</p>
