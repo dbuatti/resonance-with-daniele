@@ -9,7 +9,6 @@ import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface Profile {
   first_name: string | null;
@@ -46,117 +45,119 @@ interface Resource {
 const WelcomeHub: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
   const [upcomingEvent, setUpcomingEvent] = useState<Event | null>(null);
-  const [loadingEvent, setLoadingEvent] = useState(true);
   const [recentResources, setRecentResources] = useState<Resource[]>([]);
-  const [loadingResources, setLoadingResources] = useState(true);
   const [isSurveyCompleted, setIsSurveyCompleted] = useState(false);
-
-  // Only consider internal data loading states, as session loading is handled by Layout
-  const isLoadingAny = loadingProfile || loadingEvent || loadingResources;
-  // Removed: const showDelayedSkeleton = useDelayedLoading(isLoadingAny); // Use the delayed loading hook
+  const [loadingData, setLoadingData] = useState(true); // Single loading state for all data
 
   useEffect(() => {
     console.log("[WelcomeHub] useEffect triggered. User session loading:", loadingUserSession);
 
-    const fetchProfileAndSurvey = async () => {
-      if (user) {
-        setLoadingProfile(true);
-        console.log(`[WelcomeHub] Fetching profile for user ID: ${user.id}`);
+    const fetchAllData = async () => {
+      if (loadingUserSession) {
+        console.log("[WelcomeHub] User session still loading, delaying data fetches.");
+        return;
+      }
+
+      setLoadingData(true); // Start loading all data
+      console.log("[WelcomeHub] User session loaded, initiating all data fetches.");
+
+      const profilePromise = (async () => {
+        if (user) {
+          console.log(`[WelcomeHub] Fetching profile for user ID: ${user.id}`);
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("first_name, last_name, avatar_url, how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
+            .eq("id", user.id);
+
+          if (error) {
+            console.error("[WelcomeHub] Error fetching profile for WelcomeHub:", error);
+            return null;
+          } else if (data && data.length > 0) {
+            console.log("[WelcomeHub] Profile data fetched:", data[0]);
+            const completed = data[0].how_heard !== null ||
+                              (data[0].motivation !== null && data[0].motivation.length > 0) ||
+                              data[0].attended_session !== null ||
+                              data[0].singing_experience !== null ||
+                              data[0].session_frequency !== null ||
+                              data[0].preferred_time !== null ||
+                              (data[0].music_genres !== null && data[0].music_genres.length > 0) ||
+                              data[0].choir_goals !== null ||
+                              data[0].inclusivity_importance !== null ||
+                              data[0].suggestions !== null;
+            setIsSurveyCompleted(completed);
+            console.log("[WelcomeHub] Survey completion status:", completed);
+            return data[0];
+          } else {
+            console.log("[WelcomeHub] No profile data found for user, survey not completed.");
+            setIsSurveyCompleted(false);
+            return null;
+          }
+        }
+        console.log("[WelcomeHub] No user, skipping profile fetch.");
+        setIsSurveyCompleted(false);
+        return null;
+      })();
+
+      const eventPromise = (async () => {
+        console.log("[WelcomeHub] Fetching upcoming event.");
         const { data, error } = await supabase
-          .from("profiles")
-          .select("first_name, last_name, avatar_url, how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
-          .eq("id", user.id); // Removed .single()
+          .from("events")
+          .select("*")
+          .gte("date", format(new Date(), "yyyy-MM-dd"))
+          .order("date", { ascending: true })
+          .limit(1);
 
         if (error) {
-          console.error("[WelcomeHub] Error fetching profile for WelcomeHub:", error);
+          console.error("[WelcomeHub] Error fetching upcoming event:", error);
+          return null;
         } else if (data && data.length > 0) {
-          console.log("[WelcomeHub] Profile data fetched:", data[0]);
-          setProfile(data[0]);
-          // Check if key survey fields are filled to determine completion
-          const completed = data[0].how_heard !== null ||
-                            (data[0].motivation !== null && data[0].motivation.length > 0) ||
-                            data[0].attended_session !== null ||
-                            data[0].singing_experience !== null ||
-                            data[0].session_frequency !== null ||
-                            data[0].preferred_time !== null ||
-                            (data[0].music_genres !== null && data[0].music_genres.length > 0) ||
-                            data[0].choir_goals !== null ||
-                            data[0].inclusivity_importance !== null ||
-                            data[0].suggestions !== null;
-          setIsSurveyCompleted(completed);
-          console.log("[WelcomeHub] Survey completion status:", completed);
+          console.log("[WelcomeHub] Upcoming event fetched:", data[0]);
+          return data[0];
         } else {
-          console.log("[WelcomeHub] No profile data found for user, survey not completed.");
-          setIsSurveyCompleted(false); // No profile data means survey is not completed
+          console.log("[WelcomeHub] No upcoming events found.");
+          return null;
         }
-        setLoadingProfile(false);
-        console.log("[WelcomeHub] Profile loading state set to false.");
-      } else {
-        console.log("[WelcomeHub] No user, skipping profile fetch.");
-        setProfile(null);
-        setLoadingProfile(false);
-        setIsSurveyCompleted(false);
-      }
+      })();
+
+      const resourcesPromise = (async () => {
+        console.log("[WelcomeHub] Fetching recent resources.");
+        const { data, error } = await supabase
+          .from("resources")
+          .select("id, title, description, url")
+          .order("created_at", { ascending: false })
+          .limit(3);
+
+        if (error) {
+          console.error("[WelcomeHub] Error fetching recent resources:", error);
+          return [];
+        } else {
+          console.log("[WelcomeHub] Recent resources fetched:", data);
+          return data || [];
+        }
+      })();
+
+      // Wait for all promises to resolve
+      const [profileResult, eventResult, resourcesResult] = await Promise.all([
+        profilePromise,
+        eventPromise,
+        resourcesPromise,
+      ]);
+
+      setProfile(profileResult);
+      setUpcomingEvent(eventResult);
+      setRecentResources(resourcesResult);
+      setLoadingData(false); // All data loaded
+      console.log("[WelcomeHub] All data loaded. Loading state set to false.");
     };
 
-    const fetchUpcomingEvent = async () => {
-      setLoadingEvent(true);
-      console.log("[WelcomeHub] Fetching upcoming event.");
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .gte("date", format(new Date(), "yyyy-MM-dd")) // Only future events
-        .order("date", { ascending: true })
-        .limit(1);
+    fetchAllData();
+  }, [user, loadingUserSession]); // Re-run when user or session loading changes
 
-      if (error) {
-        console.error("[WelcomeHub] Error fetching upcoming event:", error);
-      } else if (data && data.length > 0) {
-        setUpcomingEvent(data[0]);
-        console.log("[WelcomeHub] Upcoming event fetched:", data[0]);
-      } else {
-        console.log("[WelcomeHub] No upcoming events found.");
-        setUpcomingEvent(null);
-      }
-      setLoadingEvent(false);
-      console.log("[WelcomeHub] Event loading state set to false.");
-    };
-
-    const fetchRecentResources = async () => {
-      setLoadingResources(true);
-      console.log("[WelcomeHub] Fetching recent resources.");
-      const { data, error } = await supabase
-        .from("resources")
-        .select("id, title, description, url")
-        .order("created_at", { ascending: false })
-        .limit(3);
-
-      if (error) {
-        console.error("[WelcomeHub] Error fetching recent resources:", error);
-      } else {
-        setRecentResources(data || []);
-        console.log("[WelcomeHub] Recent resources fetched:", data);
-      }
-      setLoadingResources(false);
-      console.log("[WelcomeHub] Resources loading state set to false.");
-    };
-
-    if (!loadingUserSession) {
-      console.log("[WelcomeHub] User session loaded, initiating data fetches.");
-      fetchProfileAndSurvey();
-      fetchUpcomingEvent();
-      fetchRecentResources();
-    } else {
-      console.log("[WelcomeHub] User session still loading, delaying data fetches.");
-    }
-  }, [user, loadingUserSession]);
-
-  if (isLoadingAny) { // Directly use isLoadingAny
-    console.log("[WelcomeHub] Rendering skeleton due to loading states.");
+  if (loadingData) {
+    console.log("[WelcomeHub] Rendering skeleton due to loadingData being true.");
     return (
-      <div className="container mx-auto px-4 py-8 md:py-12 space-y-8"> {/* Removed animate-fade-in-up */}
+      <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
         <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
           <CardHeader className="text-center">
             <Skeleton className="w-32 h-32 rounded-full mx-auto mb-6" />
@@ -192,7 +193,7 @@ const WelcomeHub: React.FC = () => {
   console.log("[WelcomeHub] Rendering content for user:", user?.id, "First Name:", firstName);
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12 space-y-8"> {/* Removed animate-fade-in-up */}
+    <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
       <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
         <CardHeader className="text-center">
           <img
