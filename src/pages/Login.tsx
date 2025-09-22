@@ -17,7 +17,7 @@ const Login: React.FC = () => {
         }}
         theme="light"
         debug={true}
-        redirectTo={window.location.origin + '/'} // Explicitly redirect to root after login
+        redirectTo="http://localhost:32100/" // Hardcode for testing
       />
     </div>
   );

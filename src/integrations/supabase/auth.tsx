@@ -24,42 +24,13 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     console.log('SessionContextProvider: Initializing auth state listener.');
     console.log('SessionContextProvider: Current URL hash on mount:', window.location.hash);
 
-    // Fetch the initial session immediately to handle page loads/reloads
-    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
-      if (error) {
-        console.error('SessionContextProvider: Error getting initial session:', error);
-      }
-      console.log('SessionContextProvider: Initial session check result:', { initialSession });
-      setSession(initialSession);
-      setUser(initialSession?.user || null);
-      setLoading(false); // Set loading to false after initial session check
-
-      // Handle initial redirect based on session
-      if (initialSession?.user) {
-        console.log('SessionContextProvider: Initial session found, redirecting from login if applicable.');
-        if (location.pathname === '/login') {
-          navigate('/');
-        }
-      } else {
-        console.log('SessionContextProvider: No initial session, redirecting to login if not already there.');
-        if (location.pathname !== '/login') {
-          navigate('/login');
-        }
-      }
-    });
-
-    // Set up the real-time auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession, error) => {
-      console.log('SessionContextProvider: Auth state changed!', { event, currentSession, error });
-      
-      if (error) {
-        console.error('SessionContextProvider: Error in onAuthStateChange:', error);
-      }
+    // The onAuthStateChange listener will handle both initial session and subsequent changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log('SessionContextProvider: Auth state changed!', { event, currentSession });
       
       setSession(currentSession);
       setUser(currentSession?.user || null);
-      // No need to set loading here, as it's handled by the initial getSession and subsequent state changes
-      // will naturally update the UI based on `session` and `user`
+      setLoading(false); // Set loading to false after the first auth state change event
 
       if (currentSession?.user) {
         console.log('SessionContextProvider: User found, redirecting from login if applicable.');
