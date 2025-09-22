@@ -89,9 +89,12 @@
 
 @layer base {
   html {
-    @apply bg-background; /* Ensure html also has the background */
+    height: 100%; /* Ensure html takes full height */
+    @apply bg-background; /* Apply Tailwind background */
   }
   body {
+    height: 100%; /* Ensure body takes full height */
+    background-color: hsl(var(--background)); /* Explicit background-color for iOS Safari */
     @apply bg-background text-foreground font-sans;
     min-height: 100vh; /* Ensure body always takes full viewport height */
   }
