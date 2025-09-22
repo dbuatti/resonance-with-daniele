@@ -5,24 +5,13 @@ import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
 import { type ThemeProviderProps } from "next-themes/dist/types";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  // Add a component to log theme state within the provider
-  const ThemeLogger = () => {
-    const { theme, resolvedTheme } = useTheme();
-    React.useEffect(() => {
-      console.log("[ThemeProvider] Current theme:", theme);
-      console.log("[ThemeProvider] Resolved theme:", resolvedTheme);
-      if (resolvedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }, [theme, resolvedTheme]);
-    return null;
-  };
-
+  // The ThemeLogger component was causing a React.Children.only error
+  // because NextThemesProvider expects a single child.
+  // The logic for applying dark class is now handled directly by next-themes
+  // and your globals.css file, making this logger redundant.
+  
   return (
     <NextThemesProvider {...props}>
-      <ThemeLogger />
       {children}
     </NextThemesProvider>
   );
