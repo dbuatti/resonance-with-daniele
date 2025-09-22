@@ -4,83 +4,86 @@
 
 @layer base {
   :root {
-    --background: 39 77% 95%; /* FDF5E6 - Very Light Sand */
-    --foreground: 30 24% 34%; /* 6C5A42 - Medium Brown/Olive */
+    --background: 30 20% 98%; /* Light sand */
+    --foreground: 210 10% 20%; /* Dark blue-gray for text */
 
-    --card: 30 24% 72%; /* C6B7A8 - Light Beige */
-    --card-foreground: 30 24% 34%;
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 210 10% 20%;
 
-    --popover: 30 24% 72%;
-    --popover-foreground: 30 24% 34%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 10% 20%;
 
-    --primary: 352 50% 51%; /* B15261 - Muted Rose */
-    --primary-foreground: 39 77% 95%; /* FDF5E6 - Light text on primary */
+    --primary: 200 60% 60%; /* Soft blue */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 216 33% 84%; /* B0C4DE - Muted Blue */
-    --secondary-foreground: 30 24% 34%; /* 6C5A42 - Dark text on secondary */
+    --secondary: 15 80% 85%; /* Light coral/peach */
+    --secondary-foreground: 210 10% 20%;
 
-    --muted: 30 24% 72%; /* C6B7A8 - Light Beige */
-    --muted-foreground: 30 24% 34%; /* 6C5A42 - Medium Brown/Olive */
+    --muted: 30 20% 95%; /* Slightly darker sand */
+    --muted-foreground: 210 10% 40%; /* Medium gray */
 
-    --accent: 216 33% 84%; /* B0C4DE - Muted Blue */
-    --accent-foreground: 30 24% 34%; /* 6C5A42 - Dark text on accent */
+    --accent: 15 80% 75%; /* Deeper coral */
+    --accent-foreground: 210 10% 20%;
 
     --destructive: 0 84.2% 60.2%; /* Keep default red */
     --destructive-foreground: 210 40% 98%; /* Keep default white */
 
-    --border: 30 24% 72%; /* C6B7A8 - Light Beige */
-    --input: 30 24% 72%;
-    --ring: 352 50% 51%; /* B15261 - Primary color for focus rings */
+    --border: 30 20% 90%; /* Lighter sand border */
+    --input: 30 20% 90%;
+    --ring: 200 60% 60%; /* Primary blue for focus rings */
 
     --radius: 0.5rem;
 
-    --sidebar-background: var(--primary);
-    --sidebar-foreground: var(--primary-foreground);
-    --sidebar-primary: var(--foreground);
-    --sidebar-primary-foreground: var(--background);
-    --sidebar-accent: var(--secondary);
-    --sidebar-accent-foreground: var(--foreground);
-    --sidebar-border: var(--border);
-    --sidebar-ring: var(--ring);
+    --sidebar-background: 200 60% 60%; /* Soft blue */
+    --sidebar-foreground: 0 0% 100%; /* White */
+
+    --sidebar-primary: 210 10% 20%; /* Dark blue-gray */
+    --sidebar-primary-foreground: 0 0% 100%;
+
+    --sidebar-accent: 15 80% 75%; /* Deeper coral */
+    --sidebar-accent-foreground: 0 0% 100%;
+
+    --sidebar-border: 30 20% 90%;
+    --sidebar-ring: 200 60% 60%;
   }
 
   .dark {
-    --background: 210 10% 15%; /* Very dark desaturated blue/gray */
-    --foreground: 39 77% 95%; /* FDF5E6 - Light Sand text */
+    --background: 210 20% 15%; /* Dark blue-gray */
+    --foreground: 30 20% 90%; /* Light sand for text */
 
-    --card: 210 10% 20%;
-    --card-foreground: 39 77% 95%;
+    --card: 210 20% 18%;
+    --card-foreground: 30 20% 90%;
 
-    --popover: 210 10% 20%;
-    --popover-foreground: 39 77% 95%;
+    --popover: 210 20% 18%;
+    --popover-foreground: 30 20% 90%;
 
-    --primary: 352 50% 51%; /* B15261 - Muted Rose */
-    --primary-foreground: 210 10% 15%; /* Dark background for text on primary */
+    --primary: 200 60% 70%; /* Lighter soft blue */
+    --primary-foreground: 210 20% 15%; /* Dark background for text on primary */
 
-    --secondary: 216 33% 84%; /* B0C4DE - Muted Blue */
-    --secondary-foreground: 210 10% 15%; /* Dark background for text on secondary */
+    --secondary: 15 80% 70%; /* Darker coral */
+    --secondary-foreground: 30 20% 90%;
 
-    --muted: 210 10% 25%;
-    --muted-foreground: 39 77% 95%; /* FDF5E6 - Light Sand */
+    --muted: 210 20% 25%;
+    --muted-foreground: 210 10% 60%;
 
-    --accent: 216 33% 84%; /* B0C4DE - Muted Blue */
-    --accent-foreground: 39 77% 95%; /* FDF5E6 - Light Sand */
+    --accent: 15 80% 60%;
+    --accent-foreground: 30 20% 90%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 210 10% 25%;
-    --input: 210 10% 25%;
-    --ring: 352 50% 51%;
+    --border: 210 20% 25%;
+    --input: 210 20% 25%;
+    --ring: 200 60% 70%;
 
-    --sidebar-background: var(--primary);
-    --sidebar-foreground: var(--primary-foreground);
-    --sidebar-primary: var(--foreground);
-    --sidebar-primary-foreground: var(--background);
-    --sidebar-accent: var(--secondary);
-    --sidebar-accent-foreground: var(--foreground);
-    --sidebar-border: var(--border);
-    --sidebar-ring: var(--ring);
+    --sidebar-background: 210 20% 15%;
+    --sidebar-foreground: 30 20% 90%;
+    --sidebar-primary: 200 60% 70%;
+    --sidebar-primary-foreground: 210 20% 15%;
+    --sidebar-accent: 15 80% 60%;
+    --sidebar-accent-foreground: 30 20% 90%;
+    --sidebar-border: 210 20% 25%;
+    --sidebar-ring: 200 60% 70%;
   }
 }
 

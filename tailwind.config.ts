@@ -66,7 +66,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Removed custom hero gradient colors as they will now use the theme's primary/secondary
+        // Custom colors for the hero section gradient
+        'hero-gradient-start': 'hsl(200 30% 90%)', // Lighter, less saturated blue
+        'hero-gradient-end': 'hsl(30 40% 95%)',   // Lighter, less saturated peach
+        'hero-description-foreground': 'hsl(0 0% 90%)', // Very light gray for description
       },
       borderRadius: {
         lg: "var(--radius)",
