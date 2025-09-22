@@ -31,15 +31,15 @@ const HowItWorksSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">How It Works</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora animate-fade-in-up">How It Works</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => (
-            <Card key={index} className="text-center p-6 shadow-lg rounded-xl">
+            <Card key={index} className="text-center p-6 shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
               <CardHeader className="flex flex-col items-center">
                 <div className="bg-primary/10 p-3 rounded-full mb-4">
                   {step.icon}
                 </div>
-                <CardTitle className="text-xl font-semibold">{step.title}</CardTitle>
+                <CardTitle className="text-xl font-semibold font-lora">{step.title}</CardTitle>
               </CardHeader>
               <CardContent className="text-muted-foreground">
                 {step.description}

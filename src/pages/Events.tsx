@@ -133,12 +133,12 @@ const Events: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6 py-8">
-        <h1 className="text-4xl font-bold text-center">Upcoming Events</h1>
-        <p className="text-lg text-center text-muted-foreground">
+        <h1 className="text-4xl font-bold text-center font-lora animate-fade-in-up">Upcoming Events</h1>
+        <p className="text-lg text-center text-muted-foreground animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           Stay up-to-date with all our choir's performances, rehearsals, and social gatherings.
         </p>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
           {user ? ( // Only show "Add New Event" button if user is logged in
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
@@ -148,7 +148,7 @@ const Events: React.FC = () => {
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle>Add New Event</DialogTitle>
+                  <DialogTitle className="font-lora">Add New Event</DialogTitle>
                   <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
                 </DialogHeader>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 py-4">
@@ -219,18 +219,18 @@ const Events: React.FC = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           {events.length === 0 ? (
-            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg">
-              <p className="text-xl text-muted-foreground font-semibold">No events found.</p>
+            <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+              <p className="text-xl text-muted-foreground font-semibold font-lora">No events found.</p>
               {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new events.</p>}
               {user && <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>}
             </div>
           ) : (
-            events.map((event) => (
-              <Card key={event.id} className="shadow-lg rounded-xl">
+            events.map((event, index) => (
+              <Card key={event.id} className="shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-2xl font-medium">
+                  <CardTitle className="text-2xl font-medium font-lora">
                     {event.title}
                   </CardTitle>
                   <CalendarDays className="h-6 w-6 text-muted-foreground" />

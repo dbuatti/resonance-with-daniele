@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Music, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,8 +45,8 @@ const FeaturedSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-12">Featured Highlight</h2>
-        <Card className="max-w-2xl mx-auto p-8 shadow-lg rounded-xl border-2 border-primary/20">
+        <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora animate-fade-in-up">Featured Highlight</h2>
+        <Card className="max-w-2xl mx-auto p-8 shadow-lg rounded-xl border-2 border-primary/20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-10 w-10 rounded-full mx-auto" />
@@ -62,7 +62,7 @@ const FeaturedSection: React.FC = () => {
                 <div className="bg-primary/10 p-3 rounded-full mb-4">
                   <CalendarDays className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-2xl font-bold mb-2">{featuredEvent.title}</CardTitle>
+                <CardTitle className="text-2xl font-bold mb-2 font-lora">{featuredEvent.title}</CardTitle>
                 <CardDescription className="text-lg text-muted-foreground">
                   {format(new Date(featuredEvent.date), "PPP")}
                   {featuredEvent.location && ` at ${featuredEvent.location}`}
@@ -81,7 +81,7 @@ const FeaturedSection: React.FC = () => {
             </>
           ) : (
             <CardContent className="space-y-4">
-              <p className="text-xl font-semibold text-muted-foreground">No upcoming events at the moment.</p>
+              <p className="text-xl font-semibold text-muted-foreground font-lora">No upcoming events at the moment.</p>
               <p className="text-md text-muted-foreground">Check back soon or explore our past events!</p>
               <Button size="lg" asChild>
                 <Link to="/events">View All Events</Link>

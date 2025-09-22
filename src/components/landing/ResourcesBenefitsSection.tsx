@@ -31,15 +31,15 @@ const ResourcesBenefitsSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">What You Get</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora animate-fade-in-up">What You Get</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {benefits.map((benefit, index) => (
-            <Card key={index} className="text-center p-6 shadow-lg rounded-xl">
+            <Card key={index} className="text-center p-6 shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
               <CardHeader className="flex flex-col items-center">
                 <div className="bg-primary/10 p-3 rounded-full mb-4">
                   {benefit.icon}
                 </div>
-                <CardTitle className="text-xl font-semibold">{benefit.title}</CardTitle>
+                <CardTitle className="text-xl font-semibold font-lora">{benefit.title}</CardTitle>
               </CardHeader>
               <CardContent className="text-muted-foreground">
                 {benefit.description}
@@ -49,7 +49,7 @@ const ResourcesBenefitsSection: React.FC = () => {
         </div>
 
         <div className="max-w-2xl mx-auto text-center">
-          <Card className="p-8 shadow-lg rounded-xl bg-card border-l-4 border-primary">
+          <Card className="p-8 shadow-lg rounded-xl bg-card border-l-4 border-primary animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
             <CardContent className="text-lg italic text-muted-foreground">
               “I’ve never sung in a choir before, but this felt welcoming and so fun!”
               <p className="mt-4 font-semibold text-foreground not-italic">— Chloe, Participant</p>

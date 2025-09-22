@@ -21,7 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-lg">
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-          <Link to="/" className="text-2xl font-bold whitespace-nowrap">
+          <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora">
             Resonance with Daniele
           </Link>
           <nav className="flex flex-wrap justify-center sm:justify-end gap-2">
