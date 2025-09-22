@@ -19,7 +19,7 @@ const Resources: React.FC = () => {
               <CardTitle>Sheet Music</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Upload and organize all your sheet music here.</p>
+              <p className="text-muted-foreground">Upload and organise all your sheet music here.</p>
             </CardContent>
           </Card>
           <Card>
