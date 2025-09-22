@@ -22,8 +22,8 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
 
   const getNavLinkClass = (path: string) =>
     cn(
-      "block w-full text-left py-2 px-4 rounded-md text-lg font-medium transition-colors hover:bg-primary/10",
-      location.pathname === path ? "bg-primary/10 text-primary font-semibold" : "text-foreground"
+      "block w-full text-left py-2 px-4 rounded-md text-lg font-medium transition-colors",
+      location.pathname === path ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-primary/5"
     );
 
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
@@ -32,7 +32,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="sm:hidden text-primary-foreground dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
+        <Button variant="ghost" size="icon" className="sm:hidden text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
           <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
@@ -57,31 +57,27 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
                 <span>Events</span>
               </Link>
               {user.is_admin && (
-                <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
-                  <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))} onClick={() => setIsOpen(false)}>
-                    <Shield className="h-5 w-5" /> Admin Zone
-                  </Link>
-                </Button>
-              )}
-              <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
-                <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))} onClick={() => setIsOpen(false)}>
-                  <Avatar className="h-7 w-7">
-                    {avatarUrl ? (
-                      <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
-                    ) : (
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        <UserIcon className="h-4 w-4" />
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  My Profile
+                <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))} onClick={() => setIsOpen(false)}>
+                  <Shield className="h-5 w-5" /> Admin Zone
                 </Link>
-              </Button>
+              )}
+              <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))} onClick={() => setIsOpen(false)}>
+                <Avatar className="h-7 w-7">
+                  {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
+                  ) : (
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      <UserIcon className="h-4 w-4" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                My Profile
+              </Link>
               <Button
                 variant="ghost"
                 className={cn(
-                  getNavLinkClass(""),
-                  "mt-auto text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-primary/20 dark:hover:text-primary-foreground"
+                  "block w-full text-left py-2 px-4 rounded-md text-lg font-medium transition-colors mt-auto",
+                  "text-destructive hover:bg-destructive/10 hover:text-destructive"
                 )}
                 onClick={() => { handleLogout(); setIsOpen(false); }}
               >
