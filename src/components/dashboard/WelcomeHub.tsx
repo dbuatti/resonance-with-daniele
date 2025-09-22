@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText, User as UserIcon, Settings } from "lucide-react";
+import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText, User as UserIcon, Settings, ClipboardList } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,16 @@ interface Profile {
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
+  how_heard: string | null;
+  motivation: string[] | null;
+  attended_session: boolean | null;
+  singing_experience: string | null;
+  session_frequency: string | null;
+  preferred_time: string | null;
+  music_genres: string[] | null;
+  choir_goals: string | null;
+  inclusivity_importance: string | null;
+  suggestions: string | null;
 }
 
 interface Event {
@@ -40,14 +50,15 @@ const WelcomeHub: React.FC = () => {
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [recentResources, setRecentResources] = useState<Resource[]>([]);
   const [loadingResources, setLoadingResources] = useState(true);
+  const [isSurveyCompleted, setIsSurveyCompleted] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndSurvey = async () => {
       if (user) {
         setLoadingProfile(true);
         const { data, error } = await supabase
           .from("profiles")
-          .select("first_name, last_name, avatar_url")
+          .select("first_name, last_name, avatar_url, how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
           .eq("id", user.id)
           .single();
 
@@ -55,11 +66,26 @@ const WelcomeHub: React.FC = () => {
           console.error("Error fetching profile for WelcomeHub:", error);
         } else if (data) {
           setProfile(data);
+          // Check if key survey fields are filled to determine completion
+          const completed = data.how_heard !== null ||
+                            (data.motivation !== null && data.motivation.length > 0) ||
+                            data.attended_session !== null ||
+                            data.singing_experience !== null ||
+                            data.session_frequency !== null ||
+                            data.preferred_time !== null ||
+                            (data.music_genres !== null && data.music_genres.length > 0) ||
+                            data.choir_goals !== null ||
+                            data.inclusivity_importance !== null ||
+                            data.suggestions !== null;
+          setIsSurveyCompleted(completed);
+        } else {
+          setIsSurveyCompleted(false); // No profile data means survey is not completed
         }
         setLoadingProfile(false);
       } else {
         setProfile(null);
         setLoadingProfile(false);
+        setIsSurveyCompleted(false);
       }
     };
 
@@ -97,7 +123,7 @@ const WelcomeHub: React.FC = () => {
     };
 
     if (!loadingUserSession) {
-      fetchProfile();
+      fetchProfileAndSurvey();
       fetchUpcomingEvent();
       fetchRecentResources();
     }
@@ -204,6 +230,26 @@ const WelcomeHub: React.FC = () => {
           <p className="mt-6">
             No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. I celebrate all voices and all identities, and everyone is invited to shine their unique light here.
           </p>
+
+          {!isSurveyCompleted && (
+            <Card className="bg-accent/10 border-accent text-accent-foreground p-6 shadow-md rounded-xl mt-8 animate-fade-in-up">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
+                <CardTitle className="text-xl font-lora flex items-center gap-2">
+                  <ClipboardList className="h-6 w-6 text-accent" /> Complete Your Survey!
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 space-y-4">
+                <p className="text-base">
+                  Help me tailor the choir experience to your needs and preferences by filling out a quick market research survey. It only takes a few minutes!
+                </p>
+                <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full" asChild>
+                  <Link to="/profile">
+                    <Settings className="mr-2 h-4 w-4" /> Go to Profile & Survey
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             {/* Upcoming Event Card */}
