@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, User as UserIcon, LogOut, Shield } from "lucide-react"; // Import Shield icon
+import { Menu, User as UserIcon, LogOut, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="sm:hidden text-primary-foreground">
+        <Button variant="ghost" size="icon" className="sm:hidden text-primary-foreground dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
           <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
@@ -50,14 +50,14 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
               <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
                 <span>Events</span>
               </Link>
-              {user.is_admin && ( // Conditionally render Admin Zone link
-                <Button variant="ghost" asChild>
+              {user.is_admin && (
+                <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))} onClick={() => setIsOpen(false)}>
                     <Shield className="h-5 w-5" /> Admin Zone
                   </Link>
                 </Button>
               )}
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                 <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))} onClick={() => setIsOpen(false)}>
                   <Avatar className="h-7 w-7">
                     {user.user_metadata?.avatar_url ? (
@@ -71,7 +71,14 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, loading, handleLogout }) =>
                   My Profile
                 </Link>
               </Button>
-              <Button variant="ghost" className={cn(getNavLinkClass(""), "mt-auto text-destructive hover:bg-destructive/10 hover:text-destructive")} onClick={() => { handleLogout(); setIsOpen(false); }}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  getNavLinkClass(""),
+                  "mt-auto text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-primary/20 dark:hover:text-primary-foreground"
+                )}
+                onClick={() => { handleLogout(); setIsOpen(false); }}
+              >
                 <LogOut className="mr-2 h-5 w-5" /> Logout
               </Button>
             </>

@@ -13,7 +13,6 @@ import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
-// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,7 +21,6 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, loading } = useSession();
   const location = useLocation();
-  // Removed: const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
   console.log("[Layout] User:", user ? user.id : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
@@ -39,7 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       location.pathname === path ? "text-accent font-semibold" : "text-primary-foreground"
     );
 
-  if (loading) { // Directly use 'loading' from useSession for immediate skeleton display
+  if (loading) {
     console.log("[Layout] Session is loading, rendering full-page skeleton.");
     return (
       <div className="min-h-screen flex flex-col">
@@ -70,29 +68,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             Resonance with Daniele
           </Link>
           <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">
-            <Button variant="ghost" asChild>
+            <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
               <Link to="/" className={getNavLinkClass("/")}><span>Home</span></Link>
             </Button>
             {user ? (
               <>
                 {console.log("[Layout] User is logged in, rendering authenticated nav links.")}
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/resources" className={getNavLinkClass("/resources")}><span>Resources</span></Link>
                 </Button>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/events" className={getNavLinkClass("/events")}><span>Events</span></Link>
                 </Button>
                 {user.is_admin && (
                   <>
                     {console.log("[Layout] User is admin, rendering Admin Zone link.")}
-                    <Button variant="ghost" asChild>
+                    <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                       <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))}>
                         <Shield className="h-4 w-4" /> Admin Zone
                       </Link>
                     </Button>
                   </>
                 )}
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))}>
                     <Avatar className="h-6 w-6">
                       {user.user_metadata?.avatar_url ? (
@@ -106,14 +104,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     My Profile
                   </Link>
                 </Button>
-                <Button variant="ghost" onClick={handleLogout}>
+                <Button variant="ghost" onClick={handleLogout} className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   Logout
                 </Button>
               </>
             ) : (
               <>
                 {console.log("[Layout] User is NOT logged in, rendering public nav links.")}
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/events" className={getNavLinkClass("/events")}><span>Events</span></Link>
                 </Button>
                 <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
