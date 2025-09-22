@@ -157,34 +157,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           newUserWithAdminStatus = { ...currentSession.user, is_admin: isAdmin };
         }
 
-        const userChanged = (oldUser: CustomUser | null, newUser: CustomUser | null) => {
-          if (!oldUser && !newUser) return false;
-          if (!oldUser || !newUser) return true;
-          if (oldUser.id !== newUser.id) return true;
-          if (oldUser.email !== newUser.email) return true;
-          if (oldUser.is_admin !== newUser.is_admin) return true; 
-          
-          const oldMeta = oldUser.user_metadata || {};
-          const newMeta = newUser.user_metadata || {};
-          if (oldMeta.first_name !== newMeta.first_name) return true;
-          if (oldMeta.last_name !== newMeta.last_name) return true;
-          if (oldMeta.avatar_url !== newMeta.avatar_url) return true;
-          
-          return false;
-        };
-
-        const profileChanged = (oldProfile: Profile | null, newProfile: Profile | null) => {
-          if (!oldProfile && !newProfile) return false;
-          if (!oldProfile || !newProfile) return true;
-          // Deep comparison for profile fields (simplified for brevity, can be more thorough)
-          return JSON.stringify(oldProfile) !== JSON.stringify(newProfile);
-        };
-
-        const sessionChanged = (oldSession: Session | null, newSession: Session | null) => {
-          if (oldSession === null && newSession === null) return false;
-          if (oldSession === null || newSession === null) return true;
-          return oldSession.access_token !== newSession.access_token || oldSession.expires_at !== newSession.expires_at;
-        };
+        const shouldUpdateSession = sessionRef.current?.access_token !== currentSession?.access_token || sessionRef.current?.expires_at !== currentSession?.expires_at;
+        const shouldUpdateCoreUser = userRef.current?.id !== newUserWithAdminStatus?.id || userRef.current?.email !== newUserWithAdminStatus?.email || userRef.current?.is_admin !== newUserWithAdminStatus?.is_admin;
+        const shouldUpdateProfile = JSON.stringify(profileRef.current) !== JSON.stringify(newFullProfile);
 
         if (shouldUpdateSession || shouldUpdateCoreUser || shouldUpdateProfile) {
           setContextState(prevState => ({
