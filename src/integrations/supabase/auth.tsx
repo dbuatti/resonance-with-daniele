@@ -1,10 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query'; // Import useQuery and useQueryClient
+import { useQuery, useQueryClient, QueryKey } from '@tanstack/react-query'; // Import QueryKey
 
 export interface Profile {
   id: string;
@@ -53,8 +53,13 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   }, []);
 
   // Use react-query to fetch and cache the user profile
-  const { data: profile, isLoading: profileLoading } = useQuery<Profile | null, Error>(
-    ['profile', session?.user?.id], // Query key depends on user ID
+  const { data: profile, isLoading: profileLoading } = useQuery<
+    Profile | null, // TQueryFnData: The type of data returned by the queryFn
+    Error,          // TError: The type of error that can be thrown
+    Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
+    QueryKey        // TQueryKey: The type of the query key
+  >(
+    ['profile', session?.user?.id], // Query key
     async () => {
       if (!session?.user?.id) {
         console.log("[SessionContext] No user ID, skipping profile fetch.");
@@ -102,36 +107,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     }
   );
 
-  // Effect for Supabase auth state changes
-  useEffect(() => {
-    console.log("[SessionContext] Initializing auth state listener.");
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log(`[SessionContext] Auth state changed: Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
-      setSession(currentSession);
-      setInitialLoading(false); // Initial session check is complete
-
-      // Invalidate profile query on auth changes to ensure fresh profile data
-      if (currentSession?.user) {
-        queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
-      } else {
-        queryClient.removeQueries({ queryKey: ['profile'] }); // Clear profile cache if logged out
-      }
-    });
-
-    // Fetch initial session on component mount
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      console.log("[SessionContext] Initial getSession result:", initialSession ? 'present' : 'null');
-      setSession(initialSession);
-      setInitialLoading(false);
-    });
-
-    return () => {
-      console.log("[SessionContext] Unsubscribing from auth state changes.");
-      subscription.unsubscribe();
-    };
-  }, [queryClient]); // Add queryClient to dependencies
-
   // Derived user object with admin status
   const user: CustomUser | null = session?.user ? {
     ...session.user,
@@ -156,7 +131,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     }
   }, [user, initialLoading, location.pathname, navigate]);
 
-  const contextValue = {
+  const contextValue: SessionContextType = { // Explicitly type contextValue
     session,
     user,
     profile,
