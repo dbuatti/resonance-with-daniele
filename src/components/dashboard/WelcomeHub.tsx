@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
 
 interface Event {
   id: string;
@@ -27,75 +28,59 @@ interface Resource {
 }
 
 const WelcomeHub: React.FC = () => {
-  const { user, profile, loading: loadingSession } = useSession(); // Get profile from context
-  const [upcomingEvent, setUpcomingEvent] = useState<Event | null>(null);
-  const [recentResources, setRecentResources] = useState<Resource[]>([]);
-  const [loadingOtherData, setLoadingOtherData] = useState(true); // Loading state for events/resources
+  const { user, profile, loading: loadingSession } = useSession();
 
-  useEffect(() => {
-    console.log("[WelcomeHub] useEffect triggered. User session loading:", loadingSession);
+  // Fetch upcoming event using react-query
+  const { data: upcomingEvent, isLoading: loadingEvent } = useQuery<Event | null, Error>(
+    ['upcomingEvent'],
+    async () => {
+      console.log("[WelcomeHub] Fetching upcoming event.");
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .gte("date", format(new Date(), "yyyy-MM-dd"))
+        .order("date", { ascending: true })
+        .limit(1)
+        .single(); // Use single to get one object or null
 
-    const fetchOtherData = async () => {
-      if (loadingSession) {
-        console.log("[WelcomeHub] User session still loading, delaying other data fetches.");
-        return;
+      if (error && error.code !== 'PGRST116') { // PGRST116 means "no rows found"
+        console.error("[WelcomeHub] Error fetching upcoming event:", error);
+        throw error;
       }
+      console.log("[WelcomeHub] Upcoming event fetched:", data);
+      return data || null;
+    },
+    {
+      enabled: !loadingSession, // Only fetch if session is not loading
+      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    }
+  );
 
-      setLoadingOtherData(true); // Start loading other data
-      console.log("[WelcomeHub] User session loaded, initiating other data fetches.");
+  // Fetch recent resources using react-query
+  const { data: recentResources, isLoading: loadingResources } = useQuery<Resource[], Error>(
+    ['recentResources'],
+    async () => {
+      console.log("[WelcomeHub] Fetching recent resources.");
+      const { data, error } = await supabase
+        .from("resources")
+        .select("id, title, description, url")
+        .order("created_at", { ascending: false })
+        .limit(3);
 
-      const eventPromise = (async () => {
-        console.log("[WelcomeHub] Fetching upcoming event.");
-        const { data, error } = await supabase
-          .from("events")
-          .select("*")
-          .gte("date", format(new Date(), "yyyy-MM-dd"))
-          .order("date", { ascending: true })
-          .limit(1);
-
-        if (error) {
-          console.error("[WelcomeHub] Error fetching upcoming event:", error);
-          return null;
-        } else if (data && data.length > 0) {
-          console.log("[WelcomeHub] Upcoming event fetched:", data[0]);
-          return data[0];
-        } else {
-          console.log("[WelcomeHub] No upcoming events found.");
-          return null;
-        }
-      })();
-
-      const resourcesPromise = (async () => {
-        console.log("[WelcomeHub] Fetching recent resources.");
-        const { data, error } = await supabase
-          .from("resources")
-          .select("id, title, description, url")
-          .order("created_at", { ascending: false })
-          .limit(3);
-
-        if (error) {
-          console.error("[WelcomeHub] Error fetching recent resources:", error);
-          return [];
-        } else {
-          console.log("[WelcomeHub] Recent resources fetched:", data);
-          return data || [];
-        }
-      })();
-
-      // Wait for all promises to resolve
-      const [eventResult, resourcesResult] = await Promise.all([
-        eventPromise,
-        resourcesPromise,
-      ]);
-
-      setUpcomingEvent(eventResult);
-      setRecentResources(resourcesResult);
-      setLoadingOtherData(false); // All other data loaded
-      console.log("[WelcomeHub] Other data loaded. Loading state set to false.");
-    };
-
-    fetchOtherData();
-  }, [loadingSession, user]); // Re-run when user or session loading changes
+      if (error) {
+        console.error("[WelcomeHub] Error fetching recent resources:", error);
+        throw error;
+      }
+      console.log("[WelcomeHub] Recent resources fetched:", data);
+      return data || [];
+    },
+    {
+      enabled: !loadingSession, // Only fetch if session is not loading
+      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    }
+  );
 
   // Determine if survey is completed based on the profile from context
   const isSurveyCompleted = profile ? (
@@ -111,8 +96,11 @@ const WelcomeHub: React.FC = () => {
     profile.suggestions !== null
   ) : false;
 
-  if (loadingSession || loadingOtherData) {
-    console.log("[WelcomeHub] Rendering skeleton due to loadingSession or loadingOtherData being true.");
+  // Overall loading state for WelcomeHub
+  const isLoading = loadingSession || loadingEvent || loadingResources;
+
+  if (isLoading) {
+    console.log("[WelcomeHub] Rendering skeleton due to loadingSession, loadingEvent, or loadingResources being true.");
     return (
       <div className="py-8 md:py-12 space-y-8">
         <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
@@ -285,7 +273,7 @@ const WelcomeHub: React.FC = () => {
                 <CardDescription>Fresh materials to help you practice.</CardDescription>
               </CardHeader>
               <CardContent>
-                {recentResources.length > 0 ? (
+                {recentResources && recentResources.length > 0 ? (
                   <ul className="space-y-3">
                     {recentResources.map((resource) => (
                       <li key={resource.id} className="flex items-start gap-2">
