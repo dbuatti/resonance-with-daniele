@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 const HeroSection: React.FC = () => {
   return (
-    <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end text-primary-foreground py-24 md:py-40 text-center overflow-hidden rounded-xl shadow-lg">
+    <section className="relative bg-gradient-to-br from-primary to-secondary text-primary-foreground py-24 md:py-40 text-center overflow-hidden rounded-xl shadow-lg">
       <div className="container mx-auto px-4 relative z-10">
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 animate-fade-in-up font-lora">
           Sing. Connect. Shine. Join Melbourne’s Pop-Up Choir with Daniele.
