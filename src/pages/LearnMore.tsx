@@ -120,25 +120,19 @@ const LearnMore: React.FC = () => {
               <h2 className="text-3xl font-bold font-lora text-center text-foreground">FAQs</h2>
               <div className="max-w-2xl mx-auto space-y-4">
                 <Card className="p-6 shadow-sm rounded-lg border">
-                  <CardHeader className="p-0 mb-2"> {/* Added CardHeader */}
-                    <CardTitle className="text-xl font-semibold font-lora">Do I need to be a good singer?</CardTitle>
-                  </CardHeader>
+                  <CardTitle className="text-xl font-semibold font-lora mb-2">Do I need to be a good singer?</CardTitle>
                   <CardContent className="p-0 text-muted-foreground">
                     Not at all. If you can sing in the shower, you'll fit right in!
                   </CardContent>
                 </Card>
                 <Card className="p-6 shadow-sm rounded-lg border">
-                  <CardHeader className="p-0 mb-2"> {/* Added CardHeader */}
-                    <CardTitle className="text-xl font-semibold font-lora">Do I have to commit every week?</CardTitle>
-                  </CardHeader>
+                  <CardTitle className="text-xl font-semibold font-lora mb-2">Do I have to commit every week?</CardTitle>
                   <CardContent className="p-0 text-muted-foreground">
                     Nope — come when you can. It's designed to be flexible.
                   </CardContent>
                 </Card>
                 <Card className="p-6 shadow-sm rounded-lg border">
-                  <CardHeader className="p-0 mb-2"> {/* Added CardHeader */}
-                    <CardTitle className="text-xl font-semibold font-lora">Will there be performances?</CardTitle>
-                  </CardHeader>
+                  <CardTitle className="text-xl font-semibold font-lora mb-2">Will there be performances?</CardTitle>
                   <CardContent className="p-0 text-muted-foreground">
                     Sometimes, yes — but joining performances is always optional.
                   </CardContent>
