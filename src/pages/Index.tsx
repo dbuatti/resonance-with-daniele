@@ -9,7 +9,8 @@ import FeaturedSection from "@/components/landing/FeaturedSection";
 import ResourcesBenefitsSection from "@/components/landing/ResourcesBenefitsSection";
 import MeetDanieleSection from "@/components/landing/MeetDanieleSection";
 import CallToActionSection from "@/components/landing/CallToActionSection";
-import InterestFormSection from "@/components/landing/InterestFormSection"; // Import the new component
+import InterestFormSection from "@/components/landing/InterestFormSection";
+import WelcomeHub from "@/components/dashboard/WelcomeHub"; // <--- Added this import
 import { useSession } from "@/integrations/supabase/auth";
 // No need for useDelayedLoading here, as Layout handles the global session loading.
 
