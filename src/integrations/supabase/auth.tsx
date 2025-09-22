@@ -21,18 +21,19 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const location = useLocation();
 
   useEffect(() => {
-    // The onAuthStateChange listener will handle both initial session and subsequent changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user || null);
       setLoading(false);
 
       if (currentSession?.user) {
+        // If user is logged in and on the login page, redirect to home
         if (location.pathname === '/login') {
           navigate('/');
         }
       } else {
-        if (location.pathname !== '/login') {
+        // If user is not logged in and not on the login or home page, redirect to login
+        if (location.pathname !== '/login' && location.pathname !== '/') {
           navigate('/login');
         }
       }
