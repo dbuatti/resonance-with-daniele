@@ -14,11 +14,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
+import AvatarUpload from "@/components/AvatarUpload"; // Import the new AvatarUpload component
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
   last_name: z.string().min(1, "Last name is required").optional().or(z.literal("")),
-  avatar_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  // avatar_url is now managed by the AvatarUpload component, not directly by this form
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -26,13 +27,13 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 const Profile: React.FC = () => {
   const { user, loading: loadingUserSession } = useSession();
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       first_name: "",
       last_name: "",
-      avatar_url: "",
     },
   });
 
@@ -50,7 +51,11 @@ const Profile: React.FC = () => {
           console.error("Error fetching profile:", error);
           showError("Failed to load profile data.");
         } else if (data) {
-          form.reset(data);
+          form.reset({
+            first_name: data.first_name || "",
+            last_name: data.last_name || "",
+          });
+          setCurrentAvatarUrl(data.avatar_url);
         }
         setLoadingProfile(false);
       }
@@ -61,13 +66,37 @@ const Profile: React.FC = () => {
     }
   }, [user, loadingUserSession, form]);
 
+  const updateAvatarUrlInProfile = async (url: string | null) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          avatar_url: url,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
+
+    if (error) {
+      console.error("Error updating avatar URL in profile:", error);
+      showError("Failed to update avatar URL.");
+    } else {
+      setCurrentAvatarUrl(url);
+      // Optionally, refresh user session to update user_metadata if needed
+      // await supabase.auth.refreshSession();
+    }
+  };
+
   const onSubmit = async (data: ProfileFormData) => {
     if (!user) {
       showError("You must be logged in to update your profile.");
       return;
     }
 
-    const { first_name, last_name, avatar_url } = data;
+    const { first_name, last_name } = data;
     const { error } = await supabase
       .from("profiles")
       .upsert(
@@ -75,7 +104,6 @@ const Profile: React.FC = () => {
           id: user.id,
           first_name: first_name || null,
           last_name: last_name || null,
-          avatar_url: avatar_url || null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "id" }
@@ -86,8 +114,7 @@ const Profile: React.FC = () => {
       showError("Failed to update profile.");
     } else {
       showSuccess("Profile updated successfully!");
-      // Optionally, refresh user session to update user_metadata if needed
-      // await supabase.auth.refreshSession();
+      // await supabase.auth.refreshSession(); // Refresh session to update user_metadata if needed
     }
   };
 
@@ -105,9 +132,9 @@ const Profile: React.FC = () => {
         <p className="text-lg text-muted-foreground">Please log in to view your profile.</p>
       </div>
     );
+  );
   }
 
-  const currentAvatarUrl = form.watch("avatar_url");
   const currentFirstName = form.watch("first_name");
   const currentLastName = form.watch("last_name");
 
@@ -147,13 +174,14 @@ const Profile: React.FC = () => {
                 <p className="text-red-500 text-sm">{form.formState.errors.last_name.message}</p>
               )}
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="avatar_url">Avatar URL (Optional)</Label>
-              <Input id="avatar_url" type="url" {...form.register("avatar_url")} placeholder="https://example.com/my-avatar.jpg" />
-              {form.formState.errors.avatar_url && (
-                <p className="text-red-500 text-sm">{form.formState.errors.avatar_url.message}</p>
-              )}
-            </div>
+            {user && (
+              <AvatarUpload
+                userId={user.id}
+                currentAvatarUrl={currentAvatarUrl}
+                onUploadSuccess={updateAvatarUrlInProfile}
+                onRemoveSuccess={() => updateAvatarUrlInProfile(null)}
+              />
+            )}
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? "Saving..." : "Save Profile"}
             </Button>
