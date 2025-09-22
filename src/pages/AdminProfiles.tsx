@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Loader2, Eye } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import SurveyMetricsCard from "@/components/admin/SurveyMetricsCard"; // Import the new component
 
 interface Profile {
   id: string;
@@ -108,6 +109,9 @@ const AdminProfiles: React.FC = () => {
         View and manage all registered member profiles and their survey responses.
       </p>
 
+      {/* New Survey Metrics Card */}
+      <SurveyMetricsCard profiles={profiles} />
+
       <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-lora">Member List</CardTitle>
@@ -147,7 +151,7 @@ const AdminProfiles: React.FC = () => {
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                              <DialogTitle className="font-lora">Survey Responses for {profile.first_name || profile.email}</DialogTitle>
+                              <DialogTitle className="font-lora">Survey Responses for {profile.first_name || profile.email}</CardTitle>
                               <CardDescription>Last updated: {profile.updated_at ? new Date(profile.updated_at).toLocaleString() : "N/A"}</CardDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
