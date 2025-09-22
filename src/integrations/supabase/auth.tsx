@@ -157,6 +157,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           newUserWithAdminStatus = { ...currentSession.user, is_admin: isAdmin };
         }
 
+        // Define these variables *before* the if condition
         const shouldUpdateSession = sessionRef.current?.access_token !== currentSession?.access_token || sessionRef.current?.expires_at !== currentSession?.expires_at;
         const shouldUpdateCoreUser = userRef.current?.id !== newUserWithAdminStatus?.id || userRef.current?.email !== newUserWithAdminStatus?.email || userRef.current?.is_admin !== newUserWithAdminStatus?.is_admin;
         const shouldUpdateProfile = JSON.stringify(profileRef.current) !== JSON.stringify(newFullProfile);
