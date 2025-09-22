@@ -100,12 +100,7 @@ const Events: React.FC = () => {
   };
 
   // Use react-query for events data
-  const { data: events, isLoading, isFetching, error: fetchError } = useQuery<
-    Event[], // TQueryFnData
-    Error,          // TError
-    Event[], // TData (the type of the 'data' property)
-    ['events', string] // TQueryKey
-  >({
+  const { data, isLoading, isFetching, error: fetchError } = useQuery({ // Removed explicit generics here
     queryKey: ['events', searchTerm], // Query key includes search term
     queryFn: () => fetchEvents(searchTerm),
     enabled: !loadingUserSession, // Only fetch if user session is not loading
@@ -113,6 +108,8 @@ const Events: React.FC = () => {
     gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
+
+  const events: Event[] | undefined = data; // Explicitly type data here
 
   useEffect(() => {
     if (editingEvent) {
