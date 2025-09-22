@@ -57,9 +57,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     Profile | null, // TQueryFnData: The type of data returned by the queryFn
     Error,          // TError: The type of error that can be thrown
     Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
-    ['profile', string | undefined] // TQueryKey: Explicitly define the QueryKey type
+    ['profile', string] // TQueryKey: Explicitly define the QueryKey type as string, as enabled ensures it
   >({
-    queryKey: ['profile', session?.user?.id],
+    queryKey: ['profile', session?.user?.id as string], // Cast to string because 'enabled' ensures it
     queryFn: async () => {
       if (!session?.user?.id) {
         console.log("[SessionContext] No user ID, skipping profile fetch.");
