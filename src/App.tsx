@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import AdminZone from "./pages/AdminZone";
 import AdminMembers from "./pages/AdminMembers";
 import AdminSurveyData from "./pages/AdminSurveyData";
+import AdminInterestSubmissions from "./pages/AdminInterestSubmissions"; // New import
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
               <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
               <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
+              <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} /> {/* New Admin Route */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

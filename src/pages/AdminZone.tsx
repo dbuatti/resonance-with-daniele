@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Mail } from "lucide-react"; // Import Mail icon
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -76,6 +76,13 @@ const AdminZone: React.FC = () => {
           <CardDescription>View all member profiles and manage their roles.</CardDescription>
           <Link to="/admin/members" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
             Manage Members
+          </Link>
+        </Card>
+        <Card className="shadow-lg rounded-xl p-6 text-center">
+          <CardTitle className="text-xl font-lora mb-2">Interest Submissions</CardTitle>
+          <CardDescription>View contact details of interested individuals.</CardDescription>
+          <Link to="/admin/interest-submissions" className={cn(buttonVariants({ variant: "default" }), "mt-4 flex items-center justify-center")}>
+            <Mail className="mr-2 h-4 w-4" /> View Submissions
           </Link>
         </Card>
       </div>

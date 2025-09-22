@@ -9,6 +9,7 @@ import FeaturedSection from "@/components/landing/FeaturedSection";
 import ResourcesBenefitsSection from "@/components/landing/ResourcesBenefitsSection";
 import MeetDanieleSection from "@/components/landing/MeetDanieleSection";
 import CallToActionSection from "@/components/landing/CallToActionSection";
+import InterestFormSection from "@/components/landing/InterestFormSection"; // Import the new component
 import { useSession } from "@/integrations/supabase/auth";
 // No need for useDelayedLoading here, as Layout handles the global session loading.
 
@@ -33,6 +34,7 @@ const Index: React.FC = () => {
         <>
           {console.log("[Index Page] User is NOT logged in, rendering landing sections.")}
           <HeroSection />
+          <InterestFormSection /> {/* Insert the new form here */}
           <VideoSection />
           <AboutChoirSection />
           <HowItWorksSection />
