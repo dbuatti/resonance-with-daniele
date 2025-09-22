@@ -13,7 +13,7 @@ import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
+// Removed: import { useDelayedLoading } from "@/hooks/use-delayed-loading"; // Import the new hook
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,7 +22,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, loading } = useSession();
   const location = useLocation();
-  const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
+  // Removed: const showDelayedSkeleton = useDelayedLoading(loading); // Use the delayed loading hook
   console.log("[Layout] User:", user ? user.id : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
@@ -39,7 +39,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       location.pathname === path ? "text-accent font-semibold" : "text-primary-foreground"
     );
 
-  if (showDelayedSkeleton) { // Use the delayed skeleton state
+  if (loading) { // Directly use 'loading' from useSession for immediate skeleton display
     console.log("[Layout] Session is loading, rendering full-page skeleton.");
     return (
       <div className="min-h-screen flex flex-col">
