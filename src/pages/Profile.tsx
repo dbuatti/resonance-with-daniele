@@ -12,7 +12,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { User as UserIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import *s z from "zod";
+import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload"; // Import the new AvatarUpload component
 
