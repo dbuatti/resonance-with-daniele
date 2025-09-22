@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Link as LinkIcon, PlusCircle } from "lucide-react";
+import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
 import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -33,6 +34,7 @@ type EventFormData = z.infer<typeof eventSchema>;
 
 interface Event {
   id: string;
+  user_id: string; // Added user_id to identify event creator
   title: string;
   date: string; // ISO date string
   location?: string;
@@ -43,10 +45,23 @@ interface Event {
 const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { user, loading: loadingUserSession } = useSession();
 
-  const form = useForm<EventFormData>({
+  const addForm = useForm<EventFormData>({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: "",
+      date: undefined,
+      location: "",
+      description: "",
+      humanitix_link: "",
+    },
+  });
+
+  const editForm = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: "",
@@ -58,8 +73,20 @@ const Events: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchEvents(); // Fetch events regardless of user login status
+    fetchEvents();
   }, []);
+
+  useEffect(() => {
+    if (editingEvent) {
+      editForm.reset({
+        title: editingEvent.title,
+        date: new Date(editingEvent.date),
+        location: editingEvent.location || "",
+        description: editingEvent.description || "",
+        humanitix_link: editingEvent.humanitix_link || "",
+      });
+    }
+  }, [editingEvent, editForm]);
 
   const fetchEvents = async () => {
     setLoadingEvents(true);
@@ -77,7 +104,7 @@ const Events: React.FC = () => {
     setLoadingEvents(false);
   };
 
-  const onSubmit = async (data: EventFormData) => {
+  const onAddSubmit = async (data: EventFormData) => {
     if (!user) {
       showError("You must be logged in to add events.");
       return;
@@ -98,15 +125,67 @@ const Events: React.FC = () => {
       showError("Failed to add event.");
     } else {
       showSuccess("Event added successfully!");
-      form.reset();
-      setIsDialogOpen(false);
+      addForm.reset();
+      setIsAddDialogOpen(false);
       fetchEvents();
     }
   };
 
-  if (loadingEvents) { // Only check for loading events, not user session for initial display
+  const onEditSubmit = async (data: EventFormData) => {
+    if (!user || !editingEvent) {
+      showError("You must be logged in and select an event to edit.");
+      return;
+    }
+
+    const { title, date, location, description, humanitix_link } = data;
+    const { error } = await supabase
+      .from("events")
+      .update({
+        title,
+        date: format(date, "yyyy-MM-dd"),
+        location,
+        description,
+        humanitix_link: humanitix_link || null,
+        updated_at: new Date().toISOString(), // Add updated_at for tracking changes
+      })
+      .eq("id", editingEvent.id)
+      .eq("user_id", user.id); // Ensure only the owner can update
+
+    if (error) {
+      console.error("Error updating event:", error);
+      showError("Failed to update event.");
+    } else {
+      showSuccess("Event updated successfully!");
+      setIsEditDialogOpen(false);
+      setEditingEvent(null);
+      fetchEvents();
+    }
+  };
+
+  const handleDelete = async (eventId: string) => {
+    if (!user) {
+      showError("You must be logged in to delete events.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("events")
+      .delete()
+      .eq("id", eventId)
+      .eq("user_id", user.id); // Ensure only the owner can delete
+
+    if (error) {
+      console.error("Error deleting event:", error);
+      showError("Failed to delete event.");
+    } else {
+      showSuccess("Event deleted successfully!");
+      fetchEvents();
+    }
+  };
+
+  if (loadingEvents) {
     return (
-      <div className="text-center text-lg py-8"> {/* Removed Layout wrapper */}
+      <div className="text-center text-lg py-8">
         <p className="mb-4">Loading events...</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
@@ -128,15 +207,15 @@ const Events: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed Layout wrapper */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora animate-fade-in-up">Upcoming Events</h1>
       <p className="text-lg text-center text-muted-foreground animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
         Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
       </p>
 
       <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-        {user ? ( // Only show "Add New Event" button if user is logged in
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        {user ? (
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Event
@@ -147,13 +226,13 @@ const Events: React.FC = () => {
                 <DialogTitle className="font-lora">Add New Event</DialogTitle>
                 <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
               </DialogHeader>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 py-4">
+              <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
                 <div className="space-y-2">
                   <div className="grid gap-2">
                     <Label htmlFor="title">Title</Label>
-                    <Input id="title" {...form.register("title")} />
-                    {form.formState.errors.title && (
-                      <p className="text-red-500 text-sm">{form.formState.errors.title.message}</p>
+                    <Input id="title" {...addForm.register("title")} />
+                    {addForm.formState.errors.title && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
                     )}
                   </div>
                   <div className="grid gap-2">
@@ -164,47 +243,47 @@ const Events: React.FC = () => {
                           variant={"outline"}
                           className={cn(
                             "w-full justify-start text-left font-normal",
-                            !form.watch("date") && "text-muted-foreground"
+                            !addForm.watch("date") && "text-muted-foreground"
                           )}
                         >
                           <CalendarDays className="mr-2 h-4 w-4" />
-                          {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
+                          {addForm.watch("date") ? format(addForm.watch("date"), "PPP") : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"
-                          selected={form.watch("date")}
-                          onSelect={(date) => form.setValue("date", date!)}
+                          selected={addForm.watch("date")}
+                          onSelect={(date) => addForm.setValue("date", date!)}
                           initialFocus
                         />
                       </PopoverContent>
                     </Popover>
-                    {form.formState.errors.date && (
-                      <p className="text-red-500 text-sm">{form.formState.errors.date.message}</p>
+                    {addForm.formState.errors.date && (
+                      <p className="text-red-500 text-sm">{addForm.formState.errors.date.message}</p>
                     )}
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="grid gap-2">
                     <Label htmlFor="location">Location</Label>
-                    <Input id="location" {...form.register("location")} />
+                    <Input id="location" {...addForm.register("location")} />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" {...form.register("description")} />
+                    <Textarea id="description" {...addForm.register("description")} />
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
-                  <Input id="humanitix_link" {...form.register("humanitix_link")} />
-                  {form.formState.errors.humanitix_link && (
-                    <p className="text-red-500 text-sm">{form.formState.errors.humanitix_link.message}</p>
+                  <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
+                  {addForm.formState.errors.humanitix_link && (
+                    <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
                   )}
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? "Adding..." : "Add Event"}
+                  <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                    {addForm.formState.isSubmitting ? "Adding..." : "Add Event"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -246,11 +325,119 @@ const Events: React.FC = () => {
                     No Humanitix Link
                   </Button>
                 )}
+                {user && user.id === event.user_id && (
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingEvent(event);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your event.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(event.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))
         )}
       </div>
+
+      {/* Edit Event Dialog */}
+      {editingEvent && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-lora">Edit Event</DialogTitle>
+              <CardDescription>Update the details for your choir event.</CardDescription>
+            </DialogHeader>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
+              <div className="space-y-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-title">Title</Label>
+                  <Input id="edit-title" {...editForm.register("title")} />
+                  {editForm.formState.errors.title && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-date">Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !editForm.watch("date") && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {editForm.watch("date") ? format(editForm.watch("date"), "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={editForm.watch("date")}
+                        onSelect={(date) => editForm.setValue("date", date!)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {editForm.formState.errors.date && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.date.message}</p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-location">Location</Label>
+                  <Input id="edit-location" {...editForm.register("location")} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea id="edit-description" {...editForm.register("description")} />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-humanitix_link">Humanitix Link (Optional)</Label>
+                <Input id="edit-humanitix_link" {...editForm.register("humanitix_link")} />
+                {editForm.formState.errors.humanitix_link && (
+                  <p className="text-red-500 text-sm">{editForm.formState.errors.humanitix_link.message}</p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                  {editForm.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
