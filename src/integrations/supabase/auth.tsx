@@ -22,10 +22,15 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   useEffect(() => {
     console.log('SessionContextProvider: Initializing auth state listener.');
+    console.log('SessionContextProvider: Current URL hash on mount:', window.location.hash); // Log hash on mount
 
-    // Rely solely on onAuthStateChange for initial session and subsequent changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log('SessionContextProvider: Auth state changed!', { event, currentSession });
+    // Rely solely on onAuthStateChange for session management
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession, error) => {
+      console.log('SessionContextProvider: Auth state changed!', { event, currentSession, error });
+      
+      if (error) {
+        console.error('SessionContextProvider: Error in onAuthStateChange:', error);
+      }
       
       setSession(currentSession);
       setUser(currentSession?.user || null);

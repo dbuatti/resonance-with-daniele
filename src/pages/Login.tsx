@@ -4,15 +4,42 @@ import React, { useEffect } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     console.log("Login page mounted. Supabase client initialized:", !!supabase);
-  }, []);
 
-  const handleAuthError = (error: any) => {
-    console.error("Supabase Auth Error:", error);
-  };
+    // Check session immediately on mount of Login page
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Login page: Error getting session:", error);
+      } else {
+        console.log("Login page: Session on mount:", session);
+        if (session) {
+          console.log("Login page: Session found, redirecting to home.");
+          navigate('/');
+        }
+      }
+    };
+    checkSession();
+
+    // Listen for auth state changes specifically on the login page
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log('Login page: Auth state changed!', { event, currentSession });
+      if (currentSession) {
+        console.log("Login page: Session found via onAuthStateChange, redirecting to home.");
+        navigate('/');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   return (
     <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
@@ -24,8 +51,7 @@ const Login: React.FC = () => {
           theme: ThemeSupa,
         }}
         theme="light"
-        redirectTo="http://localhost:8080" // Explicitly set redirect URL
-        onError={handleAuthError} // Attempt to capture errors
+        // Removed redirectTo to let Auth UI handle it, or default to current URL
         debug={true}
       />
     </div>
