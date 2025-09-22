@@ -22,9 +22,14 @@ interface Event {
 
 const CurrentEventPage: React.FC = () => {
   // Use react-query to fetch and cache the current event
-  const { data: currentEvent, isLoading, isFetching, error } = useQuery<Event | null, Error>(
-    ['currentEvent'],
-    async () => {
+  const { data: currentEvent, isLoading, isFetching, error } = useQuery<
+    Event | null, // TQueryFnData
+    Error,          // TError
+    Event | null, // TData (the type of the 'data' property)
+    ['currentEvent'] // TQueryKey
+  >({
+    queryKey: ['currentEvent'],
+    queryFn: async () => {
       console.log("[CurrentEventPage] Fetching current event.");
       const { data, error: fetchError } = await supabase
         .from("events")
@@ -42,16 +47,14 @@ const CurrentEventPage: React.FC = () => {
       console.log("[CurrentEventPage] Current event fetched:", data);
       return data || null;
     },
-    {
-      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-      refetchOnWindowFocus: true, // Refetch when window regains focus
-      onError: (queryError) => {
-        console.error("[CurrentEventPage] React Query error:", queryError);
-        showError("An error occurred while loading event data.");
-      },
-    }
-  );
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    onError: (queryError) => {
+      console.error("[CurrentEventPage] React Query error:", queryError);
+      showError("An error occurred while loading event data.");
+    },
+  });
 
   // Only show skeleton if there's no data in cache AND it's currently loading for the first time
   const showSkeleton = isLoading && !currentEvent;
