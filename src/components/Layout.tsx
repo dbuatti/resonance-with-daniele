@@ -10,7 +10,7 @@ import { User as UserIcon, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 // import BackToTopButton from "./BackToTopButton"; // Temporarily removed
 import FooterSection from "./landing/FooterSection";
-// import MobileNav from "./MobileNav"; // Temporarily removed
+import MobileNav from "./MobileNav"; // Re-enabled MobileNav
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -127,7 +127,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           <div className="flex items-center sm:hidden">
             <ThemeToggle />
-            {/* <MobileNav user={user} loading={loading} handleLogout={handleLogout} profile={profile} /> */}
+            <MobileNav user={user} loading={loading} handleLogout={handleLogout} profile={profile} />
           </div>
         </div>
       </header>
