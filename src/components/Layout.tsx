@@ -10,7 +10,7 @@ import { User as UserIcon, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 // import BackToTopButton from "./BackToTopButton"; // Temporarily removed
 import FooterSection from "./landing/FooterSection";
-import MobileNav from "./MobileNav"; // Re-enabled MobileNav
+import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -53,10 +53,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Skeleton className="h-8 w-8 sm:hidden bg-primary-foreground/20 rounded-md" />
           </div>
         </header>
-        <main className="flex-grow bg-background flex items-center justify-center"> {/* Added bg-background here */}
+        <main className="flex-grow bg-background flex items-center justify-center">
           <p className="text-lg text-muted-foreground">Loading application...</p>
         </main>
-        <FooterSection />
+        {/* Temporarily removed FooterSection */}
       </div>
     );
   }
@@ -131,13 +131,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
       </header>
-      <main className="flex-grow bg-background"> {/* Added bg-background here */}
-        <div className="container mx-auto"> {/* Wrapped children in a container */}
+      <main className="flex-grow bg-background">
+        <div className="container mx-auto">
           {children}
         </div>
       </main>
-      <FooterSection />
-      {/* <BackToTopButton /> */} {/* Temporarily removed */}
+      {/* Temporarily removed FooterSection */}
+      {/* <BackToTopButton /> */}
     </div>
   );
 };
