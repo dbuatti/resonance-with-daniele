@@ -79,7 +79,6 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
     if (publicUrlData?.publicUrl) {
       onUploadSuccess(publicUrlData.publicUrl);
-      showSuccess("Avatar uploaded successfully!");
       setFile(null); // Clear the selected file after successful upload
     } else {
       showError("Failed to get public URL for avatar.");
@@ -109,7 +108,6 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     }
 
     onRemoveSuccess();
-    showSuccess("Avatar removed successfully!");
     setPreview(null);
     setFile(null);
     setUploading(false);
@@ -145,7 +143,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       <div className="flex items-center gap-4">
         <Avatar className="w-24 h-24">
           {preview ? (
-            <AvatarImage src={preview} alt="Avatar Preview" />
+            <AvatarImage src={preview} alt="Avatar Preview" className="object-cover" />
           ) : (
             <AvatarFallback className="bg-muted text-muted-foreground">
               <ImageIcon className="h-12 w-12" />

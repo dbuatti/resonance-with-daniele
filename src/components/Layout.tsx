@@ -44,7 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Link to="/profile" className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
                       {user.user_metadata?.avatar_url ? (
-                        <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} />
+                        <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
                       ) : (
                         <AvatarFallback className="bg-primary-foreground text-primary">
                           <UserIcon className="h-4 w-4" />

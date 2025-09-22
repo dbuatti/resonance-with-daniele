@@ -69,7 +69,8 @@ const Profile: React.FC = () => {
   const updateAvatarUrlInProfile = async (url: string | null) => {
     if (!user) return;
 
-    const { error } = await supabase
+    // 1. Update the 'profiles' table
+    const { error: profileError } = await supabase
       .from("profiles")
       .upsert(
         {
@@ -80,14 +81,25 @@ const Profile: React.FC = () => {
         { onConflict: "id" }
       );
 
-    if (error) {
-      console.error("Error updating avatar URL in profile:", error);
-      showError("Failed to update avatar URL.");
-    } else {
-      setCurrentAvatarUrl(url);
-      // Optionally, refresh user session to update user_metadata if needed
-      // await supabase.auth.refreshSession();
+    if (profileError) {
+      console.error("Error updating avatar URL in profile table:", profileError);
+      showError("Failed to update avatar URL in profile.");
+      return;
     }
+
+    // 2. Update the user's metadata in Supabase Auth to ensure session sync
+    const { data: { user: updatedAuthUser }, error: authError } = await supabase.auth.updateUser({
+      data: { avatar_url: url },
+    });
+
+    if (authError) {
+      console.error("Error updating avatar URL in auth user metadata:", authError);
+      showError("Failed to update avatar URL in user session.");
+      return;
+    }
+
+    setCurrentAvatarUrl(url);
+    showSuccess("Avatar updated successfully!");
   };
 
   const onSubmit = async (data: ProfileFormData) => {
@@ -114,7 +126,8 @@ const Profile: React.FC = () => {
       showError("Failed to update profile.");
     } else {
       showSuccess("Profile updated successfully!");
-      // await supabase.auth.refreshSession(); // Refresh session to update user_metadata if needed
+      // Optionally, refresh user session to update user_metadata if needed
+      // await supabase.auth.refreshSession();
     }
   };
 
@@ -143,7 +156,7 @@ const Profile: React.FC = () => {
         <CardHeader className="text-center">
           <Avatar className="w-24 h-24 mx-auto mb-4">
             {currentAvatarUrl ? (
-              <AvatarImage src={currentAvatarUrl} alt={`${currentFirstName || user.email}'s avatar`} />
+              <AvatarImage src={currentAvatarUrl} alt={`${currentFirstName || user.email}'s avatar`} className="object-cover" />
             ) : (
               <AvatarFallback className="bg-primary text-primary-foreground">
                 <UserIcon className="h-12 w-12" />
