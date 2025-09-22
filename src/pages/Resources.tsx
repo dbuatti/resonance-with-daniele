@@ -102,10 +102,6 @@ const Resources: React.FC = () => {
     staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
     refetchOnWindowFocus: true, // Refetch when window regains focus
-    onError: (queryError) => {
-      console.error("[Resources Page] React Query error:", queryError);
-      showError("An error occurred while loading resources.");
-    },
   });
 
   useEffect(() => {
