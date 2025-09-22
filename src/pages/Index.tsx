@@ -10,6 +10,11 @@ const Index: React.FC = () => {
   return (
     <Layout>
       <div className="flex flex-col items-center justify-center text-center space-y-8 py-16">
+        <img
+          src="/images/daniele-buatti-headshot.jpeg"
+          alt="Daniele Buatti"
+          className="w-48 h-48 rounded-full object-cover shadow-lg mb-4"
+        />
         <h1 className="text-5xl font-extrabold tracking-tight lg:text-6xl">
           Welcome to the Resonance with Daniele Hub!
         </h1>
