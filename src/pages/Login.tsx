@@ -6,6 +6,9 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 
 const Login: React.FC = () => {
+  // Dynamically get the current origin for the redirect URL
+  const redirectToUrl = window.location.origin + '/';
+
   return (
     <div className="flex flex-col items-center justify-center p-4">
       <div className="p-8 max-w-md w-full bg-card rounded-xl shadow-lg border border-border animate-fade-in-up">
@@ -25,7 +28,7 @@ const Login: React.FC = () => {
             },
           }}
           theme="light"
-          redirectTo="http://localhost:32100/"
+          redirectTo={redirectToUrl} // Use the dynamic redirect URL
         />
       </div>
     </div>
