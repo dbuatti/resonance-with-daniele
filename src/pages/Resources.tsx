@@ -90,20 +90,23 @@ const Resources: React.FC = () => {
   };
 
   // Use react-query for resources data
-  const { data: resources, isLoading, isFetching, error: fetchError } = useQuery<Resource[], Error>(
-    ['resources', searchTerm], // Query key includes search term
-    () => fetchResources(searchTerm),
-    {
-      enabled: !loadingUserSession, // Only fetch if user session is not loading
-      staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-      cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-      refetchOnWindowFocus: true, // Refetch when window regains focus
-      onError: (queryError) => {
-        console.error("[Resources Page] React Query error:", queryError);
-        showError("An error occurred while loading resources.");
-      },
-    }
-  );
+  const { data: resources, isLoading, isFetching, error: fetchError } = useQuery<
+    Resource[], // TQueryFnData
+    Error,          // TError
+    Resource[], // TData (the type of the 'data' property)
+    ['resources', string] // TQueryKey
+  >({
+    queryKey: ['resources', searchTerm], // Query key includes search term
+    queryFn: () => fetchResources(searchTerm),
+    enabled: !loadingUserSession, // Only fetch if user session is not loading
+    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    onError: (queryError) => {
+      console.error("[Resources Page] React Query error:", queryError);
+      showError("An error occurred while loading resources.");
+    },
+  });
 
   useEffect(() => {
     if (editingResource) {
@@ -140,7 +143,7 @@ const Resources: React.FC = () => {
       showSuccess("Resource added successfully!");
       addForm.reset();
       setIsAddDialogOpen(false);
-      queryClient.invalidateQueries(['resources']); // Invalidate to refetch and update UI
+      queryClient.invalidateQueries({ queryKey: ['resources'] }); // Invalidate to refetch and update UI
       console.log("[Resources Page] Resource added and list refreshed.");
     }
   };
@@ -173,7 +176,7 @@ const Resources: React.FC = () => {
       showSuccess("Resource updated successfully!");
       setIsEditDialogOpen(false);
       setEditingResource(null);
-      queryClient.invalidateQueries(['resources']); // Invalidate to refetch and update UI
+      queryClient.invalidateQueries({ queryKey: ['resources'] }); // Invalidate to refetch and update UI
       console.log("[Resources Page] Resource updated and list refreshed.");
     }
   };
@@ -198,7 +201,7 @@ const Resources: React.FC = () => {
       showError("Failed to delete resource.");
     } else {
       showSuccess("Resource deleted successfully!");
-      queryClient.invalidateQueries(['resources']); // Invalidate to refetch and update UI
+      queryClient.invalidateQueries({ queryKey: ['resources'] }); // Invalidate to refetch and update UI
       console.log("[Resources Page] Resource deleted and list refreshed.");
     }
   };
