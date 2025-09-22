@@ -68,17 +68,19 @@ const AdminSurveyData: React.FC = () => {
 
   if (loadingProfiles) {
     return (
-      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">
-          <CardHeader>
-            <Skeleton className="h-8 w-1/2 mb-2" />
-            <Skeleton className="h-5 w-3/4" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-48 w-full mb-4" />
-            <Skeleton className="h-48 w-full" />
-          </CardContent>
-        </Card>
+      <div className="container mx-auto"> {/* Added container mx-auto here */}
+        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+          <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">
+            <CardHeader>
+              <Skeleton className="h-8 w-1/2 mb-2" />
+              <Skeleton className="h-5 w-3/4" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-48 w-full mb-4" />
+              <Skeleton className="h-48 w-full" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -88,12 +90,14 @@ const AdminSurveyData: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora">Member Survey Data & Insights</h1>
-      <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-        Explore aggregated survey responses to understand your community's preferences and feedback.
-      </p>
-      <SurveyMetricsCard profiles={profiles} loading={loadingProfiles} />
+    <div className="container mx-auto"> {/* Added container mx-auto here */}
+      <div className="space-y-6 py-8">
+        <h1 className="text-4xl font-bold text-center font-lora">Member Survey Data & Insights</h1>
+        <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
+          Explore aggregated survey responses to understand your community's preferences and feedback.
+        </p>
+        <SurveyMetricsCard profiles={profiles} loading={loadingProfiles} />
+      </div>
     </div>
   );
 };

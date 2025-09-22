@@ -10,22 +10,19 @@ import ResourcesBenefitsSection from "@/components/landing/ResourcesBenefitsSect
 import MeetDanieleSection from "@/components/landing/MeetDanieleSection";
 import CallToActionSection from "@/components/landing/CallToActionSection";
 import InterestFormSection from "@/components/landing/InterestFormSection";
-import WelcomeHub from "@/components/dashboard/WelcomeHub"; // <--- Added this import
+import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
-// No need for useDelayedLoading here, as Layout handles the global session loading.
 
 const Index: React.FC = () => {
   const { user, loading } = useSession();
   console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
 
-  // If the session is still loading, render nothing. The Layout component will show a global skeleton if needed.
   if (loading) {
     return null;
   }
 
-  // Once loading is complete, render content based on user authentication status.
   return (
-    <>
+    <div className="container mx-auto"> {/* Added container mx-auto here */}
       {user ? (
         <>
           {console.log("[Index Page] User is logged in, rendering WelcomeHub.")}
@@ -35,7 +32,7 @@ const Index: React.FC = () => {
         <>
           {console.log("[Index Page] User is NOT logged in, rendering landing sections.")}
           <HeroSection />
-          <InterestFormSection /> {/* Insert the new form here */}
+          <InterestFormSection />
           <VideoSection />
           <AboutChoirSection />
           <HowItWorksSection />
@@ -45,7 +42,7 @@ const Index: React.FC = () => {
           <CallToActionSection />
         </>
       )}
-    </>
+    </div>
   );
 };
 

@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertCircle, Mail } from "lucide-react"; // Import Mail icon
+import { AlertCircle, Mail } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,6 @@ const AdminZone: React.FC = () => {
 
   useEffect(() => {
     if (!loading && (!user || !user.is_admin)) {
-      // If not loading, and user is not logged in or not an admin, redirect to home
       navigate("/");
     }
   }, [user, loading, navigate]);
@@ -30,8 +29,6 @@ const AdminZone: React.FC = () => {
   }
 
   if (!user || !user.is_admin) {
-    // This block should ideally not be reached due to the redirect in useEffect,
-    // but serves as a fallback for immediate rendering before redirect.
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-6 text-center shadow-lg rounded-xl border-destructive/20 border-2">
@@ -53,36 +50,38 @@ const AdminZone: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora">Welcome to the Admin Zone, Daniele!</h1>
-      <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-        This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.
-      </p>
+    <div className="container mx-auto"> {/* Added container mx-auto here */}
+      <div className="space-y-6 py-8">
+        <h1 className="text-4xl font-bold text-center font-lora">Welcome to the Admin Zone, Daniele!</h1>
+        <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
+          This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.
+        </p>
 
-      <AdminDashboardOverview />
+        <AdminDashboardOverview />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
-          <CardDescription>Analyze aggregated insights from member surveys.</CardDescription>
-          <Link to="/admin/survey-data" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            View Survey Data
-          </Link>
-        </Card>
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">Manage Members</CardTitle>
-          <CardDescription>View all member profiles and manage their roles.</CardDescription>
-          <Link to="/admin/members" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            Manage Members
-          </Link>
-        </Card>
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">Interest Submissions</CardTitle>
-          <CardDescription>View contact details of interested individuals.</CardDescription>
-          <Link to="/admin/interest-submissions" className={cn(buttonVariants({ variant: "default" }), "mt-4 flex items-center justify-center")}>
-            <Mail className="mr-2 h-4 w-4" /> View Submissions
-          </Link>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <Card className="shadow-lg rounded-xl p-6 text-center">
+            <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
+            <CardDescription>Analyze aggregated insights from member surveys.</CardDescription>
+            <Link to="/admin/survey-data" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+              View Survey Data
+            </Link>
+          </Card>
+          <Card className="shadow-lg rounded-xl p-6 text-center">
+            <CardTitle className="text-xl font-lora mb-2">Manage Members</CardTitle>
+            <CardDescription>View all member profiles and manage their roles.</CardDescription>
+            <Link to="/admin/members" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+              Manage Members
+            </Link>
+          </Card>
+          <Card className="shadow-lg rounded-xl p-6 text-center">
+            <CardTitle className="text-xl font-lora mb-2">Interest Submissions</CardTitle>
+            <CardDescription>View contact details of interested individuals.</CardDescription>
+            <Link to="/admin/interest-submissions" className={cn(buttonVariants({ variant: "default" }), "mt-4 flex items-center justify-center")}>
+              <Mail className="mr-2 h-4 w-4" /> View Submissions
+            </Link>
+          </Card>
+        </div>
       </div>
     </div>
   );
