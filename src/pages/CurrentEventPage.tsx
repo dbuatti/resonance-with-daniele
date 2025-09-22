@@ -50,10 +50,6 @@ const CurrentEventPage: React.FC = () => {
     staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
     refetchOnWindowFocus: true, // Refetch when window regains focus
-    onError: (queryError) => {
-      console.error("[CurrentEventPage] React Query error:", queryError);
-      showError("An error occurred while loading event data.");
-    },
   });
 
   // Only show skeleton if there's no data in cache AND it's currently loading for the first time
