@@ -62,25 +62,24 @@ const WelcomeHub: React.FC = () => {
         const { data, error } = await supabase
           .from("profiles")
           .select("first_name, last_name, avatar_url, how_heard, motivation, attended_session, singing_experience, session_frequency, preferred_time, music_genres, choir_goals, inclusivity_importance, suggestions")
-          .eq("id", user.id)
-          .single();
+          .eq("id", user.id); // Removed .single()
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
+        if (error) {
           console.error("[WelcomeHub] Error fetching profile for WelcomeHub:", error);
-        } else if (data) {
-          console.log("[WelcomeHub] Profile data fetched:", data);
-          setProfile(data);
+        } else if (data && data.length > 0) {
+          console.log("[WelcomeHub] Profile data fetched:", data[0]);
+          setProfile(data[0]);
           // Check if key survey fields are filled to determine completion
-          const completed = data.how_heard !== null ||
-                            (data.motivation !== null && data.motivation.length > 0) ||
-                            data.attended_session !== null ||
-                            data.singing_experience !== null ||
-                            data.session_frequency !== null ||
-                            data.preferred_time !== null ||
-                            (data.music_genres !== null && data.music_genres.length > 0) ||
-                            data.choir_goals !== null ||
-                            data.inclusivity_importance !== null ||
-                            data.suggestions !== null;
+          const completed = data[0].how_heard !== null ||
+                            (data[0].motivation !== null && data[0].motivation.length > 0) ||
+                            data[0].attended_session !== null ||
+                            data[0].singing_experience !== null ||
+                            data[0].session_frequency !== null ||
+                            data[0].preferred_time !== null ||
+                            (data[0].music_genres !== null && data[0].music_genres.length > 0) ||
+                            data[0].choir_goals !== null ||
+                            data[0].inclusivity_importance !== null ||
+                            data[0].suggestions !== null;
           setIsSurveyCompleted(completed);
           console.log("[WelcomeHub] Survey completion status:", completed);
         } else {

@@ -48,19 +48,18 @@ const Profile: React.FC = () => {
         const { data, error } = await supabase
           .from("profiles")
           .select("first_name, last_name, avatar_url")
-          .eq("id", user.id)
-          .single();
+          .eq("id", user.id); // Removed .single()
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
+        if (error) { // Removed error.code !== 'PGRST116' check as it's now handled by data.length
           console.error("[Profile Page] Error fetching profile:", error);
           showError("Failed to load profile data.");
-        } else if (data) {
-          console.log("[Profile Page] Profile data fetched:", data);
+        } else if (data && data.length > 0) {
+          console.log("[Profile Page] Profile data fetched:", data[0]);
           form.reset({
-            first_name: data.first_name || "",
-            last_name: data.last_name || "",
+            first_name: data[0].first_name || "",
+            last_name: data[0].last_name || "",
           });
-          setCurrentAvatarUrl(data.avatar_url);
+          setCurrentAvatarUrl(data[0].avatar_url);
         } else {
           console.log("[Profile Page] No profile data found for user, initializing with empty values.");
           form.reset({ first_name: "", last_name: "" });

@@ -34,19 +34,22 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
       if (currentUser) {
         console.log(`[SessionContext] Fetching is_admin status for user ID: ${currentUser.id}`);
+        // Removed .single() to avoid potential 406 issues if no row is found or multiple are returned
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('is_admin')
-          .eq('id', currentUser.id)
-          .single();
+          .eq('id', currentUser.id);
 
-        if (profileError && profileError.code !== 'PGRST116') {
+        if (profileError) {
           console.error("[SessionContext] Error fetching admin status:", profileError);
-        } else if (profileData) {
-          currentUser = { ...currentUser, is_admin: profileData.is_admin };
-          console.log("[SessionContext] User is_admin status fetched:", profileData.is_admin);
+          // Even with an error, ensure is_admin is set to false
+          currentUser = { ...currentUser, is_admin: false };
+        } else if (profileData && profileData.length > 0) {
+          // Access is_admin from the first item in the array
+          currentUser = { ...currentUser, is_admin: profileData[0].is_admin };
+          console.log("[SessionContext] User is_admin status fetched:", profileData[0].is_admin);
         } else {
-          currentUser = { ...currentUser, is_admin: false }; // Default to false if no profile or no is_admin
+          currentUser = { ...currentUser, is_admin: false }; // Default to false if no profile data
           console.log("[SessionContext] No profile data found for user, setting is_admin to false.");
         }
       }
