@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils"; // Import cn for conditional class names
+import BackToTopButton from "./BackToTopButton"; // Import the new BackToTopButton
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -82,6 +83,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className="flex-grow container mx-auto py-8 px-4">
         {children}
       </main>
+      <FooterSection /> {/* Ensure FooterSection is included */}
+      <BackToTopButton /> {/* Add the BackToTopButton here */}
     </div>
   );
 };

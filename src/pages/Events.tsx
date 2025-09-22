@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } => "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -294,12 +294,92 @@ const Events: React.FC = () => {
         ) : events.length === 0 ? (
           <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
             <CalendarDays className="h-16 w-16 text-muted-foreground" />
-            <p className="text-xl text-muted-foreground font-semibold font-lora">No events found.</p>
-            {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new events.</p>}
+            <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
+            <p className="text-md text-muted-foreground mt-2">
+              {user
+                ? "Be the first to add one using the 'Add New Event' button above!"
+                : "Log in to add and view upcoming events."}
+            </p>
+            {!user && (
+              <Button asChild className="mt-4">
+                <Link to="/login">Login to Add Events</Link>
+              </Button>
+            )}
             {user && (
-              <p className="text-md text-muted-foreground mt-2">
-                Be the first to add one using the "Add New Event" button above!
-              </p>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="mt-4">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Event
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle className="font-lora">Add New Event</DialogTitle>
+                    <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
+                  </DialogHeader>
+                  <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                    <div className="space-y-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input id="title" {...addForm.register("title")} />
+                        {addForm.formState.errors.title && (
+                          <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
+                        )}
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="date">Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !addForm.watch("date") && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarDays className="mr-2 h-4 w-4" />
+                              {addForm.watch("date") ? format(addForm.watch("date"), "PPP") : <span>Pick a date</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={addForm.watch("date")}
+                              onSelect={(date) => addForm.setValue("date", date!)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        {addForm.formState.errors.date && (
+                          <p className="text-red-500 text-sm">{addForm.formState.errors.date.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="location">Location</Label>
+                        <Input id="location" {...addForm.register("location")} />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea id="description" {...addForm.register("description")} />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
+                      <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
+                      {addForm.formState.errors.humanitix_link && (
+                        <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                        {addForm.formState.isSubmitting ? "Adding..." : "Add Event"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             )}
           </div>
         ) : (

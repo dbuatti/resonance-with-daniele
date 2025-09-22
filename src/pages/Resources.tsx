@@ -241,12 +241,56 @@ const Resources: React.FC = () => {
         ) : resources.length === 0 ? (
           <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
             <FileText className="h-16 w-16 text-muted-foreground" />
-            <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found.</p>
-            {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new resources.</p>}
+            <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found yet!</p>
+            <p className="text-md text-muted-foreground mt-2">
+              {user
+                ? "Be the first to add one using the 'Add New Resource' button above!"
+                : "Log in to add and access choir resources."}
+            </p>
+            {!user && (
+              <Button asChild className="mt-4">
+                <Link to="/login">Login to Add Resources</Link>
+              </Button>
+            )}
             {user && (
-              <p className="text-md text-muted-foreground mt-2">
-                Be the first to add one using the "Add New Resource" button above!
-              </p>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="mt-4">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Resource
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle className="font-lora">Add New Resource</DialogTitle>
+                    <CardDescription>Provide details for a new choir resource.</CardDescription>
+                  </DialogHeader>
+                  <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="title">Title</Label>
+                      <Input id="title" {...addForm.register("title")} />
+                      {addForm.formState.errors.title && (
+                        <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
+                      )}
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="url">URL</Label>
+                      <Input id="url" type="url" {...addForm.register("url")} placeholder="https://example.com/resource.pdf" />
+                      {addForm.formState.errors.url && (
+                        <p className="text-red-500 text-sm">{addForm.formState.errors.url.message}</p>
+                      )}
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="description">Description (Optional)</Label>
+                      <Textarea id="description" {...addForm.register("description")} />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                        {addForm.formState.isSubmitting ? "Adding..." : "Add Resource"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             )}
           </div>
         ) : (
