@@ -168,14 +168,14 @@ const Resources: React.FC = () => {
 
   return (
     <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora animate-fade-in-up">
+      <h1 className="text-4xl font-bold text-center font-lora">
         {loadingResources ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>
-      <p className="text-lg text-center text-muted-foreground animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <p className="text-lg text-center text-muted-foreground">
         {loadingResources ? <Skeleton className="h-6 w-1/2 mx-auto" /> : "This is where you'll find all the sheet music, practice tracks, and other materials I've prepared for the choir."}
       </p>
 
-      <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+      <div className="flex justify-center">
         {loadingResources ? (
           <Skeleton className="h-10 w-48" />
         ) : user ? (
@@ -239,14 +239,14 @@ const Resources: React.FC = () => {
             </Card>
           ))
         ) : resources.length === 0 ? (
-          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg">
             <p className="text-xl text-muted-foreground font-semibold font-lora">No resources found.</p>
             {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new resources.</p>}
             {user && <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>}
           </div>
         ) : (
-          resources.map((resource, index) => (
-            <Card key={resource.id} className="shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
+          resources.map((resource) => (
+            <Card key={resource.id} className="shadow-lg rounded-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-medium font-lora">
                   {resource.title}

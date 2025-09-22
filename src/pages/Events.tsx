@@ -185,14 +185,14 @@ const Events: React.FC = () => {
 
   return (
     <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora animate-fade-in-up">
+      <h1 className="text-4xl font-bold text-center font-lora">
         {loadingEvents ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>
-      <p className="text-lg text-center text-muted-foreground animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <p className="text-lg text-center text-muted-foreground">
         {loadingEvents ? <Skeleton className="h-6 w-1/2 mx-auto" /> : "Stay up-to-date with all my choir's performances, rehearsals, and social gatherings."}
       </p>
 
-      <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+      <div className="flex justify-center">
         {loadingEvents ? (
           <Skeleton className="h-10 w-48" />
         ) : user ? (
@@ -292,14 +292,14 @@ const Events: React.FC = () => {
             </Card>
           ))
         ) : events.length === 0 ? (
-          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg">
             <p className="text-xl text-muted-foreground font-semibold font-lora">No events found.</p>
             {!user && <p className="text-md text-muted-foreground mt-2">Log in to add new events.</p>}
             {user && <p className="text-md text-muted-foreground mt-2">Be the first to add one using the button above!</p>}
           </div>
         ) : (
-          events.map((event, index) => (
-            <Card key={event.id} className="shadow-lg rounded-xl animate-fade-in-up" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
+          events.map((event) => (
+            <Card key={event.id} className="shadow-lg rounded-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-medium font-lora">
                   {event.title}
