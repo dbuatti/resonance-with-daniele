@@ -264,7 +264,7 @@ const WelcomeHub: React.FC = () => {
                   Help me tailor the choir experience to your needs and preferences by filling out a quick market research survey. It only takes a few minutes!
                 </p>
                 <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full" asChild>
-                  <Link to="/profile">
+                  <Link to="/profile/survey">
                     <Settings className="mr-2 h-4 w-4" /> Go to Profile & Survey
                   </Link>
                 </Button>
