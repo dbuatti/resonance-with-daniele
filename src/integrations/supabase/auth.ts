@@ -13,7 +13,7 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
-export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,8 +55,10 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     return () => subscription.unsubscribe();
   }, [navigate, location.pathname]);
 
+  const contextValue = { session, user, loading };
+
   return (
-    <SessionContext.Provider value={{ session, user, loading }}>
+    <SessionContext.Provider value={contextValue}>
       {children}
     </SessionContext.Provider>
   );
