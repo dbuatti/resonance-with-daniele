@@ -8,6 +8,7 @@ import { AlertCircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview"; // Import the new component
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
@@ -58,21 +59,10 @@ const AdminZone: React.FC = () => {
         This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.
       </p>
 
+      <AdminDashboardOverview /> {/* New dashboard overview component */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">Manage Events</CardTitle>
-          <CardDescription>Add, edit, or delete upcoming choir events.</CardDescription>
-          <Link to="/events" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            Go to Events
-          </Link>
-        </Card>
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">Manage Resources</CardTitle>
-          <CardDescription>Upload and organize sheet music, audio, and tutorials.</CardDescription>
-          <Link to="/resources" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            Go to Resources
-          </Link>
-        </Card>
+        {/* The "Manage Events" and "Manage Resources" cards are now integrated into AdminDashboardOverview */}
         <Card className="shadow-lg rounded-xl p-6 text-center">
           <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
           <CardDescription>Analyze aggregated insights from member surveys.</CardDescription>
