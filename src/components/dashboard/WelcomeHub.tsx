@@ -1,15 +1,74 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Music, Mic2, Users, Camera } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
+
+interface Profile {
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+}
 
 const WelcomeHub: React.FC = () => {
-  const { user } = useSession();
-  const firstName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || "there"; // Fallback to email part
+  const { user, loading: loadingUserSession } = useSession();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        setLoadingProfile(true);
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("first_name, last_name, avatar_url")
+          .eq("id", user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine for new users
+          console.error("Error fetching profile for WelcomeHub:", error);
+        } else if (data) {
+          setProfile(data);
+        }
+        setLoadingProfile(false);
+      } else {
+        setProfile(null);
+        setLoadingProfile(false);
+      }
+    };
+
+    if (!loadingUserSession) {
+      fetchProfile();
+    }
+  }, [user, loadingUserSession]);
+
+  if (loadingUserSession || loadingProfile) {
+    return (
+      <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
+        <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 animate-fade-in-up">
+          <CardHeader>
+            <Skeleton className="w-32 h-32 rounded-full mx-auto mb-6" />
+            <Skeleton className="h-10 w-3/4 mx-auto mb-4" />
+            <Skeleton className="h-6 w-1/2 mx-auto mb-6" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
