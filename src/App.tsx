@@ -7,24 +7,27 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Resources from "./pages/Resources";
 import Events from "./pages/Events";
-import Login from "./pages/Login"; // Import the new Login page
-import { SessionContextProvider } from "./integrations/supabase/auth"; // Update import to .tsx
+import Login from "./pages/Login";
+import { SessionContextProvider } from "./integrations/supabase/auth";
+import React from "react"; // Import React for Fragment
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      <React.Fragment> {/* Wrap multiple children in a Fragment */}
+        <Toaster />
+        <Sonner />
+      </React.Fragment>
       <BrowserRouter>
-        <SessionContextProvider> {/* Wrap the app with SessionContextProvider */}
+        <SessionContextProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/resources" element={<Resources />} />
             <Route path="/events" element={<Events />} />
-            <Route path="/login" element={<Login />} /> {/* Add the Login route */}
+            <Route path="/login" element={<Login />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </SessionContextProvider>
