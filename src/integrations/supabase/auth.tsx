@@ -1,18 +1,17 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'; // Import useRef
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PostgrestError } from '@supabase/supabase-js';
 
-// Define the Profile interface based on your 'profiles' table schema
 interface Profile {
   id: string;
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
-  is_admin: boolean; // This is crucial for the TypeScript fix
+  is_admin: boolean;
   updated_at: string;
   how_heard: string | null;
   motivation: string[] | null;
@@ -27,7 +26,7 @@ interface Profile {
 }
 
 interface CustomUser extends User {
-  is_admin?: boolean; // Add is_admin property
+  is_admin?: boolean;
 }
 
 interface SessionContextType {
@@ -45,11 +44,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Refs to hold the latest state values without triggering useEffect re-runs
   const userRef = useRef<CustomUser | null>(user);
   const sessionRef = useRef<Session | null>(session);
 
-  // Update refs whenever state changes
   useEffect(() => {
     userRef.current = user;
   }, [user]);
@@ -58,29 +55,25 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     sessionRef.current = session;
   }, [session]);
 
-  const processUserAndProfile = useCallback(async (currentUser: User | null) => {
-    let processedUser: CustomUser | null = currentUser;
+  const fetchIsAdminStatus = useCallback(async (userId: string, userEmail: string | undefined): Promise<boolean> => {
+    console.log(`[SessionContext] Fetching is_admin status for user ID: ${userId}`);
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', userId)
+      .single();
 
-    if (processedUser) {
-      console.log(`[SessionContext] Processing profile for user ID: ${processedUser.id}`);
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', processedUser.id)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error("[SessionContext] Error fetching profile data:", profileError);
-        processedUser = { ...processedUser, is_admin: false };
-      } else if (profileData) {
-        processedUser = { ...processedUser, is_admin: profileData.is_admin };
-        console.log("[SessionContext] User profile fetched. is_admin status:", profileData.is_admin);
-      } else {
-        processedUser = { ...processedUser, is_admin: processedUser.email === 'daniele.buatti@gmail.com' || processedUser.email === 'resonancewithdaniele@gmail.com' };
-        console.log("[SessionContext] No profile found for user. Setting is_admin based on email.");
-      }
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error("[SessionContext] Error fetching profile data for is_admin:", profileError);
+      return false;
+    } else if (profileData) {
+      console.log("[SessionContext] is_admin status fetched:", profileData.is_admin);
+      return profileData.is_admin;
+    } else {
+      const isAdminByEmail = userEmail === 'daniele.buatti@gmail.com' || userEmail === 'resonancewithdaniele@gmail.com';
+      console.log("[SessionContext] No profile found for user. Setting is_admin based on email:", isAdminByEmail);
+      return isAdminByEmail;
     }
-    return processedUser;
   }, []);
 
   useEffect(() => {
@@ -94,14 +87,24 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         console.error("[SessionContext] Error getting initial session:", initialSessionError);
       }
 
-      const processedInitialUser = await processUserAndProfile(initialSession?.user || null);
       setSession(initialSession);
-      setUser(processedInitialUser);
+      let initialUserWithoutAdmin: CustomUser | null = initialSession?.user || null;
+      setUser(initialUserWithoutAdmin); // Set user immediately without waiting for is_admin
       setLoading(false);
-      console.log("[SessionContext] Initial session processed. Loading set to false.");
+      console.log("[SessionContext] Initial session processed. Loading set to false. User without admin set.");
 
-      // Initial redirect logic
-      if (processedInitialUser) {
+      if (initialUserWithoutAdmin) {
+        const isAdmin = await fetchIsAdminStatus(initialUserWithoutAdmin.id, initialUserWithoutAdmin.email);
+        setUser(prevUser => {
+          if (prevUser && prevUser.id === initialUserWithoutAdmin?.id) {
+            return { ...prevUser, is_admin: isAdmin };
+          }
+          return prevUser;
+        });
+        console.log("[SessionContext] Initial user's is_admin status updated asynchronously.");
+      }
+
+      if (initialUserWithoutAdmin) {
         if (location.pathname === '/login') {
           console.log("[SessionContext] Redirecting from /login to / after initial session.");
           navigate('/');
@@ -116,12 +119,12 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
         console.log(`[SessionContext] Auth state changed (listener): Event=${event}, Session=${currentSession ? 'present' : 'null'}`);
         
-        const processedUser = await processUserAndProfile(currentSession?.user || null);
-
+        let newUserWithoutAdmin: CustomUser | null = currentSession?.user || null;
+        
         const userChanged = (oldUser: CustomUser | null, newUser: CustomUser | null) => {
           console.log("--- userChanged comparison ---");
           console.log("Old User (ref):", oldUser);
-          console.log("New User (processed):", newUser);
+          console.log("New User (from currentSession):", newUser);
 
           if (!oldUser && !newUser) return false;
           if (!oldUser || !newUser) {
@@ -129,37 +132,16 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
             return true;
           }
 
-          if (oldUser.id !== newUser.id) {
-            console.log("[SessionContext] User changed: ID mismatch.");
-            return true;
-          }
-          if (oldUser.email !== newUser.email) {
-            console.log("[SessionContext] User changed: Email mismatch.");
-            return true;
-          }
-          if (oldUser.is_admin !== newUser.is_admin) {
-            console.log("[SessionContext] User changed: Admin status mismatch.");
-            return true;
-          }
-
-          // Deep compare user_metadata
+          if (oldUser.id !== newUser.id) return true;
+          if (oldUser.email !== newUser.email) return true;
+          
           const oldMeta = oldUser.user_metadata || {};
           const newMeta = newUser.user_metadata || {};
-
-          if (oldMeta.first_name !== newMeta.first_name) {
-            console.log(`[SessionContext] User changed: First name mismatch. Old: ${oldMeta.first_name}, New: ${newMeta.first_name}`);
-            return true;
-          }
-          if (oldMeta.last_name !== newMeta.last_name) {
-            console.log(`[SessionContext] User changed: Last name mismatch. Old: ${oldMeta.last_name}, New: ${newMeta.last_name}`);
-            return true;
-          }
-          if (oldMeta.avatar_url !== newMeta.avatar_url) {
-            console.log(`[SessionContext] User changed: Avatar URL mismatch. Old: ${oldMeta.avatar_url}, New: ${newMeta.avatar_url}`);
-            return true;
-          }
+          if (oldMeta.first_name !== newMeta.first_name) return true;
+          if (oldMeta.last_name !== newMeta.last_name) return true;
+          if (oldMeta.avatar_url !== newMeta.avatar_url) return true;
           
-          console.log("[SessionContext] User unchanged.");
+          console.log("[SessionContext] Core User (Auth) unchanged.");
           return false;
         };
 
@@ -169,23 +151,32 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           return oldSession.access_token !== newSession.access_token || oldSession.expires_at !== newSession.expires_at;
         };
 
-        // Use refs for comparison to get the latest state values
-        const shouldUpdateUser = userChanged(userRef.current, processedUser);
         const shouldUpdateSession = sessionChanged(sessionRef.current, currentSession);
+        const shouldUpdateCoreUser = userChanged(userRef.current, newUserWithoutAdmin);
 
         if (shouldUpdateSession) {
           setSession(currentSession);
           console.log("[SessionContext] Listener processed. Session state updated.");
         }
-        if (shouldUpdateUser) {
-          setUser(processedUser);
-          console.log("[SessionContext] Listener processed. User state updated.");
-        } else if (!shouldUpdateSession && !shouldUpdateUser) {
+        if (shouldUpdateCoreUser) {
+          setUser(newUserWithoutAdmin);
+          console.log("[SessionContext] Listener processed. Core User (Auth) state updated.");
+        } else if (!shouldUpdateSession && !shouldUpdateCoreUser) {
           console.log("[SessionContext] Listener processed. User and Session state unchanged (no significant diff).");
         }
 
-        // Redirect logic
-        if (processedUser) {
+        if (newUserWithoutAdmin) {
+          const isAdmin = await fetchIsAdminStatus(newUserWithoutAdmin.id, newUserWithoutAdmin.email);
+          setUser(prevUser => {
+            if (prevUser && prevUser.id === newUserWithoutAdmin?.id && prevUser.is_admin !== isAdmin) {
+              console.log("[SessionContext] Async update: is_admin status changed, updating user state.");
+              return { ...prevUser, is_admin: isAdmin };
+            }
+            return prevUser;
+          });
+        }
+
+        if (newUserWithoutAdmin) {
           if (location.pathname === '/login') {
             console.log("[SessionContext] Redirecting from /login to / after listener update.");
             navigate('/');
@@ -206,10 +197,10 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     getInitialSessionAndSetupListener();
 
-  }, [navigate, processUserAndProfile]); // Removed location.pathname from dependencies
+  }, [navigate, fetchIsAdminStatus]);
 
   const contextValue = { session, user, loading };
-  console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null');
+  console.log("[SessionContext] Rendering SessionContextProvider with loading:", loading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin);
 
   return (
     <SessionContext.Provider value={contextValue}>
