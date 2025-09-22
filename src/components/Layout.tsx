@@ -84,25 +84,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     {console.log("[Layout] User is admin, rendering Admin Zone link.")}
                     <Button variant="ghost" asChild>
                       <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))}>
-                        <span><Shield className="h-4 w-4" /> Admin Zone</span>
+                        <Shield className="h-4 w-4" /> Admin Zone
                       </Link>
                     </Button>
                   </>
                 )}
                 <Button variant="ghost" asChild>
                   <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))}>
-                    <span>
-                      <Avatar className="h-6 w-6">
-                        {user.user_metadata?.avatar_url ? (
-                          <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
-                        ) : (
-                          <AvatarFallback className="bg-primary-foreground text-primary">
-                            <UserIcon className="h-4 w-4" />
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      My Profile
-                    </span>
+                    <Avatar className="h-6 w-6">
+                      {user.user_metadata?.avatar_url ? (
+                        <AvatarImage src={user.user_metadata.avatar_url} alt={`${displayName}'s avatar`} className="object-cover" />
+                      ) : (
+                        <AvatarFallback className="bg-primary-foreground text-primary">
+                          <UserIcon className="h-4 w-4" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    My Profile
                   </Link>
                 </Button>
                 <Button variant="ghost" onClick={handleLogout}>
