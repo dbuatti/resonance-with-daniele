@@ -88,6 +88,7 @@ const Profile: React.FC = () => {
     }
 
     // 2. Update the user's metadata in Supabase Auth to ensure session sync
+    // This is crucial for the `useSession` hook to reflect the change immediately
     const { data: { user: updatedAuthUser }, error: authError } = await supabase.auth.updateUser({
       data: { avatar_url: url },
     });
@@ -97,6 +98,9 @@ const Profile: React.FC = () => {
       showError("Failed to update avatar URL in user session.");
       return;
     }
+
+    // Log the updated user object to confirm the metadata change
+    console.log("Supabase Auth User updated:", updatedAuthUser);
 
     setCurrentAvatarUrl(url);
     showSuccess("Avatar updated successfully!");

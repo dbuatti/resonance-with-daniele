@@ -78,6 +78,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       .getPublicUrl(filePath);
 
     if (publicUrlData?.publicUrl) {
+      console.log("Public URL generated:", publicUrlData.publicUrl); // Add this log
       onUploadSuccess(publicUrlData.publicUrl);
       setFile(null); // Clear the selected file after successful upload
     } else {
