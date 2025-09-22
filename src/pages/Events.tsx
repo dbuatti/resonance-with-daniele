@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
+import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,7 @@ const Events: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { user, loading: loadingUserSession } = useSession();
+  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
   console.log("[Events Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
   const addForm = useForm<EventFormData>({
@@ -75,9 +76,13 @@ const Events: React.FC = () => {
   });
 
   useEffect(() => {
-    console.log("[Events Page] useEffect: Initial fetch events.");
-    fetchEvents();
-  }, []);
+    console.log("[Events Page] useEffect: Initial fetch events or search term changed.");
+    const debounceTimeout = setTimeout(() => {
+      fetchEvents(searchTerm);
+    }, 300); // Debounce search to avoid too many requests
+
+    return () => clearTimeout(debounceTimeout);
+  }, [searchTerm, user]); // Re-fetch when search term changes or user changes (for permissions)
 
   useEffect(() => {
     if (editingEvent) {
@@ -92,13 +97,21 @@ const Events: React.FC = () => {
     }
   }, [editingEvent, editForm]);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (currentSearchTerm: string) => {
     setLoadingEvents(true);
-    console.log("[Events Page] Fetching all events from Supabase.");
-    const { data, error } = await supabase
+    console.log("[Events Page] Fetching all events from Supabase with search term:", currentSearchTerm);
+    let query = supabase
       .from("events")
       .select("*")
       .order("date", { ascending: true });
+
+    if (currentSearchTerm) {
+      query = query.or(
+        `title.ilike.%${currentSearchTerm}%,description.ilike.%${currentSearchTerm}%,location.ilike.%${currentSearchTerm}%`
+      );
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("[Events Page] Error fetching events:", error);
@@ -137,7 +150,7 @@ const Events: React.FC = () => {
       showSuccess("Event added successfully!");
       addForm.reset();
       setIsAddDialogOpen(false);
-      fetchEvents();
+      fetchEvents(searchTerm); // Refresh with current search term
       console.log("[Events Page] Event added and list refreshed.");
     }
   };
@@ -172,7 +185,7 @@ const Events: React.FC = () => {
       showSuccess("Event updated successfully!");
       setIsEditDialogOpen(false);
       setEditingEvent(null);
-      fetchEvents();
+      fetchEvents(searchTerm); // Refresh with current search term
       console.log("[Events Page] Event updated and list refreshed.");
     }
   };
@@ -197,7 +210,7 @@ const Events: React.FC = () => {
       showError("Failed to delete event.");
     } else {
       showSuccess("Event deleted successfully!");
-      fetchEvents();
+      fetchEvents(searchTerm); // Refresh with current search term
       console.log("[Events Page] Event deleted and list refreshed.");
     }
   };
@@ -219,7 +232,18 @@ const Events: React.FC = () => {
         </p>
       )}
 
-      <div className="flex justify-center">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search events by title, description, or location..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-4 py-2 w-full"
+            disabled={loadingEvents}
+          />
+        </div>
         {loadingEvents ? (
           <Skeleton className="h-10 w-48" />
         ) : user ? (

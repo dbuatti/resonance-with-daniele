@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2, Search } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
@@ -43,6 +43,7 @@ const Resources: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
+  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
   console.log("[Resources Page] User:", user ? user.id : 'null', "Loading User Session:", loadingUserSession);
 
   const addForm = useForm<ResourceFormData>({
@@ -64,9 +65,13 @@ const Resources: React.FC = () => {
   });
 
   useEffect(() => {
-    console.log("[Resources Page] useEffect: Initial fetch resources.");
-    fetchResources();
-  }, []);
+    console.log("[Resources Page] useEffect: Initial fetch resources or search term changed.");
+    const debounceTimeout = setTimeout(() => {
+      fetchResources(searchTerm);
+    }, 300); // Debounce search to avoid too many requests
+
+    return () => clearTimeout(debounceTimeout);
+  }, [searchTerm, user]); // Re-fetch when search term changes or user changes (for permissions)
 
   useEffect(() => {
     if (editingResource) {
@@ -79,13 +84,21 @@ const Resources: React.FC = () => {
     }
   }, [editingResource, editForm]);
 
-  const fetchResources = async () => {
+  const fetchResources = async (currentSearchTerm: string) => {
     setLoadingResources(true);
-    console.log("[Resources Page] Fetching all resources from Supabase.");
-    const { data, error } = await supabase
+    console.log("[Resources Page] Fetching all resources from Supabase with search term:", currentSearchTerm);
+    let query = supabase
       .from("resources")
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (currentSearchTerm) {
+      query = query.or(
+        `title.ilike.%${currentSearchTerm}%,description.ilike.%${currentSearchTerm}%`
+      );
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("[Resources Page] Error fetching resources:", error);
@@ -122,7 +135,7 @@ const Resources: React.FC = () => {
       showSuccess("Resource added successfully!");
       addForm.reset();
       setIsAddDialogOpen(false);
-      fetchResources();
+      fetchResources(searchTerm); // Refresh with current search term
       console.log("[Resources Page] Resource added and list refreshed.");
     }
   };
@@ -155,7 +168,7 @@ const Resources: React.FC = () => {
       showSuccess("Resource updated successfully!");
       setIsEditDialogOpen(false);
       setEditingResource(null);
-      fetchResources();
+      fetchResources(searchTerm); // Refresh with current search term
       console.log("[Resources Page] Resource updated and list refreshed.");
     }
   };
@@ -180,7 +193,7 @@ const Resources: React.FC = () => {
       showError("Failed to delete resource.");
     } else {
       showSuccess("Resource deleted successfully!");
-      fetchResources();
+      fetchResources(searchTerm); // Refresh with current search term
       console.log("[Resources Page] Resource deleted and list refreshed.");
     }
   };
@@ -202,7 +215,18 @@ const Resources: React.FC = () => {
         </p>
       )}
 
-      <div className="flex justify-center">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search resources by title or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-4 py-2 w-full"
+            disabled={loadingResources}
+          />
+        </div>
         {loadingResources ? (
           <Skeleton className="h-10 w-48" />
         ) : user ? (
