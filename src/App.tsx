@@ -5,8 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Resources from "./pages/Resources"; // Import the new Resources page
-import Events from "./pages/Events";       // Import the new Events page
+import Resources from "./pages/Resources";
+import Events from "./pages/Events";
+import Login from "./pages/Login"; // Import the new Login page
+import { SessionContextProvider } from "./integrations/supabase/auth"; // Import the SessionContextProvider
 
 const queryClient = new QueryClient();
 
@@ -16,13 +18,16 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <SessionContextProvider> {/* Wrap the app with SessionContextProvider */}
+          <Routes>
+            <Route path="/" element={<Index />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/login" element={<Login />} /> {/* Add the Login route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </SessionContextProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

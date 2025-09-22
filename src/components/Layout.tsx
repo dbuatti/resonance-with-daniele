@@ -4,12 +4,20 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { useSession } from "@/integrations/supabase/auth"; // Import useSession hook
+import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const { user, loading } = useSession(); // Use the session hook
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-md">
@@ -17,7 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Link to="/" className="text-2xl font-bold">
             Choir Companion
           </Link>
-          <nav className="space-x-4">
+          <nav className="space-x-4 flex items-center">
             <Button variant="ghost" asChild>
               <Link to="/">Home</Link>
             </Button>
@@ -27,6 +35,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Button variant="ghost" asChild>
               <Link to="/events">Events</Link>
             </Button>
+            {!loading && (
+              user ? (
+                <Button variant="ghost" onClick={handleLogout}>
+                  Logout
+                </Button>
+              ) : (
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Login</Link>
+                </Button>
+              )
+            )}
           </nav>
         </div>
       </header>

@@ -18,6 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
+import { useSession } from "@/integrations/supabase/auth"; // Import useSession
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -41,9 +42,9 @@ interface Event {
 
 const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true); // Renamed to avoid conflict with session loading
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { user, loading: loadingUserSession } = useSession(); // Use useSession hook
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -57,31 +58,16 @@ const Events: React.FC = () => {
   });
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-
-    fetchUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
     if (user) {
       fetchEvents();
     } else {
       setEvents([]); // Clear events if no user is logged in
-      setLoading(false);
+      setLoadingEvents(false);
     }
   }, [user]);
 
   const fetchEvents = async () => {
-    setLoading(true);
+    setLoadingEvents(true);
     const { data, error } = await supabase
       .from("events")
       .select("*")
@@ -93,7 +79,7 @@ const Events: React.FC = () => {
     } else {
       setEvents(data || []);
     }
-    setLoading(false);
+    setLoadingEvents(false);
   };
 
   const onSubmit = async (data: EventFormData) => {
@@ -123,10 +109,10 @@ const Events: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loadingUserSession || loadingEvents) {
     return (
       <Layout>
-        <div className="text-center text-lg">Loading events...</div>
+        <div className="text-center text-lg">Loading...</div>
       </Layout>
     );
   }
