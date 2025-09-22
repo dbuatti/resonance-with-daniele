@@ -4,6 +4,27 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { PostgrestError } from '@supabase/supabase-js'; // Import PostgrestError
+
+// Define the Profile interface based on your 'profiles' table schema
+interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  is_admin: boolean; // This is crucial for the TypeScript fix
+  updated_at: string;
+  how_heard: string | null;
+  motivation: string[] | null;
+  attended_session: boolean | null;
+  singing_experience: string | null;
+  session_frequency: string | null;
+  preferred_time: string | null;
+  music_genres: string[] | null;
+  choir_goals: string | null;
+  inclusivity_importance: string | null;
+  suggestions: string | null;
+}
 
 interface CustomUser extends User {
   is_admin?: boolean; // Add is_admin property
@@ -41,7 +62,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
             is_admin: processedUser.email === 'daniele.buatti@gmail.com' || processedUser.email === 'resonancewithdaniele@gmail.com',
           },
           { onConflict: 'id' }
-        );
+        ) as { data: Profile[] | null; error: PostgrestError | null }; // Explicitly type the return
 
       if (profileError) {
         console.error("[SessionContext] Error upserting profile data:", profileError);
