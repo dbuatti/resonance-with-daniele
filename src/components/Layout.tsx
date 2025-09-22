@@ -4,15 +4,15 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { useSession } from "@/integrations/supabase/auth"; // Update import to .tsx
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
+import { useSession } from "@/integrations/supabase/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, loading } = useSession(); // Use the session hook
+  const { user, loading } = useSession();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -23,7 +23,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <header className="bg-primary text-primary-foreground p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold">
-            Choir Companion
+            Resonance with Daniele
           </Link>
           <nav className="space-x-4 flex items-center">
             <Button variant="ghost" asChild>

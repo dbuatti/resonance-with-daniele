@@ -11,7 +11,7 @@ const Index: React.FC = () => {
     <Layout>
       <div className="flex flex-col items-center justify-center text-center space-y-8 py-12">
         <h1 className="text-5xl font-extrabold tracking-tight lg:text-6xl">
-          Welcome to Your Choir Companion
+          Resonance with Daniele
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl">
           Your central hub for all things choir-related: resources, events, and important announcements.
