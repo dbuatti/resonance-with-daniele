@@ -24,12 +24,13 @@ const CurrentEventPage: React.FC = () => {
               title="Humanitix Current Event"
               className="absolute top-0 left-0 w-full h-full border-0"
               allowFullScreen
+              allow="payment" {/* Added allow="payment" here */}
             ></iframe>
           </div>
           <div className="text-center">
             <Button asChild size="lg">
               <a href={HUMANITIX_EVENT_URL} target="_blank" rel="noopener noreferrer">
-                <span> {/* Wrapped icon and text in a span */}
+                <span>
                   <ExternalLink className="mr-2 h-4 w-4" /> View Event Details
                 </span>
               </a>
