@@ -20,7 +20,7 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<CustomUser | null>(null);
-  const [loading, setLoading] = useState(true); // Keep loading true initially
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,36 +46,49 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   useEffect(() => {
     let ignore = false;
+    let initialSessionChecked = false; // Flag to ensure loading is set to false after the first check
 
-    const initializeSession = async () => {
-      setLoading(true); 
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (ignore) return;
-
-        setSession(initialSession);
-        await processUser(initialSession?.user || null); 
-        
-        // Handle redirects after initial load
-        if (initialSession?.user && location.pathname === '/login') {
-          navigate('/');
-        } else if (!initialSession?.user && location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
-          navigate('/login');
-        }
-      } catch (error) {
-        console.error("Error during session initialization:", error);
-        // Optionally handle error state for user, e.g., show a toast
-      } finally {
-        setLoading(false); // Always set loading to false after initial attempt
-      }
-    };
-
-    initializeSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (ignore) return;
+
       setSession(currentSession);
       await processUser(currentSession?.user || null);
+
+      if (!initialSessionChecked) {
+        setLoading(false); // Set loading to false after the first auth state is processed
+        initialSessionChecked = true;
+      }
+
+      // Handle redirects
+      if (currentSession?.user && location.pathname === '/login') {
+        navigate('/');
+      } else if (!currentSession?.user && location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
+        navigate('/login');
+      }
+    });
+
+    // Immediately check session in case onAuthStateChange 'INITIAL_SESSION' is not fired or is delayed.
+    // This is a fallback to ensure `loading` is resolved.
+    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+      if (ignore || initialSessionChecked) return; // If the listener already handled it, don't re-process
+
+      setSession(initialSession);
+      await processUser(initialSession?.user || null);
+      setLoading(false);
+      initialSessionChecked = true;
+
+      // Handle redirects (duplicate, but ensures it runs if listener is slow)
+      if (initialSession?.user && location.pathname === '/login') {
+        navigate('/');
+      } else if (!initialSession?.user && location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/events' && location.pathname !== '/resources') {
+        navigate('/login');
+      }
+    }).catch(error => {
+      console.error("Error fetching initial session:", error);
+      if (!initialSessionChecked) {
+        setLoading(false);
+        initialSessionChecked = true;
+      }
     });
 
     return () => {
