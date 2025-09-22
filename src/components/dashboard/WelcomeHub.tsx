@@ -11,6 +11,11 @@ const WelcomeHub: React.FC = () => {
     <div className="container mx-auto px-4 py-8 md:py-12 space-y-8">
       <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
         <CardHeader>
+          <img
+            src="/images/daniele-buatti-headshot.jpeg"
+            alt="Daniele Buatti"
+            className="w-32 h-32 rounded-full object-cover shadow-md mx-auto mb-6"
+          />
           <CardTitle className="text-4xl md:text-5xl font-extrabold text-center text-primary mb-4">
             Welcome to the Resonance with Daniele Hub!
           </CardTitle>
