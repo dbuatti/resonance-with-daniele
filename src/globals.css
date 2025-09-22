@@ -97,20 +97,7 @@
     background-color: hsl(var(--background));
     @apply bg-background text-foreground font-sans;
     min-height: 100vh;
-    /* Create a fixed background layer to prevent white overscroll on iOS */
-    position: relative;
-    z-index: 0;
-  }
-  /* Fixed background pseudo-element to cover the entire viewport */
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: hsl(var(--background));
-    z-index: -1;
+    /* Removed fixed background pseudo-element to fix iOS white box issue */
   }
 
   * {
