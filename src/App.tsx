@@ -26,12 +26,12 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <React.Fragment> {/* Wrap Sonner and ThemeProvider in a Fragment */}
-        <Sonner />
-        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-          <BrowserRouter>
-            <SessionContextProvider>
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <SessionContextProvider> {/* SessionContextProvider should be inside ThemeProvider */}
+        <BrowserRouter>
+          <TooltipProvider> {/* TooltipProvider now wraps Sonner and Routes */}
+            <React.Fragment> {/* This is the single child for TooltipProvider */}
+              <Sonner />
               <Routes>
                 <Route path="/" element={<Layout><Index /></Layout>} />
                 <Route path="/resources" element={<Layout><Resources /></Layout>} />
@@ -51,11 +51,11 @@ const App = () => (
                 <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </SessionContextProvider>
-          </BrowserRouter>
-        </ThemeProvider>
-      </React.Fragment>
-    </TooltipProvider>
+            </React.Fragment>
+          </TooltipProvider>
+        </BrowserRouter>
+      </SessionContextProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
