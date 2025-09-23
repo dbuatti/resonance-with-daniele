@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2, Search, Headphones, Folder, FolderOpen, ChevronRight, ChevronLeft } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2, Search, Headphones, Folder, FolderOpen, ChevronRight, ChevronLeft, Move } from "lucide-react"; // Added Move icon
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
@@ -19,13 +19,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ResourceUpload from "@/components/ResourceUpload";
-import ResourceFolderCard from "@/components/ResourceFolderCard"; // Import the new folder card
+import ResourceFolderCard from "@/components/ResourceFolderCard";
+import MoveResourceDialog from "@/components/MoveResourceDialog"; // Import the new component
 
 // Define schemas
 const resourceSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  folder_id: z.string().uuid().nullable().optional(), // Added folder_id
 });
 
 const folderSchema = z.object({
@@ -69,6 +71,9 @@ const Resources: React.FC = () => {
   const [editingFolder, setEditingFolder] = useState<ResourceFolder | null>(null);
   const [isDeletingFolder, setIsDeletingFolder] = useState<string | null>(null); // Track which folder is being deleted
 
+  const [isMoveResourceDialogOpen, setIsMoveResourceDialogOpen] = useState(false); // New state for move dialog
+  const [movingResource, setMovingResource] = useState<Resource | null>(null); // New state for resource being moved
+
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
 
@@ -83,6 +88,7 @@ const Resources: React.FC = () => {
       title: "",
       description: "",
       url: "",
+      folder_id: currentFolderId,
     },
   });
 
@@ -92,6 +98,7 @@ const Resources: React.FC = () => {
       title: "",
       description: "",
       url: "",
+      folder_id: null,
     },
   });
 
@@ -245,6 +252,7 @@ const Resources: React.FC = () => {
         title: editingResource.title,
         description: editingResource.description || "",
         url: editingResource.url || "",
+        folder_id: editingResource.folder_id,
       });
       setSelectedFile(null);
       setRemoveFileRequested(false);
@@ -330,16 +338,16 @@ const Resources: React.FC = () => {
 
     try {
       if (selectedFile) {
-        resourceUrl = await uploadFileToStorage(selectedFile, user.id, currentFolderId);
+        resourceUrl = await uploadFileToStorage(selectedFile, user.id, data.folder_id || null);
       }
 
-      console.log(`[Resources Page] Inserting new resource for user ${user.id}:`, { title: data.title, url: resourceUrl, folder_id: currentFolderId });
+      console.log(`[Resources Page] Inserting new resource for user ${user.id}:`, { title: data.title, url: resourceUrl, folder_id: data.folder_id });
       const { error } = await supabase.from("resources").insert({
         user_id: user.id,
         title: data.title,
         description: data.description,
         url: resourceUrl,
-        folder_id: currentFolderId,
+        folder_id: data.folder_id || null,
       });
 
       if (error) {
@@ -348,7 +356,7 @@ const Resources: React.FC = () => {
       } else {
         showSuccess("Resource added successfully!");
         addResourceForm.reset({
-          title: "", description: "", url: ""
+          title: "", description: "", url: "", folder_id: currentFolderId
         });
         setSelectedFile(null);
         setIsAddResourceDialogOpen(false);
@@ -356,7 +364,7 @@ const Resources: React.FC = () => {
       }
     } catch (error: any) {
       console.error("[Resources Page] Error during add resource process:", error);
-      showError("An unexpected error occurred: " + error.message);
+      showError("Failed to add resource: " + error.message);
     } finally {
       setIsUploading(false);
     }
@@ -382,19 +390,19 @@ const Resources: React.FC = () => {
         if (editingResource.url) {
           await deleteFileFromStorage(editingResource.url);
         }
-        newResourceUrl = await uploadFileToStorage(selectedFile, user.id, editingResource.folder_id);
+        newResourceUrl = await uploadFileToStorage(selectedFile, user.id, data.folder_id || null);
       } else if (!removeFileRequested) {
         newResourceUrl = data.url || null;
       }
 
-      console.log(`[Resources Page] Updating resource ${editingResource.id} for user ${user.id}:`, { title: data.title, url: newResourceUrl, folder_id: editingResource.folder_id });
+      console.log(`[Resources Page] Updating resource ${editingResource.id} for user ${user.id}:`, { title: data.title, url: newResourceUrl, folder_id: data.folder_id });
       const { error } = await supabase
         .from("resources")
         .update({
           title: data.title,
           description: data.description,
           url: newResourceUrl,
-          folder_id: editingResource.folder_id, // Keep the same folder_id for now
+          folder_id: data.folder_id || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", editingResource.id);
@@ -412,7 +420,7 @@ const Resources: React.FC = () => {
       }
     } catch (error: any) {
       console.error("[Resources Page] Error during edit resource process:", error);
-      showError("An unexpected error occurred: " + error.message);
+      showError("Failed to update resource: " + error.message);
     } finally {
       setIsUploading(false);
     }
@@ -636,12 +644,12 @@ const Resources: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 pr-4 py-2 w-full"
-            disabled={loadingResources || isUploading}
+            disabled={isLoading || isUploading}
           />
         </div>
         
-        {user?.is_admin ? (
-          <React.Fragment> {/* Explicitly wrap the two dialogs */}
+        {user?.is_admin && (
+          <>
             <Dialog open={isAddFolderDialogOpen} onOpenChange={setIsAddFolderDialogOpen}>
               <DialogTrigger asChild>
                 <Button disabled={isUploading}>
@@ -729,7 +737,7 @@ const Resources: React.FC = () => {
                 </form>
               </DialogContent>
             </Dialog>
-          </React.Fragment>
+          </>
         ) : (
           <p className="text-md text-muted-foreground">Log in as an admin to manage resources.</p>
         )}
@@ -803,6 +811,17 @@ const Resources: React.FC = () => {
                         disabled={isUploading}
                       >
                         <Edit className="h-4 w-4 mr-2" /> Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setMovingResource(resource);
+                          setIsMoveResourceDialogOpen(true);
+                        }}
+                        disabled={isUploading}
+                      >
+                        <Move className="h-4 w-4 mr-2" /> Move
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -923,6 +942,19 @@ const Resources: React.FC = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Move Resource Dialog */}
+      <MoveResourceDialog
+        isOpen={isMoveResourceDialogOpen}
+        onOpenChange={setIsMoveResourceDialogOpen}
+        resourceToMove={movingResource}
+        onMoveSuccess={() => {
+          setMovingResource(null);
+          // Invalidate queries for the current folder to reflect the change
+          queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId, searchTerm] });
+        }}
+        currentFolderId={currentFolderId}
+      />
     </div>
   );
 };
