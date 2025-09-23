@@ -15,7 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip components
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface IssueReport {
   id: string;
@@ -196,12 +196,12 @@ const AdminIssueReportsPage: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[80px]">Status</TableHead> {/* Fixed width for status */}
-                    <TableHead className="min-w-[150px]">Reporter Email</TableHead>
-                    <TableHead className="min-w-[200px]">Issue Description</TableHead>
-                    <TableHead className="min-w-[120px]">Page URL</TableHead>
-                    <TableHead className="w-[180px]">Submitted On</TableHead> {/* Fixed width for date */}
-                    <TableHead className="text-right w-[200px]">Actions</TableHead> {/* Fixed width for actions */}
+                    <TableHead className="w-[80px]">Status</TableHead>
+                    <TableHead className="min-w-[120px]">Reporter Email</TableHead>
+                    <TableHead className="min-w-[150px]">Issue Description</TableHead>
+                    <TableHead className="min-w-[100px]">Page URL</TableHead>
+                    <TableHead className="w-[180px]">Submitted On</TableHead>
+                    <TableHead className="text-right w-[200px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -215,17 +215,17 @@ const AdminIssueReportsPage: React.FC = () => {
                       <TableCell className="font-medium">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="truncate max-w-[150px] inline-block">{report.email}</span>
+                            <span className="truncate max-w-[120px] inline-block">{report.email}</span>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{report.email}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="text-muted-foreground max-w-[200px] line-clamp-2">
+                      <TableCell className="text-muted-foreground">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span>{report.issue_description}</span>
+                            <span className="line-clamp-2 max-w-[150px] inline-block">{report.issue_description}</span>
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
                             <p>{report.issue_description}</p>
@@ -236,7 +236,7 @@ const AdminIssueReportsPage: React.FC = () => {
                         {report.page_url ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <a href={report.page_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[120px] inline-block">
+                              <a href={report.page_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[100px] inline-block">
                                 {report.page_url}
                               </a>
                             </TooltipTrigger>
