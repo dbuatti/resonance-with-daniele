@@ -1,5 +1,10 @@
-import { useLocation } from "react-router-dom";
+"use client";
+
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Frown } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,14 +17,21 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100"> {/* Removed animate-fade-in-up */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-          Return to Home
-        </a>
-      </div>
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+      <Card className="max-w-md w-full p-6 text-center shadow-lg rounded-xl border-2 border-muted-foreground/20">
+        <CardHeader className="flex flex-col items-center">
+          <Frown className="h-16 w-16 text-primary mb-4" />
+          <CardTitle className="text-4xl font-bold mb-2 font-lora">404 - Page Not Found</CardTitle>
+          <CardDescription className="text-lg text-muted-foreground">
+            Oops! The page you're looking for doesn't exist.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild className="mt-6">
+            <Link to="/">Return to Home</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
