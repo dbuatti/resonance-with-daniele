@@ -636,7 +636,7 @@ const Resources: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 pr-4 py-2 w-full"
-            disabled={loadingResources || isUploading} {/* Removed JSX comment */}
+            disabled={loadingResources || isUploading}
           />
         </div>
         
@@ -686,7 +686,7 @@ const Resources: React.FC = () => {
                 <DialogHeader>
                   <DialogTitle className="font-lora">Add New Resource</DialogTitle>
                   <CardDescription>Provide details for a new choir resource.</CardDescription>
-                </DialogHeader>{/* Added missing closing tag */}
+                </DialogHeader>
                 <form onSubmit={addResourceForm.handleSubmit(onAddResourceSubmit)} className="grid gap-6 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="title">Title</Label>
