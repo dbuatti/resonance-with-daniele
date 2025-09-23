@@ -223,13 +223,18 @@ const ProfileDetails: React.FC = () => {
     setIsLoggingOut(true); // Use setIsLoggingOut from context
     console.log("[ProfileDetails Page] Attempting to log out.");
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("[ProfileDetails Page] Error during logout:", error);
-        showError("Failed to log out: " + error.message);
+      if (user) { // Only attempt to sign out if a user (and thus a session) is present
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error("[ProfileDetails Page] Error during logout:", error);
+          showError("Failed to log out: " + error.message);
+        } else {
+          showSuccess("Logged out successfully!");
+          console.log("[ProfileDetails Page] User logged out.");
+        }
       } else {
-        showSuccess("Logged out successfully!");
-        console.log("[ProfileDetails Page] User logged out.");
+        console.log("[ProfileDetails Page] No active user session found, no server-side logout needed.");
+        showSuccess("Logged out successfully!"); // Just confirm local state is cleared
       }
     } catch (error: any) {
       console.error("[ProfileDetails Page] Unexpected error during logout:", error);

@@ -13,7 +13,7 @@ import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
-import { showError } from "@/utils/toast"; // Import showError
+import { showError } from "@/utils/toast";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,12 +28,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsLoggingOut(true); // Set logging out state
     console.log("[Layout] Attempting to log out user.");
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("[Layout] Error during logout:", error);
-        showError("Failed to log out: " + error.message);
+      if (user) { // Only attempt to sign out if a user (and thus a session) is present
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error("[Layout] Error during logout:", error);
+          showError("Failed to log out: " + error.message);
+        } else {
+          showSuccess("Logged out successfully!");
+          console.log("[Layout] User logged out.");
+        }
       } else {
-        console.log("[Layout] User logged out.");
+        console.log("[Layout] No active user session found, no server-side logout needed.");
+        showSuccess("Logged out successfully!"); // Just confirm local state is cleared
       }
     } catch (error: any) {
       console.error("[Layout] Unexpected error during logout:", error);
