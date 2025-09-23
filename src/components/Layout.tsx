@@ -13,7 +13,7 @@ import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
-import { showError, showSuccess } from "@/utils/toast"; // Added showSuccess import
+import { showError, showSuccess } from "@/utils/toast"; // Ensure showSuccess is also imported
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,7 +28,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsLoggingOut(true);
     console.log("[Layout] Attempting to log out user.");
     try {
-      if (user) {
+      // Check if there's an active session on the client before attempting server-side signOut
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+
+      if (currentSession) {
         const { error } = await supabase.auth.signOut();
         if (error) {
           console.error("[Layout] Error during logout:", error);
@@ -38,12 +41,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           console.log("[Layout] User logged out.");
         }
       } else {
-        console.log("[Layout] No active user session found, no server-side logout needed.");
+        // If no session found on client, treat as already logged out locally
+        console.log("[Layout] No active user session found on client, treating as local logout.");
         showSuccess("Logged out successfully!");
       }
     } catch (error: any) {
-      console.error("[Layout] Unexpected error during logout:", error);
-      showError("An unexpected error occurred during logout: " + error.message);
+      // Specifically handle AuthSessionMissingError as a successful local logout
+      if (error.name === 'AuthSessionMissingError') {
+        console.log("[Layout] AuthSessionMissingError caught, treating as successful local logout.");
+        showSuccess("Logged out successfully!");
+      } else {
+        console.error("[Layout] Unexpected error during logout:", error);
+        showError("An unexpected error occurred during logout: " + error.message);
+      }
     } finally {
       setIsLoggingOut(false);
     }

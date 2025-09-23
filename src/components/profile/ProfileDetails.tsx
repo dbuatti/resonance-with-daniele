@@ -15,8 +15,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload";
-import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
-import VoiceTypeSelector from "./VoiceTypeSelector"; // Import the new component
+import { useQueryClient } from "@tanstack/react-query";
+import VoiceTypeSelector from "./VoiceTypeSelector";
 import {
   Form,
   FormControl,
@@ -24,33 +24,32 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"; // Added imports for form components
+} from "@/components/ui/form";
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
   last_name: z.string().min(1, "Last name is required").optional().or(z.literal("")),
-  voice_type: z.array(z.string()).optional(), // Added voice_type to schema
+  voice_type: z.array(z.string()).optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const ProfileDetails: React.FC = () => {
-  const { user, profile, loading: loadingSession, isLoggingOut, setIsLoggingOut } = useSession(); // Get isLoggingOut and setIsLoggingOut from context
+  const { user, profile, loading: loadingSession, isLoggingOut, setIsLoggingOut } = useSession();
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const queryClient = useQueryClient(); // Initialize query client
+  const queryClient = useQueryClient();
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       first_name: "",
       last_name: "",
-      voice_type: [], // Default to empty array
+      voice_type: [],
     },
   });
 
-  // Effect to set form values when profile data from context becomes available
   useEffect(() => {
     console.log("[ProfileDetails Page] useEffect: loadingSession:", loadingSession, "User:", user?.id, "Profile from context:", profile ? 'present' : 'null');
 
@@ -59,10 +58,9 @@ const ProfileDetails: React.FC = () => {
       form.reset({
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
-        voice_type: profile.voice_type || [], // Set voice_type from profile
+        voice_type: profile.voice_type || [],
       });
     } else if (!loadingSession && !user) {
-      // If no user, reset form and avatar
       form.reset({ first_name: "", last_name: "", voice_type: [] });
       setSelectedAvatarFile(null);
       setRemoveAvatarRequested(false);
@@ -91,18 +89,16 @@ const ProfileDetails: React.FC = () => {
         console.error("[ProfileDetails Page] Attempted to submit profile without a user.");
         return;
       }
-      // Check if a logout is in progress
-      if (isLoggingOut) { // Use isLoggingOut from context
+      if (isLoggingOut) {
         showError("Cannot save profile while logging out.");
         console.warn("[ProfileDetails Page] Attempted to save profile while logout was in progress.");
         return;
       }
 
-      let newAvatarUrl: string | null = profile?.avatar_url || null; // Start with current profile avatar URL
+      let newAvatarUrl: string | null = profile?.avatar_url || null;
       let uploadError: Error | null = null;
       let deleteError: Error | null = null;
 
-      // --- Step 1: Handle Avatar Upload/Removal ---
       if (removeAvatarRequested && profile?.avatar_url) {
         console.log("[ProfileDetails Page] Processing avatar removal.");
         const urlParts = profile.avatar_url.split('/');
@@ -154,7 +150,6 @@ const ProfileDetails: React.FC = () => {
         return;
       }
 
-      // --- Step 2: Update Supabase Auth User Metadata ---
       console.log("[ProfileDetails Page] Updating user metadata in Supabase Auth.");
       const { data: authResponseData, error: authUpdateError } = await supabase.auth.updateUser({
         data: { 
@@ -168,12 +163,11 @@ const ProfileDetails: React.FC = () => {
 
       if (authUpdateError) {
         console.error("[ProfileDetails Page] Error updating avatar URL in auth user metadata:", authUpdateError);
-        showError("Failed to update user session: " + authUpdateError.message); // More specific error message
+        showError("Failed to update user session: " + authUpdateError.message);
         return;
       }
       console.log("[ProfileDetails Page] Supabase Auth User updated successfully:", authResponseData.user);
 
-      // --- Step 3: Update profiles table ---
       console.log("[ProfileDetails Page] Updating profiles table.");
       const { error: profileUpdateError } = await supabase
         .from("profiles")
@@ -183,7 +177,7 @@ const ProfileDetails: React.FC = () => {
             first_name: data.first_name || null,
             last_name: data.last_name || null,
             avatar_url: newAvatarUrl,
-            voice_type: data.voice_type && data.voice_type.length > 0 ? data.voice_type : null, // Save voice_type
+            voice_type: data.voice_type && data.voice_type.length > 0 ? data.voice_type : null,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "id" }
@@ -196,7 +190,6 @@ const ProfileDetails: React.FC = () => {
       }
       console.log("[ProfileDetails Page] Profile table updated successfully.");
 
-      // --- Final UI updates ---
       form.reset({
         first_name: data.first_name || "",
         last_name: data.last_name || "",
@@ -205,9 +198,8 @@ const ProfileDetails: React.FC = () => {
       setSelectedAvatarFile(null);
       setRemoveAvatarRequested(false);
       showSuccess("Profile updated successfully!");
-      // Invalidate relevant queries to refetch and update UI
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['adminMembers'] }); // Invalidate admin members list
+      queryClient.invalidateQueries({ queryKey: ['adminMembers'] });
       console.log("[ProfileDetails Page] Profile update process completed successfully.");
 
     } catch (error: any) {
@@ -220,10 +212,13 @@ const ProfileDetails: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    setIsLoggingOut(true); // Use setIsLoggingOut from context
+    setIsLoggingOut(true);
     console.log("[ProfileDetails Page] Attempting to log out.");
     try {
-      if (user) { // Only attempt to sign out if a user (and thus a session) is present
+      // Check if there's an active session on the client before attempting server-side signOut
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+
+      if (currentSession) {
         const { error } = await supabase.auth.signOut();
         if (error) {
           console.error("[ProfileDetails Page] Error during logout:", error);
@@ -233,14 +228,21 @@ const ProfileDetails: React.FC = () => {
           console.log("[ProfileDetails Page] User logged out.");
         }
       } else {
-        console.log("[ProfileDetails Page] No active user session found, no server-side logout needed.");
-        showSuccess("Logged out successfully!"); // Just confirm local state is cleared
+        // If no session found on client, treat as already logged out locally
+        console.log("[ProfileDetails Page] No active user session found on client, treating as local logout.");
+        showSuccess("Logged out successfully!");
       }
     } catch (error: any) {
-      console.error("[ProfileDetails Page] Unexpected error during logout:", error);
-      showError("An unexpected error occurred during logout: " + error.message);
+      // Specifically handle AuthSessionMissingError as a successful local logout
+      if (error.name === 'AuthSessionMissingError') {
+        console.log("[ProfileDetails Page] AuthSessionMissingError caught, treating as successful local logout.");
+        showSuccess("Logged out successfully!");
+      } else {
+        console.error("[ProfileDetails Page] Unexpected error during logout:", error);
+        showError("An unexpected error occurred during logout: " + error.message);
+      }
     } finally {
-      setIsLoggingOut(false); // Use setIsLoggingOut from context
+      setIsLoggingOut(false);
     }
   };
 
@@ -289,7 +291,6 @@ const ProfileDetails: React.FC = () => {
 
   const currentFirstName = form.watch("first_name");
   const currentLastName = form.watch("last_name");
-  // Simplified logic: if a new file is selected, use its preview. Otherwise, use the profile's current avatar URL.
   const displayAvatarUrl = selectedAvatarFile ? URL.createObjectURL(selectedAvatarFile) : profile?.avatar_url;
 
   console.log("[ProfileDetails Page] Rendering profile form for user:", user.id);
@@ -310,7 +311,7 @@ const ProfileDetails: React.FC = () => {
         <CardDescription className="text-muted-foreground">Manage your personal information.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}> {/* Wrap the form with <Form> */}
+        <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -332,7 +333,7 @@ const ProfileDetails: React.FC = () => {
             </div>
             {user && (
               <AvatarUpload
-                currentAvatarUrl={profile?.avatar_url || null} // Pass current avatar from context
+                currentAvatarUrl={profile?.avatar_url || null}
                 onFileChange={handleAvatarFileChange}
                 onRemoveRequested={handleRemoveAvatarRequested}
                 isSaving={isSavingProfile || isLoggingOut}
@@ -345,7 +346,7 @@ const ProfileDetails: React.FC = () => {
               name="voice_type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Your Voice Type(s)</FormLabel> {/* Added FormLabel */}
+                  <FormLabel>Your Voice Type(s)</FormLabel>
                   <FormControl>
                     <VoiceTypeSelector
                       value={field.value}
@@ -371,7 +372,7 @@ const ProfileDetails: React.FC = () => {
               variant="outline"
               onClick={handleLogout}
               className="w-full text-destructive hover:text-destructive-foreground hover:bg-destructive"
-              disabled={isSavingProfile || isLoggingOut} // Disable if saving or already logging out
+              disabled={isSavingProfile || isLoggingOut}
             >
               {isLoggingOut ? (
                 <>
