@@ -12,9 +12,9 @@ const SongSuggestionsPage: React.FC = () => {
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Suggest new songs for the choir to learn and vote on your favorites!
       </p>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <SongSuggestionForm />
-        <SongVotingList />
+      <div className="max-w-4xl mx-auto space-y-6"> {/* Changed to a single column layout */}
+        <SongVotingList /> {/* This will now be the main, large card at the top */}
+        <SongSuggestionForm /> {/* This will be directly below it */}
       </div>
     </div>
   );
