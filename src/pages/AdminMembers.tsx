@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip components
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Profile {
   id: string;
@@ -134,7 +134,7 @@ const AdminMembers: React.FC = () => {
   if (loadingProfiles) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl">
+        <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl"> {/* Changed max-w-4xl to max-w-6xl */}
           <CardHeader>
             <Skeleton className="h-8 w-1/2 mb-2" />
             <Skeleton className="h-5 w-3/4" />
@@ -164,7 +164,7 @@ const AdminMembers: React.FC = () => {
   if (fetchError) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl text-center">
+        <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl text-center"> {/* Changed max-w-4xl to max-w-6xl */}
           <CardTitle className="text-2xl font-lora text-destructive">Error Loading Data</CardTitle>
           <CardDescription className="text-muted-foreground">{fetchError.message}</CardDescription>
         </Card>
@@ -179,7 +179,7 @@ const AdminMembers: React.FC = () => {
         View and manage all registered member profiles, including their roles.
       </p>
 
-      <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
+      <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl"> {/* Changed max-w-4xl to max-w-6xl */}
         <CardHeader>
           <CardTitle className="text-2xl font-lora">Member List</CardTitle>
           <CardDescription>Change user roles or view their detailed survey responses.</CardDescription>
@@ -195,8 +195,8 @@ const AdminMembers: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[150px]">Name</TableHead>
-                    <TableHead className="min-w-[180px]">Email</TableHead>
+                    <TableHead className="min-w-[180px]">Name</TableHead> {/* Increased min-w */}
+                    <TableHead className="min-w-[220px]">Email</TableHead> {/* Increased min-w */}
                     <TableHead className="w-[120px]">Role</TableHead>
                     <TableHead className="w-[120px]">Survey Status</TableHead>
                     <TableHead className="text-right w-[150px]">Actions</TableHead>
@@ -208,7 +208,7 @@ const AdminMembers: React.FC = () => {
                       <TableCell className="font-medium">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="truncate max-w-[150px] inline-block">
+                            <span className="truncate max-w-[180px] inline-block"> {/* Adjusted max-w */}
                               {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}
                             </span>
                           </TooltipTrigger>
@@ -220,7 +220,7 @@ const AdminMembers: React.FC = () => {
                       <TableCell>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="truncate max-w-[180px] inline-block">{profile.email || "N/A"}</span>
+                            <span className="truncate max-w-[220px] inline-block">{profile.email || "N/A"}</span> {/* Adjusted max-w */}
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{profile.email || "N/A"}</p>
@@ -233,7 +233,7 @@ const AdminMembers: React.FC = () => {
                           onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
                           disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id}
                         >
-                          <SelectTrigger className="w-full"> {/* Changed to w-full */}
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select role" />
                           </SelectTrigger>
                           <SelectContent>
