@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, Shield } from "lucide-react";
+import { User as UserIcon, Shield, Music } from "lucide-react"; // Import Music icon
 import { cn } from "@/lib/utils";
 import BackToTopButton from "./BackToTopButton";
 import FooterSection from "./landing/FooterSection";
@@ -86,6 +86,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </Button>
                 <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
                   <Link to="/events" className={getNavLinkClass("/events")}><span>Events</span></Link>
+                </Button>
+                <Button variant="ghost" asChild className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
+                  <Link to="/song-suggestions" className={cn("flex items-center gap-2", getNavLinkClass("/song-suggestions"))}>
+                    <Music className="h-4 w-4" /> Song Suggestions
+                  </Link>
                 </Button>
                 {user.is_admin && (
                   <>

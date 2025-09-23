@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, User as UserIcon, LogOut, Shield } from "lucide-react";
+import { Menu, User as UserIcon, LogOut, Shield, Music } from "lucide-react"; // Import Music icon
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Profile } from "@/integrations/supabase/auth";
@@ -56,6 +56,9 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
               </Link>
               <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
                 <span>Events</span>
+              </Link>
+              <Link to="/song-suggestions" className={cn("flex items-center gap-2", getNavLinkClass("/song-suggestions"))} onClick={() => setIsOpen(false)}>
+                <Music className="h-5 w-5" /> Song Suggestions
               </Link>
               {user.is_admin && (
                 <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))} onClick={() => setIsOpen(false)}>

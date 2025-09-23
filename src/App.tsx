@@ -19,7 +19,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import ProfileLayoutPage from "./pages/ProfileLayoutPage";
 import ProfileDetails from "./components/profile/ProfileDetails";
 import SurveyPage from "./pages/SurveyPage";
-import LearnMore from "./pages/LearnMore"; // Import the new LearnMore page
+import LearnMore from "./pages/LearnMore";
+import SongSuggestionsPage from "./pages/SongSuggestionsPage"; // Import the new SongSuggestionsPage
 
 const queryClient = new QueryClient();
 
@@ -36,7 +37,8 @@ const App = () => (
               <Route path="/events" element={<Layout><Events /></Layout>} />
               <Route path="/login" element={<Layout><Login /></Layout>} />
               <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
-              <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} /> {/* New Learn More Route */}
+              <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} />
+              <Route path="/song-suggestions" element={<Layout><SongSuggestionsPage /></Layout>} /> {/* New Song Suggestions Route */}
               
               <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
                 <Route index element={<ProfileDetails />} />

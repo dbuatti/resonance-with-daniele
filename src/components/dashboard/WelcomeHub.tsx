@@ -10,8 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query"; // Import useQuery
-import SongSuggestionForm from "./SongSuggestionForm"; // Import new component
-import SongVotingList from "./SongVotingList"; // Import new component
+// Removed imports for SongSuggestionForm and SongVotingList
 
 interface Event {
   id: string;
@@ -312,11 +311,25 @@ const WelcomeHub: React.FC = () => {
             </Card>
           </div>
 
-          {/* Song Suggestion and Voting Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <SongSuggestionForm />
-            <SongVotingList />
-          </div>
+          {/* New Card for Song Suggestions */}
+          <Card className="shadow-md border border-border">
+            <CardHeader>
+              <CardTitle className="text-xl font-lora flex items-center gap-2">
+                <Music className="h-5 w-5 text-foreground" /> Song Suggestions
+              </CardTitle>
+              <CardDescription>Suggest new songs and vote on existing ones!</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Have a song in mind you'd love the choir to sing? Or want to see what others have suggested?
+              </p>
+              <Button size="sm" className="w-full" asChild>
+                <Link to="/song-suggestions">
+                  <Music className="mr-2 h-4 w-4" /> Go to Song Suggestions
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
 
           <div className="flex justify-center mt-8">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
