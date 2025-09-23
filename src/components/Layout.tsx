@@ -13,7 +13,7 @@ import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
-import { showError, showSuccess } from "@/utils/toast"; // Ensure showSuccess is also imported
+import { showError, showSuccess } from "@/utils/toast";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,25 +28,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsLoggingOut(true);
     console.log("[Layout] Attempting to log out user.");
     try {
-      // Check if there's an active session on the client before attempting server-side signOut
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-
-      if (currentSession) {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          console.error("[Layout] Error during logout:", error);
-          showError("Failed to log out: " + error.message);
-        } else {
-          showSuccess("Logged out successfully!");
-          console.log("[Layout] User logged out.");
-        }
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("[Layout] Error during logout:", error);
+        showError("Failed to log out: " + error.message);
       } else {
-        // If no session found on client, treat as already logged out locally
-        console.log("[Layout] No active user session found on client, treating as local logout.");
         showSuccess("Logged out successfully!");
+        console.log("[Layout] User logged out.");
       }
     } catch (error: any) {
-      // Specifically handle AuthSessionMissingError as a successful local logout
+      // AuthSessionMissingError means the user is already logged out from Supabase's perspective
       if (error.name === 'AuthSessionMissingError') {
         console.log("[Layout] AuthSessionMissingError caught, treating as successful local logout.");
         showSuccess("Logged out successfully!");
