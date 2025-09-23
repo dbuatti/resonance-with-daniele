@@ -6,7 +6,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2 } from "lucide-react";
+import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, ChevronLeft, ChevronRight } from "lucide-react"; // Added ChevronLeft, ChevronRight
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,45 +38,56 @@ const SongVotingList: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1); // New state for current page
+  const pageSize = 5; // Number of songs per page
 
-  // Fetch song suggestions
-  const { data: songSuggestions, isLoading: loadingSuggestions, error: suggestionsError } = useQuery<
-    SongSuggestion[],
+  // Fetch song suggestions with pagination
+  const fetchSongSuggestions = async (currentSearchTerm: string, page: number, pageSize: number): Promise<{ data: SongSuggestion[], count: number | null }> => {
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize - 1;
+
+    console.log(`[SongVotingList] Fetching song suggestions for page ${page} with search term: ${currentSearchTerm}`);
+    let query = supabase
+      .from("song_suggestions")
+      .select(`
+        *,
+        profiles (first_name, last_name, avatar_url)
+      `, { count: 'exact' }); // Request exact count
+
+    if (currentSearchTerm) {
+      query = query.or(
+        `title.ilike.%${currentSearchTerm}%,artist.ilike.%${currentSearchTerm}%`
+      );
+    }
+
+    const { data, error, count } = await query
+      .order("total_votes", { ascending: false })
+      .order("created_at", { ascending: false })
+      .range(startIndex, endIndex);
+
+    if (error) {
+      console.error("Error fetching song suggestions:", error);
+      throw error;
+    }
+    return { data: data || [], count };
+  };
+
+  const { data: paginatedData, isLoading: loadingSuggestions, error: suggestionsError } = useQuery<
+    { data: SongSuggestion[], count: number | null },
     Error,
-    SongSuggestion[],
-    ['songSuggestions', string]
+    { data: SongSuggestion[], count: number | null },
+    ['songSuggestions', string, number, number]
   >({
-    queryKey: ['songSuggestions', searchTerm], // Query key includes search term
-    queryFn: async ({ queryKey }) => {
-      const [, currentSearchTerm] = queryKey;
-      console.log("[SongVotingList] Fetching song suggestions with search term:", currentSearchTerm);
-      let query = supabase
-        .from("song_suggestions")
-        .select(`
-          *,
-          profiles (first_name, last_name, avatar_url)
-        `)
-        .order("total_votes", { ascending: false })
-        .order("created_at", { ascending: false });
-
-      if (currentSearchTerm) {
-        query = query.or(
-          `title.ilike.%${currentSearchTerm}%,artist.ilike.%${currentSearchTerm}%`
-        );
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching song suggestions:", error);
-        throw error;
-      }
-      return data || [];
-    },
+    queryKey: ['songSuggestions', searchTerm, currentPage, pageSize],
+    queryFn: ({ queryKey }) => fetchSongSuggestions(queryKey[1], queryKey[2], queryKey[3]),
     enabled: !loadingSession,
     staleTime: 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  const songSuggestions = paginatedData?.data || [];
+  const totalCount = paginatedData?.count || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // Fetch user's votes
   const { data: userVotes, isLoading: loadingUserVotes, error: userVotesError } = useQuery<
@@ -129,7 +140,7 @@ const SongVotingList: React.FC = () => {
         showError("Failed to remove vote: " + error.message);
       } else {
         showSuccess("Vote removed!");
-        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm] });
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize] });
         queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] });
       }
     } else {
@@ -143,7 +154,7 @@ const SongVotingList: React.FC = () => {
         showError("Failed to cast vote: " + error.message);
       } else {
         showSuccess("Vote cast successfully!");
-        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm] });
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize] });
         queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] });
       }
     }
@@ -165,9 +176,17 @@ const SongVotingList: React.FC = () => {
       showError("Failed to delete song suggestion: " + error.message);
     } else {
       showSuccess("Song suggestion deleted!");
-      queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm] });
+      queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize] });
       queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] }); // Invalidate votes as well
     }
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
   };
 
   const isLoading = loadingSuggestions || loadingUserVotes;
@@ -180,7 +199,7 @@ const SongVotingList: React.FC = () => {
         </CardHeader>
         <CardContent className="p-0 space-y-4">
           <Skeleton className="h-10 w-full mb-4" /> {/* Search bar skeleton */}
-          {[...Array(3)].map((_, i) => (
+          {[...Array(pageSize)].map((_, i) => ( // Render pageSize number of skeletons
             <div key={i} className="flex items-center gap-4 p-3 border rounded-md">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className="flex-1 space-y-1">
@@ -223,7 +242,10 @@ const SongVotingList: React.FC = () => {
             type="text"
             placeholder="Search songs by title or artist..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page on search
+            }}
             className="pl-9 pr-4 py-2 w-full"
           />
         </div>
@@ -299,6 +321,28 @@ const SongVotingList: React.FC = () => {
                 ? "Try a different search term, or be the first to suggest a song."
                 : "Be the first to suggest a song using the form above."}
             </p>
+          </div>
+        )}
+
+        {totalCount > pageSize && ( // Only show pagination if there are more items than pageSize
+          <div className="flex justify-between items-center mt-6 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1 || isLoading}
+            >
+              <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || isLoading}
+            >
+              Next <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         )}
       </CardContent>
