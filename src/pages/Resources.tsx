@@ -356,7 +356,7 @@ const Resources: React.FC = () => {
       }
     } catch (error: any) {
       console.error("[Resources Page] Error during add resource process:", error);
-      showError("Failed to add resource: " + error.message);
+      showError("An unexpected error occurred: " + error.message);
     } finally {
       setIsUploading(false);
     }
@@ -412,7 +412,7 @@ const Resources: React.FC = () => {
       }
     } catch (error: any) {
       console.error("[Resources Page] Error during edit resource process:", error);
-      showError("Failed to update resource: " + error.message);
+      showError("An unexpected error occurred: " + error.message);
     } finally {
       setIsUploading(false);
     }
@@ -686,7 +686,7 @@ const Resources: React.FC = () => {
                 <DialogHeader>
                   <DialogTitle className="font-lora">Add New Resource</DialogTitle>
                   <CardDescription>Provide details for a new choir resource.</CardDescription>
-                </DialogHeader>
+                </CardHeader>
                 <form onSubmit={addResourceForm.handleSubmit(onAddResourceSubmit)} className="grid gap-6 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="title">Title</Label>
@@ -771,7 +771,7 @@ const Resources: React.FC = () => {
                 key={folder.id}
                 folder={folder}
                 onNavigate={setCurrentFolderId}
-                onEdit={(f) => { setEditingFolder(f); setIsEditFolderDialogOpen(true); }} // Corrected: Pass the full folder object
+                onEdit={(f) => { setEditingFolder(f); setIsEditFolderDialogOpen(true); }}
                 onDelete={handleDeleteFolder}
                 isDeleting={isDeletingFolder === folder.id}
               />
@@ -836,7 +836,7 @@ const Resources: React.FC = () => {
 
       {/* Edit Folder Dialog */}
       {editingFolder && (
-        <Dialog open={isEditFolderDialogOpen} onOnOpenChange={setIsEditFolderDialogOpen}>
+        <Dialog open={isEditFolderDialogOpen} onOpenChange={setIsEditFolderDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Folder</DialogTitle>
@@ -868,7 +868,7 @@ const Resources: React.FC = () => {
 
       {/* Edit Resource Dialog */}
       {editingResource && (
-        <Dialog open={isEditResourceDialogOpen} onOnOpenChange={setIsEditResourceDialogOpen}>
+        <Dialog open={isEditResourceDialogOpen} onOpenChange={setIsEditResourceDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Resource</DialogTitle>
