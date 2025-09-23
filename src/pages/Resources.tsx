@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2, Search, Headphones } from "lucide-react";
@@ -339,7 +339,7 @@ const Resources: React.FC = () => {
       }
     } catch (error: any) {
       console.error("[Resources Page] Error during delete resource process:", error);
-      showError("Failed to delete resource: " + error.message);
+      showError("An unexpected error occurred: " + error.message);
     } finally {
       setIsUploading(false);
     }
@@ -387,7 +387,8 @@ const Resources: React.FC = () => {
             disabled={isLoading || isUploading}
           />
         </div>
-        {user?.is_admin && ( // Only show add button for admins
+        
+        {user?.is_admin ? ( // Conditional rendering for the Add New Resource button and dialog
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button disabled={isUploading}>
@@ -422,7 +423,7 @@ const Resources: React.FC = () => {
                 <ResourceUpload
                   selectedFile={selectedFile}
                   onFileChange={setSelectedFile}
-                  onRemoveRequested={() => {}} // Not applicable for add form
+                  onRemoveRequested={() => {}} // Not applicable for add form, as there's no 'current' file to remove
                   currentFileUrl={null}
                   isSaving={isUploading}
                 />
@@ -570,7 +571,7 @@ const Resources: React.FC = () => {
               <ResourceUpload
                 selectedFile={selectedFile}
                 onFileChange={setSelectedFile}
-                onRemoveRequested={setRemoveFileRequested}
+                onRemoveRequested={() => setRemoveFileRequested(true)} // Corrected: Pass a function that sets the state
                 currentFileUrl={editingResource.url}
                 isSaving={isUploading}
               />
