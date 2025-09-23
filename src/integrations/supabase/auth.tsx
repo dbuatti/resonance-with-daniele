@@ -131,7 +131,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   // Handle redirects
   useEffect(() => {
     if (!initialLoading) {
-      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login'];
+      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login', '/learn-more']; // Added /learn-more
       if (user) {
         if (location.pathname === '/login') {
           console.log("[SessionContext] Redirecting from /login to / after login.");
