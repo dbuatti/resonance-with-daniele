@@ -26,7 +26,6 @@ const resourceSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  folder_id: z.string().uuid().nullable().optional(), // Added folder_id
 });
 
 const folderSchema = z.object({
@@ -84,7 +83,6 @@ const Resources: React.FC = () => {
       title: "",
       description: "",
       url: "",
-      folder_id: currentFolderId,
     },
   });
 
@@ -94,7 +92,7 @@ const Resources: React.FC = () => {
       title: "",
       description: "",
       url: "",
-      folder_id: null,
+      folder_id: null, // This field is not in resourceSchema, will be ignored.
     },
   });
 
@@ -248,7 +246,6 @@ const Resources: React.FC = () => {
         title: editingResource.title,
         description: editingResource.description || "",
         url: editingResource.url || "",
-        folder_id: editingResource.folder_id,
       });
       setSelectedFile(null);
       setRemoveFileRequested(false);
@@ -334,16 +331,16 @@ const Resources: React.FC = () => {
 
     try {
       if (selectedFile) {
-        resourceUrl = await uploadFileToStorage(selectedFile, user.id, data.folder_id || null);
+        resourceUrl = await uploadFileToStorage(selectedFile, user.id, currentFolderId);
       }
 
-      console.log(`[Resources Page] Inserting new resource for user ${user.id}:`, { title: data.title, url: resourceUrl, folder_id: data.folder_id });
+      console.log(`[Resources Page] Inserting new resource for user ${user.id}:`, { title: data.title, url: resourceUrl, folder_id: currentFolderId });
       const { error } = await supabase.from("resources").insert({
         user_id: user.id,
         title: data.title,
         description: data.description,
         url: resourceUrl,
-        folder_id: data.folder_id || null,
+        folder_id: currentFolderId,
       });
 
       if (error) {
@@ -352,7 +349,7 @@ const Resources: React.FC = () => {
       } else {
         showSuccess("Resource added successfully!");
         addResourceForm.reset({
-          title: "", description: "", url: "", folder_id: currentFolderId
+          title: "", description: "", url: ""
         });
         setSelectedFile(null);
         setIsAddResourceDialogOpen(false);
@@ -386,19 +383,19 @@ const Resources: React.FC = () => {
         if (editingResource.url) {
           await deleteFileFromStorage(editingResource.url);
         }
-        newResourceUrl = await uploadFileToStorage(selectedFile, user.id, data.folder_id || null);
+        newResourceUrl = await uploadFileToStorage(selectedFile, user.id, editingResource.folder_id);
       } else if (!removeFileRequested) {
         newResourceUrl = data.url || null;
       }
 
-      console.log(`[Resources Page] Updating resource ${editingResource.id} for user ${user.id}:`, { title: data.title, url: newResourceUrl, folder_id: data.folder_id });
+      console.log(`[Resources Page] Updating resource ${editingResource.id} for user ${user.id}:`, { title: data.title, url: newResourceUrl, folder_id: editingResource.folder_id });
       const { error } = await supabase
         .from("resources")
         .update({
           title: data.title,
           description: data.description,
           url: newResourceUrl,
-          folder_id: data.folder_id || null,
+          folder_id: editingResource.folder_id, // Keep the same folder_id for now
           updated_at: new Date().toISOString(),
         })
         .eq("id", editingResource.id);
@@ -640,12 +637,12 @@ const Resources: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 pr-4 py-2 w-full"
-            disabled={isLoading || isUploading}
+            disabled={loadingResources || isUploading} {/* Corrected: Use loadingResources */}
           />
         </div>
         
-        {user?.is_admin && (
-          <>
+        {user?.is_admin ? (
+          <React.Fragment> {/* Explicitly wrap the two dialogs */}
             <Dialog open={isAddFolderDialogOpen} onOpenChange={setIsAddFolderDialogOpen}>
               <DialogTrigger asChild>
                 <Button disabled={isUploading}>
@@ -717,7 +714,7 @@ const Resources: React.FC = () => {
                     onRemoveRequested={() => {}}
                     currentFileUrl={null}
                     isSaving={isUploading}
-                    folderPathDisplay={currentFolderPathDisplay} // Pass the current folder path
+                    folderPathDisplay={currentFolderPathDisplay}
                   />
                   <DialogFooter>
                     <Button type="submit" disabled={isUploading}>
@@ -733,7 +730,7 @@ const Resources: React.FC = () => {
                 </form>
               </DialogContent>
             </Dialog>
-          </>
+          </React.Fragment>
         ) : (
           <p className="text-md text-muted-foreground">Log in as an admin to manage resources.</p>
         )}
@@ -775,7 +772,7 @@ const Resources: React.FC = () => {
                 key={folder.id}
                 folder={folder}
                 onNavigate={setCurrentFolderId}
-                onEdit={(f) => { setEditingFolder(f); setIsEditFolderDialogOpen(true); }}
+                onEdit={(f) => { setEditingFolder(f); setIsEditFolderDialogOpen(true); }} // Corrected: Pass the full folder object
                 onDelete={handleDeleteFolder}
                 isDeleting={isDeletingFolder === folder.id}
               />
@@ -910,7 +907,7 @@ const Resources: React.FC = () => {
                 onRemoveRequested={() => setRemoveFileRequested(true)}
                 currentFileUrl={editingResource.url}
                 isSaving={isUploading}
-                folderPathDisplay={currentFolderPathDisplay} // Pass the current folder path
+                folderPathDisplay={currentFolderPathDisplay}
               />
               <DialogFooter>
                 <Button type="submit" disabled={isUploading}>
