@@ -104,6 +104,9 @@ const WelcomeHub: React.FC = () => {
     profile.suggestions !== null
   ) : false;
 
+  // Determine if profile (first_name, last_name) is completed
+  const isProfileCompleted = profile && profile.first_name && profile.last_name;
+
   // Overall loading state for WelcomeHub
   const isLoading = loadingSession || loadingEvent || loadingResources;
 
@@ -211,6 +214,31 @@ const WelcomeHub: React.FC = () => {
             No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. I celebrate all voices and all identities, and everyone is invited to shine their unique light here.
           </p>
 
+          {/* New: Profile Completion Card */}
+          {!isProfileCompleted && (
+            <Card className="bg-primary/10 border-primary text-primary-foreground p-6 shadow-md rounded-xl mt-8 dark:bg-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
+                <CardTitle className="text-xl font-lora flex items-center gap-2">
+                  <UserIcon className="h-6 w-6 text-primary" /> Complete Your Profile!
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 space-y-4">
+                <p className="text-base">
+                  Please take a moment to add your first and last name to your profile. This helps me connect with you better!
+                </p>
+                <Button 
+                  size="sm" 
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 w-full" 
+                  asChild
+                >
+                  <Link to="/profile">
+                    <Settings className="mr-2 h-4 w-4" /> Go to My Profile
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {!isSurveyCompleted && (
             <Card className="bg-accent/10 border-accent text-accent-foreground p-6 shadow-md rounded-xl mt-8 dark:bg-accent/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
@@ -235,10 +263,10 @@ const WelcomeHub: React.FC = () => {
             </Card>
           )}
 
-          {/* New Quick Actions Card */}
+          {/* Quick Actions Card */}
           <QuickActionsCard />
 
-          {/* New Latest Announcements Card */}
+          {/* Latest Announcements Card */}
           <LatestAnnouncementsCard />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
