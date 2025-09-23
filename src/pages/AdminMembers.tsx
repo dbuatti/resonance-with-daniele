@@ -39,6 +39,7 @@ interface Profile {
   inclusivity_importance: string | null;
   suggestions: string | null;
   updated_at: string;
+  voice_type: string[] | null; // Added voice_type
 }
 
 const AdminMembers: React.FC = () => {
@@ -127,7 +128,8 @@ const AdminMembers: React.FC = () => {
       (profile.music_genres && profile.music_genres.length > 0) ||
       profile.choir_goals !== null ||
       profile.inclusivity_importance !== null ||
-      profile.suggestions !== null
+      profile.suggestions !== null ||
+      (profile.voice_type && profile.voice_type.length > 0) // Include voice_type
     );
   };
 
@@ -285,6 +287,10 @@ const AdminMembers: React.FC = () => {
                               <div className="grid grid-cols-4 items-center gap-4">
                                 <p className="col-span-1 text-sm font-medium">Suggestions:</p>
                                 <p className="col-span-3 text-sm text-muted-foreground">{profile.suggestions || "N/A"}</p>
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <p className="col-span-1 text-sm font-medium">Voice Type(s):</p>
+                                <p className="col-span-3 text-sm text-muted-foreground">{profile.voice_type?.join(", ") || "N/A"}</p>
                               </div>
                             </div>
                           </DialogContent>

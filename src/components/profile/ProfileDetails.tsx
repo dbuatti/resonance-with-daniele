@@ -16,10 +16,12 @@ import * as z from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload";
 import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
+import VoiceTypeSelector from "./VoiceTypeSelector"; // Import the new component
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
   last_name: z.string().min(1, "Last name is required").optional().or(z.literal("")),
+  voice_type: z.array(z.string()).optional(), // Added voice_type to schema
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -36,6 +38,7 @@ const ProfileDetails: React.FC = () => {
     defaultValues: {
       first_name: "",
       last_name: "",
+      voice_type: [], // Default to empty array
     },
   });
 
@@ -48,10 +51,11 @@ const ProfileDetails: React.FC = () => {
       form.reset({
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
+        voice_type: profile.voice_type || [], // Set voice_type from profile
       });
     } else if (!loadingSession && !user) {
       // If no user, reset form and avatar
-      form.reset({ first_name: "", last_name: "" });
+      form.reset({ first_name: "", last_name: "", voice_type: [] });
       setSelectedAvatarFile(null);
       setRemoveAvatarRequested(false);
     }
@@ -165,6 +169,7 @@ const ProfileDetails: React.FC = () => {
             first_name: data.first_name || null,
             last_name: data.last_name || null,
             avatar_url: newAvatarUrl,
+            voice_type: data.voice_type && data.voice_type.length > 0 ? data.voice_type : null, // Save voice_type
             updated_at: new Date().toISOString(),
           },
           { onConflict: "id" }
@@ -181,6 +186,7 @@ const ProfileDetails: React.FC = () => {
       form.reset({
         first_name: data.first_name || "",
         last_name: data.last_name || "",
+        voice_type: data.voice_type || [],
       });
       setSelectedAvatarFile(null);
       setRemoveAvatarRequested(false);
@@ -299,6 +305,24 @@ const ProfileDetails: React.FC = () => {
               selectedFile={selectedAvatarFile}
             />
           )}
+
+          <FormField
+            control={form.control}
+            name="voice_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <VoiceTypeSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSavingProfile}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <Button type="submit" className="w-full" disabled={isSavingProfile}>
             {isSavingProfile ? (
               <>

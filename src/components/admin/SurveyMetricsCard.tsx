@@ -37,6 +37,7 @@ interface Profile {
   inclusivity_importance: string | null;
   suggestions: string | null;
   updated_at: string;
+  voice_type: string[] | null; // Added voice_type
 }
 
 interface SurveyMetricsCardProps {
@@ -44,7 +45,7 @@ interface SurveyMetricsCardProps {
   loading: boolean; // Add loading prop
 }
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ffc658", "#d0ed57"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ffc658", "#d0ed57", "#a4de6c", "#d3a4de"]; // Extended colors for more categories
 
 const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading }) => { // Accept loading prop
   const totalProfiles = profiles.length;
@@ -58,7 +59,8 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
     (p.music_genres && p.music_genres.length > 0) ||
     p.choir_goals ||
     p.inclusivity_importance ||
-    p.suggestions
+    p.suggestions ||
+    (p.voice_type && p.voice_type.length > 0) // Include voice_type in response check
   );
   const totalResponses = profilesWithResponses.length;
   const surveyCompletionRate = totalProfiles > 0 ? ((totalResponses / totalProfiles) * 100).toFixed(1) : "0.0";
@@ -133,6 +135,7 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
   const preferredTimeData = aggregateData("preferred_time");
   const musicGenresData = aggregateData("music_genres", true);
   const inclusivityImportanceData = aggregateData("inclusivity_importance");
+  const voiceTypeData = aggregateData("voice_type", true); // Aggregate voice type data
 
   const totalMotivationSelections = profilesWithResponses.reduce((sum, p) => sum + (p.motivation?.length || 0), 0);
   const averageMotivationSelections = totalResponses > 0 ? (totalMotivationSelections / totalResponses).toFixed(1) : "0.0";
@@ -227,6 +230,7 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
           {renderChart(preferredTimeData, "Preferred Session Time", COLORS[5])}
           {renderChart(musicGenresData, "Music Genres Enjoyed", COLORS[6])}
           {renderChart(inclusivityImportanceData, "Inclusivity Importance", COLORS[7])}
+          {renderChart(voiceTypeData, "Voice Type Distribution", COLORS[8])} {/* New chart for voice types */}
         </div>
 
         <Separator />

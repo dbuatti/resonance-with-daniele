@@ -24,6 +24,7 @@ export interface Profile {
   inclusivity_importance: string | null;
   suggestions: string | null;
   email: string | null;
+  voice_type: string[] | null; // Added voice_type
 }
 
 interface CustomUser extends User {
@@ -113,6 +114,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           session_frequency: null, preferred_time: null, music_genres: null, choir_goals: null,
           inclusivity_importance: null, suggestions: null,
           email: session.user.email,
+          voice_type: null, // Default for new column
         };
       }
     },
