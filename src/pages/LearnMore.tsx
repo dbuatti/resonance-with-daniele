@@ -126,9 +126,9 @@ const LearnMore: React.FC = () => {
             </CardContent>
           </Card>
           <Card className="p-6 shadow-lg rounded-xl">
-            <CardTitle className="text-xl font-semibold font-lora mb-2">Do I have to commit every week?</CardTitle>
+            <CardTitle className="text-xl font-semibold font-lora mb-2">What's the commitment?</CardTitle>
             <CardContent className="p-0 text-muted-foreground">
-              Not at all! My choir is designed for flexibility. You can drop in for sessions that fit your schedule, with no long-term commitment required.
+              My choir runs once a month and is designed for flexibility. You can drop in for sessions that fit your schedule, with no long-term commitment required. Come when you can!
             </CardContent>
           </Card>
           <Card className="p-6 shadow-lg rounded-xl">
