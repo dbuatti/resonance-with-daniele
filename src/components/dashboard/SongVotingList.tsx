@@ -1,16 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Loader2, Music, User as UserIcon } from "lucide-react";
+import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface SongSuggestion {
   id: string;
@@ -35,18 +37,20 @@ interface UserVote {
 const SongVotingList: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch song suggestions
   const { data: songSuggestions, isLoading: loadingSuggestions, error: suggestionsError } = useQuery<
     SongSuggestion[],
     Error,
     SongSuggestion[],
-    ['songSuggestions']
+    ['songSuggestions', string]
   >({
-    queryKey: ['songSuggestions'],
-    queryFn: async () => {
-      console.log("[SongVotingList] Fetching song suggestions.");
-      const { data, error } = await supabase
+    queryKey: ['songSuggestions', searchTerm], // Query key includes search term
+    queryFn: async ({ queryKey }) => {
+      const [, currentSearchTerm] = queryKey;
+      console.log("[SongVotingList] Fetching song suggestions with search term:", currentSearchTerm);
+      let query = supabase
         .from("song_suggestions")
         .select(`
           *,
@@ -54,6 +58,14 @@ const SongVotingList: React.FC = () => {
         `)
         .order("total_votes", { ascending: false })
         .order("created_at", { ascending: false });
+
+      if (currentSearchTerm) {
+        query = query.or(
+          `title.ilike.%${currentSearchTerm}%,artist.ilike.%${currentSearchTerm}%`
+        );
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching song suggestions:", error);
@@ -117,7 +129,7 @@ const SongVotingList: React.FC = () => {
         showError("Failed to remove vote: " + error.message);
       } else {
         showSuccess("Vote removed!");
-        queryClient.invalidateQueries({ queryKey: ['songSuggestions'] });
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm] });
         queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] });
       }
     } else {
@@ -131,9 +143,30 @@ const SongVotingList: React.FC = () => {
         showError("Failed to cast vote: " + error.message);
       } else {
         showSuccess("Vote cast successfully!");
-        queryClient.invalidateQueries({ queryKey: ['songSuggestions'] });
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm] });
         queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] });
       }
+    }
+  };
+
+  const handleDeleteSongSuggestion = async (suggestionId: string) => {
+    if (!user || !user.is_admin) {
+      showError("You do not have permission to delete song suggestions.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("song_suggestions")
+      .delete()
+      .eq("id", suggestionId);
+
+    if (error) {
+      console.error("Error deleting song suggestion:", error);
+      showError("Failed to delete song suggestion: " + error.message);
+    } else {
+      showSuccess("Song suggestion deleted!");
+      queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm] });
+      queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] }); // Invalidate votes as well
     }
   };
 
@@ -146,12 +179,14 @@ const SongVotingList: React.FC = () => {
           <Skeleton className="h-6 w-1/2" />
         </CardHeader>
         <CardContent className="p-0 space-y-4">
+          <Skeleton className="h-10 w-full mb-4" /> {/* Search bar skeleton */}
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-center gap-4 p-3 border rounded-md">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className="flex-1 space-y-1">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
               </div>
               <Skeleton className="h-8 w-20" />
             </div>
@@ -181,6 +216,18 @@ const SongVotingList: React.FC = () => {
         <CardDescription className="mb-4">
           Vote for songs you'd like to sing! The most popular suggestions will be considered for future sessions.
         </CardDescription>
+
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search songs by title or artist..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-4 py-2 w-full"
+          />
+        </div>
+
         {songSuggestions && songSuggestions.length > 0 ? (
           <ul className="space-y-4">
             {songSuggestions.map((song) => (
@@ -218,13 +265,40 @@ const SongVotingList: React.FC = () => {
                     </div>
                   )}
                 </div>
+                {user?.is_admin && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon" className="h-8 w-8">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the song suggestion "{song.title}" by {song.artist}.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </li>
             ))}
           </ul>
         ) : (
           <div className="text-center text-muted-foreground py-8">
-            <p className="text-xl font-semibold">No songs suggested yet!</p>
-            <p className="mt-2">Be the first to suggest a song using the form above.</p>
+            <p className="text-xl font-semibold">No songs found!</p>
+            <p className="mt-2">
+              {searchTerm
+                ? "Try a different search term, or be the first to suggest a song."
+                : "Be the first to suggest a song using the form above."}
+            </p>
           </div>
         )}
       </CardContent>
