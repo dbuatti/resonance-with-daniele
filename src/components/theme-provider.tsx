@@ -5,24 +5,19 @@ import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
 import { type ThemeProviderProps } from "next-themes/dist/types";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  // Add a component to log theme state within the provider
-  const ThemeLogger = () => {
-    const { theme, resolvedTheme } = useTheme();
-    React.useEffect(() => {
-      console.log("[ThemeProvider] Current theme:", theme);
-      console.log("[ThemeProvider] Resolved theme:", resolvedTheme);
-      if (resolvedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }, [theme, resolvedTheme]);
-    return null;
-  };
+  // Re-adding the useEffect to ensure the 'dark' class is correctly applied/removed
+  // from the document.documentElement, which is essential for Tailwind CSS theme switching.
+  const { theme, resolvedTheme } = useTheme();
+  React.useEffect(() => {
+    if (resolvedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [resolvedTheme]);
 
   return (
     <NextThemesProvider {...props}>
-      <ThemeLogger />
       {children}
     </NextThemesProvider>
   );
