@@ -6,29 +6,29 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, Shield, Music, Loader2 } from "lucide-react"; // Import Music and Loader2 icon
+import { User as UserIcon, Shield, Music, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BackToTopButton from "./BackToTopButton";
 import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
-import { showError } from "@/utils/toast";
+import { showError, showSuccess } from "@/utils/toast"; // Added showSuccess import
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, profile, loading, isLoggingOut, setIsLoggingOut } = useSession(); // Get isLoggingOut and setIsLoggingOut
+  const { user, profile, loading, isLoggingOut, setIsLoggingOut } = useSession();
   const location = useLocation();
   console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
-    setIsLoggingOut(true); // Set logging out state
+    setIsLoggingOut(true);
     console.log("[Layout] Attempting to log out user.");
     try {
-      if (user) { // Only attempt to sign out if a user (and thus a session) is present
+      if (user) {
         const { error } = await supabase.auth.signOut();
         if (error) {
           console.error("[Layout] Error during logout:", error);
@@ -39,13 +39,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }
       } else {
         console.log("[Layout] No active user session found, no server-side logout needed.");
-        showSuccess("Logged out successfully!"); // Just confirm local state is cleared
+        showSuccess("Logged out successfully!");
       }
     } catch (error: any) {
       console.error("[Layout] Unexpected error during logout:", error);
       showError("An unexpected error occurred during logout: " + error.message);
     } finally {
-      setIsLoggingOut(false); // Reset logging out state
+      setIsLoggingOut(false);
     }
   };
 
@@ -155,12 +155,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           <div className="flex items-center sm:hidden">
             <ThemeToggle />
-            <MobileNav user={user} loading={loading} handleLogout={handleLogout} profile={profile} isLoggingOut={isLoggingOut} /> {/* Pass isLoggingOut */}
+            <MobileNav user={user} loading={loading} handleLogout={handleLogout} profile={profile} isLoggingOut={isLoggingOut} />
           </div>
         </div>
       </header>
       <main className="flex-grow bg-background">
-        <div className="container mx-auto"> {/* Centralized container for all page content */}
+        <div className="container mx-auto">
           {children}
         </div>
       </main>
