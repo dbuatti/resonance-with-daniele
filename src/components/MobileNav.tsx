@@ -7,19 +7,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Menu, User as UserIcon, LogOut, Shield, Music, Loader2 } from "lucide-react"; // Import Music and Loader2 icon
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Profile } from "@/integrations/supabase/auth";
+import { Profile, useSession } from "@/integrations/supabase/auth"; // Import useSession
 
 interface MobileNavProps {
-  user: any;
-  profile: Profile | null;
-  loading: boolean;
-  handleLogout: () => void;
-  isLoggingOut: boolean; // New prop
+  // Removed user, profile, loading, handleLogout, isLoggingOut props as they will be accessed via useSession
 }
 
-const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLogout, isLoggingOut }) => {
+const MobileNav: React.FC<MobileNavProps> = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, profile, loading, isLoggingOut, logout } = useSession(); // Access session context
 
   const getNavLinkClass = (path: string) =>
     cn(
@@ -30,6 +27,11 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
   // Prioritize profile data for display name and avatar
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
   const avatarUrl = profile?.avatar_url; // Use profile.avatar_url directly
+
+  const handleLogoutClick = async () => {
+    await logout(); // Call the centralized logout function
+    setIsOpen(false); // Close the mobile nav after logout
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -84,7 +86,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
                   "block w-full text-left py-2 px-4 rounded-md text-lg font-medium transition-colors mt-auto",
                   "text-destructive hover:bg-destructive/10 hover:text-destructive"
                 )}
-                onClick={() => { handleLogout(); setIsOpen(false); }}
+                onClick={handleLogoutClick}
                 disabled={isLoggingOut} // Disable if logging out
               >
                 {isLoggingOut ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />} Logout

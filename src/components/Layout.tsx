@@ -4,7 +4,6 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/integrations/supabase/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon, Shield, Music, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,46 +12,18 @@ import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
-import { showError, showSuccess } from "@/utils/toast";
-import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, profile, loading, isLoggingOut, setIsLoggingOut } = useSession();
+  const { user, profile, loading, isLoggingOut, logout } = useSession(); // Use centralized logout
   const location = useLocation();
-  const queryClient = useQueryClient(); // Initialize queryClient
   console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
-    console.log("[Layout] Attempting to log out user. Clearing client cache.");
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        if (error.name === 'AuthSessionMissingError') {
-          console.log("[Layout] AuthSessionMissingError returned, treating as successful logout.");
-          showSuccess("Logged out successfully!");
-          queryClient.clear(); // Explicitly clear all caches
-        } else {
-          console.error("[Layout] Error during logout:", error);
-          showError("Failed to log out: " + error.message);
-        }
-      } else {
-        showSuccess("Logged out successfully!");
-        console.log("[Layout] User logged out.");
-        queryClient.clear(); // Explicitly clear all caches
-      }
-    } catch (error: any) {
-      // This catch block is for actual exceptions thrown by the client library,
-      // which should be rare for signOut() but good to have for robustness.
-      console.error("[Layout] Unexpected exception during logout:", error);
-      showError("An unexpected error occurred during logout: " + error.message);
-    } finally {
-      setIsLoggingOut(false);
-    }
+    await logout(); // Call the centralized logout function
   };
 
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";

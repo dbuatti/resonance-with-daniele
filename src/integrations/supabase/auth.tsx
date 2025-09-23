@@ -5,6 +5,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { showSuccess, showError } from '@/utils/toast'; // Import toast functions
 
 export interface Profile {
   id: string;
@@ -38,7 +39,7 @@ interface SessionContextType {
   loading: boolean; // Overall loading for the session context
   profileLoading: boolean; // Loading specifically for the profile data
   isLoggingOut: boolean; // Added isLoggingOut
-  setIsLoggingOut: React.Dispatch<React.SetStateAction<boolean>>; // Added setter
+  logout: () => Promise<void>; // Added logout function to context
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -46,7 +47,7 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [session, setSession] = useState<Session | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // For initial session fetch
-  const [isLoggingOut, setIsLoggingOut] = useState(false); // New state for logout loading
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // State for logout loading
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -55,6 +56,37 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const determineAdminStatus = useCallback((userEmail: string | undefined, profileAdminStatus: boolean | undefined): boolean => {
     return profileAdminStatus ?? (userEmail === 'daniele.buatti@gmail.com' || userEmail === 'resonancewithdaniele@gmail.com');
   }, []);
+
+  // Centralized logout function
+  const logout = useCallback(async () => {
+    setIsLoggingOut(true);
+    console.log("[SessionContext] Initiating logout. Clearing client cache and session state.");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        if (error.name === 'AuthSessionMissingError') {
+          console.log("[SessionContext] AuthSessionMissingError returned, treating as successful logout.");
+          showSuccess("Logged out successfully!");
+        } else {
+          console.error("[SessionContext] Error during logout:", error);
+          showError("Failed to log out: " + error.message);
+        }
+      } else {
+        showSuccess("Logged out successfully!");
+        console.log("[SessionContext] User logged out.");
+      }
+    } catch (error: any) {
+      console.error("[SessionContext] Unexpected exception during logout:", error);
+      showError("An unexpected error occurred during logout: " + error.message);
+    } finally {
+      // Ensure client-side state is fully reset regardless of server response
+      setSession(null); // Explicitly clear session state
+      queryClient.clear(); // Clear all cached queries
+      console.log("[SessionContext] All React Query caches cleared and session state reset.");
+      navigate('/login'); // Redirect to login page
+      setIsLoggingOut(false);
+    }
+  }, [queryClient, navigate]);
 
   // Effect to handle Supabase auth state changes and initial session fetch
   useEffect(() => {
@@ -69,6 +101,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       if (_event === 'SIGNED_OUT') {
         queryClient.clear(); // Clear all cached queries
         console.log("[SessionContext] All React Query caches cleared due to SIGNED_OUT event.");
+        // No need to navigate here, as the explicit logout function handles it.
       }
     });
 
@@ -139,23 +172,16 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     is_admin: determineAdminStatus(session.user.email, profile?.is_admin),
   } : null;
 
-  // Handle redirects
+  // Handle redirects for unauthenticated users trying to access protected routes
   useEffect(() => {
-    if (!initialLoading) {
-      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login', '/learn-more']; // Added /learn-more
-      if (user) {
-        if (location.pathname === '/login') {
-          console.log("[SessionContext] Redirecting from /login to / after login.");
-          navigate('/');
-        }
-      } else {
-        if (!publicPaths.includes(location.pathname)) {
-          console.log(`[SessionContext] Redirecting from ${location.pathname} to /login after logout or unauthenticated access.`);
-          navigate('/login');
-        }
+    if (!initialLoading && !isLoggingOut) { // Only redirect if not initially loading and not in the middle of logging out
+      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login', '/learn-more'];
+      if (!user && !publicPaths.includes(location.pathname)) {
+        console.log(`[SessionContext] Redirecting from ${location.pathname} to /login due to unauthenticated access.`);
+        navigate('/login');
       }
     }
-  }, [user, initialLoading, location.pathname, navigate]);
+  }, [user, initialLoading, isLoggingOut, location.pathname, navigate]);
 
   const contextValue: SessionContextType = { // Explicitly type contextValue
     session,
@@ -164,7 +190,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     loading: initialLoading || profileLoading, // Overall loading is true if initial session or profile is loading
     profileLoading,
     isLoggingOut, // Provide the state
-    setIsLoggingOut, // Provide the setter
+    logout, // Provide the centralized logout function
   };
   console.log("[SessionContext] Rendering SessionContextProvider with overall loading:", contextValue.loading, "profileLoading:", profileLoading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin, "profile:", profile ? 'present' : 'null');
 

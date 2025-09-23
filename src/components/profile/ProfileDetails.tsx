@@ -35,7 +35,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const ProfileDetails: React.FC = () => {
-  const { user, profile, loading: loadingSession, isLoggingOut, setIsLoggingOut } = useSession();
+  const { user, profile, loading: loadingSession, isLoggingOut, logout } = useSession(); // Use centralized logout
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -212,32 +212,7 @@ const ProfileDetails: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
-    console.log("[ProfileDetails Page] Attempting to log out. Clearing client cache.");
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        if (error.name === 'AuthSessionMissingError') {
-          console.log("[ProfileDetails Page] AuthSessionMissingError returned, treating as successful logout.");
-          showSuccess("Logged out successfully!");
-          queryClient.clear(); // Explicitly clear all caches
-        } else {
-          console.error("[ProfileDetails Page] Error during logout:", error);
-          showError("Failed to log out: " + error.message);
-        }
-      } else {
-        showSuccess("Logged out successfully!");
-        console.log("[ProfileDetails Page] User logged out.");
-        queryClient.clear(); // Explicitly clear all caches
-      }
-    } catch (error: any) {
-      // This catch block is for actual exceptions thrown by the client library,
-      // which should be rare for signOut() but good to have for robustness.
-      console.error("[ProfileDetails Page] Unexpected exception during logout:", error);
-      showError("An unexpected error occurred during logout: " + error.message);
-    } finally {
-      setIsLoggingOut(false);
-    }
+    await logout(); // Call the centralized logout function
   };
 
   if (loadingSession) {
