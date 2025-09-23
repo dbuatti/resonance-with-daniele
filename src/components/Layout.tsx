@@ -13,6 +13,7 @@ import FooterSection from "./landing/FooterSection";
 import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
+import { showError } from "@/utils/toast"; // Import showError
 
 interface LayoutProps {
   children: React.ReactNode;
