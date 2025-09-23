@@ -14,6 +14,7 @@ import MobileNav from "./MobileNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "./ThemeToggle";
 import { showError, showSuccess } from "@/utils/toast";
+import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,17 +23,19 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, profile, loading, isLoggingOut, setIsLoggingOut } = useSession();
   const location = useLocation();
+  const queryClient = useQueryClient(); // Initialize queryClient
   console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    console.log("[Layout] Attempting to log out user.");
+    console.log("[Layout] Attempting to log out user. Clearing client cache.");
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
         if (error.name === 'AuthSessionMissingError') {
           console.log("[Layout] AuthSessionMissingError returned, treating as successful logout.");
           showSuccess("Logged out successfully!");
+          queryClient.clear(); // Explicitly clear all caches
         } else {
           console.error("[Layout] Error during logout:", error);
           showError("Failed to log out: " + error.message);
@@ -40,6 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       } else {
         showSuccess("Logged out successfully!");
         console.log("[Layout] User logged out.");
+        queryClient.clear(); // Explicitly clear all caches
       }
     } catch (error: any) {
       // This catch block is for actual exceptions thrown by the client library,

@@ -213,13 +213,14 @@ const ProfileDetails: React.FC = () => {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    console.log("[ProfileDetails Page] Attempting to log out.");
+    console.log("[ProfileDetails Page] Attempting to log out. Clearing client cache.");
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
         if (error.name === 'AuthSessionMissingError') {
           console.log("[ProfileDetails Page] AuthSessionMissingError returned, treating as successful logout.");
           showSuccess("Logged out successfully!");
+          queryClient.clear(); // Explicitly clear all caches
         } else {
           console.error("[ProfileDetails Page] Error during logout:", error);
           showError("Failed to log out: " + error.message);
@@ -227,6 +228,7 @@ const ProfileDetails: React.FC = () => {
       } else {
         showSuccess("Logged out successfully!");
         console.log("[ProfileDetails Page] User logged out.");
+        queryClient.clear(); // Explicitly clear all caches
       }
     } catch (error: any) {
       // This catch block is for actual exceptions thrown by the client library,

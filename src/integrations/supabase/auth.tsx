@@ -64,6 +64,12 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       setInitialLoading(false);
       // Invalidate profile query to refetch with new session
       queryClient.invalidateQueries({ queryKey: ['profile', currentSession?.user?.id] });
+
+      // If signed out, clear all queries related to user data
+      if (_event === 'SIGNED_OUT') {
+        queryClient.clear(); // Clear all cached queries
+        console.log("[SessionContext] All React Query caches cleared due to SIGNED_OUT event.");
+      }
     });
 
     // Fetch initial session on component mount
