@@ -4,29 +4,37 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, User as UserIcon, LogOut, Shield, Music, Loader2 } from "lucide-react"; // Import Music and Loader2 icon
+import {
+  Menu,
+  Home,
+  Info,
+  FileText,
+  CalendarDays,
+  Music,
+  Shield,
+  User as UserIcon,
+  LogOut,
+  Loader2,
+  Settings, // Added for profile link
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Profile, useSession } from "@/integrations/supabase/auth"; // Import useSession
+import { useSession } from "@/integrations/supabase/auth";
 
-interface MobileNavProps {
-  // Removed user, profile, loading, handleLogout, isLoggingOut props as they will be accessed via useSession
-}
-
-const MobileNav: React.FC<MobileNavProps> = () => {
+const MobileNav: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user, profile, loading, isLoggingOut, logout } = useSession(); // Access session context
 
   const getNavLinkClass = (path: string) =>
     cn(
-      "block w-full text-left py-2 px-4 rounded-md text-lg font-medium transition-colors",
+      "flex items-center gap-3 w-full text-left py-3 px-4 rounded-md text-lg font-medium transition-colors",
       location.pathname === path ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-primary/5"
     );
 
   // Prioritize profile data for display name and avatar
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
-  const avatarUrl = profile?.avatar_url; // Use profile.avatar_url directly
+  const avatarUrl = profile?.avatar_url;
 
   const handleLogoutClick = async () => {
     await logout(); // Call the centralized logout function
@@ -47,54 +55,66 @@ const MobileNav: React.FC<MobileNavProps> = () => {
         </SheetHeader>
         <nav className="flex flex-col gap-2 flex-grow">
           <Link to="/" className={getNavLinkClass("/")} onClick={() => setIsOpen(false)}>
+            <Home className="h-5 w-5" />
             <span>Home</span>
           </Link>
-          <Link to="/current-event" className={getNavLinkClass("/current-event")} onClick={() => setIsOpen(false)}>
-            <span>Current Event</span>
+          <Link to="/learn-more" className={getNavLinkClass("/learn-more")} onClick={() => setIsOpen(false)}>
+            <Info className="h-5 w-5" />
+            <span>Learn More</span>
+          </Link>
+          <Link to="/current-event" className={cn(getNavLinkClass("/current-event"), "text-accent font-bold")} onClick={() => setIsOpen(false)}>
+            <CalendarDays className="h-5 w-5" />
+            <span>COMING UP!</span>
           </Link>
           {!loading && user ? (
             <>
               <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>
+                <FileText className="h-5 w-5" />
                 <span>Resources</span>
               </Link>
               <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
+                <CalendarDays className="h-5 w-5" />
                 <span>Events</span>
               </Link>
-              <Link to="/song-suggestions" className={cn("flex items-center gap-2", getNavLinkClass("/song-suggestions"))} onClick={() => setIsOpen(false)}>
-                <Music className="h-5 w-5" /> Song Suggestions
+              <Link to="/song-suggestions" className={getNavLinkClass("/song-suggestions")} onClick={() => setIsOpen(false)}>
+                <Music className="h-5 w-5" />
+                <span>Song Suggestions</span>
               </Link>
               {user.is_admin && (
-                <Link to="/admin" className={cn("flex items-center gap-2", getNavLinkClass("/admin"))} onClick={() => setIsOpen(false)}>
-                  <Shield className="h-5 w-5" /> Admin Zone
+                <Link to="/admin" className={getNavLinkClass("/admin")} onClick={() => setIsOpen(false)}>
+                  <Shield className="h-5 w-5" />
+                  <span>Admin Zone</span>
                 </Link>
               )}
-              <Link to="/profile" className={cn("flex items-center gap-2", getNavLinkClass("/profile"))} onClick={() => setIsOpen(false)}>
+              <Link to="/profile" className={getNavLinkClass("/profile")} onClick={() => setIsOpen(false)}>
                 <Avatar className="h-7 w-7">
                   {avatarUrl ? (
                     <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
                   ) : (
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                       <UserIcon className="h-4 w-4" />
                     </AvatarFallback>
                   )}
                 </Avatar>
-                My Profile
+                <span>My Profile</span>
               </Link>
               <Button
                 variant="ghost"
                 className={cn(
-                  "block w-full text-left py-2 px-4 rounded-md text-lg font-medium transition-colors mt-auto",
+                  "flex items-center gap-3 w-full text-left py-3 px-4 rounded-md text-lg font-medium transition-colors mt-auto",
                   "text-destructive hover:bg-destructive/10 hover:text-destructive"
                 )}
                 onClick={handleLogoutClick}
-                disabled={isLoggingOut} // Disable if logging out
+                disabled={isLoggingOut}
               >
-                {isLoggingOut ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />} Logout
+                {isLoggingOut ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />}
+                <span>Logout</span>
               </Button>
             </>
           ) : (
             <>
               <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
+                <CalendarDays className="h-5 w-5" />
                 <span>Events</span>
               </Link>
               <Button asChild className="mt-auto w-full">
