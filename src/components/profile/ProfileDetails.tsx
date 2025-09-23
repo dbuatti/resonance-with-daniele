@@ -17,6 +17,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import AvatarUpload from "@/components/AvatarUpload";
 import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 import VoiceTypeSelector from "./VoiceTypeSelector"; // Import the new component
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"; // Added imports for form components
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -277,65 +285,68 @@ const ProfileDetails: React.FC = () => {
         <CardDescription className="text-muted-foreground">Manage your personal information.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={user.email || ""} disabled className="bg-muted" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="first_name">First Name</Label>
-            <Input id="first_name" {...form.register("first_name")} />
-            {form.formState.errors.first_name && (
-              <p className="text-red-500 text-sm">{form.formState.errors.first_name.message}</p>
+        <Form {...form}> {/* Wrap the form with <Form> */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={user.email || ""} disabled className="bg-muted" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="first_name">First Name</Label>
+              <Input id="first_name" {...form.register("first_name")} />
+              {form.formState.errors.first_name && (
+                <p className="text-red-500 text-sm">{form.formState.errors.first_name.message}</p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="last_name">Last Name</Label>
+              <Input id="last_name" {...form.register("last_name")} />
+              {form.formState.errors.last_name && (
+                <p className="text-red-500 text-sm">{form.formState.errors.last_name.message}</p>
+              )}
+            </div>
+            {user && (
+              <AvatarUpload
+                currentAvatarUrl={profile?.avatar_url || null} // Pass current avatar from context
+                onFileChange={handleAvatarFileChange}
+                onRemoveRequested={handleRemoveAvatarRequested}
+                isSaving={isSavingProfile}
+                selectedFile={selectedAvatarFile}
+              />
             )}
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="last_name">Last Name</Label>
-            <Input id="last_name" {...form.register("last_name")} />
-            {form.formState.errors.last_name && (
-              <p className="text-red-500 text-sm">{form.formState.errors.last_name.message}</p>
-            )}
-          </div>
-          {user && (
-            <AvatarUpload
-              currentAvatarUrl={profile?.avatar_url || null} // Pass current avatar from context
-              onFileChange={handleAvatarFileChange}
-              onRemoveRequested={handleRemoveAvatarRequested}
-              isSaving={isSavingProfile}
-              selectedFile={selectedAvatarFile}
+
+            <FormField
+              control={form.control}
+              name="voice_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your Voice Type(s)</FormLabel> {/* Added FormLabel */}
+                  <FormControl>
+                    <VoiceTypeSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={isSavingProfile}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          )}
 
-          <FormField
-            control={form.control}
-            name="voice_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <VoiceTypeSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                    disabled={isSavingProfile}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button type="submit" className="w-full" disabled={isSavingProfile}>
-            {isSavingProfile ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-              </>
-            ) : (
-              "Save Profile"
-            )}
-          </Button>
-          <Button variant="outline" onClick={handleLogout} className="w-full text-destructive hover:text-destructive-foreground hover:bg-destructive">
-            <LogOut className="mr-2 h-4 w-4" /> Sign Out
-          </Button>
-        </form>
+            <Button type="submit" className="w-full" disabled={isSavingProfile}>
+              {isSavingProfile ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                </>
+              ) : (
+                "Save Profile"
+              )}
+            </Button>
+            <Button variant="outline" onClick={handleLogout} className="w-full text-destructive hover:text-destructive-foreground hover:bg-destructive">
+              <LogOut className="mr-2 h-4 w-4" /> Sign Out
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

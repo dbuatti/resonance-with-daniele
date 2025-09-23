@@ -36,9 +36,7 @@ const VoiceTypeSelector: React.FC<VoiceTypeSelectorProps> = ({ value, onChange, 
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-        Your Voice Type(s)
-      </p>
+      {/* Removed the <p> tag here, FormLabel will be used in ProfileDetails */}
       <div className="flex flex-wrap gap-2">
         {voiceTypes.map((type) => {
           const isSelected = selectedVoiceTypes.includes(type.name);
