@@ -31,7 +31,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import ReportIssueButton from "./ReportIssueButton"; // Import the new component
+import ReportIssueButton from "./ReportIssueButton";
+import UnreadIssueReportsNotice from "./UnreadIssueReportsNotice"; // Import the new component
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -211,7 +212,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
       <FooterSection />
       <BackToTopButton />
-      <ReportIssueButton /> {/* Add the ReportIssueButton here */}
+      <ReportIssueButton />
+      <UnreadIssueReportsNotice /> {/* Add the new floating notice here */}
     </div>
   );
 };

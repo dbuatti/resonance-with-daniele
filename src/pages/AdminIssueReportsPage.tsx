@@ -7,13 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageSquare, Trash2, AlertCircle } from "lucide-react";
+import { Loader2, MessageSquare, Trash2, AlertCircle, CheckCircle2, EyeOff } from "lucide-react"; // Added CheckCircle2 and EyeOff
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge"; // Import Badge
 
 interface IssueReport {
   id: string;
@@ -22,6 +23,7 @@ interface IssueReport {
   issue_description: string;
   page_url: string | null;
   created_at: string;
+  is_read: boolean; // Added is_read
 }
 
 const AdminIssueReportsPage: React.FC = () => {
@@ -67,6 +69,30 @@ const AdminIssueReportsPage: React.FC = () => {
     refetchOnWindowFocus: true,
   });
 
+  // Effect to mark all currently displayed unread reports as read when the page loads
+  useEffect(() => {
+    if (user?.is_admin && issueReports && issueReports.length > 0) {
+      const unreadReportIds = issueReports.filter(report => !report.is_read).map(report => report.id);
+      if (unreadReportIds.length > 0) {
+        console.log("[AdminIssueReportsPage] Marking unread reports as read:", unreadReportIds);
+        supabase
+          .from("issue_reports")
+          .update({ is_read: true })
+          .in("id", unreadReportIds)
+          .then(({ error }) => {
+            if (error) {
+              console.error("Error marking reports as read:", error);
+            } else {
+              console.log("Reports marked as read successfully.");
+              queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] });
+              queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] }); // Invalidate the unread count
+            }
+          });
+      }
+    }
+  }, [issueReports, user?.is_admin, queryClient]);
+
+
   const handleDeleteReport = async (reportId: string) => {
     if (!user || !user.is_admin) {
       showError("You do not have permission to delete issue reports.");
@@ -85,6 +111,28 @@ const AdminIssueReportsPage: React.FC = () => {
       showSuccess("Issue report deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] }); // Invalidate to refetch and update UI
       queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] }); // Invalidate dashboard counts
+      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] }); // Invalidate the unread count
+    }
+  };
+
+  const handleMarkAsRead = async (reportId: string, currentStatus: boolean) => {
+    if (!user || !user.is_admin) {
+      showError("You do not have permission to change read status.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("issue_reports")
+      .update({ is_read: !currentStatus })
+      .eq("id", reportId);
+
+    if (error) {
+      console.error("Error updating read status:", error);
+      showError("Failed to update read status: " + error.message);
+    } else {
+      showSuccess(`Report marked as ${!currentStatus ? "read" : "unread"}!`);
+      queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] }); // Invalidate to refetch and update UI
+      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] }); // Invalidate the unread count
     }
   };
 
@@ -151,6 +199,7 @@ const AdminIssueReportsPage: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Status</TableHead> {/* New Status column */}
                     <TableHead>Reporter Email</TableHead>
                     <TableHead>Issue Description</TableHead>
                     <TableHead>Page URL</TableHead>
@@ -160,7 +209,12 @@ const AdminIssueReportsPage: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {issueReports?.map((report) => (
-                    <TableRow key={report.id}>
+                    <TableRow key={report.id} className={!report.is_read ? "bg-red-50/50 dark:bg-red-950/20" : ""}> {/* Highlight unread rows */}
+                      <TableCell>
+                        <Badge variant={report.is_read ? "secondary" : "destructive"}>
+                          {report.is_read ? "Read" : "Unread"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="font-medium">{report.email}</TableCell>
                       <TableCell className="text-muted-foreground max-w-xs line-clamp-2">
                         {report.issue_description}
@@ -174,27 +228,44 @@ const AdminIssueReportsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>{format(new Date(report.created_at), "PPP p")}</TableCell>
                       <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-4 w-4 mr-2" /> Delete
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete this issue report.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteReport(report.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleMarkAsRead(report.id, report.is_read)}
+                          >
+                            {report.is_read ? (
+                              <>
+                                <EyeOff className="h-4 w-4 mr-2" /> Mark Unread
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="h-4 w-4 mr-2" /> Mark Read
+                              </>
+                            )}
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4 mr-2" /> Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete this issue report.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteReport(report.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
