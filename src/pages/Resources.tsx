@@ -92,7 +92,7 @@ const Resources: React.FC = () => {
       title: "",
       description: "",
       url: "",
-      folder_id: null, // This field is not in resourceSchema, will be ignored.
+      // folder_id: null, // Removed: This field is not in resourceSchema
     },
   });
 
