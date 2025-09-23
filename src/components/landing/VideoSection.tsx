@@ -22,7 +22,7 @@ const VideoSection: React.FC = () => {
           </video>
         </div>
         <p className="mt-8 text-lg text-muted-foreground max-w-2xl mx-auto">
-          See our choir in action and get a glimpse of the vibrant community we've built.
+          Get a glimpse into the joyful energy of my past choir performances.
         </p>
       </div>
     </section>
