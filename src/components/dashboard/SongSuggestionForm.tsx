@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "@hookform/resolvers/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,10 +20,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Music } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Textarea } from "@/components/ui/textarea"; // Import Textarea
 
 const songSuggestionSchema = z.object({
   title: z.string().min(1, "Song title is required"),
   artist: z.string().min(1, "Artist name is required"),
+  reason: z.string().optional(), // Added new optional reason field
 });
 
 type SongSuggestionFormData = z.infer<typeof songSuggestionSchema>;
@@ -41,6 +43,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
     defaultValues: {
       title: "",
       artist: "",
+      reason: "", // Default value for the new field
     },
   });
 
@@ -55,6 +58,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
         user_id: user.id,
         title: data.title,
         artist: data.artist,
+        reason: data.reason || null, // Include the new reason field
       });
 
       if (error) {
@@ -108,6 +112,23 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
                   <FormLabel>Artist</FormLabel>
                   <FormControl>
                     <Input placeholder="Queen" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="reason"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Why this song? (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="I love the harmonies in this song, and it would be a fun challenge for the choir!"
+                      className="resize-y min-h-[80px]"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -22,6 +22,7 @@ interface SongSuggestion {
   artist: string;
   total_votes: number;
   created_at: string;
+  reason?: string | null; // Added new optional reason field
   profiles: {
     first_name: string | null;
     last_name: string | null;
@@ -58,7 +59,7 @@ const SongVotingList: React.FC = () => {
 
     if (currentSearchTerm) {
       query = query.or(
-        `title.ilike.%${currentSearchTerm}%,artist.ilike.%${currentSearchTerm}%`
+        `title.ilike.%${currentSearchTerm}%,artist.ilike.%${currentSearchTerm}%,reason.ilike.%${currentSearchTerm}%` // Include reason in search
       );
     }
 
@@ -214,14 +215,14 @@ const SongVotingList: React.FC = () => {
             <Skeleton className="h-10 w-32" /> {/* Sort select skeleton */}
           </div>
           {[...Array(pageSize)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-3 border rounded-md">
-              <Skeleton className="h-10 w-10 rounded-full" />
+            <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border rounded-md">
+              <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
               <div className="flex-1 space-y-1">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
                 <Skeleton className="h-3 w-1/3" />
               </div>
-              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-8 w-20 flex-shrink-0" />
             </div>
           ))}
         </CardContent>
@@ -255,7 +256,7 @@ const SongVotingList: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search songs by title or artist..."
+              placeholder="Search songs by title, artist, or reason..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -279,7 +280,7 @@ const SongVotingList: React.FC = () => {
         {songSuggestions && songSuggestions.length > 0 ? (
           <ul className="space-y-4">
             {songSuggestions.map((song) => (
-              <li key={song.id} className="flex items-center gap-4 p-3 border rounded-md bg-muted/20">
+              <li key={song.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border rounded-md bg-muted/20">
                 <div className="flex-shrink-0 text-center">
                   <Button
                     variant="ghost"
@@ -298,6 +299,9 @@ const SongVotingList: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
                   <p className="text-sm text-muted-foreground">by {song.artist}</p>
+                  {song.reason && (
+                    <p className="text-xs italic text-muted-foreground mt-1">"{song.reason}"</p>
+                  )}
                   {song.profiles && (
                     <div className="flex items-center text-xs text-muted-foreground mt-1">
                       <Avatar className="h-4 w-4 mr-1">
@@ -316,7 +320,7 @@ const SongVotingList: React.FC = () => {
                 {user?.is_admin && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon" className="h-8 w-8">
+                      <Button variant="destructive" size="icon" className="h-8 w-8 flex-shrink-0">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
