@@ -13,11 +13,11 @@ const LearnMore: React.FC = () => {
         <h1 className="text-4xl md:text-5xl font-bold font-lora text-foreground">
           🎶 Learn More About Resonance with Daniele
         </h1>
-        <p className="text-lg md:text-xl max-w-3xl mx-auto text-muted-foreground">
+        <p className="text-lg md::text-xl max-w-3xl mx-auto text-muted-foreground">
           Welcome! Resonance with Daniele is a community choir that’s all about joy, connection, and the magic of voices joining together. You don’t need to read music or have choir experience — if you love singing (even just in the shower or car), you’ll fit right in.
         </p>
         <p className="text-lg md::text-xl max-w-3xl mx-auto text-muted-foreground">
-          I created this space so people could gather, feel safe to sing freely, and experience the uplifting energy of community music-making.
+          I created this space so people could gather, feel safe to sing freely, and experience the uplifting energy of creating music with community.
         </p>
         <img
           src="/images/daniele-buatti-headshot.jpeg"
