@@ -11,8 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import QuickActionsCard from "@/components/dashboard/QuickActionsCard";
-import LatestAnnouncementsCard from "@/components/dashboard/LatestAnnouncementsCard";
-import VocalTipCard from "@/components/dashboard/VocalTipCard"; // Import the new VocalTipCard
+import LatestAnnouncementsCard from "@/components/dashboard/LatestAnnouncementsCard"; // Import the new LatestAnnouncementsCard
 
 interface Event {
   id: string;
@@ -269,9 +268,6 @@ const WelcomeHub: React.FC = () => {
 
           {/* Latest Announcements Card */}
           <LatestAnnouncementsCard />
-
-          {/* New: Vocal Tip of the Day Card */}
-          <VocalTipCard />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             {/* Upcoming Event Card */}
