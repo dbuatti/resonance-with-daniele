@@ -16,7 +16,7 @@ const LearnMore: React.FC = () => {
         <p className="text-lg md:text-xl max-w-3xl mx-auto text-muted-foreground">
           Welcome! Resonance with Daniele is a community choir that’s all about joy, connection, and the magic of voices joining together. You don’t need to read music or have choir experience — if you love singing (even just in the shower or car), you’ll fit right in.
         </p>
-        <p className="text-lg md:text-xl max-w-3xl mx-auto text-muted-foreground">
+        <p className="text-lg md::text-xl max-w-3xl mx-auto text-muted-foreground">
           I created this space so people could gather, feel safe to sing freely, and experience the uplifting energy of community music-making.
         </p>
         <img
@@ -128,7 +128,7 @@ const LearnMore: React.FC = () => {
           <Card className="p-6 shadow-lg rounded-xl">
             <CardTitle className="text-xl font-semibold font-lora mb-2">Do I have to commit every week?</CardTitle>
             <CardContent className="p-0 text-muted-foreground">
-              Nope — come when you can. It’s designed to be flexible, so you can drop in for sessions that fit your schedule.
+              Not at all! My choir is designed for flexibility. You can drop in for sessions that fit your schedule, with no long-term commitment required.
             </CardContent>
           </Card>
           <Card className="p-6 shadow-lg rounded-xl">
