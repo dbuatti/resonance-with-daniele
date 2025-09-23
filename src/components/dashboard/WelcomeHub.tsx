@@ -9,8 +9,8 @@ import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
-// Removed imports for SongSuggestionForm and SongVotingList
+import { useQuery } from "@tanstack/react-query";
+import QuickActionsCard from "@/components/dashboard/QuickActionsCard"; // Import the new QuickActionsCard
 
 interface Event {
   id: string;
@@ -233,6 +233,9 @@ const WelcomeHub: React.FC = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* New Quick Actions Card */}
+          <QuickActionsCard />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             {/* Upcoming Event Card */}
