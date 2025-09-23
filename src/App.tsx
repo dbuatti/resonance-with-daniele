@@ -11,6 +11,7 @@ import AdminZone from "./pages/AdminZone";
 import AdminMembers from "./pages/AdminMembers";
 import AdminSurveyData from "./pages/AdminSurveyData";
 import AdminInterestSubmissions from "./pages/AdminInterestSubmissions";
+import AdminAnnouncementsPage from "./pages/AdminAnnouncementsPage"; // Import the new AdminAnnouncementsPage
 import CurrentEventPage from "./pages/CurrentEventPage";
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
@@ -20,7 +21,7 @@ import ProfileLayoutPage from "./pages/ProfileLayoutPage";
 import ProfileDetails from "./components/profile/ProfileDetails";
 import SurveyPage from "./pages/SurveyPage";
 import LearnMore from "./pages/LearnMore";
-import SongSuggestionsPage from "./pages/SongSuggestionsPage"; // Import the new SongSuggestionsPage
+import SongSuggestionsPage from "./pages/SongSuggestionsPage";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +39,7 @@ const App = () => (
               <Route path="/login" element={<Layout><Login /></Layout>} />
               <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
               <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} />
-              <Route path="/song-suggestions" element={<Layout><SongSuggestionsPage /></Layout>} /> {/* New Song Suggestions Route */}
+              <Route path="/song-suggestions" element={<Layout><SongSuggestionsPage /></Layout>} />
               
               <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
                 <Route index element={<ProfileDetails />} />
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
               <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
               <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} />
+              <Route path="/admin/announcements" element={<Layout><AdminAnnouncementsPage /></Layout>} /> {/* New Admin Announcements Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SessionContextProvider>
