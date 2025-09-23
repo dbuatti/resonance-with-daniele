@@ -14,6 +14,7 @@ interface ResourceUploadProps {
   onRemoveRequested: () => void; // Callback for when user explicitly requests removal of the current file
   isSaving: boolean; // Prop to indicate if parent is saving, for loading states
   selectedFile: File | null; // The file currently selected in the parent form state
+  folderPathDisplay: string | null; // New prop: The human-readable path of the current folder
 }
 
 const ResourceUpload: React.FC<ResourceUploadProps> = ({
@@ -22,6 +23,7 @@ const ResourceUpload: React.FC<ResourceUploadProps> = ({
   onRemoveRequested,
   isSaving,
   selectedFile,
+  folderPathDisplay, // Destructure the new prop
 }) => {
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
@@ -126,6 +128,11 @@ const ResourceUpload: React.FC<ResourceUploadProps> = ({
           )}
           {previewFileName && (
             <p className="text-sm text-primary mt-2">Selected: {previewFileName}</p>
+          )}
+          {folderPathDisplay && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {selectedFile ? "Will upload to:" : "Current location:"} <span className="font-mono">{folderPathDisplay}</span>
+            </p>
           )}
         </div>
         {hasFile && (

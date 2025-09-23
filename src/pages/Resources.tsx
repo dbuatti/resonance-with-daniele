@@ -596,6 +596,9 @@ const Resources: React.FC = () => {
   // --- Overall Loading State ---
   const showSkeleton = (loadingFolders || loadingResources) && (!folders && !resources);
 
+  // Determine the current folder path for display in ResourceUpload
+  const currentFolderPathDisplay = breadcrumbs.map(b => b.name).join(' / ');
+
   return (
     <div className="space-y-6 py-8 px-4">
       <h1 className="text-4xl font-bold text-center font-lora">
@@ -714,6 +717,7 @@ const Resources: React.FC = () => {
                     onRemoveRequested={() => {}}
                     currentFileUrl={null}
                     isSaving={isUploading}
+                    folderPathDisplay={currentFolderPathDisplay} // Pass the current folder path
                   />
                   <DialogFooter>
                     <Button type="submit" disabled={isUploading}>
@@ -906,6 +910,7 @@ const Resources: React.FC = () => {
                 onRemoveRequested={() => setRemoveFileRequested(true)}
                 currentFileUrl={editingResource.url}
                 isSaving={isUploading}
+                folderPathDisplay={currentFolderPathDisplay} // Pass the current folder path
               />
               <DialogFooter>
                 <Button type="submit" disabled={isUploading}>
