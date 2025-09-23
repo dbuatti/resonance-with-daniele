@@ -31,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ReportIssueButton from "./ReportIssueButton"; // Import the new component
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -210,6 +211,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
       <FooterSection />
       <BackToTopButton />
+      <ReportIssueButton /> {/* Add the ReportIssueButton here */}
     </div>
   );
 };
