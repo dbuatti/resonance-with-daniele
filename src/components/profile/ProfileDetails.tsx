@@ -217,21 +217,22 @@ const ProfileDetails: React.FC = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error("[ProfileDetails Page] Error during logout:", error);
-        showError("Failed to log out: " + error.message);
+        if (error.name === 'AuthSessionMissingError') {
+          console.log("[ProfileDetails Page] AuthSessionMissingError returned, treating as successful logout.");
+          showSuccess("Logged out successfully!");
+        } else {
+          console.error("[ProfileDetails Page] Error during logout:", error);
+          showError("Failed to log out: " + error.message);
+        }
       } else {
         showSuccess("Logged out successfully!");
         console.log("[ProfileDetails Page] User logged out.");
       }
     } catch (error: any) {
-      // AuthSessionMissingError means the user is already logged out from Supabase's perspective
-      if (error.name === 'AuthSessionMissingError') {
-        console.log("[ProfileDetails Page] AuthSessionMissingError caught, treating as successful local logout.");
-        showSuccess("Logged out successfully!");
-      } else {
-        console.error("[ProfileDetails Page] Unexpected error during logout:", error);
-        showError("An unexpected error occurred during logout: " + error.message);
-      }
+      // This catch block is for actual exceptions thrown by the client library,
+      // which should be rare for signOut() but good to have for robustness.
+      console.error("[ProfileDetails Page] Unexpected exception during logout:", error);
+      showError("An unexpected error occurred during logout: " + error.message);
     } finally {
       setIsLoggingOut(false);
     }

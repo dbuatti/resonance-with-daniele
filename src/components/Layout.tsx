@@ -30,21 +30,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error("[Layout] Error during logout:", error);
-        showError("Failed to log out: " + error.message);
+        if (error.name === 'AuthSessionMissingError') {
+          console.log("[Layout] AuthSessionMissingError returned, treating as successful logout.");
+          showSuccess("Logged out successfully!");
+        } else {
+          console.error("[Layout] Error during logout:", error);
+          showError("Failed to log out: " + error.message);
+        }
       } else {
         showSuccess("Logged out successfully!");
         console.log("[Layout] User logged out.");
       }
     } catch (error: any) {
-      // AuthSessionMissingError means the user is already logged out from Supabase's perspective
-      if (error.name === 'AuthSessionMissingError') {
-        console.log("[Layout] AuthSessionMissingError caught, treating as successful local logout.");
-        showSuccess("Logged out successfully!");
-      } else {
-        console.error("[Layout] Unexpected error during logout:", error);
-        showError("An unexpected error occurred during logout: " + error.message);
-      }
+      // This catch block is for actual exceptions thrown by the client library,
+      // which should be rare for signOut() but good to have for robustness.
+      console.error("[Layout] Unexpected exception during logout:", error);
+      showError("An unexpected error occurred during logout: " + error.message);
     } finally {
       setIsLoggingOut(false);
     }
