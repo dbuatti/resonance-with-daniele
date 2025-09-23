@@ -136,7 +136,7 @@ const AdminIssueReportsPage: React.FC = () => {
   if (loadingReports) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-        <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl"> {/* Changed max-w-4xl to max-w-6xl */}
+        <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl">
           <CardHeader>
             <Skeleton className="h-8 w-1/2 mb-2" />
             <Skeleton className="h-5 w-3/4" />
@@ -165,7 +165,7 @@ const AdminIssueReportsPage: React.FC = () => {
   if (fetchError) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-        <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl text-center"> {/* Changed max-w-4xl to max-w-6xl */}
+        <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl text-center">
           <CardTitle className="text-2xl font-lora text-destructive">Error Loading Data</CardTitle>
           <CardDescription className="text-muted-foreground">{fetchError.message}</CardDescription>
         </Card>
@@ -180,7 +180,7 @@ const AdminIssueReportsPage: React.FC = () => {
         Review and manage all submitted issue reports and complaints from users.
       </p>
 
-      <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl"> {/* Changed max-w-4xl to max-w-6xl */}
+      <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-lora">All Reports</CardTitle>
           <CardDescription>Overview of all reported issues.</CardDescription>
@@ -198,8 +198,8 @@ const AdminIssueReportsPage: React.FC = () => {
                   <TableRow>
                     <TableHead className="w-[80px]">Status</TableHead>
                     <TableHead className="min-w-[150px]">Reporter Email</TableHead>
-                    <TableHead className="min-w-[250px]">Issue Description</TableHead> {/* Increased min-w */}
-                    <TableHead className="min-w-[150px]">Page URL</TableHead> {/* Increased min-w */}
+                    <TableHead className="min-w-[250px]">Issue Description</TableHead>
+                    <TableHead className="min-w-[150px]">Page URL</TableHead>
                     <TableHead className="w-[180px]">Submitted On</TableHead>
                     <TableHead className="text-right w-[200px]">Actions</TableHead>
                   </TableRow>
@@ -214,35 +214,21 @@ const AdminIssueReportsPage: React.FC = () => {
                       </TableCell>
                       <TableCell className="font-medium">
                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="truncate max-w-[150px] inline-block">{report.email}</span> {/* Adjusted max-w */}
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{report.email}</p>
-                          </TooltipContent>
+                          <TooltipTrigger asChild><span className="truncate max-w-[150px] inline-block">{report.email}</span></TooltipTrigger>
+                          <TooltipContent><p>{report.email}</p></TooltipContent>
                         </Tooltip>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="line-clamp-2 max-w-[250px] inline-block">{report.issue_description}</span> {/* Adjusted max-w */}
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p>{report.issue_description}</p>
-                          </TooltipContent>
+                          <TooltipTrigger asChild><span className="line-clamp-2 max-w-[250px] inline-block">{report.issue_description}</span></TooltipTrigger>
+                          <TooltipContent className="max-w-xs"><p>{report.issue_description}</p></TooltipContent>
                         </Tooltip>
                       </TableCell>
                       <TableCell>
                         {report.page_url ? (
                           <Tooltip>
-                            <TooltipTrigger asChild>
-                              <a href={report.page_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[150px] inline-block"> {/* Adjusted max-w */}
-                                {report.page_url}
-                              </a>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{report.page_url}</p>
-                            </TooltipContent>
+                            <TooltipTrigger asChild><a href={report.page_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[150px] inline-block">{report.page_url}</a></TooltipTrigger>
+                            <TooltipContent><p>{report.page_url}</p></TooltipContent>
                           </Tooltip>
                         ) : "N/A"}
                       </TableCell>
