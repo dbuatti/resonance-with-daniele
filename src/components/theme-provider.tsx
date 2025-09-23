@@ -1,28 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { type ThemeProviderProps } from "next-themes/dist/types";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  // Add a component to log theme state within the provider
-  const ThemeLogger = () => {
-    const { theme, resolvedTheme } = useTheme();
-    React.useEffect(() => {
-      console.log("[ThemeProvider] Current theme:", theme);
-      console.log("[ThemeProvider] Resolved theme:", resolvedTheme);
-      if (resolvedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }, [theme, resolvedTheme]);
-    return null;
-  };
-
+  // Removed ThemeLogger component and its usage to ensure NextThemesProvider receives a single child.
+  // Logging can be done in components that consume the theme context (e.g., ThemeToggle, Layout).
   return (
     <NextThemesProvider {...props}>
-      <ThemeLogger />
       {children}
     </NextThemesProvider>
   );
