@@ -28,19 +28,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsLoggingOut(true);
     console.log("[Layout] Attempting to log out user.");
     try {
-      if (user) { // Only attempt to sign out if a user is currently logged in according to our session context
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          console.error("[Layout] Error during logout:", error);
-          showError("Failed to log out: " + error.message);
-        } else {
-          showSuccess("Logged out successfully!");
-          console.log("[Layout] User logged out.");
-        }
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("[Layout] Error during logout:", error);
+        showError("Failed to log out: " + error.message);
       } else {
-        // If no user is present, consider it already logged out locally
-        console.log("[Layout] No active user session found, treating as local logout.");
         showSuccess("Logged out successfully!");
+        console.log("[Layout] User logged out.");
       }
     } catch (error: any) {
       // AuthSessionMissingError means the user is already logged out from Supabase's perspective
