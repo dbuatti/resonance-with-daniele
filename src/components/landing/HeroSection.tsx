@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 const HeroSection: React.FC = () => {
   return (
     <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end dark:from-hero-gradient-start-dark dark:to-hero-gradient-end-dark py-24 md:py-40 text-center overflow-hidden rounded-xl shadow-lg">
-      <div className="relative z-10"> {/* Removed px-4 */}
+      <div className="relative z-10 px-4"> {/* Added px-4 for consistent padding */}
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 font-lora text-foreground">
           Sing. Connect. Shine. <br className="hidden sm:inline" /> Join Melbourne’s Pop-Up Choir with Daniele.
         </h1>

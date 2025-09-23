@@ -17,7 +17,7 @@ const Login: React.FC = () => {
   const authTheme = resolvedTheme === 'dark' ? 'dark' : 'light';
 
   return (
-    <div> {/* Removed px-4, relies on Layout's container */}
+    <div className="px-4"> {/* Added px-4 for consistent padding */}
       <div className="flex flex-col items-center justify-center p-4 min-h-[calc(100vh-80px)]">
         <div className="p-8 max-w-md w-full bg-card rounded-xl shadow-2xl border-2 border-primary/20">
           <h2 className="text-3xl font-bold text-center mb-8 text-foreground font-lora">Login to Resonance with Daniele</h2>

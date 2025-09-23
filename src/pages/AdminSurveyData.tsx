@@ -105,7 +105,7 @@ const AdminSurveyData: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed container mx-auto */}
+    <div className="space-y-6 py-8 px-4"> {/* Added px-4 for consistent padding */}
       <h1 className="text-4xl font-bold text-center font-lora">Member Survey Data & Insights</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Explore aggregated survey responses to understand your community's preferences and feedback.

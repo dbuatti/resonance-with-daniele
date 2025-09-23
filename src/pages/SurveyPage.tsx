@@ -6,7 +6,7 @@ import SurveyForm from "@/components/profile/SurveyForm";
 
 const SurveyPage: React.FC = () => {
   return (
-    <div className="max-w-2xl mx-auto"> {/* Removed container mx-auto */}
+    <div className="max-w-2xl mx-auto"> {/* Kept max-w-2xl mx-auto as it's a direct child of ProfileLayoutPage */}
       <SurveyForm />
     </div>
   );

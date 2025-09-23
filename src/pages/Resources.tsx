@@ -208,7 +208,7 @@ const Resources: React.FC = () => {
   console.log("[Resources Page] Rendering Resources component. isLoading:", isLoading, "isFetching:", isFetching, "Resources count:", resources?.length);
 
   return (
-    <div className="space-y-6 py-8">
+    <div className="space-y-6 py-8 px-4"> {/* Added px-4 for consistent padding */}
       <h1 className="text-4xl font-bold text-center font-lora">
         {showSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>
