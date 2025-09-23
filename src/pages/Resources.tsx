@@ -92,7 +92,6 @@ const Resources: React.FC = () => {
       title: "",
       description: "",
       url: "",
-      // folder_id: null, // Removed: This field is not in resourceSchema
     },
   });
 
@@ -837,7 +836,7 @@ const Resources: React.FC = () => {
 
       {/* Edit Folder Dialog */}
       {editingFolder && (
-        <Dialog open={isEditFolderDialogOpen} onOpenChange={setIsEditFolderDialogOpen}>
+        <Dialog open={isEditFolderDialogOpen} onOnOpenChange={setIsEditFolderDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Folder</DialogTitle>
@@ -869,7 +868,7 @@ const Resources: React.FC = () => {
 
       {/* Edit Resource Dialog */}
       {editingResource && (
-        <Dialog open={isEditResourceDialogOpen} onOpenChange={setIsEditResourceDialogOpen}>
+        <Dialog open={isEditResourceDialogOpen} onOnOpenChange={setIsEditResourceDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Resource</DialogTitle>

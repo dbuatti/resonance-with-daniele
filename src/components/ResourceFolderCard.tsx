@@ -7,14 +7,19 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSession } from "@/integrations/supabase/auth";
 
+interface ResourceFolder {
+  id: string;
+  name: string;
+  parent_folder_id: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface ResourceFolderCardProps {
-  folder: {
-    id: string;
-    name: string;
-    user_id: string;
-  };
+  folder: ResourceFolder; // Changed to accept the full ResourceFolder object
   onNavigate: (folderId: string) => void;
-  onEdit: (folder: { id: string; name: string; parent_folder_id: string | null }) => void;
+  onEdit: (folder: ResourceFolder) => void; // Changed to accept the full ResourceFolder object
   onDelete: (folderId: string) => void;
   isDeleting: boolean;
 }
@@ -46,7 +51,7 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onEdit({ id: folder.id, name: folder.name, parent_folder_id: null })} // parent_folder_id will be fetched in edit dialog
+              onClick={() => onEdit(folder)} // Pass the full folder object
               disabled={isDeleting}
             >
               <Edit className="h-4 w-4 mr-2" /> Edit
