@@ -7,14 +7,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageSquare, Trash2, AlertCircle, CheckCircle2, EyeOff } from "lucide-react"; // Added CheckCircle2 and EyeOff
+import { Loader2, MessageSquare, Trash2, AlertCircle, CheckCircle2, EyeOff } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge"; // Import Badge
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip components
 
 interface IssueReport {
   id: string;
@@ -23,7 +24,7 @@ interface IssueReport {
   issue_description: string;
   page_url: string | null;
   created_at: string;
-  is_read: boolean; // Added is_read
+  is_read: boolean;
 }
 
 const AdminIssueReportsPage: React.FC = () => {
@@ -38,7 +39,6 @@ const AdminIssueReportsPage: React.FC = () => {
     }
   }, [user, loadingSession, navigate]);
 
-  // Query function for fetching issue reports
   const fetchIssueReports = async (): Promise<IssueReport[]> => {
     console.log("[AdminIssueReportsPage] Fetching all issue reports.");
     const { data, error } = await supabase
@@ -54,7 +54,6 @@ const AdminIssueReportsPage: React.FC = () => {
     return data || [];
   };
 
-  // Use react-query for issue reports data
   const { data: issueReports, isLoading: loadingReports, error: fetchError } = useQuery<
     IssueReport[],
     Error,
@@ -63,13 +62,12 @@ const AdminIssueReportsPage: React.FC = () => {
   >({
     queryKey: ['adminIssueReports'],
     queryFn: fetchIssueReports,
-    enabled: !loadingSession && !!user?.is_admin, // Only fetch if session is not loading and user is admin
-    staleTime: 60 * 1000, // Data is considered fresh for 1 minute
-    gcTime: 5 * 60 * 1000, // Data stays in cache for 5 minutes
+    enabled: !loadingSession && !!user?.is_admin,
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
-  // Effect to mark all currently displayed unread reports as read when the page loads
   useEffect(() => {
     if (user?.is_admin && issueReports && issueReports.length > 0) {
       const unreadReportIds = issueReports.filter(report => !report.is_read).map(report => report.id);
@@ -85,13 +83,12 @@ const AdminIssueReportsPage: React.FC = () => {
             } else {
               console.log("Reports marked as read successfully.");
               queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] });
-              queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] }); // Invalidate the unread count
+              queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
             }
           });
       }
     }
   }, [issueReports, user?.is_admin, queryClient]);
-
 
   const handleDeleteReport = async (reportId: string) => {
     if (!user || !user.is_admin) {
@@ -109,9 +106,9 @@ const AdminIssueReportsPage: React.FC = () => {
       showError("Failed to delete issue report: " + error.message);
     } else {
       showSuccess("Issue report deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] }); // Invalidate to refetch and update UI
-      queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] }); // Invalidate dashboard counts
-      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] }); // Invalidate the unread count
+      queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
     }
   };
 
@@ -131,8 +128,8 @@ const AdminIssueReportsPage: React.FC = () => {
       showError("Failed to update read status: " + error.message);
     } else {
       showSuccess(`Report marked as ${!currentStatus ? "read" : "unread"}!`);
-      queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] }); // Invalidate to refetch and update UI
-      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] }); // Invalidate the unread count
+      queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
     }
   };
 
@@ -162,7 +159,7 @@ const AdminIssueReportsPage: React.FC = () => {
   }
 
   if (!user || !user.is_admin) {
-    return null; // Redirect handled by useEffect
+    return null;
   }
 
   if (fetchError) {
@@ -199,12 +196,12 @@ const AdminIssueReportsPage: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Reporter Email</TableHead>
-                    <TableHead>Issue Description</TableHead>
-                    <TableHead>Page URL</TableHead>
-                    <TableHead>Submitted On</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[80px]">Status</TableHead> {/* Fixed width for status */}
+                    <TableHead className="min-w-[150px]">Reporter Email</TableHead>
+                    <TableHead className="min-w-[200px]">Issue Description</TableHead>
+                    <TableHead className="min-w-[120px]">Page URL</TableHead>
+                    <TableHead className="w-[180px]">Submitted On</TableHead> {/* Fixed width for date */}
+                    <TableHead className="text-right w-[200px]">Actions</TableHead> {/* Fixed width for actions */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -215,15 +212,38 @@ const AdminIssueReportsPage: React.FC = () => {
                           {report.is_read ? "Read" : "Unread"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">{report.email}</TableCell>
-                      <TableCell className="text-muted-foreground max-w-xs line-clamp-2">
-                        {report.issue_description}
+                      <TableCell className="font-medium">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="truncate max-w-[150px] inline-block">{report.email}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{report.email}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground max-w-[200px] line-clamp-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>{report.issue_description}</span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>{report.issue_description}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </TableCell>
                       <TableCell>
                         {report.page_url ? (
-                          <a href={report.page_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                            {report.page_url.length > 30 ? report.page_url.substring(0, 27) + "..." : report.page_url}
-                          </a>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <a href={report.page_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[120px] inline-block">
+                                {report.page_url}
+                              </a>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{report.page_url}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         ) : "N/A"}
                       </TableCell>
                       <TableCell>{format(new Date(report.created_at), "PPP p")}</TableCell>

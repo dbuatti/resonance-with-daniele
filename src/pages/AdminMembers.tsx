@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useQuery, useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip components
 
 interface Profile {
   id: string;
@@ -39,7 +40,7 @@ interface Profile {
   inclusivity_importance: string | null;
   suggestions: string | null;
   updated_at: string;
-  voice_type: string[] | null; // Added voice_type
+  voice_type: string[] | null;
 }
 
 const AdminMembers: React.FC = () => {
@@ -47,7 +48,7 @@ const AdminMembers: React.FC = () => {
   const navigate = useNavigate();
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
-  const queryClient = useQueryClient(); // Initialize query client
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!loadingSession && (!user || !user.is_admin)) {
@@ -56,7 +57,6 @@ const AdminMembers: React.FC = () => {
     }
   }, [user, loadingSession, navigate]);
 
-  // Query function for fetching profiles
   const fetchProfiles = async (): Promise<Profile[]> => {
     console.log("[AdminMembers] Fetching all profiles.");
     const { data, error } = await supabase
@@ -72,19 +72,18 @@ const AdminMembers: React.FC = () => {
     return data || [];
   };
 
-  // Use react-query for profiles data
   const { data: profiles, isLoading: loadingProfiles, error: fetchError } = useQuery<
-    Profile[], // TQueryFnData
-    Error,          // TError
-    Profile[], // TData (the type of the 'data' property)
-    ['adminMembers'] // TQueryKey
+    Profile[],
+    Error,
+    Profile[],
+    ['adminMembers']
   >({
     queryKey: ['adminMembers'],
     queryFn: fetchProfiles,
-    enabled: !loadingSession && !!user?.is_admin, // Only fetch if session is not loading and user is admin
-    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    enabled: !loadingSession && !!user?.is_admin,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   const handleAdminStatusChange = async (profileId: string, newStatus: boolean) => {
@@ -109,14 +108,13 @@ const AdminMembers: React.FC = () => {
       showError("Failed to update admin status: " + error.message);
     } else {
       showSuccess(`User role updated to ${newStatus ? "Admin" : "User"}!`);
-      queryClient.invalidateQueries({ queryKey: ['adminMembers'] }); // Invalidate to refetch and update UI
-      queryClient.invalidateQueries({ queryKey: ['adminProfiles'] }); // Also invalidate survey data
-      queryClient.invalidateQueries({ queryKey: ['profile', profileId] }); // Invalidate the specific user's profile
+      queryClient.invalidateQueries({ queryKey: ['adminMembers'] });
+      queryClient.invalidateQueries({ queryKey: ['adminProfiles'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', profileId] });
     }
     setIsUpdatingAdminStatus(null);
   };
 
-  // Helper function to determine if a profile has any survey responses
   const hasSurveyResponses = (profile: Profile) => {
     return (
       profile.how_heard !== null ||
@@ -129,7 +127,7 @@ const AdminMembers: React.FC = () => {
       profile.choir_goals !== null ||
       profile.inclusivity_importance !== null ||
       profile.suggestions !== null ||
-      (profile.voice_type && profile.voice_type.length > 0) // Include voice_type
+      (profile.voice_type && profile.voice_type.length > 0)
     );
   };
 
@@ -175,7 +173,7 @@ const AdminMembers: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8 px-4"> {/* Added px-4 for consistent padding */}
+    <div className="space-y-6 py-8 px-4">
       <h1 className="text-4xl font-bold text-center font-lora">Manage Member Profiles</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         View and manage all registered member profiles, including their roles.
@@ -197,21 +195,37 @@ const AdminMembers: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Survey Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="min-w-[150px]">Name</TableHead>
+                    <TableHead className="min-w-[180px]">Email</TableHead>
+                    <TableHead className="w-[120px]">Role</TableHead>
+                    <TableHead className="w-[120px]">Survey Status</TableHead>
+                    <TableHead className="text-right w-[150px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {profiles?.map((profile) => (
                     <TableRow key={profile.id}>
                       <TableCell className="font-medium">
-                        {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="truncate max-w-[150px] inline-block">
+                              {profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </TableCell>
                       <TableCell>
-                        {profile.email || "N/A"}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="truncate max-w-[180px] inline-block">{profile.email || "N/A"}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{profile.email || "N/A"}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </TableCell>
                       <TableCell>
                         <Select
@@ -219,7 +233,7 @@ const AdminMembers: React.FC = () => {
                           onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
                           disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id}
                         >
-                          <SelectTrigger className="w-[120px]">
+                          <SelectTrigger className="w-full"> {/* Changed to w-full */}
                             <SelectValue placeholder="Select role" />
                           </SelectTrigger>
                           <SelectContent>
