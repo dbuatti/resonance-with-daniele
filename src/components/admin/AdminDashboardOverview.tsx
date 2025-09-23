@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Users, CalendarDays, FileText, PlusCircle, Loader2, Mail } from "lucide-react"; // Added Mail icon
+import { Users, CalendarDays, FileText, PlusCircle, Loader2, Mail, MessageSquare } from "lucide-react"; // Added MessageSquare icon
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showError } from "@/utils/toast";
@@ -34,11 +34,17 @@ const AdminDashboardOverview: React.FC = () => {
       .select("id", { count: "exact", head: true });
     if (submissionError) throw submissionError;
 
+    const { count: issueReports, error: issueReportError } = await supabase
+      .from("issue_reports")
+      .select("id", { count: "exact", head: true });
+    if (issueReportError) throw issueReportError;
+
     return {
       memberCount: members,
       eventCount: events,
       resourceCount: resources,
       interestSubmissionCount: submissions,
+      issueReportCount: issueReports, // Added issueReportCount
     };
   };
 
@@ -49,6 +55,7 @@ const AdminDashboardOverview: React.FC = () => {
       eventCount: number | null;
       resourceCount: number | null;
       interestSubmissionCount: number | null;
+      issueReportCount: number | null; // Added issueReportCount to type
     },
     Error,
     {
@@ -56,6 +63,7 @@ const AdminDashboardOverview: React.FC = () => {
       eventCount: number | null;
       resourceCount: number | null;
       interestSubmissionCount: number | null;
+      issueReportCount: number | null; // Added issueReportCount to type
     },
     ['adminDashboardCounts']
   >({
@@ -76,7 +84,7 @@ const AdminDashboardOverview: React.FC = () => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(5)].map((_, i) => ( // Increased array size for new card
           <Card key={i} className="shadow-lg rounded-xl p-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-6 w-1/2" />
@@ -92,11 +100,12 @@ const AdminDashboardOverview: React.FC = () => {
     );
   }
 
-  const { memberCount, eventCount, resourceCount, interestSubmissionCount } = data || {
+  const { memberCount, eventCount, resourceCount, interestSubmissionCount, issueReportCount } = data || {
     memberCount: null,
     eventCount: null,
     resourceCount: null,
     interestSubmissionCount: null,
+    issueReportCount: null,
   };
 
   return (
@@ -144,7 +153,6 @@ const AdminDashboardOverview: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* New Card for Interest Submissions */}
       <Card className="shadow-lg rounded-xl p-6 text-center">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-lora">Interest Submissions</CardTitle>
@@ -155,6 +163,22 @@ const AdminDashboardOverview: React.FC = () => {
           <Button asChild className="w-full">
             <Link to="/admin/interest-submissions">
               View Submissions
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* New Card for Issue Reports */}
+      <Card className="shadow-lg rounded-xl p-6 text-center">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-xl font-lora">Issue Reports</CardTitle>
+          <MessageSquare className="h-6 w-6 text-primary" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-5xl font-bold text-foreground mb-4">{issueReportCount !== null ? issueReportCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
+          <Button asChild className="w-full">
+            <Link to="/admin/issue-reports"> {/* Placeholder link for now */}
+              View Reports
             </Link>
           </Button>
         </CardContent>
