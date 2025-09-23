@@ -37,6 +37,8 @@ interface SessionContextType {
   profile: Profile | null;
   loading: boolean; // Overall loading for the session context
   profileLoading: boolean; // Loading specifically for the profile data
+  isLoggingOut: boolean; // Added isLoggingOut
+  setIsLoggingOut: React.Dispatch<React.SetStateAction<boolean>>; // Added setter
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -44,6 +46,7 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [session, setSession] = useState<Session | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // For initial session fetch
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // New state for logout loading
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -154,6 +157,8 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     profile,
     loading: initialLoading || profileLoading, // Overall loading is true if initial session or profile is loading
     profileLoading,
+    isLoggingOut, // Provide the state
+    setIsLoggingOut, // Provide the setter
   };
   console.log("[SessionContext] Rendering SessionContextProvider with overall loading:", contextValue.loading, "profileLoading:", profileLoading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin, "profile:", profile ? 'present' : 'null');
 

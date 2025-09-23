@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, User as UserIcon, LogOut, Shield, Music } from "lucide-react"; // Import Music icon
+import { Menu, User as UserIcon, LogOut, Shield, Music, Loader2 } from "lucide-react"; // Import Music and Loader2 icon
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Profile } from "@/integrations/supabase/auth";
@@ -14,9 +14,10 @@ interface MobileNavProps {
   profile: Profile | null;
   loading: boolean;
   handleLogout: () => void;
+  isLoggingOut: boolean; // New prop
 }
 
-const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLogout }) => {
+const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLogout, isLoggingOut }) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -84,8 +85,9 @@ const MobileNav: React.FC<MobileNavProps> = ({ user, profile, loading, handleLog
                   "text-destructive hover:bg-destructive/10 hover:text-destructive"
                 )}
                 onClick={() => { handleLogout(); setIsOpen(false); }}
+                disabled={isLoggingOut} // Disable if logging out
               >
-                <LogOut className="mr-2 h-5 w-5" /> Logout
+                {isLoggingOut ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />} Logout
               </Button>
             </>
           ) : (

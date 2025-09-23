@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, Shield, Music } from "lucide-react"; // Import Music icon
+import { User as UserIcon, Shield, Music, Loader2 } from "lucide-react"; // Import Music and Loader2 icon
 import { cn } from "@/lib/utils";
 import BackToTopButton from "./BackToTopButton";
 import FooterSection from "./landing/FooterSection";
@@ -19,14 +19,27 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, profile, loading } = useSession();
+  const { user, profile, loading, isLoggingOut, setIsLoggingOut } = useSession(); // Get isLoggingOut and setIsLoggingOut
   const location = useLocation();
   console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
 
   const handleLogout = async () => {
+    setIsLoggingOut(true); // Set logging out state
     console.log("[Layout] Attempting to log out user.");
-    await supabase.auth.signOut();
-    console.log("[Layout] User logged out.");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("[Layout] Error during logout:", error);
+        showError("Failed to log out: " + error.message);
+      } else {
+        console.log("[Layout] User logged out.");
+      }
+    } catch (error: any) {
+      console.error("[Layout] Unexpected error during logout:", error);
+      showError("An unexpected error occurred during logout: " + error.message);
+    } finally {
+      setIsLoggingOut(false); // Reset logging out state
+    }
   };
 
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
@@ -116,8 +129,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     My Profile
                   </Link>
                 </Button>
-                <Button variant="ghost" onClick={handleLogout} className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground">
-                  Logout
+                <Button variant="ghost" onClick={handleLogout} className="dark:hover:bg-primary/20 dark:hover:text-primary-foreground" disabled={isLoggingOut}>
+                  {isLoggingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Logout
                 </Button>
               </>
             ) : (
@@ -135,7 +148,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           <div className="flex items-center sm:hidden">
             <ThemeToggle />
-            <MobileNav user={user} loading={loading} handleLogout={handleLogout} profile={profile} />
+            <MobileNav user={user} loading={loading} handleLogout={handleLogout} profile={profile} isLoggingOut={isLoggingOut} /> {/* Pass isLoggingOut */}
           </div>
         </div>
       </header>

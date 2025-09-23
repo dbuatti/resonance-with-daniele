@@ -35,7 +35,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const ProfileDetails: React.FC = () => {
-  const { user, profile, loading: loadingSession } = useSession(); // Get profile from context
+  const { user, profile, loading: loadingSession, isLoggingOut, setIsLoggingOut } = useSession(); // Get isLoggingOut and setIsLoggingOut from context
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [removeAvatarRequested, setRemoveAvatarRequested] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -89,6 +89,12 @@ const ProfileDetails: React.FC = () => {
       if (!user) {
         showError("You must be logged in to update your profile.");
         console.error("[ProfileDetails Page] Attempted to submit profile without a user.");
+        return;
+      }
+      // Check if a logout is in progress
+      if (isLoggingOut) { // Use isLoggingOut from context
+        showError("Cannot save profile while logging out.");
+        console.warn("[ProfileDetails Page] Attempted to save profile while logout was in progress.");
         return;
       }
 
@@ -162,7 +168,7 @@ const ProfileDetails: React.FC = () => {
 
       if (authUpdateError) {
         console.error("[ProfileDetails Page] Error updating avatar URL in auth user metadata:", authUpdateError);
-        showError("Failed to update avatar URL in user session.");
+        showError("Failed to update user session: " + authUpdateError.message); // More specific error message
         return;
       }
       console.log("[ProfileDetails Page] Supabase Auth User updated successfully:", authResponseData.user);
@@ -214,9 +220,23 @@ const ProfileDetails: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    setIsLoggingOut(true); // Use setIsLoggingOut from context
     console.log("[ProfileDetails Page] Attempting to log out.");
-    await supabase.auth.signOut();
-    console.log("[ProfileDetails Page] User logged out.");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("[ProfileDetails Page] Error during logout:", error);
+        showError("Failed to log out: " + error.message);
+      } else {
+        showSuccess("Logged out successfully!");
+        console.log("[ProfileDetails Page] User logged out.");
+      }
+    } catch (error: any) {
+      console.error("[ProfileDetails Page] Unexpected error during logout:", error);
+      showError("An unexpected error occurred during logout: " + error.message);
+    } finally {
+      setIsLoggingOut(false); // Use setIsLoggingOut from context
+    }
   };
 
   if (loadingSession) {
@@ -293,14 +313,14 @@ const ProfileDetails: React.FC = () => {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="first_name">First Name</Label>
-              <Input id="first_name" {...form.register("first_name")} />
+              <Input id="first_name" {...form.register("first_name")} disabled={isSavingProfile || isLoggingOut} />
               {form.formState.errors.first_name && (
                 <p className="text-red-500 text-sm">{form.formState.errors.first_name.message}</p>
               )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="last_name">Last Name</Label>
-              <Input id="last_name" {...form.register("last_name")} />
+              <Input id="last_name" {...form.register("last_name")} disabled={isSavingProfile || isLoggingOut} />
               {form.formState.errors.last_name && (
                 <p className="text-red-500 text-sm">{form.formState.errors.last_name.message}</p>
               )}
@@ -310,7 +330,7 @@ const ProfileDetails: React.FC = () => {
                 currentAvatarUrl={profile?.avatar_url || null} // Pass current avatar from context
                 onFileChange={handleAvatarFileChange}
                 onRemoveRequested={handleRemoveAvatarRequested}
-                isSaving={isSavingProfile}
+                isSaving={isSavingProfile || isLoggingOut}
                 selectedFile={selectedAvatarFile}
               />
             )}
@@ -325,7 +345,7 @@ const ProfileDetails: React.FC = () => {
                     <VoiceTypeSelector
                       value={field.value}
                       onChange={field.onChange}
-                      disabled={isSavingProfile}
+                      disabled={isSavingProfile || isLoggingOut}
                     />
                   </FormControl>
                   <FormMessage />
@@ -333,7 +353,7 @@ const ProfileDetails: React.FC = () => {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isSavingProfile}>
+            <Button type="submit" className="w-full" disabled={isSavingProfile || isLoggingOut}>
               {isSavingProfile ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
@@ -342,8 +362,21 @@ const ProfileDetails: React.FC = () => {
                 "Save Profile"
               )}
             </Button>
-            <Button variant="outline" onClick={handleLogout} className="w-full text-destructive hover:text-destructive-foreground hover:bg-destructive">
-              <LogOut className="mr-2 h-4 w-4" /> Sign Out
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="w-full text-destructive hover:text-destructive-foreground hover:bg-destructive"
+              disabled={isSavingProfile || isLoggingOut} // Disable if saving or already logging out
+            >
+              {isLoggingOut ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging Out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                </>
+              )}
             </Button>
           </form>
         </Form>
