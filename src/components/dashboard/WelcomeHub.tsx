@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import SongSuggestionForm from "./SongSuggestionForm"; // Import new component
+import SongVotingList from "./SongVotingList"; // Import new component
 
 interface Event {
   id: string;
@@ -308,6 +310,12 @@ const WelcomeHub: React.FC = () => {
                 )}
               </CardContent>
             </Card>
+          </div>
+
+          {/* Song Suggestion and Voting Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <SongSuggestionForm />
+            <SongVotingList />
           </div>
 
           <div className="flex justify-center mt-8">
