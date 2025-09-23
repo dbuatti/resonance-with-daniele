@@ -199,7 +199,7 @@ const AdminIssueReportsPage: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Status</TableHead> {/* New Status column */}
+                    <TableHead>Status</TableHead>
                     <TableHead>Reporter Email</TableHead>
                     <TableHead>Issue Description</TableHead>
                     <TableHead>Page URL</TableHead>
@@ -209,7 +209,7 @@ const AdminIssueReportsPage: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {issueReports?.map((report) => (
-                    <TableRow key={report.id} className={!report.is_read ? "bg-red-50/50 dark:bg-red-950/20" : ""}> {/* Highlight unread rows */}
+                    <TableRow key={report.id} className={!report.is_read ? "bg-red-50/50 dark:bg-red-950/20" : ""}>
                       <TableCell>
                         <Badge variant={report.is_read ? "secondary" : "destructive"}>
                           {report.is_read ? "Read" : "Unread"}

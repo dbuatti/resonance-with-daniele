@@ -15,6 +15,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { DialogDescription } from "@/components/ui/dialog"; // Import DialogDescription
 
 const issueReportSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -85,9 +86,9 @@ const ReportIssueButton: React.FC = () => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-lora">Report an Issue or Complaint</DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <DialogDescription> {/* Changed from <p> to DialogDescription */}
             Help me improve the app by letting me know about any bugs or problems you encounter.
-          </p>
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 py-4">
           <div className="grid gap-2">
