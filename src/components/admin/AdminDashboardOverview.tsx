@@ -36,7 +36,8 @@ const AdminDashboardOverview: React.FC = () => {
 
     const { count: issueReports, error: issueReportError } = await supabase
       .from("issue_reports")
-      .select("id", { count: "exact", head: true });
+      .select("id", { count: "exact", head: true })
+      .eq("is_read", false); // Only count unread reports
     if (issueReportError) throw issueReportError;
 
     return {
@@ -171,13 +172,13 @@ const AdminDashboardOverview: React.FC = () => {
       {/* New Card for Issue Reports */}
       <Card className="shadow-lg rounded-xl p-6 text-center">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xl font-lora">Issue Reports</CardTitle>
+          <CardTitle className="text-xl font-lora">Unread Issue Reports</CardTitle>
           <MessageSquare className="h-6 w-6 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{issueReportCount !== null ? issueReportCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/admin/issue-reports"> {/* Placeholder link for now */}
+            <Link to="/admin/issue-reports">
               View Reports
             </Link>
           </Button>
