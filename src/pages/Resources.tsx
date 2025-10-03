@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2, Search, Headphones, Folder, FolderOpen, ChevronRight, ChevronLeft, FolderSync } from "lucide-react"; // Added FolderSync icon
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2, Search, Headphones, Folder, FolderOpen, ChevronRight, ChevronLeft, FolderSync } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
@@ -21,6 +21,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ResourceUpload from "@/components/ResourceUpload";
 import ResourceFolderCard from "@/components/ResourceFolderCard"; // Import the new folder card
 import MoveResourceDialog from "@/components/MoveResourceDialog"; // Import the MoveResourceDialog
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Import Select components
 
 // Define schemas
 const resourceSchema = z.object({
@@ -163,6 +170,20 @@ const Resources: React.FC = () => {
     return data || [];
   };
 
+  const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
+    console.log("[Resources Page] Fetching all folders for dropdown.");
+    const { data, error } = await supabase
+      .from("resource_folders")
+      .select("id, name, parent_folder_id, user_id, created_at, updated_at") // Include all fields for ResourceFolder type
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching all folders:", error);
+      throw new Error("Failed to load all folders.");
+    }
+    return data || [];
+  };
+
   const fetchResources = async (parentId: string | null, currentSearchTerm: string): Promise<Resource[]> => {
     console.log(`[Resources Page] Fetching resources for folder_id: ${parentId}, search: ${currentSearchTerm}`);
     let query = supabase
@@ -196,6 +217,16 @@ const Resources: React.FC = () => {
     queryKey: ['resourceFolders', currentFolderId],
     queryFn: () => fetchFolders(currentFolderId),
     enabled: !loadingUserSession,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const { data: allFolders, isLoading: loadingAllFolders, error: allFoldersError } = useQuery<
+    ResourceFolder[], Error, ResourceFolder[], ['allResourceFolders']
+  >({
+    queryKey: ['allResourceFolders'],
+    queryFn: fetchAllFolders,
+    enabled: !loadingUserSession && user?.is_admin && isEditFolderDialogOpen, // Only fetch when admin and edit dialog is open
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -499,6 +530,7 @@ const Resources: React.FC = () => {
         addFolderForm.reset({ name: "", parent_folder_id: currentFolderId });
         setIsAddFolderDialogOpen(false);
         queryClient.invalidateQueries({ queryKey: ['resourceFolders', currentFolderId] });
+        queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] }); // Invalidate all folders cache
       }
     } catch (error: any) {
       console.error("Unexpected error during add folder process:", error);
@@ -516,6 +548,7 @@ const Resources: React.FC = () => {
 
     setIsUploading(true);
     try {
+      const oldParentId = editingFolder.parent_folder_id;
       console.log(`[Resources Page] Updating folder ${editingFolder.id}:`, { name: data.name, parent_folder_id: data.parent_folder_id });
       const { error } = await supabase
         .from("resource_folders")
@@ -534,7 +567,11 @@ const Resources: React.FC = () => {
         setIsEditFolderDialogOpen(false);
         setEditingFolder(null);
         queryClient.invalidateQueries({ queryKey: ['resourceFolders', currentFolderId] });
-        queryClient.invalidateQueries({ queryKey: ['resourceFolders', editingFolder.parent_folder_id] }); // Invalidate old parent if changed
+        if (oldParentId !== data.parent_folder_id) {
+          queryClient.invalidateQueries({ queryKey: ['resourceFolders', oldParentId] }); // Invalidate old parent
+          queryClient.invalidateQueries({ queryKey: ['resourceFolders', data.parent_folder_id] }); // Invalidate new parent
+        }
+        queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] }); // Invalidate all folders cache
       }
     } catch (error: any) {
       console.error("Unexpected error during edit folder process:", error);
@@ -580,6 +617,7 @@ const Resources: React.FC = () => {
         showSuccess("Folder and its contents deleted successfully!");
         queryClient.invalidateQueries({ queryKey: ['resourceFolders', currentFolderId] });
         queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId, searchTerm] });
+        queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] }); // Invalidate all folders cache
         if (currentFolderId === folderId) { // If we deleted the current folder, navigate up
           const parentBreadcrumb = breadcrumbs[breadcrumbs.length - 2];
           setCurrentFolderId(parentBreadcrumb ? parentBreadcrumb.id : null);
@@ -598,6 +636,32 @@ const Resources: React.FC = () => {
 
   // Determine the current folder path for display in ResourceUpload
   const currentFolderPathDisplay = breadcrumbs.map(b => b.name).join(' / ');
+
+  // Helper to get all descendant folder IDs
+  const getDescendantFolderIds = useCallback((folderId: string | null, allF: ResourceFolder[]): Set<string> => {
+    const descendants = new Set<string>();
+    if (!folderId) return descendants;
+
+    const children = allF.filter(f => f.parent_folder_id === folderId);
+    children.forEach(child => {
+      descendants.add(child.id);
+      getDescendantFolderIds(child.id, allF).forEach(d => descendants.add(d));
+    });
+    return descendants;
+  }, []);
+
+  // Filtered folders for the "Move Folder" dropdown
+  const getMovableParentFolders = useCallback(() => {
+    if (!allFolders || !editingFolder) return [];
+
+    const foldersToExclude = new Set<string>();
+    foldersToExclude.add(editingFolder.id); // Cannot move a folder into itself
+    getDescendantFolderIds(editingFolder.id, allFolders).forEach(id => foldersToExclude.add(id)); // Cannot move a folder into its children
+
+    return allFolders.filter(folder => !foldersToExclude.has(folder.id));
+  }, [allFolders, editingFolder, getDescendantFolderIds]);
+
+  const movableParentFolders = getMovableParentFolders();
 
   return (
     <div className="space-y-6 py-8">
@@ -855,7 +919,7 @@ const Resources: React.FC = () => {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Folder</DialogTitle>
-              <CardDescription>Update the name of your folder.</CardDescription>
+              <CardDescription>Update the name and location of your folder.</CardDescription>
             </DialogHeader>
             <form onSubmit={editFolderForm.handleSubmit(onEditFolderSubmit)} className="grid gap-6 py-4">
               <div className="grid gap-2">
@@ -863,6 +927,40 @@ const Resources: React.FC = () => {
                 <Input id="edit-folder-name" {...editFolderForm.register("name")} disabled={isUploading} />
                 {editFolderForm.formState.errors.name && (
                   <p className="text-red-500 text-sm">{editFolderForm.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-parent-folder">Move to Folder</Label>
+                {loadingAllFolders ? (
+                  <Button variant="outline" disabled className="w-full justify-start">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading folders...
+                  </Button>
+                ) : allFoldersError ? (
+                  <p className="text-destructive text-sm">Error loading folders.</p>
+                ) : (
+                  <Select
+                    value={editFolderForm.watch("parent_folder_id") || "null"}
+                    onValueChange={(value) => editFolderForm.setValue("parent_folder_id", value === "null" ? null : value)}
+                    disabled={isUploading}
+                  >
+                    <SelectTrigger id="edit-parent-folder">
+                      <SelectValue placeholder="Select parent folder" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="null">
+                        <div className="flex items-center gap-2">
+                          <Folder className="h-4 w-4 text-muted-foreground" /> Home (Root)
+                        </div>
+                      </SelectItem>
+                      {movableParentFolders.map((folder) => (
+                        <SelectItem key={folder.id} value={folder.id}>
+                          <div className="flex items-center gap-2">
+                            <Folder className="h-4 w-4 text-muted-foreground" /> {folder.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
               </div>
               <DialogFooter>
