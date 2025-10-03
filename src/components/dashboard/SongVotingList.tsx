@@ -6,7 +6,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Clock } from "lucide-react"; // Added new icons
+import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Clock, Edit as EditIcon } from "lucide-react"; // Added EditIcon
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +14,12 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // Import Dialog components
+import { Label } from "@/components/ui/label"; // Import Label
+import { Textarea } from "@/components/ui/textarea"; // Import Textarea
+import { useForm } from "react-hook-form"; // Import useForm
+import { zodResolver } from "@hookform/resolvers/zod"; // Import zodResolver
+import * as z from "zod"; // Import z
 
 interface SongSuggestion {
   id: string;
@@ -36,6 +42,15 @@ interface UserVote {
   suggestion_id: string;
 }
 
+// Define schema for editing song suggestions
+const editSongSuggestionSchema = z.object({
+  title: z.string().min(1, "Song title is required"),
+  artist: z.string().min(1, "Artist name is required"),
+  reason: z.string().optional(),
+});
+
+type EditSongSuggestionFormData = z.infer<typeof editSongSuggestionSchema>;
+
 const SongVotingList: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
@@ -43,6 +58,29 @@ const SongVotingList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState<"votes_desc" | "newest">("votes_desc"); // New state for sorting
   const pageSize = 5;
+
+  const [isEditSongDialogOpen, setIsEditSongDialogOpen] = useState(false); // State for edit dialog
+  const [editingSong, setEditingSong] = useState<SongSuggestion | null>(null); // State for song being edited
+
+  const editForm = useForm<EditSongSuggestionFormData>({
+    resolver: zodResolver(editSongSuggestionSchema),
+    defaultValues: {
+      title: "",
+      artist: "",
+      reason: "",
+    },
+  });
+
+  // Effect to set form values when a song is selected for editing
+  React.useEffect(() => {
+    if (editingSong) {
+      editForm.reset({
+        title: editingSong.title,
+        artist: editingSong.artist,
+        reason: editingSong.reason || "",
+      });
+    }
+  }, [editingSong, editForm]);
 
   // Fetch song suggestions with pagination and sorting
   const fetchSongSuggestions = async (currentSearchTerm: string, page: number, pageSize: number, currentSortOrder: string): Promise<{ data: SongSuggestion[], count: number | null }> => {
@@ -164,6 +202,39 @@ const SongVotingList: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize, sortOrder] });
         queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] });
       }
+    }
+  };
+
+  const handleEditSongSubmit = async (data: EditSongSuggestionFormData) => {
+    if (!user || !user.is_admin || !editingSong) {
+      showError("You must be an administrator and select a song to edit.");
+      return;
+    }
+
+    try {
+      const { title, artist, reason } = data;
+      const { error } = await supabase
+        .from("song_suggestions")
+        .update({
+          title,
+          artist,
+          reason: reason || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", editingSong.id);
+
+      if (error) {
+        console.error("Error updating song suggestion:", error);
+        showError("Failed to update song suggestion: " + error.message);
+      } else {
+        showSuccess("Song suggestion updated successfully!");
+        setIsEditSongDialogOpen(false);
+        setEditingSong(null);
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize, sortOrder] });
+      }
+    } catch (error: any) {
+      console.error("Unexpected error during song suggestion update:", error);
+      showError("An unexpected error occurred: " + error.message);
     }
   };
 
@@ -318,27 +389,40 @@ const SongVotingList: React.FC = () => {
                   )}
                 </div>
                 {user?.is_admin && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon" className="h-8 w-8 flex-shrink-0">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the song suggestion "{song.title}" by {song.artist}.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)}>
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 flex-shrink-0"
+                      onClick={() => {
+                        setEditingSong(song);
+                        setIsEditSongDialogOpen(true);
+                      }}
+                    >
+                      <EditIcon className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon" className="h-8 w-8 flex-shrink-0">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the song suggestion "{song.title}" by {song.artist}.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 )}
               </li>
             ))}
@@ -376,6 +460,59 @@ const SongVotingList: React.FC = () => {
           </div>
         )}
       </CardContent>
+
+      {/* Edit Song Suggestion Dialog */}
+      {editingSong && (
+        <Dialog open={isEditSongDialogOpen} onOpenChange={setIsEditSongDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-lora">Edit Song Suggestion</DialogTitle>
+              <CardDescription>Update the details for this song suggestion.</CardDescription>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(handleEditSongSubmit)} className="grid gap-6 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-song-title">Song Title</Label>
+                  <Input id="edit-song-title" {...editForm.register("title")} />
+                  {editForm.formState.errors.title && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-song-artist">Artist</Label>
+                  <Input id="edit-song-artist" {...editForm.register("artist")} />
+                  {editForm.formState.errors.artist && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.artist.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-song-reason">Why this song? (Optional)</Label>
+                  <Textarea
+                    id="edit-song-reason"
+                    placeholder="I love the harmonies in this song, and it would be a fun challenge for the choir!"
+                    className="resize-y min-h-[80px]"
+                    {...editForm.register("reason")}
+                  />
+                  {editForm.formState.errors.reason && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.reason.message}</p>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                    {editForm.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 };
