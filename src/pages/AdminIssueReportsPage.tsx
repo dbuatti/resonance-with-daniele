@@ -174,7 +174,7 @@ const AdminIssueReportsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8 px-4">
+    <div className="space-y-6 py-8"> {/* Removed px-4 */}
       <h1 className="text-4xl font-bold text-center font-lora">Issue Reports</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Review and manage all submitted issue reports and complaints from users.

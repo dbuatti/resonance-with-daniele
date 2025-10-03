@@ -113,7 +113,7 @@ const WelcomeHub: React.FC = () => {
   if (isLoading) {
     console.log("[WelcomeHub] Rendering skeleton due to loadingSession, loadingEvent, or loadingResources being true.");
     return (
-      <div className="py-8 md:py-12 space-y-8 px-4"> {/* Added px-4 for consistent padding */}
+      <div className="py-8 md:py-12 space-y-8"> {/* Removed px-4 for consistent padding */}
         <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
           <CardHeader className="text-center">
             <Skeleton className="w-32 h-32 rounded-full mx-auto mb-6" />
@@ -149,7 +149,7 @@ const WelcomeHub: React.FC = () => {
   console.log("[WelcomeHub] Rendering content for user:", user?.id, "First Name:", firstName);
 
   return (
-    <div className="py-8 md:py-12 space-y-8 px-4"> {/* Added px-4 for consistent padding */}
+    <div className="py-8 md:py-12 space-y-8"> {/* Removed px-4 for consistent padding */}
       <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
         <CardHeader className="text-center">
           <img

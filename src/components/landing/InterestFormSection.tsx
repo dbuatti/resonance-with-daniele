@@ -71,7 +71,7 @@ const InterestFormSection: React.FC = () => {
   if (isSubmitted) {
     return (
       <section className="py-16 md:py-24 bg-muted text-foreground">
-        <div className="px-4 max-w-2xl mx-auto"> {/* Added px-4 and kept max-w-2xl mx-auto */}
+        <div className="max-w-2xl mx-auto"> {/* Removed px-4 and kept max-w-2xl mx-auto */}
           <Card className="p-6 md:p-8 shadow-lg rounded-xl text-center">
             <CardHeader>
               <CardTitle className="text-3xl font-bold font-lora">Thank You!</CardTitle>
@@ -90,7 +90,7 @@ const InterestFormSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground">
-      <div className="px-4 max-w-2xl mx-auto"> {/* Added px-4 and kept max-w-2xl mx-auto */}
+      <div className="max-w-2xl mx-auto"> {/* Removed px-4 and kept max-w-2xl mx-auto */}
         <Card className="p-6 md:p-8 shadow-lg rounded-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold font-lora">Stay Up-to-Date on the Choir!</CardTitle>

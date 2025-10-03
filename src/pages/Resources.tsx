@@ -596,7 +596,7 @@ const Resources: React.FC = () => {
   const currentFolderPathDisplay = breadcrumbs.map(b => b.name).join(' / ');
 
   return (
-    <div className="space-y-6 py-8 px-4">
+    <div className="space-y-6 py-8"> {/* Removed px-4 */}
       <h1 className="text-4xl font-bold text-center font-lora">
         {showSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>
@@ -611,7 +611,7 @@ const Resources: React.FC = () => {
       )}
 
       {/* Breadcrumbs */}
-      <nav className="flex items-center space-x-2 text-sm text-muted-foreground max-w-6xl mx-auto px-4">
+      <nav className="flex items-center space-x-2 text-sm text-muted-foreground max-w-6xl mx-auto">
         {breadcrumbs.map((crumb, index) => (
           <React.Fragment key={crumb.id || "root"}>
             {index > 0 && <ChevronRight className="h-4 w-4" />}

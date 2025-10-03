@@ -8,7 +8,7 @@ import { CheckCircle, Mic, Users, Heart, CalendarDays } from "lucide-react";
 
 const LearnMore: React.FC = () => {
   return (
-    <div className="space-y-12 py-8 md:py-12 px-4"> {/* Added px-4 for consistent padding */}
+    <div className="space-y-12 py-8 md:py-12"> {/* Removed px-4 */}
       <section className="text-center space-y-6">
         <h1 className="text-4xl md:text-5xl font-bold font-lora text-foreground">
           🎶 Learn More About Resonance with Daniele

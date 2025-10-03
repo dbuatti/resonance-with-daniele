@@ -50,7 +50,7 @@ const AdminZone: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8 px-4"> {/* Added px-4 for consistent padding */}
+    <div className="space-y-6 py-8"> {/* Removed px-4 */}
       <h1 className="text-4xl font-bold text-center font-lora">Welcome to the Admin Zone, Daniele!</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.

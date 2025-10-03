@@ -58,7 +58,7 @@ const CurrentEventPage: React.FC = () => {
   if (showSkeleton) {
     console.log("[CurrentEventPage] Showing skeleton: isLoading is true and no cached data.");
     return (
-      <div className="py-8 md:py-12 space-y-6 px-4"> {/* Added px-4 for consistent padding */}
+      <div className="py-8 md:py-12 space-y-6"> {/* Removed px-4 */}
         <Card className="p-4 sm:p-6 md:p-8 shadow-lg rounded-xl border-2 border-primary">
           <CardHeader className="text-center">
             <Skeleton className="h-10 w-1/2 mx-auto mb-2" />
@@ -76,7 +76,7 @@ const CurrentEventPage: React.FC = () => {
   console.log("[CurrentEventPage] Rendering content: currentEvent is", currentEvent ? 'present' : 'null', "isFetching:", isFetching);
 
   return (
-    <div className="py-8 md:py-12 space-y-6 px-4"> {/* Added px-4 for consistent padding */}
+    <div className="py-8 md:py-12 space-y-6"> {/* Removed px-4 */}
       <Card className="p-4 sm:p-6 md:p-8 shadow-lg rounded-xl border-2 border-primary">
         <CardHeader className="text-center">
           <CardTitle className="text-4xl font-bold font-lora">COMING UP!</CardTitle>
