@@ -68,27 +68,7 @@ const AdminIssueReportsPage: React.FC = () => {
     refetchOnWindowFocus: true,
   });
 
-  useEffect(() => {
-    if (user?.is_admin && issueReports && issueReports.length > 0) {
-      const unreadReportIds = issueReports.filter(report => !report.is_read).map(report => report.id);
-      if (unreadReportIds.length > 0) {
-        console.log("[AdminIssueReportsPage] Marking unread reports as read:", unreadReportIds);
-        supabase
-          .from("issue_reports")
-          .update({ is_read: true })
-          .in("id", unreadReportIds)
-          .then(({ error }) => {
-            if (error) {
-              console.error("Error marking reports as read:", error);
-            } else {
-              console.log("Reports marked as read successfully.");
-              queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] });
-              queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
-            }
-          });
-      }
-    }
-  }, [issueReports, user?.is_admin, queryClient]);
+  // Removed the useEffect that automatically marked all unread reports as read on page load.
 
   const handleDeleteReport = async (reportId: string) => {
     if (!user || !user.is_admin) {
@@ -174,7 +154,7 @@ const AdminIssueReportsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed px-4 */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">Issue Reports</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Review and manage all submitted issue reports and complaints from users.
