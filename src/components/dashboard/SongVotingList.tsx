@@ -20,6 +20,14 @@ import { Textarea } from "@/components/ui/textarea"; // Import Textarea
 import { useForm } from "react-hook-form"; // Import useForm
 import { zodResolver } from "@hookform/resolvers/zod"; // Import zodResolver
 import * as z from "zod"; // Import z
+import {
+  Form, // Import the Form component
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 interface SongSuggestion {
   id: string;

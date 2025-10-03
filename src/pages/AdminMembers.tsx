@@ -273,7 +273,7 @@ const AdminMembers: React.FC = () => {
       // Update auth.users metadata (only first_name, last_name, avatar_url can be updated here)
       const { data: authResponseData, error: authUpdateError } = await supabase.auth.admin.updateUserById(editingMember.id, {
         email: editingMember.email || undefined, // Keep email if it exists
-        data: {
+        user_metadata: { // Corrected from 'data' to 'user_metadata'
           first_name: data.first_name || null,
           last_name: data.last_name || null,
           avatar_url: newAvatarUrl,
