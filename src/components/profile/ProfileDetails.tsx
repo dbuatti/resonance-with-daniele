@@ -218,7 +218,7 @@ const ProfileDetails: React.FC = () => {
   if (loadingSession) {
     console.log("[ProfileDetails Page] Rendering skeleton due to loadingSession.");
     return (
-      <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
+      <Card className="w-full p-6 md:p-8 shadow-lg rounded-xl">
         <CardHeader className="text-center">
           <Skeleton className="w-24 h-24 rounded-full mx-auto mb-4" />
           <Skeleton className="h-8 w-1/2 mx-auto mb-2" />
@@ -265,7 +265,7 @@ const ProfileDetails: React.FC = () => {
   console.log("[ProfileDetails Page] Rendering profile form for user:", user.id);
 
   return (
-    <Card className="max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-xl">
+    <Card className="w-full p-6 md:p-8 shadow-lg rounded-xl">
       <CardHeader className="text-center">
         <Avatar className="w-24 h-24 mx-auto mb-4">
           {displayAvatarUrl ? (

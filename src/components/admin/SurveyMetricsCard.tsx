@@ -80,7 +80,7 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
 
   if (loading) { // Use the loading prop directly
     return (
-      <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
+      <Card className="w-full p-6 shadow-lg rounded-xl">
         <CardHeader>
           <Skeleton className="h-8 w-1/2 mb-2" />
           <Skeleton className="h-5 w-3/4" />
@@ -95,7 +95,7 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
 
   if (totalResponses === 0) {
     return (
-      <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
+      <Card className="w-full p-6 shadow-lg rounded-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-lora">Survey Metrics</CardTitle>
           <CardDescription>No survey responses available yet.</CardDescription>
@@ -198,7 +198,7 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto p-6 shadow-lg rounded-xl">
+    <Card className="w-full p-6 shadow-lg rounded-xl">
       <CardHeader>
         <CardTitle className="text-3xl font-bold font-lora">Survey Metrics & Insights</CardTitle>
         <CardDescription className="text-muted-foreground">
