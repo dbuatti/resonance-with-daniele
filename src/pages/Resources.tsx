@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2, Search, Headphones, Folder, FolderOpen, ChevronRight, ChevronLeft } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Link as LinkIcon, FileText, Loader2, Search, Headphones, Folder, FolderOpen, ChevronRight, ChevronLeft, FolderSync } from "lucide-react"; // Added FolderSync icon
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
@@ -20,6 +20,7 @@ import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ResourceUpload from "@/components/ResourceUpload";
 import ResourceFolderCard from "@/components/ResourceFolderCard"; // Import the new folder card
+import MoveResourceDialog from "@/components/MoveResourceDialog"; // Import the MoveResourceDialog
 
 // Define schemas
 const resourceSchema = z.object({
@@ -68,6 +69,9 @@ const Resources: React.FC = () => {
   const [isEditFolderDialogOpen, setIsEditFolderDialogOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<ResourceFolder | null>(null);
   const [isDeletingFolder, setIsDeletingFolder] = useState<string | null>(null); // Track which folder is being deleted
+
+  const [isMoveResourceDialogOpen, setIsMoveResourceDialogOpen] = useState(false); // State for move dialog
+  const [resourceToMove, setResourceToMove] = useState<Resource | null>(null); // State for resource to move
 
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
@@ -596,7 +600,7 @@ const Resources: React.FC = () => {
   const currentFolderPathDisplay = breadcrumbs.map(b => b.name).join(' / ');
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed px-4 */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">
         {showSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Choir Resources"}
       </h1>
@@ -804,6 +808,17 @@ const Resources: React.FC = () => {
                       >
                         <Edit className="h-4 w-4 mr-2" /> Edit
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setResourceToMove(resource);
+                          setIsMoveResourceDialogOpen(true);
+                        }}
+                        disabled={isUploading}
+                      >
+                        <FolderSync className="h-4 w-4 mr-2" /> Move
+                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="destructive" size="sm" disabled={isUploading}>
@@ -923,6 +938,18 @@ const Resources: React.FC = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Move Resource Dialog */}
+      <MoveResourceDialog
+        isOpen={isMoveResourceDialogOpen}
+        onOpenChange={setIsMoveResourceDialogOpen}
+        resourceToMove={resourceToMove}
+        onMoveSuccess={() => {
+          setResourceToMove(null);
+          queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId, searchTerm] }); // Refresh current view
+        }}
+        currentFolderId={currentFolderId}
+      />
     </div>
   );
 };
