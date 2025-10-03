@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Eye } from "lucide-react";
+import { Loader2, Eye, Trash2 } from "lucide-react"; // Added Trash2 icon
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"; // Import AlertDialog components
 
 interface Profile {
   id: string;
@@ -48,6 +49,7 @@ const AdminMembers: React.FC = () => {
   const navigate = useNavigate();
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState<string | null>(null); // New state for tracking user deletion
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -115,6 +117,40 @@ const AdminMembers: React.FC = () => {
     setIsUpdatingAdminStatus(null);
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!user || !user.is_admin) {
+      showError("You do not have permission to delete users.");
+      return;
+    }
+
+    if (userId === user.id) {
+      showError("You cannot delete your own user account.");
+      return;
+    }
+
+    setIsDeletingUser(userId);
+    try {
+      // Use the Supabase Admin API to delete the user from auth.users
+      // This will trigger the RLS ON DELETE CASCADE on the public.profiles table
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+
+      if (error) {
+        console.error("Error deleting user:", error);
+        showError("Failed to delete user: " + error.message);
+      } else {
+        showSuccess(`User "${userName}" and their profile deleted successfully!`);
+        queryClient.invalidateQueries({ queryKey: ['adminMembers'] }); // Invalidate to refetch and update UI
+        queryClient.invalidateQueries({ queryKey: ['adminProfiles'] }); // Invalidate admin survey data
+        queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] }); // Update dashboard counts
+      }
+    } catch (error: any) {
+      console.error("Unexpected error during user deletion:", error);
+      showError("An unexpected error occurred: " + error.message);
+    } finally {
+      setIsDeletingUser(null);
+    }
+  };
+
   const hasSurveyResponses = (profile: Profile) => {
     return (
       profile.how_heard !== null ||
@@ -173,7 +209,7 @@ const AdminMembers: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed px-4 */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">Manage Member Profiles</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         View and manage all registered member profiles, including their roles.
@@ -221,7 +257,7 @@ const AdminMembers: React.FC = () => {
                         <Select
                           value={profile.is_admin ? "admin" : "user"}
                           onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
-                          disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id}
+                          disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id || isDeletingUser === profile.id}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select role" />
@@ -240,65 +276,97 @@ const AdminMembers: React.FC = () => {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" onClick={() => setSelectedProfile(profile)}>
-                              <Eye className="mr-2 h-4 w-4" /> View Survey
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle className="font-lora">Survey Responses for {profile.first_name || profile.email}</DialogTitle>
-                              <CardDescription>Last updated: {profile.updated_at ? new Date(profile.updated_at).toLocaleString() : "N/A"}</CardDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">How Heard:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.how_heard || "N/A"}</p>
+                        <div className="flex justify-end gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => setSelectedProfile(profile)} disabled={isDeletingUser === profile.id}>
+                                <Eye className="mr-2 h-4 w-4" /> View Survey
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="font-lora">Survey Responses for {profile.first_name || profile.email}</DialogTitle>
+                                <CardDescription>Last updated: {profile.updated_at ? new Date(profile.updated_at).toLocaleString() : "N/A"}</CardDescription>
+                              </DialogHeader>
+                              <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">How Heard:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.how_heard || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Motivation:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.motivation?.join(", ") || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Attended Session:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.attended_session === true ? "Yes" : profile.attended_session === false ? "No" : "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Singing Experience:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.singing_experience || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Session Frequency:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.session_frequency || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Preferred Time:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.preferred_time || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Music Genres:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.music_genres?.join(", ") || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Choir Goals:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.choir_goals || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Inclusivity Importance:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.inclusivity_importance || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Suggestions:</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.suggestions || "N/A"}</p>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                  <p className="col-span-1 text-sm font-medium">Voice Type(s):</p>
+                                  <p className="col-span-3 text-sm text-muted-foreground">{profile.voice_type?.join(", ") || "N/A"}</p>
+                                </div>
                               </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Motivation:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.motivation?.join(", ") || "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Attended Session:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.attended_session === true ? "Yes" : profile.attended_session === false ? "No" : "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Singing Experience:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.singing_experience || "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Session Frequency:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.session_frequency || "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Preferred Time:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.preferred_time || "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Music Genres:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.music_genres?.join(", ") || "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Choir Goals:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.choir_goals || "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Inclusivity Importance:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.inclusivity_importance || "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Suggestions:</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.suggestions || "N/A"}</p>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <p className="col-span-1 text-sm font-medium">Voice Type(s):</p>
-                                <p className="col-span-3 text-sm text-muted-foreground">{profile.voice_type?.join(", ") || "N/A"}</p>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogContent>
+                          </Dialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                disabled={profile.id === user.id || isDeletingUser === profile.id}
+                              >
+                                {isDeletingUser === profile.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                )}
+                                Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete the user account for "{profile.first_name || profile.email}" and all their associated data.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteUser(profile.id, profile.first_name || profile.email || "Unknown User")}>
+                                  Delete User
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
