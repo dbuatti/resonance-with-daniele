@@ -118,7 +118,7 @@ const MobileNav: React.FC = () => {
                 <span>Events</span>
               </Link>
               <Button asChild className="mt-auto w-full">
-                <Link to="/login" onClick={() => setIsOpen(false)}><span>Sign Up Now</span></Link>
+                <Link to="/login" onClick={() => setIsOpen(false)}><span>Get Started</span></Link>
               </Button>
             </>
           )}

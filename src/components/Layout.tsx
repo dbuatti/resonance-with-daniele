@@ -193,7 +193,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </Link>
                 </Button>
                 <Button className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
-                  <Link to="/login"><span>Sign Up Now</span></Link>
+                  <Link to="/login"><span>Get Started</span></Link>
                 </Button>
               </>
             )}

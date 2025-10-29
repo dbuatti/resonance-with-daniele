@@ -16,7 +16,7 @@ const HeroSection: React.FC = () => {
         </p>
         <div className="flex justify-center gap-4">
           <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border border-muted-foreground/30" asChild>
-            <Link to="/login">Sign Up Now</Link>
+            <Link to="/login">Get Started</Link>
           </Button>
           <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border border-muted-foreground/30" asChild>
             <Link to="/learn-more">Learn More</Link>
