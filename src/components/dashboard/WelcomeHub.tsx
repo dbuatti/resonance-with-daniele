@@ -346,33 +346,9 @@ const WelcomeHub: React.FC = () => {
             </Card>
           </div>
 
-          {/* New Card for Song Suggestions */}
-          <Card className="shadow-md border border-border">
-            <CardHeader>
-              <CardTitle className="text-xl font-lora flex items-center gap-2">
-                <Music className="h-5 w-5 text-foreground" /> Song Suggestions
-              </CardTitle>
-              <CardDescription>Suggest new songs and vote on existing ones!</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Have a song in mind you'd love the choir to sing? Or want to see what others have suggested?
-              </p>
-              <Button size="sm" className="w-full" asChild>
-                <Link to="/song-suggestions">
-                  <Music className="mr-2 h-4 w-4" /> Go to Song Suggestions
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Removed Song Suggestions Card */}
 
-          <div className="flex justify-center mt-8">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
-              <Link to="/profile">
-                <Settings className="mr-2 h-5 w-5" /> Manage My Profile
-              </Link>
-            </Button>
-          </div>
+          {/* Removed Manage My Profile Button */}
 
           <p className="text-center">
             💡 Learn more about me and my work:{" "}
