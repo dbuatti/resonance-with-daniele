@@ -165,14 +165,14 @@ const WelcomeHub: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent className="text-lg text-muted-foreground space-y-6">
-          <p>
+          <p className="mb-6">
             Welcome! I’m Daniele Buatti, and I’m thrilled to share this space with you. I’ve been working in musical theatre, vocal coaching, and music direction for years, and I believe in the transformative power of singing — not just as performance, but as connection, expression, and joy.
           </p>
-          <p>
+          <p className="mb-8">
             This hub is your go-to space for everything choir-related:
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"> {/* Added mb-8 here */}
             <div className="flex items-start gap-3">
               <CalendarDays className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
               <div>
@@ -210,7 +210,7 @@ const WelcomeHub: React.FC = () => {
             </div>
           </div>
 
-          <p className="mt-6">
+          <p className="mt-6 mb-8"> {/* Added mb-8 here */}
             No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. I celebrate all voices and all identities, and everyone is invited to shine their unique light here.
           </p>
 
@@ -336,7 +336,7 @@ const WelcomeHub: React.FC = () => {
                   </ul>
                 ) : (
                   <div className="text-center text-muted-foreground">
-                    <p>No recent resources.</p>
+                    <p>No recent resources found yet.</p> {/* Improved empty state message */}
                     <Button variant="link" className="p-0 h-auto" asChild>
                       <Link to="/resources">View all resources</Link>
                     </Button>
