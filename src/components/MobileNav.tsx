@@ -58,10 +58,12 @@ const MobileNav: React.FC = () => {
             <Home className="h-5 w-5" />
             <span>Home</span>
           </Link>
-          <Link to="/learn-more" className={getNavLinkClass("/learn-more")} onClick={() => setIsOpen(false)}>
-            <Info className="h-5 w-5" />
-            <span>Learn More</span>
-          </Link>
+          {!user && ( // Only show "Learn More" if user is not logged in
+            <Link to="/learn-more" className={getNavLinkClass("/learn-more")} onClick={() => setIsOpen(false)}>
+              <Info className="h-5 w-5" />
+              <span>Learn More</span>
+            </Link>
+          )}
           <Link to="/current-event" className={cn(getNavLinkClass("/current-event"), "text-accent font-bold")} onClick={() => setIsOpen(false)}>
             <CalendarDays className="h-5 w-5" />
             <span>COMING UP!</span>

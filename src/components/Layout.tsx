@@ -94,12 +94,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span>Home</span>
               </Link>
             </Button>
-            <Button variant="ghost" asChild className={getNavLinkClass("/learn-more")}>
-              <Link to="/learn-more">
-                <Info className="h-4 w-4" />
-                <span>Learn More</span>
-              </Link>
-            </Button>
+            {!user && ( // Only show "Learn More" if user is not logged in
+              <Button variant="ghost" asChild className={getNavLinkClass("/learn-more")}>
+                <Link to="/learn-more">
+                  <Info className="h-4 w-4" />
+                  <span>Learn More</span>
+                </Link>
+              </Button>
+            )}
             <Button variant="ghost" asChild className={cn(getNavLinkClass("/current-event"), "text-accent font-bold")}>
               <Link to="/current-event">
                 <CalendarDays className="h-4 w-4" />
