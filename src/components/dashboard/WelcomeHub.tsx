@@ -42,7 +42,7 @@ const WelcomeHub: React.FC = () => {
     queryKey: ['upcomingEvent'],
     queryFn: async () => {
       console.log("[WelcomeHub] Fetching upcoming event.");
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("events")
         .select("*")
         .gte("date", format(new Date(), "yyyy-MM-dd"))
@@ -50,9 +50,9 @@ const WelcomeHub: React.FC = () => {
         .limit(1)
         .single(); // Use single to get one object or null
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 means "no rows found"
-        console.error("[WelcomeHub] Error fetching upcoming event:", error);
-        throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+        console.error("[WelcomeHub] Error fetching upcoming event:", fetchError);
+        throw fetchError; // Re-throw to be caught by react-query's error handling
       }
       console.log("[WelcomeHub] Upcoming event fetched:", data);
       return data || null;
@@ -214,6 +214,9 @@ const WelcomeHub: React.FC = () => {
             No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. I celebrate all voices and all identities, and everyone is invited to shine their unique light here.
           </p>
 
+          {/* Quick Actions Card - Moved here */}
+          <QuickActionsCard />
+
           {/* New: Profile Completion Card */}
           {!isProfileCompleted && (
             <Card className="bg-primary/10 border-primary text-primary-foreground p-6 shadow-md rounded-xl mt-8 dark:bg-primary/20">
@@ -262,9 +265,6 @@ const WelcomeHub: React.FC = () => {
               </CardContent>
             </Card>
           )}
-
-          {/* Quick Actions Card */}
-          <QuickActionsCard />
 
           {/* Latest Announcements Card */}
           <LatestAnnouncementsCard />
