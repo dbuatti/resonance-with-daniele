@@ -76,7 +76,7 @@ const ReportIssueButton: React.FC = () => {
         <Button
           variant="default"
           size="lg"
-          className="fixed bottom-8 right-8 p-3 rounded-full shadow-lg z-50 flex items-center gap-2"
+          className="fixed bottom-8 left-8 p-3 rounded-full shadow-lg z-50 flex items-center gap-2"
         >
           <MessageSquare className="h-5 w-5" />
           <span className="hidden md:inline">Report an Issue</span>
