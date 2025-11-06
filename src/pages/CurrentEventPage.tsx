@@ -88,6 +88,7 @@ const CurrentEventPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Check if we have an event OR if we are using the general fallback link */}
           {currentEvent ? (
             <>
               <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-xl border border-border min-h-[70vh] max-h-[80vh]">
