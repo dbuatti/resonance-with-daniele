@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Loader2, Search, AlertCircle } from "lucide-react"; // Changed Link as LinkIcon to ExternalLink
+import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Loader2, Search, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useQuery, useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"; // Ensure Form components are imported
 
 // Define the schema for an event
 const eventSchema = z.object({
@@ -274,73 +282,112 @@ const Events: React.FC = () => {
                 <DialogTitle className="font-lora">Add New Event</DialogTitle>
                 <CardDescription>Fill in the details for your upcoming choir event.</CardDescription>
               </DialogHeader>
-              <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-                <div className="space-y-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input id="title" {...addForm.register("title")} />
-                    {addForm.formState.errors.title && (
-                      <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
+              <Form {...addForm}>
+                <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                  <FormField
+                    control={addForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Event Title" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !addForm.watch("date") && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarDays className="mr-2 h-4 w-4" />
-                          {addForm.watch("date") ? format(addForm.watch("date"), "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={addForm.watch("date")}
-                          onSelect={(date) => addForm.setValue("date", date!)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {addForm.formState.errors.date && (
-                      <p className="text-red-500 text-sm">{addForm.formState.errors.date.message}</p>
+                  />
+                  
+                  <FormField
+                    control={addForm.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarDays className="mr-2 h-4 w-4" />
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input id="location" {...addForm.register("location")} />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" {...addForm.register("description")} />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
-                  <Input id="humanitix_link" {...addForm.register("humanitix_link")} placeholder="https://events.humanitix.com/resonance-choir" />
-                  {addForm.formState.errors.humanitix_link && (
-                    <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                    {addForm.formState.isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                      </>
-                    ) : (
-                        "Add Event"
-                      )}
-                  </Button>
-                </DialogFooter>
-              </form>
+                  />
+
+                  <FormField
+                    control={addForm.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Location (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Venue Name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={addForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Details about the event..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={addForm.control}
+                    name="humanitix_link"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Humanitix Link (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://events.humanitix.com/..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <DialogFooter>
+                    <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                      {addForm.formState.isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                        </>
+                      ) : (
+                          "Add Event"
+                        )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
             </DialogContent>
           </Dialog>
         ) : (
@@ -450,73 +497,112 @@ const Events: React.FC = () => {
               <DialogTitle className="font-lora">Edit Event</DialogTitle>
               <CardDescription>Update the details for your choir event.</CardDescription>
             </DialogHeader>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
-              <div className="space-y-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-title">Title</Label>
-                  <Input id="edit-title" {...editForm.register("title")} />
-                  {editForm.formState.errors.title && (
-                    <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
+                <FormField
+                  control={editForm.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input id="edit-title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-date">Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !editForm.watch("date") && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {editForm.watch("date") ? format(editForm.watch("date"), "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={editForm.watch("date")}
-                        onSelect={(date) => editForm.setValue("date", date!)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  {editForm.formState.errors.date && (
-                    <p className="text-red-500 text-sm">{editForm.formState.errors.date.message}</p>
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarDays className="mr-2 h-4 w-4" />
+                              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-location">Location</Label>
-                  <Input id="edit-location" {...editForm.register("location")} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-description">Description</Label>
-                  <Textarea id="edit-description" {...editForm.register("description")} />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-humanitix_link">Humanitix Link (Optional)</Label>
-                <Input id="edit-humanitix_link" {...editForm.register("humanitix_link")} placeholder="https://events.humanitix.com/resonance-choir" />
-                {editForm.formState.errors.humanitix_link && (
-                  <p className="text-red-500 text-sm">{editForm.formState.errors.humanitix_link.message}</p>
-                )}
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={editForm.formState.isSubmitting}>
-                  {editForm.formState.isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                    </>
-                  ) : (
-                      "Save Changes"
-                    )}
-                </Button>
-              </DialogFooter>
-            </form>
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location (Optional)</FormLabel>
+                      <FormControl>
+                        <Input id="edit-location" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea id="edit-description" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="humanitix_link"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Humanitix Link (Optional)</FormLabel>
+                      <FormControl>
+                        <Input id="edit-humanitix_link" {...field} placeholder="https://events.humanitix.com/resonance-choir" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                    {editForm.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                      </>
+                    ) : (
+                        "Save Changes"
+                      )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       )}
