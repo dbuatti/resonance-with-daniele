@@ -39,6 +39,32 @@ const AdminIssueReportsPage: React.FC = () => {
     }
   }, [user, loadingSession, navigate]);
 
+  // Function to mark all unread reports as read
+  const markAllAsRead = async () => {
+    if (!user?.is_admin) return;
+
+    console.log("[AdminIssueReportsPage] Attempting to mark all unread reports as read.");
+    const { error } = await supabase
+      .from("issue_reports")
+      .update({ is_read: true })
+      .eq("is_read", false);
+
+    if (error) {
+      console.error("Error marking reports as read:", error);
+    } else {
+      console.log("[AdminIssueReportsPage] Successfully marked unread reports as read.");
+      // Invalidate the count query immediately
+      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
+    }
+  };
+
+  // Use effect to trigger markAllAsRead after initial data fetch (or immediately if data is cached)
+  useEffect(() => {
+    if (user?.is_admin) {
+      markAllAsRead();
+    }
+  }, [user?.is_admin]); // Run once when user/admin status is confirmed
+
   const fetchIssueReports = async (): Promise<IssueReport[]> => {
     console.log("[AdminIssueReportsPage] Fetching all issue reports.");
     const { data, error } = await supabase
@@ -67,8 +93,6 @@ const AdminIssueReportsPage: React.FC = () => {
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
-
-  // Removed the useEffect that automatically marked all unread reports as read on page load.
 
   const handleDeleteReport = async (reportId: string) => {
     if (!user || !user.is_admin) {

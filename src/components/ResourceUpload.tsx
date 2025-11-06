@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,12 +31,31 @@ const ResourceUpload: React.FC<ResourceUploadProps> = ({
     if (selectedFile) {
       setPreviewFileName(selectedFile.name);
     } else if (currentFileUrl) {
-      // Extract file name from URL if it's a Supabase URL
-      const urlParts = currentFileUrl.split('/');
-      const fileNameWithUUID = urlParts[urlParts.length - 1];
-      // Attempt to remove UUID prefix if present (e.g., "uuid/filename.pdf")
-      const cleanFileName = fileNameWithUUID.includes('/') ? fileNameWithUUID.split('/').pop() : fileNameWithUUID;
-      setPreviewFileName(cleanFileName || "Uploaded File");
+      // Extract file name from URL
+      try {
+        const url = new URL(currentFileUrl);
+        // The path is usually /storage/v1/object/public/bucket_name/user_id/folder/filename
+        const pathSegments = url.pathname.split('/');
+        // Find the last segment which should be the filename (potentially with UUID/timestamp prefix)
+        let fileName = pathSegments[pathSegments.length - 1];
+
+        // If the file name contains a timestamp prefix (e.g., 1678886400000-my-file.pdf), remove it
+        const timestampRegex = /^\d+-/;
+        if (timestampRegex.test(fileName)) {
+          fileName = fileName.replace(timestampRegex, '');
+        }
+        
+        // If the file name contains a UUID prefix (e.g., uuid/filename.pdf), extract the last part
+        if (fileName.includes('/')) {
+            fileName = fileName.split('/').pop() || fileName;
+        }
+
+        setPreviewFileName(fileName || "Uploaded File");
+      } catch (e) {
+        // If URL parsing fails, fall back to simple extraction
+        const urlParts = currentFileUrl.split('/');
+        setPreviewFileName(urlParts[urlParts.length - 1] || "Uploaded File");
+      }
     } else {
       setPreviewFileName(null);
     }
@@ -126,8 +145,11 @@ const ResourceUpload: React.FC<ResourceUploadProps> = ({
               Drag 'n' drop a PDF or audio file here, click to select, or paste from clipboard.
             </p>
           )}
-          {previewFileName && (
-            <p className="text-sm text-primary mt-2">Selected: {previewFileName}</p>
+          {(selectedFile || currentFileUrl) && (
+            <p className="text-sm text-primary mt-2">
+              {selectedFile ? "Selected: " : "Current File: "}
+              {previewFileName}
+            </p>
           )}
           {folderPathDisplay && (
             <p className="text-xs text-muted-foreground mt-1">
