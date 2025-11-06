@@ -34,13 +34,13 @@ const CurrentEventPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Removed fixed height constraints (min-h-[70vh] max-h-[80vh]) and added aspect-video for better responsiveness */}
-          <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-xl border border-border aspect-video md:aspect-[16/10] lg:aspect-[16/9]">
+          {/* Use min-h to ensure visibility, but rely on the Humanitix script to dynamically set the actual height. */}
+          <div className="w-full mx-auto rounded-lg overflow-hidden shadow-xl border border-border min-h-[70vh]">
             {/* Humanitix Inline Embed Iframe */}
             <iframe
               data-checkout="resonance-choir"
               title="Resonance with Daniele Choir Event"
-              className="absolute top-0 left-0 w-full h-full border-0"
+              className="w-full h-full border-0"
               allowFullScreen
               allow="payment"
             ></iframe>
