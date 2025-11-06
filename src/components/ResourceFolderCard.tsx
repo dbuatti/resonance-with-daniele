@@ -65,9 +65,9 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
       {...getRootProps()}
       onClick={handleNavigateClick}
       className={cn(
-        // Re-introducing clean container styling to match the image: light background, rounded, subtle shadow/border
-        "flex flex-col justify-between h-full transition-all duration-300 rounded-xl bg-card shadow-md border border-border/50 cursor-pointer",
-        "hover:shadow-lg hover:border-primary/50",
+        // Removed border border-border/50. Keeping shadow-md for the contained look.
+        "flex flex-col justify-between h-full transition-all duration-300 rounded-xl bg-card shadow-md cursor-pointer",
+        "hover:shadow-lg hover:border hover:border-primary/50", // Add border only on hover
         isDragActive && isAdmin && "border-4 border-primary ring-4 ring-primary/50 bg-primary/10",
         isUploading && "opacity-70 cursor-wait",
         isDeleting && "opacity-50 cursor-not-allowed"
@@ -87,7 +87,7 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
           <img 
             src="/images/folder-icon.png" 
             alt="Folder Icon" 
-            className="h-48 w-48 object-contain mb-2 text-primary" // Increased size to h-48 w-48 and reduced margin
+            className="h-48 w-48 object-contain mb-2 text-primary" 
           />
         )}
         <CardTitle className="text-2xl font-bold font-lora line-clamp-2 mt-2">
