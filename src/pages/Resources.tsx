@@ -40,7 +40,8 @@ const Resources: React.FC = () => {
     console.log("[ResourcesPage] Fetching resources.");
     let query = supabase
       .from("resources")
-      .select("*");
+      .select("*")
+      .order("created_at", { ascending: false }); // Default sort by newest first
 
     if (!isAdmin) {
       // Only fetch published resources for non-admins
@@ -83,19 +84,44 @@ const Resources: React.FC = () => {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingResource(null);
+    // Re-fetch resources after dialog closes if needed, although the dialog handles invalidation on success
   };
 
   const handleDeleteResource = async () => {
     if (!resourceToDelete || !isAdmin) return;
 
-    const { error } = await supabase
+    // If the resource is a file, attempt to delete it from storage first
+    if (resourceToDelete.type === 'file' && resourceToDelete.url) {
+      try {
+        const url = new URL(resourceToDelete.url);
+        const pathInStorage = url.pathname.split('/resources/')[1];
+        
+        if (pathInStorage) {
+          console.log(`[ResourcesPage] Deleting file from storage: ${pathInStorage}`);
+          const { error: storageError } = await supabase.storage
+            .from("resources")
+            .remove([pathInStorage]);
+
+          if (storageError) {
+            console.error("Error deleting file from storage:", storageError);
+            // Continue to delete DB record even if storage fails, to prevent orphaned records
+            showError("Warning: Failed to delete file from storage, but deleting database record.");
+          }
+        }
+      } catch (e) {
+        console.error("Error processing file URL for deletion:", e);
+      }
+    }
+
+    // Delete the database record
+    const { error: dbError } = await supabase
       .from("resources")
       .delete()
       .eq("id", resourceToDelete.id);
 
-    if (error) {
-      console.error("Error deleting resource:", error);
-      showError("Failed to delete resource: " + error.message);
+    if (dbError) {
+      console.error("Error deleting resource record:", dbError);
+      showError("Failed to delete resource record: " + dbError.message);
     } else {
       showSuccess("Resource deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ['resources'] });
@@ -127,8 +153,8 @@ const Resources: React.FC = () => {
           return resource.type === 'url';
         }
         // For 'pdf' and 'audio', check the file type based on the URL/type field
-        if (resource.type === 'file') {
-          const url = resource.url?.toLowerCase() || '';
+        if (resource.type === 'file' && resource.url) {
+          const url = resource.url.toLowerCase();
           if (filterType === 'pdf') return url.endsWith('.pdf');
           if (filterType === 'audio') return url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a');
         }
