@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSession } from "@/integrations/supabase/auth";
 import { ResourceFolder } from "@/types/Resource"; // Import ResourceFolder type
+import { cn } from "@/lib/utils";
 
 interface ResourceFolderCardProps {
   folder: ResourceFolder; // Use imported ResourceFolder type
@@ -27,52 +28,55 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
   const isAdmin = user?.is_admin;
 
   return (
-    <Card className="shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-200 flex flex-col justify-between">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-2xl font-medium font-lora flex items-center gap-2">
-          <Folder className="h-6 w-6 text-primary" />
+    <Card className="shadow-lg rounded-xl flex flex-col justify-between">
+      {/* Clickable Area: Folder Icon and Name */}
+      <div 
+        onClick={() => onNavigate(folder.id)}
+        className={cn(
+          "p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-200",
+          "hover:bg-muted/50 hover:shadow-inner rounded-t-xl flex-grow"
+        )}
+      >
+        <Folder className="h-16 w-16 text-primary mb-4" /> {/* Large Folder Icon */}
+        <CardTitle className="text-xl font-bold font-lora line-clamp-2">
           {folder.name}
         </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        <Button onClick={() => onNavigate(folder.id)} className="w-full">
-          Open Folder
-        </Button>
-        {isAdmin && (
-          <div className="flex justify-end gap-2 mt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(folder)} // Pass the full folder object
-              disabled={isDeleting}
-            >
-              <Edit className="h-4 w-4 mr-2" /> Edit
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={isDeleting}>
-                  {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+      </div>
+
+      {/* Admin Actions (if applicable) */}
+      {isAdmin && (
+        <CardContent className="pt-2 pb-4 flex justify-end gap-2 border-t border-border">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onEdit(folder)}
+            disabled={isDeleting}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={isDeleting}>
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the folder "{folder.name}" and all its contents (sub-folders and resources).
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(folder.id)}>
                   Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the folder "{folder.name}" and all its contents (sub-folders and resources).
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(folder.id)}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        )}
-      </CardContent>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardContent>
+      )}
     </Card>
   );
 };
