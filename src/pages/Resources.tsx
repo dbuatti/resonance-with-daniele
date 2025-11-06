@@ -82,8 +82,14 @@ const Resources: React.FC = () => {
     let query = supabase
       .from("resources")
       .select("*")
-      .eq("folder_id", folderId) // Filter by current folder ID (null for root)
       .order("created_at", { ascending: false });
+
+    // FIX: Use is.null for root folder (folderId === null)
+    if (folderId === null) {
+      query = query.is("folder_id", null);
+    } else {
+      query = query.eq("folder_id", folderId);
+    }
 
     if (!isAdmin) {
       query = query.eq("is_published", true);
