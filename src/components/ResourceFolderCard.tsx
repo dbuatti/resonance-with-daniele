@@ -65,9 +65,9 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
       {...getRootProps()}
       onClick={handleNavigateClick}
       className={cn(
-        // Minimal styling: no shadow, no border, clean background
-        "flex flex-col justify-between h-full transition-all duration-300 rounded-xl bg-card cursor-pointer",
-        "hover:bg-muted/70 hover:shadow-md border border-transparent hover:border-border", // Subtle hover effect
+        // Re-introducing clean container styling to match the image: light background, rounded, subtle shadow/border
+        "flex flex-col justify-between h-full transition-all duration-300 rounded-xl bg-card shadow-md border border-border/50 cursor-pointer",
+        "hover:shadow-lg hover:border-primary/50",
         isDragActive && isAdmin && "border-4 border-primary ring-4 ring-primary/50 bg-primary/10",
         isUploading && "opacity-70 cursor-wait",
         isDeleting && "opacity-50 cursor-not-allowed"
@@ -76,21 +76,21 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
       {/* Folder Content Area (Clickable for navigation) */}
       <div 
         className={cn(
-          "py-8 px-4 flex flex-col items-center justify-center text-center transition-all duration-200",
+          "py-12 px-4 flex flex-col items-center justify-center text-center transition-all duration-200",
           "flex-grow rounded-t-xl"
         )}
       >
         {/* Massive Folder Icon / Image */}
         {isUploading ? (
-          <Loader2 className="h-32 w-32 text-primary mb-4 animate-spin" />
+          <Loader2 className="h-48 w-48 text-primary mb-4 animate-spin" />
         ) : (
           <img 
             src="/images/folder-icon.png" 
             alt="Folder Icon" 
-            className="h-32 w-32 object-contain mb-2 text-primary" // Reduced margin bottom
+            className="h-48 w-48 object-contain mb-2 text-primary" // Increased size to h-48 w-48 and reduced margin
           />
         )}
-        <CardTitle className="text-xl font-bold font-lora line-clamp-2"> {/* Reduced font size slightly for better fit */}
+        <CardTitle className="text-2xl font-bold font-lora line-clamp-2 mt-2">
           {folder.name}
         </CardTitle>
         {isUploading && (
