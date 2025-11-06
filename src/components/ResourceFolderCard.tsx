@@ -2,7 +2,7 @@
 
 import React, { useCallback } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Folder, Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Trash2, Loader2 } from "lucide-react"; // Removed Folder import
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSession } from "@/integrations/supabase/auth";
@@ -66,11 +66,15 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
           "bg-card hover:bg-primary/5 flex-grow rounded-t-lg" // Subtle hover effect
         )}
       >
-        {/* Massive Folder Icon */}
+        {/* Massive Folder Icon / Image */}
         {isUploading ? (
           <Loader2 className="h-32 w-32 text-primary mb-4 animate-spin" />
         ) : (
-          <Folder className="h-32 w-32 text-primary mb-4" /> 
+          <img 
+            src="/images/folder-icon.jpg" 
+            alt="Folder Icon" 
+            className="h-32 w-32 object-contain mb-4 text-primary" 
+          />
         )}
         <CardTitle className="text-2xl font-bold font-lora line-clamp-2 mt-2">
           {folder.name}
