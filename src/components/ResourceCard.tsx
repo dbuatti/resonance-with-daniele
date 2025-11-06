@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, EyeOff, CheckCircle2, FileSearch, Download, File } from "lucide-react";
+import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -52,13 +52,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
   const fileDetails = getFileDetails();
 
-  const handlePrimaryAction = () => {
-    if (!resource.url) return;
-
-    if (fileDetails.isPdf) {
+  const handleOpenPreview = () => {
+    if (fileDetails.isPdf && resource.url) {
       setIsPreviewOpen(true);
-    } else {
-      // For audio files and external links, open directly in a new tab
+    } else if (resource.url) {
+      // For non-PDF files (like audio) and links, open directly in a new tab
       window.open(resource.url, '_blank');
     }
   };
@@ -68,6 +66,22 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
       window.open(resource.url, '_blank');
     }
   };
+
+  // Determine the primary button text and icon based on type
+  const getPrimaryButtonDetails = () => {
+    if (fileDetails.isPdf) {
+      return { text: "Download File", icon: <Download className="h-4 w-4 mr-2" /> };
+    }
+    if (fileDetails.isAudio) {
+      return { text: "Listen to Audio", icon: <Headphones className="h-4 w-4 mr-2" /> };
+    }
+    if (isLink) {
+      return { text: "View Link", icon: <ExternalLink className="h-4 w-4 mr-2" /> };
+    }
+    return { text: "Download File", icon: <Download className="h-4 w-4 mr-2" /> };
+  };
+
+  const primaryButtonDetails = getPrimaryButtonDetails();
 
   return (
     <>
@@ -98,49 +112,53 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           </CardDescription>
         </CardHeader>
         
-        {/* Visual Preview Area for Files */}
+        {/* Visual Preview Area for Files (Clickable for PDF Preview) */}
         {isFile && (
-          <CardContent className="pt-0 pb-4">
+          <CardContent 
+            className={cn(
+              "pt-0 pb-4",
+              fileDetails.isPdf && resource.url && "cursor-pointer hover:opacity-90 transition-opacity"
+            )}
+            onClick={fileDetails.isPdf ? handleOpenPreview : undefined}
+          >
             <div className="bg-muted/50 border border-border rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-3">
               {fileDetails.icon}
               <p className="text-sm font-medium text-foreground line-clamp-1">{fileDetails.fileName}</p>
               <p className="text-xs text-muted-foreground">{fileDetails.type}</p>
+              {fileDetails.isPdf && resource.url && (
+                <div className="flex items-center text-primary text-sm font-semibold mt-2">
+                  <FileSearch className="h-4 w-4 mr-1" /> Click to Preview
+                </div>
+              )}
             </div>
           </CardContent>
         )}
 
         <CardContent className="pt-0">
           <div className="flex flex-col gap-3">
+            {/* Primary Action Button (Download for PDF, Listen for Audio, View for Link) */}
             <Button 
-              onClick={handlePrimaryAction} 
+              onClick={fileDetails.isPdf ? handleDownloadAction : handleOpenPreview} 
               className="w-full" 
               disabled={!resource.url}
             >
-              {fileDetails.isPdf ? (
-                <>
-                  <FileSearch className="h-4 w-4 mr-2" />
-                  <span>Preview PDF</span>
-                </>
-              ) : fileDetails.isAudio ? (
-                <>
-                  <Headphones className="h-4 w-4 mr-2" />
-                  <span>Listen to Audio</span>
-                </>
-              ) : isLink ? (
-                <>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  <span>View Link</span>
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  <span>Download File</span>
-                </>
-              )}
+              {primaryButtonDetails.icon}
+              <span>{primaryButtonDetails.text}</span>
             </Button>
             
-            {/* Secondary Download button for PDFs/Audio */}
-            {isFile && !fileDetails.isPdf && ( // Show Download for non-PDF files (like audio)
+            {/* Secondary Action Button (Only needed if primary action is not Download) */}
+            {isFile && fileDetails.isPdf && ( // If primary is Download (for PDF), offer Preview as secondary
+              <Button 
+                onClick={handleOpenPreview} 
+                variant="outline"
+                className="w-full" 
+                disabled={!resource.url}
+              >
+                <FileSearch className="h-4 w-4 mr-2" /> Open Full Preview
+              </Button>
+            )}
+            
+            {isFile && fileDetails.isAudio && ( // If primary is Listen (for Audio), offer Download as secondary
               <Button 
                 onClick={handleDownloadAction} 
                 variant="outline"
@@ -148,16 +166,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 disabled={!resource.url}
               >
                 <Download className="h-4 w-4 mr-2" /> Download File
-              </Button>
-            )}
-            {isLink && ( // Show Download for links (as a secondary action, though it just opens the link)
-              <Button 
-                onClick={handleDownloadAction} 
-                variant="outline"
-                className="w-full" 
-                disabled={!resource.url}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" /> Open Link
               </Button>
             )}
 
