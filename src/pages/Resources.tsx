@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -41,6 +41,7 @@ const Resources: React.FC = () => {
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<ResourceFolder | null>(null);
   const [isDeletingFolder, setIsDeletingFolder] = useState(false);
+  const [isUploadingFileToFolder, setIsUploadingFileToFolder] = useState<string | null>(null); // Folder ID being uploaded to
 
   // Filter/Sort states
   const [searchTerm, setSearchTerm] = useState("");
@@ -137,6 +138,86 @@ const Resources: React.FC = () => {
 
     return [...crumbs, ...path];
   }, [allFolders, currentFolderId]);
+
+  // --- File Upload Helpers (Replicated from ResourceDialog for D&D) ---
+
+  const uploadFile = useCallback(async (file: File, resourceId: string): Promise<{ url: string | null, error: Error | null }> => {
+    if (!user) return { url: null, error: new Error("User not authenticated.") };
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${resourceId}/${Date.now()}.${fileExt}`;
+    const filePath = fileName;
+
+    const { error: uploadErr } = await supabase.storage
+      .from("resources")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (uploadErr) {
+      return { url: null, error: uploadErr };
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("resources")
+      .getPublicUrl(filePath);
+      
+    return { url: publicUrlData?.publicUrl || null, error: null };
+  }, [user]);
+
+  const handleFileUploadToFolder = useCallback(async (file: File, folderId: string) => {
+    if (!isAdmin || !user) {
+      showError("You do not have permission to upload files.");
+      return;
+    }
+
+    setIsUploadingFileToFolder(folderId);
+    const resourceId = crypto.randomUUID();
+
+    try {
+      // 1. Upload the file
+      const { url: fileUrl, error: uploadError } = await uploadFile(file, resourceId);
+
+      if (uploadError || !fileUrl) {
+        throw new Error("File upload failed: " + uploadError?.message);
+      }
+
+      // 2. Create the resource metadata entry
+      const resourceData = {
+        id: resourceId,
+        user_id: user.id,
+        title: file.name, // Use file name as title
+        description: `Uploaded via drag and drop on ${format(new Date(), "PPP")}`,
+        url: fileUrl,
+        type: 'file' as const,
+        is_published: true,
+        folder_id: folderId,
+      };
+
+      const { error: dbError } = await supabase
+        .from("resources")
+        .insert(resourceData);
+
+      if (dbError) {
+        console.error("Error saving resource metadata after successful upload:", dbError);
+        throw new Error("Failed to save resource details after upload: " + dbError.message);
+      }
+
+      showSuccess(`File "${file.name}" uploaded successfully to folder!`);
+      
+      // Invalidate queries for the target folder and the root
+      queryClient.invalidateQueries({ queryKey: ['resources', folderId] });
+      queryClient.invalidateQueries({ queryKey: ['resources', null] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
+
+    } catch (error: any) {
+      console.error("Drag and drop upload failed:", error);
+      showError(error.message || "An unexpected error occurred during file upload.");
+    } finally {
+      setIsUploadingFileToFolder(null);
+    }
+  }, [isAdmin, user, queryClient, uploadFile]);
 
   // --- Handlers ---
 
@@ -449,8 +530,10 @@ const Resources: React.FC = () => {
                   folder={folder}
                   onNavigate={() => handleNavigate(folder.id)}
                   onEdit={handleOpenEditFolderDialog}
-                  onDelete={(id) => setFolderToDelete(folder)}
+                  onDelete={() => setFolderToDelete(folder)}
                   isDeleting={isDeletingFolder}
+                  onFileUpload={handleFileUploadToFolder}
+                  isUploading={isUploadingFileToFolder === folder.id}
                 />
               ))}
             </div>

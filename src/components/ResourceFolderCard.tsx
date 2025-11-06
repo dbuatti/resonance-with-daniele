@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Folder, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useSession } from "@/integrations/supabase/auth";
 import { ResourceFolder } from "@/types/Resource";
 import { cn } from "@/lib/utils";
+import { useDropzone } from "react-dropzone";
 
 interface ResourceFolderCardProps {
   folder: ResourceFolder;
@@ -15,6 +16,8 @@ interface ResourceFolderCardProps {
   onEdit: (folder: ResourceFolder) => void;
   onDelete: (folderId: string) => void;
   isDeleting: boolean;
+  onFileUpload: (file: File, folderId: string) => void;
+  isUploading: boolean;
 }
 
 const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
@@ -23,12 +26,38 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
   onEdit,
   onDelete,
   isDeleting,
+  onFileUpload,
+  isUploading,
 }) => {
   const { user } = useSession();
   const isAdmin = user?.is_admin;
 
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0 && isAdmin) {
+      onFileUpload(acceptedFiles[0], folder.id);
+    }
+  }, [isAdmin, folder.id, onFileUpload]);
+
+  const { getRootProps, isDragActive } = useDropzone({
+    onDrop,
+    noClick: true, // Prevent clicking the card from opening the file dialog
+    accept: {
+      'application/pdf': ['.pdf'],
+      'audio/*': ['.mp3', '.wav', '.ogg', '.m4a'],
+    },
+    maxFiles: 1,
+    disabled: !isAdmin || isDeleting || isUploading, // Disable if uploading
+  });
+
   return (
-    <Card className="flex flex-col justify-between h-full transition-all duration-300 shadow-md hover:shadow-xl">
+    <Card 
+      {...getRootProps()}
+      className={cn(
+        "flex flex-col justify-between h-full transition-all duration-300 shadow-md hover:shadow-xl",
+        isDragActive && isAdmin && "border-4 border-primary ring-4 ring-primary/50 bg-primary/10", // Drag active style
+        isUploading && "opacity-70 cursor-wait" // Uploading style
+      )}
+    >
       {/* Clickable Area: Massive Folder Icon and Name */}
       <div 
         onClick={() => onNavigate(folder.id)}
@@ -38,10 +67,17 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
         )}
       >
         {/* Massive Folder Icon */}
-        <Folder className="h-32 w-32 text-primary mb-4" /> 
+        {isUploading ? (
+          <Loader2 className="h-32 w-32 text-primary mb-4 animate-spin" />
+        ) : (
+          <Folder className="h-32 w-32 text-primary mb-4" /> 
+        )}
         <CardTitle className="text-2xl font-bold font-lora line-clamp-2 mt-2">
           {folder.name}
         </CardTitle>
+        {isUploading && (
+          <p className="text-sm text-primary mt-2 font-semibold">Uploading file...</p>
+        )}
       </div>
 
       {/* Admin Actions (if applicable) - Visually separated footer */}
@@ -51,13 +87,13 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
             variant="outline"
             size="sm"
             onClick={() => onEdit(folder)}
-            disabled={isDeleting}
+            disabled={isDeleting || isUploading}
           >
             <Edit className="h-4 w-4" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" disabled={isDeleting}>
+              <Button variant="destructive" size="sm" disabled={isDeleting || isUploading}>
                 {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               </Button>
             </AlertDialogTrigger>
