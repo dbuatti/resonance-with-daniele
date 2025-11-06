@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Edit, Trash2, Loader2 } from "lucide-react"; // Removed Folder import
+import { CardTitle } from "@/components/ui/card";
+import { Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSession } from "@/integrations/supabase/auth";
@@ -49,21 +49,34 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
     disabled: !isAdmin || isDeleting || isUploading, // Disable if uploading
   });
 
+  // Handle navigation click, ensuring it doesn't trigger if admin actions are clicked
+  const handleNavigateClick = (e: React.MouseEvent) => {
+    // Check if the click target is one of the action buttons or their children
+    const target = e.target as HTMLElement;
+    const isActionButton = target.closest('.admin-action-button');
+    
+    if (!isActionButton) {
+      onNavigate(folder.id);
+    }
+  };
+
   return (
-    <Card 
+    <div 
       {...getRootProps()}
+      onClick={handleNavigateClick}
       className={cn(
-        "flex flex-col justify-between h-full transition-all duration-300 shadow-md hover:shadow-xl",
-        isDragActive && isAdmin && "border-4 border-primary ring-4 ring-primary/50 bg-primary/10", // Drag active style
-        isUploading && "opacity-70 cursor-wait" // Uploading style
+        "flex flex-col justify-between h-full transition-all duration-300 shadow-md rounded-xl border border-border bg-card cursor-pointer",
+        "hover:shadow-xl hover:border-primary/50",
+        isDragActive && isAdmin && "border-4 border-primary ring-4 ring-primary/50 bg-primary/10",
+        isUploading && "opacity-70 cursor-wait",
+        isDeleting && "opacity-50 cursor-not-allowed"
       )}
     >
-      {/* Clickable Area: Massive Folder Icon and Name */}
+      {/* Folder Content Area (Clickable for navigation) */}
       <div 
-        onClick={() => onNavigate(folder.id)}
         className={cn(
-          "p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200",
-          "bg-card hover:bg-primary/5 flex-grow rounded-t-lg" // Subtle hover effect
+          "p-8 flex flex-col items-center justify-center text-center transition-all duration-200",
+          "flex-grow rounded-t-xl"
         )}
       >
         {/* Massive Folder Icon / Image */}
@@ -71,7 +84,7 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
           <Loader2 className="h-32 w-32 text-primary mb-4 animate-spin" />
         ) : (
           <img 
-            src="/images/folder-icon.jpg" 
+            src="/images/folder-icon.png" // Updated to .png
             alt="Folder Icon" 
             className="h-32 w-32 object-contain mb-4 text-primary" 
           />
@@ -86,18 +99,19 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
 
       {/* Admin Actions (if applicable) - Visually separated footer */}
       {isAdmin && (
-        <CardContent className="pt-2 pb-4 flex justify-end gap-2 border-t border-border bg-muted/30 rounded-b-lg">
+        <div className="pt-2 pb-4 px-4 flex justify-end gap-2 border-t border-border bg-muted/30 rounded-b-xl">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onEdit(folder)}
             disabled={isDeleting || isUploading}
+            className="admin-action-button"
           >
             <Edit className="h-4 w-4" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" disabled={isDeleting || isUploading}>
+              <Button variant="destructive" size="sm" disabled={isDeleting || isUploading} className="admin-action-button">
                 {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               </Button>
             </AlertDialogTrigger>
@@ -116,9 +130,9 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 };
 
