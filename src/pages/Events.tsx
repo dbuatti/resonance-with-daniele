@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Link as LinkIcon, PlusCircle, Edit, Trash2, Loader2, Search, AlertCircle } from "lucide-react";
+import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Loader2, Search, AlertCircle } from "lucide-react"; // Changed Link as LinkIcon to ExternalLink
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -151,7 +151,7 @@ const Events: React.FC = () => {
         addForm.reset();
         setIsAddDialogOpen(false);
         queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
-        queryClient.invalidateQueries({ queryKey: ['currentEvent'] }); // Also invalidate current event
+        queryClient.invalidateQueries({ queryKey: ['upcomingEvent'] }); // Also invalidate current event
       }
     } catch (error) {
       console.error("Unexpected error adding event:", error);
@@ -188,7 +188,7 @@ const Events: React.FC = () => {
         setIsEditDialogOpen(false);
         setEditingEvent(null);
         queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
-        queryClient.invalidateQueries({ queryKey: ['currentEvent'] }); // Also invalidate current event
+        queryClient.invalidateQueries({ queryKey: ['upcomingEvent'] }); // Also invalidate current event
       }
     } catch (error) {
       console.error("Unexpected error updating event:", error);
@@ -215,7 +215,7 @@ const Events: React.FC = () => {
       } else {
         showSuccess("Event deleted successfully!");
         queryClient.invalidateQueries({ queryKey: ['events'] }); // Invalidate to refetch and update UI
-        queryClient.invalidateQueries({ queryKey: ['currentEvent'] }); // Also invalidate current event
+        queryClient.invalidateQueries({ queryKey: ['upcomingEvent'] }); // Also invalidate current event
       }
     } catch (error) {
       console.error("Unexpected error deleting event:", error);
@@ -367,7 +367,7 @@ const Events: React.FC = () => {
           <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
             <CalendarDays className="h-16 w-16 text-muted-foreground" />
             <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
-            <p className="text-md text-muted-foreground mt-2">
+            <p className="mt-2">
               {user
                 ? "Be the first to add one using the 'Add New Event' button above!"
                 : "Log in to add and view upcoming events."}
@@ -394,7 +394,7 @@ const Events: React.FC = () => {
                 {event.humanitix_link ? (
                   <Button asChild className="w-full">
                     <a href={event.humanitix_link} target="_blank" rel="noopener noreferrer">
-                      <LinkIcon className="mr-2 h-4 w-4" /> View on Humanitix
+                      <ExternalLink className="mr-2 h-4 w-4" /> View on Humanitix
                     </a>
                   </Button>
                 ) : (
