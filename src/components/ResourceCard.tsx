@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, EyeOff, CheckCircle2, FileSearch, Download } from "lucide-react";
+import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, EyeOff, CheckCircle2, FileSearch, Download, File } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -25,18 +25,29 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   const isPublished = resource.is_published;
 
   const getFileDetails = () => {
-    if (!resource.url) return { icon: <FileText className="h-6 w-6 text-muted-foreground" />, type: 'Unknown File', isPdf: false, isAudio: false };
+    if (!resource.url) return { icon: <FileText className="h-12 w-12 text-muted-foreground" />, type: 'Unknown File', isPdf: false, isAudio: false, fileName: 'N/A' };
     const url = resource.url.toLowerCase();
     const isPdf = url.endsWith('.pdf');
     const isAudio = url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a');
 
+    // Attempt to extract file name from URL path
+    const urlObj = new URL(resource.url);
+    const pathSegments = urlObj.pathname.split('/');
+    let fileName = pathSegments[pathSegments.length - 1];
+    
+    // Clean up potential prefixes (UUID/timestamp)
+    fileName = fileName.replace(/^\d+-/, '');
+    if (fileName.includes('/')) {
+        fileName = fileName.split('/').pop() || fileName;
+    }
+    
     if (isPdf) {
-      return { icon: <FileText className="h-6 w-6 text-primary" />, type: 'PDF Document', isPdf, isAudio: false };
+      return { icon: <FileText className="h-12 w-12 text-primary" />, type: 'PDF Document', isPdf, isAudio: false, fileName };
     }
     if (isAudio) {
-      return { icon: <Headphones className="h-6 w-6 text-primary" />, type: 'Audio Track', isPdf: false, isAudio };
+      return { icon: <Headphones className="h-12 w-12 text-primary" />, type: 'Audio Track', isPdf: false, isAudio, fileName };
     }
-    return { icon: <FileText className="h-6 w-6 text-muted-foreground" />, type: 'File', isPdf: false, isAudio: false };
+    return { icon: <File className="h-12 w-12 text-muted-foreground" />, type: 'File', isPdf: false, isAudio: false, fileName };
   };
 
   const fileDetails = getFileDetails();
@@ -66,21 +77,39 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
       )}>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
-              {isLink ? <LinkIcon className="h-6 w-6 text-primary" /> : fileDetails.icon}
+            <div className="flex items-center gap-2">
+              {isLink ? (
+                <LinkIcon className="h-6 w-6 text-primary" />
+              ) : (
+                <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
+                  {fileDetails.icon}
+                </div>
+              )}
+              <CardTitle className="text-xl font-lora line-clamp-2">{resource.title}</CardTitle>
             </div>
             {isAdmin && (
-              <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs">
+              <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs flex-shrink-0">
                 {isPublished ? "Published" : "Draft"}
               </Badge>
             )}
           </div>
-          <CardTitle className="text-xl font-lora mt-2 line-clamp-2">{resource.title}</CardTitle>
-          <CardDescription className="text-sm text-muted-foreground line-clamp-3 min-h-[40px]">
+          <CardDescription className="text-sm text-muted-foreground line-clamp-3 min-h-[40px] mt-2">
             {resource.description || (isLink ? "External Link" : fileDetails.type)}
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
+        
+        {/* Visual Preview Area for Files */}
+        {isFile && (
+          <CardContent className="pt-0 pb-4">
+            <div className="bg-muted/50 border border-border rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-3">
+              {fileDetails.icon}
+              <p className="text-sm font-medium text-foreground line-clamp-1">{fileDetails.fileName}</p>
+              <p className="text-xs text-muted-foreground">{fileDetails.type}</p>
+            </div>
+          </CardContent>
+        )}
+
+        <CardContent className="pt-0">
           <div className="flex flex-col gap-3">
             <Button 
               onClick={handlePrimaryAction} 
@@ -110,20 +139,30 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               )}
             </Button>
             
-            {/* Secondary Download button for PDFs/Audio if needed, or just keep the primary action */}
-            {fileDetails.isPdf && (
+            {/* Secondary Download button for PDFs/Audio */}
+            {isFile && !fileDetails.isPdf && ( // Show Download for non-PDF files (like audio)
               <Button 
                 onClick={handleDownloadAction} 
                 variant="outline"
                 className="w-full" 
                 disabled={!resource.url}
               >
-                <Download className="h-4 w-4 mr-2" /> Download PDF
+                <Download className="h-4 w-4 mr-2" /> Download File
+              </Button>
+            )}
+            {isLink && ( // Show Download for links (as a secondary action, though it just opens the link)
+              <Button 
+                onClick={handleDownloadAction} 
+                variant="outline"
+                className="w-full" 
+                disabled={!resource.url}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" /> Open Link
               </Button>
             )}
 
             {isAdmin && (
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 mt-2">
                 <Button
                   variant="outline"
                   size="sm"
