@@ -6,20 +6,12 @@ import { Folder, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSession } from "@/integrations/supabase/auth";
-
-interface ResourceFolder {
-  id: string;
-  name: string;
-  parent_folder_id: string | null;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-}
+import { ResourceFolder } from "@/types/Resource"; // Import ResourceFolder type
 
 interface ResourceFolderCardProps {
-  folder: ResourceFolder; // Changed to accept the full ResourceFolder object
+  folder: ResourceFolder; // Use imported ResourceFolder type
   onNavigate: (folderId: string) => void;
-  onEdit: (folder: ResourceFolder) => void; // Changed to accept the full ResourceFolder object
+  onEdit: (folder: ResourceFolder) => void;
   onDelete: (folderId: string) => void;
   isDeleting: boolean;
 }

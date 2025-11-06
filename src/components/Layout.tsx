@@ -32,7 +32,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ReportIssueButton from "./ReportIssueButton";
-import UnreadIssueReportsNotice from "./UnreadIssueReportsNotice"; // Import the new component
+import UnreadIssueReportsNotice from "./UnreadIssueReportsNotice";
+import AdminViewToggle from "./AdminViewToggle"; // Import the new component
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -88,6 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             Resonance with Daniele
           </Link>
           <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">
+            {user?.is_admin && <AdminViewToggle />} {/* Admin View Toggle */}
             <Button variant="ghost" asChild className={getNavLinkClass("/")}>
               <Link to="/">
                 <Home className="h-4 w-4" />
@@ -215,7 +217,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <FooterSection />
       <BackToTopButton />
       <ReportIssueButton />
-      <UnreadIssueReportsNotice /> {/* Add the new floating notice here */}
+      {user?.is_admin && <UnreadIssueReportsNotice />}
     </div>
   );
 };

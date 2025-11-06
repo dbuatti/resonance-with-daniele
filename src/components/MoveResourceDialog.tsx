@@ -22,17 +22,12 @@ import { Loader2, Folder } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
+import { ResourceFolder } from "@/types/Resource"; // Import ResourceFolder
 
 interface Resource {
   id: string;
   title: string;
   folder_id: string | null;
-}
-
-interface ResourceFolder {
-  id: string;
-  name: string;
-  parent_folder_id: string | null;
 }
 
 interface MoveResourceDialogProps {
@@ -59,7 +54,7 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
     console.log("[MoveResourceDialog] Fetching all folders.");
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("id, name, parent_folder_id")
+      .select("id, name, parent_folder_id, user_id, created_at, updated_at") // Select all required fields
       .order("name", { ascending: true });
 
     if (error) {
@@ -84,7 +79,7 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      // Reset selected folder when dialog opens, default to current folder's parent or null
+      // Reset selected folder when dialog opens, default to resource's current folder
       setSelectedFolder(resourceToMove?.folder_id || null);
     }
   }, [isOpen, resourceToMove]);
@@ -114,6 +109,7 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
         queryClient.invalidateQueries({ queryKey: ['resources', resourceToMove.folder_id] }); // Old folder
         queryClient.invalidateQueries({ queryKey: ['resources', selectedFolder] }); // New folder
         queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId] }); // Current view
+        queryClient.invalidateQueries({ queryKey: ['resources', null] }); // Root folder
       }
     } catch (error: any) {
       console.error("Unexpected error during resource move:", error);
@@ -144,16 +140,17 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
 
   // Filter out the current folder and its children to prevent moving a folder into itself
   const getMovableFolders = () => {
-    if (!allFolders || !resourceToMove) return [];
+    if (!allFolders || !resourceToMove) return allFolders || [];
 
-    // Get all child folder IDs of the resource's current folder (if it's a folder being moved, not a resource)
-    // Since we are moving a resource, we just need to exclude its current folder as a destination
+    // When moving a resource, we don't need to exclude descendants, only the current folder itself
+    // as a destination if the resource is already there.
     const foldersToExclude = new Set<string>();
+    // Exclude the current folder of the resource, as moving it to the same place is redundant
     if (resourceToMove.folder_id) {
       foldersToExclude.add(resourceToMove.folder_id);
     }
 
-    return allFolders.filter(folder => !foldersToExclude.has(folder.id));
+    return allFolders.filter(folder => folder.id !== resourceToMove.folder_id);
   };
 
   const movableFolders = getMovableFolders();
@@ -178,7 +175,7 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
               <p className="text-destructive text-sm">Error loading folders.</p>
             ) : (
               <Select
-                value={selectedFolder || ""}
+                value={selectedFolder || "null"}
                 onValueChange={(value) => setSelectedFolder(value === "null" ? null : value)}
                 disabled={isMoving}
               >
@@ -207,7 +204,7 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isMoving}>
             Cancel
           </Button>
-          <Button onClick={handleMove} disabled={isMoving || !resourceToMove || selectedFolder === undefined}>
+          <Button onClick={handleMove} disabled={isMoving || !resourceToMove || selectedFolder === undefined || selectedFolder === resourceToMove.folder_id}>
             {isMoving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Moving...

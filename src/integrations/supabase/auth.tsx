@@ -39,6 +39,8 @@ interface SessionContextType {
   loading: boolean; // Overall loading for the session context
   profileLoading: boolean; // Loading specifically for the profile data
   isLoggingOut: boolean; // Added isLoggingOut
+  isAdminView: boolean; // New state: true if viewing as admin, false if viewing as regular user
+  toggleAdminView: () => void; // New function to toggle admin view
   logout: () => Promise<void>; // Added logout function to context
 }
 
@@ -48,6 +50,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const [session, setSession] = useState<Session | null>(null);
   const [initialLoading, setInitialLoading] = useState(true); // For initial session fetch
   const [isLoggingOut, setIsLoggingOut] = useState(false); // State for logout loading
+  const [isAdminView, setIsAdminView] = useState(true); // New state: Default to admin view if user is admin
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -85,8 +88,15 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       console.log("[SessionContext] All React Query caches cleared and session state reset.");
       navigate('/login'); // Redirect to login page
       setIsLoggingOut(false);
+      setIsAdminView(true); // Reset admin view state on logout
     }
   }, [queryClient, navigate]);
+
+  // Toggle function for admin view
+  const toggleAdminView = useCallback(() => {
+    setIsAdminView(prev => !prev);
+    showSuccess(`Switched to ${isAdminView ? 'User' : 'Admin'} View.`);
+  }, [isAdminView]);
 
   // Effect to handle Supabase auth state changes and initial session fetch
   useEffect(() => {
@@ -101,7 +111,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       if (_event === 'SIGNED_OUT') {
         queryClient.clear(); // Clear all cached queries
         console.log("[SessionContext] All React Query caches cleared due to SIGNED_OUT event.");
-        // No need to navigate here, as the explicit logout function handles it.
       }
     });
 
@@ -166,33 +175,46 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
-  // Derived user object with admin status
+  // Derived user object with admin status, respecting the isAdminView toggle
+  const actualIsAdmin = determineAdminStatus(session?.user?.email, profile?.is_admin);
+  
   const user: CustomUser | null = session?.user ? {
     ...session.user,
-    is_admin: determineAdminStatus(session.user.email, profile?.is_admin),
+    // The user object's is_admin property reflects the actual role, but we use isAdminView for UI logic
+    is_admin: actualIsAdmin, 
   } : null;
 
   // Handle redirects for unauthenticated users trying to access protected routes
   useEffect(() => {
     if (!initialLoading && !isLoggingOut) { // Only redirect if not initially loading and not in the middle of logging out
-      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login', '/learn-more'];
+      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login', '/learn-more', '/song-suggestions'];
+      
+      // Check if the user is trying to access an admin route
+      const isAdminRoute = location.pathname.startsWith('/admin');
+
       if (!user && !publicPaths.includes(location.pathname)) {
         console.log(`[SessionContext] Redirecting from ${location.pathname} to /login due to unauthenticated access.`);
         navigate('/login');
+      } else if (isAdminRoute && user && !user.is_admin) {
+        // If a non-admin user tries to access /admin, redirect to home
+        console.log(`[SessionContext] Redirecting non-admin user from ${location.pathname} to /.`);
+        navigate('/');
       }
     }
   }, [user, initialLoading, isLoggingOut, location.pathname, navigate]);
 
   const contextValue: SessionContextType = { // Explicitly type contextValue
     session,
-    user,
+    user: user ? { ...user, is_admin: user.is_admin && isAdminView } : null, // Override user.is_admin based on toggle for UI/data fetching
     profile,
     loading: initialLoading || profileLoading, // Overall loading is true if initial session or profile is loading
     profileLoading,
     isLoggingOut, // Provide the state
+    isAdminView, // Provide the state
+    toggleAdminView, // Provide the toggle function
     logout, // Provide the centralized logout function
   };
-  console.log("[SessionContext] Rendering SessionContextProvider with overall loading:", contextValue.loading, "profileLoading:", profileLoading, "user:", user ? user.id : 'null', "is_admin:", user?.is_admin, "profile:", profile ? 'present' : 'null');
+  console.log("[SessionContext] Rendering SessionContextProvider with overall loading:", contextValue.loading, "profileLoading:", profileLoading, "user:", user ? user.id : 'null', "is_admin (actual):", actualIsAdmin, "isAdminView (context):", contextValue.user?.is_admin, "profile:", profile ? 'present' : 'null');
 
   return (
     <SessionContext.Provider value={contextValue}>

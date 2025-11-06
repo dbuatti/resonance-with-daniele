@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Resource } from "@/types/Resource";
+import { Resource, ResourceFolder } from "@/types/Resource"; // Import ResourceFolder
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, Link as LinkIcon, CheckCircle2 } from "lucide-react";
+import { Loader2, FileText, Link as LinkIcon, CheckCircle2, Folder } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -29,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/auth";
 import { showError, showSuccess } from "@/utils/toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ResourceUpload from './ResourceUpload';
 
 // Define the schema for the resource form
@@ -39,6 +39,7 @@ const resourceSchema = z.object({
   type: z.enum(['file', 'url'], { required_error: "Resource type is required" }),
   url: z.string().optional().nullable(),
   is_published: z.boolean().default(true),
+  folder_id: z.string().optional().nullable(), // Added folder_id
 });
 
 type ResourceFormData = z.infer<typeof resourceSchema>;
@@ -47,9 +48,10 @@ interface ResourceDialogProps {
   isOpen: boolean;
   onClose: () => void;
   editingResource: Resource | null;
+  currentFolderId: string | null; // The folder ID where the user is currently located
 }
 
-const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editingResource }) => {
+const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editingResource, currentFolderId }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -64,10 +66,57 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       type: 'file',
       url: null,
       is_published: true,
+      folder_id: null,
     },
   });
 
   const currentType = form.watch('type');
+
+  // Fetch all folders for the dropdown
+  const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
+    const { data, error } = await supabase
+      .from("resource_folders")
+      .select("id, name, parent_folder_id, user_id, created_at, updated_at") // Select all required fields
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching all folders:", error);
+      throw new Error("Failed to load folders for selection.");
+    }
+    return data || [];
+  };
+
+  const { data: allFolders, isLoading: loadingFolders } = useQuery<
+    ResourceFolder[],
+    Error,
+    ResourceFolder[],
+    ['allResourceFolders']
+  >({
+    queryKey: ['allResourceFolders'],
+    queryFn: fetchAllFolders,
+    enabled: isOpen,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Helper function to get the full path display for a folder
+  const getFolderPathDisplay = (folderId: string | null) => {
+    if (folderId === null) return "Home (Root)";
+    const folder = allFolders?.find(f => f.id === folderId);
+    if (!folder) return "Unknown Folder";
+
+    let path = folder.name;
+    let current = folder;
+    while (current.parent_folder_id) {
+      const parent = allFolders?.find(f => f.id === current.parent_folder_id);
+      if (parent) {
+        path = `${parent.name} / ${path}`;
+        current = parent;
+      } else {
+        break;
+      }
+    }
+    return path;
+  };
 
   // Effect to reset form and state when dialog opens/changes resource
   useEffect(() => {
@@ -78,6 +127,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         type: editingResource.type,
         url: editingResource.url || null,
         is_published: editingResource.is_published,
+        folder_id: editingResource.folder_id || null, // Set folder_id for editing
       });
       setSelectedFile(null);
       setRemoveFileRequested(false);
@@ -88,11 +138,12 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         type: 'file',
         url: null,
         is_published: true,
+        folder_id: currentFolderId || null, // Set default folder_id to current view
       });
       setSelectedFile(null);
       setRemoveFileRequested(false);
     }
-  }, [editingResource, form, isOpen]);
+  }, [editingResource, form, isOpen, currentFolderId]);
 
   const handleFileChange = useCallback((file: File | null) => {
     setSelectedFile(file);
@@ -108,7 +159,6 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
     if (!user) return { url: null, error: new Error("User not authenticated.") };
 
     const fileExt = file.name.split(".").pop();
-    // Use resource ID as part of the path to ensure uniqueness and easy cleanup
     const fileName = `${resourceId}/${Date.now()}.${fileExt}`;
     const filePath = fileName;
 
@@ -118,7 +168,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       .from("resources")
       .upload(filePath, file, {
         cacheControl: "3600",
-        upsert: true, // Use upsert in case we are replacing a file for an existing resource
+        upsert: true,
       });
 
     if (uploadErr) {
@@ -138,7 +188,6 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
 
     try {
       const url = new URL(fileUrl);
-      // Path in storage is everything after the bucket name 'resources/'
       const pathInStorage = url.pathname.split('/resources/')[1];
       
       if (!pathInStorage) {
@@ -203,7 +252,6 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       if (selectedFile) {
         // If creating a new resource, we need an ID first. If editing, use existing ID.
         if (!resourceId) {
-          // Temporarily generate a UUID for the file path before inserting the resource row
           resourceId = crypto.randomUUID();
         }
         
@@ -225,14 +273,14 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
 
       // 4. Upsert Resource Metadata
       const resourceData = {
-        id: resourceId, // Will be null if creating new and file upload failed, but should be set if upload succeeded
+        id: resourceId,
         user_id: user.id,
         title: data.title,
         description: data.description || null,
         url: finalUrl,
         type: data.type,
         is_published: data.is_published,
-        // folder_path is currently not managed by the form, leaving it null/default
+        folder_id: data.folder_id || null, // Include folder_id
       };
 
       const { error: dbError } = await supabase
@@ -246,8 +294,10 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
 
       showSuccess(`Resource "${data.title}" ${editingResource ? 'updated' : 'created'} successfully!`);
       
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['resources'] });
+      // Invalidate queries for the current folder and the root
+      queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId] });
+      queryClient.invalidateQueries({ queryKey: ['resources', data.folder_id] });
+      queryClient.invalidateQueries({ queryKey: ['resources', null] });
       queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
 
       onClose();
@@ -307,7 +357,6 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                   <FormLabel>Resource Type</FormLabel>
                   <Select onValueChange={(value: 'file' | 'url') => {
                     field.onChange(value);
-                    // Reset file/url state when type changes
                     setSelectedFile(null);
                     setRemoveFileRequested(false);
                     form.setValue('url', null);
@@ -331,6 +380,42 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="folder_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Folder Location</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value === "null" ? null : value)}
+                    value={field.value || "null"}
+                    disabled={isSaving || loadingFolders}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select folder (Root)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="null">
+                        <div className="flex items-center gap-2">
+                          <Folder className="h-4 w-4 text-muted-foreground" /> Home (Root)
+                        </div>
+                      </SelectItem>
+                      {allFolders?.map((folder) => (
+                        <SelectItem key={folder.id} value={folder.id}>
+                          <div className="flex items-center gap-2">
+                            <Folder className="h-4 w-4 text-muted-foreground" /> {getFolderPathDisplay(folder.id)}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {currentType === 'file' && (
               <ResourceUpload
                 currentFileUrl={editingResource?.type === 'file' && !removeFileRequested ? editingResource.url : null}
@@ -338,7 +423,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                 onRemoveRequested={handleRemoveRequested}
                 isSaving={isSaving}
                 selectedFile={selectedFile}
-                folderPathDisplay={null} // Folder path is not implemented yet
+                folderPathDisplay={getFolderPathDisplay(form.watch('folder_id') || null)}
               />
             )}
 
