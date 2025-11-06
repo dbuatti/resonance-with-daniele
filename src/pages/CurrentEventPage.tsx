@@ -1,82 +1,28 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ExternalLink, CalendarDays, Loader2 } from "lucide-react";
+import { ExternalLink, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { showError } from "@/utils/toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
 
-interface Event {
-  id: string;
-  title: string;
-  date: string; // ISO date string
-  location?: string;
-  description?: string;
-  humanitix_link?: string;
-}
+// The Humanitix embed script is loaded via index.html or dynamically.
+// We use the iframe structure provided by Humanitix for the embed.
 
 const CurrentEventPage: React.FC = () => {
-  // Use react-query to fetch and cache the current event
-  const { data: currentEvent, isLoading, isFetching, error } = useQuery<
-    Event | null, // TQueryFnData
-    Error,          // TError
-    Event | null, // TData (the type of the 'data' property)
-    ['currentEvent'] // TQueryKey
-  >({
-    queryKey: ['currentEvent'],
-    queryFn: async () => {
-      console.log("[CurrentEventPage] Fetching current event.");
-      const { data, error: fetchError } = await supabase
-        .from("events")
-        .select("*")
-        .gte("date", format(new Date(), "yyyy-MM-dd")) // Only future events
-        .order("date", { ascending: true })
-        .limit(1)
-        .single(); // Use single to get one object or null
+  const humanitixUrl = "https://events.humanitix.com/resonance-choir";
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means "no rows found"
-        console.error("[CurrentEventPage] Error fetching current event:", fetchError);
-        showError("Failed to load current event details.");
-        throw fetchError; // Re-throw to be caught by react-query's error handling
-      }
-      console.log("[CurrentEventPage] Current event fetched:", data);
-      return data || null;
-    },
-    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-  });
-
-  // Only show skeleton if there's no data in cache AND it's currently loading for the first time
-  const showSkeleton = isLoading && !currentEvent;
-
-  if (showSkeleton) {
-    console.log("[CurrentEventPage] Showing skeleton: isLoading is true and no cached data.");
-    return (
-      <div className="py-8 md:py-12 space-y-6">
-        <Card className="p-4 sm:p-6 md:p-8 shadow-lg rounded-xl border-2 border-primary">
-          <CardHeader className="text-center">
-            <Skeleton className="h-10 w-1/2 mx-auto mb-2" />
-            <Skeleton className="h-6 w-3/4 mx-auto" />
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <Skeleton className="w-full mx-auto rounded-lg min-h-[70vh] max-h-[80vh]" />
-            <Skeleton className="h-12 w-48 mx-auto" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  console.log("[CurrentEventPage] Rendering content: currentEvent is", currentEvent ? 'present' : 'null', "isFetching:", isFetching);
-
-  // Use the event's link if available, otherwise use the general Humanitix page
-  const humanitixLink = currentEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
+  // Inject the Humanitix inline script dynamically if it hasn't been loaded yet.
+  // This ensures the iframe is correctly initialized.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !document.querySelector('script[src*="humanitix.com/scripts/widgets/inline.js"]')) {
+      const script = document.createElement('script');
+      script.src = "https://events.humanitix.com/scripts/widgets/inline.js";
+      script.type = "module";
+      document.body.appendChild(script);
+      console.log("[CurrentEventPage] Injected Humanitix inline script.");
+    }
+  }, []);
 
   return (
     <div className="py-8 md:py-12 space-y-6">
@@ -88,41 +34,28 @@ const CurrentEventPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Check if we have an event OR if we are using the general fallback link */}
-          {currentEvent ? (
-            <>
-              <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-xl border border-border min-h-[70vh] max-h-[80vh]">
-                <iframe
-                  src={humanitixLink}
-                  title={currentEvent.title}
-                  className="absolute top-0 left-0 w-full h-full border-0"
-                  allowFullScreen
-                  allow="payment"
-                ></iframe>
-              </div>
-              <div className="text-center">
-                <Button asChild size="lg">
-                  <a href={humanitixLink} target="_blank" rel="noopener noreferrer">
-                    <span>
-                      <ExternalLink className="mr-2 h-4 w-4" /> View Event Details
-                    </span>
-                  </a>
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground text-center">
-                If the embedded content is not loading, please click the button above to view the event directly on Humanitix.
-              </p>
-            </>
-          ) : (
-            <div className="text-center p-8 space-y-4">
-              <CalendarDays className="h-16 w-16 text-muted-foreground mx-auto" />
-              <p className="text-xl font-semibold text-muted-foreground font-lora">No upcoming event featured right now.</p>
-              <p className="text-md text-muted-foreground">Check back soon for new events, or view all past and future events.</p>
-              <Button asChild size="lg" className="mt-4">
-                <Link to="/events">View All Events</Link>
-              </Button>
-            </div>
-          )}
+          <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-xl border border-border min-h-[70vh] max-h-[80vh]">
+            {/* Humanitix Inline Embed Iframe */}
+            <iframe
+              data-checkout="resonance-choir"
+              title="Resonance with Daniele Choir Event"
+              className="absolute top-0 left-0 w-full h-full border-0"
+              allowFullScreen
+              allow="payment"
+            ></iframe>
+          </div>
+          <div className="text-center">
+            <Button asChild size="lg">
+              <a href={humanitixUrl} target="_blank" rel="noopener noreferrer">
+                <span>
+                  <ExternalLink className="mr-2 h-4 w-4" /> View Event Details
+                </span>
+              </a>
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground text-center">
+            If the embedded content is not loading, please click the button above to view the event directly on Humanitix.
+          </p>
         </CardContent>
       </Card>
     </div>
