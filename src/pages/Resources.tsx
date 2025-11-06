@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, FileText, Headphones, Link as LinkIcon, Edit, Trash2, Search, Filter, SortAsc, Folder, Home, ChevronRight, AlertCircle } from "lucide-react";
+import { Loader2, Plus, FileText, Headphones, Link as LinkIcon, Edit, Trash2, Search, Filter, SortAsc, Folder, Home, ChevronRight, AlertCircle, UploadCloud } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,8 @@ import { Resource, ResourceFolder } from "@/types/Resource"; // Import ResourceF
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
+import { useDropzone } from "react-dropzone"; // Import useDropzone
+import { cn } from "@/lib/utils"; // Import cn
 
 // Define Filter and Sort types
 type FilterType = 'all' | 'pdf' | 'audio' | 'link';
@@ -166,13 +168,15 @@ const Resources: React.FC = () => {
     return { url: publicUrlData?.publicUrl || null, error: null };
   }, [user]);
 
-  const handleFileUploadToFolder = useCallback(async (file: File, folderId: string) => {
+  const handleFileUploadToFolder = useCallback(async (file: File, folderId: string | null) => {
     if (!isAdmin || !user) {
       showError("You do not have permission to upload files.");
       return;
     }
 
-    setIsUploadingFileToFolder(folderId);
+    // Use a temporary ID for the upload state if uploading to root
+    const uploadStateId = folderId || 'root';
+    setIsUploadingFileToFolder(uploadStateId);
     const resourceId = crypto.randomUUID();
 
     try {
@@ -204,7 +208,7 @@ const Resources: React.FC = () => {
         throw new Error("Failed to save resource details after upload: " + dbError.message);
       }
 
-      showSuccess(`File "${file.name}" uploaded successfully to folder!`);
+      showSuccess(`File "${file.name}" uploaded successfully!`);
       
       // Invalidate queries for the target folder and the root
       queryClient.invalidateQueries({ queryKey: ['resources', folderId] });
@@ -218,6 +222,26 @@ const Resources: React.FC = () => {
       setIsUploadingFileToFolder(null);
     }
   }, [isAdmin, user, queryClient, uploadFile]);
+
+  // --- Dropzone for main content area ---
+  const onDropMain = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0 && isAdmin) {
+      handleFileUploadToFolder(acceptedFiles[0], currentFolderId);
+    }
+  }, [isAdmin, currentFolderId, handleFileUploadToFolder]);
+
+  const { getRootProps: getMainRootProps, isDragActive: isMainDragActive } = useDropzone({
+    onDrop: onDropMain,
+    noClick: true, // Prevent clicking the main area from opening the file dialog
+    accept: {
+      'application/pdf': ['.pdf'],
+      'audio/*': ['.mp3', '.wav', '.ogg', '.m4a'],
+    },
+    maxFiles: 1,
+    disabled: !isAdmin || isUploadingFileToFolder !== null,
+  });
+  // --- End Dropzone for main content area ---
+
 
   // --- Handlers ---
 
@@ -520,7 +544,23 @@ const Resources: React.FC = () => {
         </div>
 
         {/* Content Display: Folders then Resources */}
-        <div className="space-y-8">
+        <div 
+          {...getMainRootProps()}
+          className={cn(
+            "space-y-8 p-4 rounded-xl transition-colors duration-300",
+            isMainDragActive && isAdmin && "border-4 border-dashed border-primary/50 bg-primary/5"
+          )}
+        >
+          {isMainDragActive && isAdmin && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl pointer-events-none">
+              <div className="text-center p-12 border-4 border-dashed border-primary rounded-xl bg-card/90 shadow-2xl">
+                <UploadCloud className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
+                <p className="text-2xl font-bold text-primary font-lora">Drop file here to upload to this folder</p>
+                <p className="text-muted-foreground mt-2">Only PDF and Audio files are supported.</p>
+              </div>
+            </div>
+          )}
+
           {/* Folders */}
           {currentSubFolders.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -532,7 +572,7 @@ const Resources: React.FC = () => {
                   onEdit={handleOpenEditFolderDialog}
                   onDelete={() => setFolderToDelete(folder)}
                   isDeleting={isDeletingFolder}
-                  onFileUpload={handleFileUploadToFolder}
+                  onFileUpload={(file) => handleFileUploadToFolder(file, folder.id)}
                   isUploading={isUploadingFileToFolder === folder.id}
                 />
               ))}
