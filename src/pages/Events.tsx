@@ -183,7 +183,7 @@ const Events: React.FC = () => {
           location,
           description,
           humanitix_link: humanitix_link || null,
-          updated_at: new Date().toISOString(),
+          // Removed manual updated_at setting, handled by DB trigger
         })
         .eq("id", editingEvent.id)
         .eq("user_id", user.id);
