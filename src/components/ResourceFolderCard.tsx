@@ -1,16 +1,16 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Folder, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSession } from "@/integrations/supabase/auth";
-import { ResourceFolder } from "@/types/Resource"; // Import ResourceFolder type
+import { ResourceFolder } from "@/types/Resource";
 import { cn } from "@/lib/utils";
 
 interface ResourceFolderCardProps {
-  folder: ResourceFolder; // Use imported ResourceFolder type
+  folder: ResourceFolder;
   onNavigate: (folderId: string) => void;
   onEdit: (folder: ResourceFolder) => void;
   onDelete: (folderId: string) => void;
@@ -28,24 +28,25 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
   const isAdmin = user?.is_admin;
 
   return (
-    <Card className="shadow-lg rounded-xl flex flex-col justify-between">
-      {/* Clickable Area: Folder Icon and Name */}
+    <Card className="flex flex-col justify-between h-full transition-all duration-300 shadow-md hover:shadow-xl">
+      {/* Clickable Area: Massive Folder Icon and Name */}
       <div 
         onClick={() => onNavigate(folder.id)}
         className={cn(
-          "p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-200",
-          "hover:bg-muted/50 hover:shadow-inner rounded-t-xl flex-grow"
+          "p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200",
+          "bg-card hover:bg-primary/5 flex-grow rounded-t-lg" // Subtle hover effect
         )}
       >
-        <Folder className="h-16 w-16 text-primary mb-4" /> {/* Large Folder Icon */}
-        <CardTitle className="text-xl font-bold font-lora line-clamp-2">
+        {/* Massive Folder Icon */}
+        <Folder className="h-32 w-32 text-primary mb-4" /> 
+        <CardTitle className="text-2xl font-bold font-lora line-clamp-2 mt-2">
           {folder.name}
         </CardTitle>
       </div>
 
-      {/* Admin Actions (if applicable) */}
+      {/* Admin Actions (if applicable) - Visually separated footer */}
       {isAdmin && (
-        <CardContent className="pt-2 pb-4 flex justify-end gap-2 border-t border-border">
+        <CardContent className="pt-2 pb-4 flex justify-end gap-2 border-t border-border bg-muted/30 rounded-b-lg">
           <Button
             variant="outline"
             size="sm"
