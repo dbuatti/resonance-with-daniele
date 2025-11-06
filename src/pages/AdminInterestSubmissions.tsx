@@ -105,7 +105,7 @@ const AdminInterestSubmissions: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed px-4 */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">Interest Submissions</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         View all individuals who have expressed interest in Resonance with Daniele.

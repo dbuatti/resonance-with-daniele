@@ -227,7 +227,7 @@ const Events: React.FC = () => {
   const showSkeleton = isLoading && !events;
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed px-4 */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">
         {showSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
       </h1>

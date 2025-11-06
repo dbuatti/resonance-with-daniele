@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 const CallToActionSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-primary text-primary-foreground text-center">
-      <div className=""> {/* Removed px-4 for consistent padding */}
+      <div className="max-w-6xl mx-auto"> {/* Added max-w-6xl mx-auto for centering */}
         <h2 className="text-3xl md:text-5xl font-bold mb-6 font-lora">
           Ready to find your voice?
         </h2>

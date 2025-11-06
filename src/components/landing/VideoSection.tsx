@@ -5,7 +5,7 @@ import React from "react";
 const VideoSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground text-center">
-      <div className=""> {/* Removed px-4 for consistent padding */}
+      <div className="max-w-6xl mx-auto"> {/* Added max-w-6xl mx-auto for centering */}
         <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora">Experience the Joy of Singing</h2>
         <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden shadow-2xl">
           <video

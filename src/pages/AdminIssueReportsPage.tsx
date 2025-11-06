@@ -169,7 +169,7 @@ const AdminIssueReportsPage: React.FC = () => {
           {issueReports && issueReports.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <p className="text-xl font-semibold">No issue reports found yet.</p>
-              <p className="mt-2">Users can submit reports via the "Report an Issue" button at the bottom right.</p>
+              <p className="mt-2">Users can submit reports via the "Report an Issue" button at the bottom left.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

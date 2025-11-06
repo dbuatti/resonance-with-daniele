@@ -224,7 +224,7 @@ const AdminAnnouncementsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 py-8"> {/* Removed px-4 */}
+    <div className="space-y-6 py-8">
       <h1 className="text-4xl font-bold text-center font-lora">Manage Announcements</h1>
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Create, edit, and delete important announcements for your choir members.

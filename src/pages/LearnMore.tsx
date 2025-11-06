@@ -8,7 +8,7 @@ import { CheckCircle, Mic, Users, Heart, CalendarDays } from "lucide-react";
 
 const LearnMore: React.FC = () => {
   return (
-    <div className="space-y-12 py-8 md:py-12"> {/* Removed px-4 */}
+    <div className="space-y-12 py-8 md:py-12">
       <section className="text-center space-y-6">
         <h1 className="text-4xl md:text-5xl font-bold font-lora text-foreground">
           🎶 Learn More About Resonance with Daniele
@@ -66,7 +66,7 @@ const LearnMore: React.FC = () => {
               <Heart className="h-10 w-10 text-primary mb-4" />
               <CardTitle className="text-xl font-semibold font-lora">Sing in Harmony</CardTitle>
             </CardHeader>
-            <CardContent className="text-muted-foreground">
+            <CardContent className="p-0 text-muted-foreground">
               That special moment when voices blend as one, creating beautiful music.
             </CardContent>
           </Card>
