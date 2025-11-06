@@ -65,9 +65,9 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
       {...getRootProps()}
       onClick={handleNavigateClick}
       className={cn(
-        // Simplified styling: lighter background, subtle shadow/border, full height
-        "flex flex-col justify-between h-full transition-all duration-300 shadow-sm rounded-xl border border-border bg-muted/50 cursor-pointer",
-        "hover:shadow-lg hover:border-primary/50",
+        // Removed shadow and border to eliminate card look. Using a very light background.
+        "flex flex-col justify-between h-full transition-all duration-300 rounded-xl bg-muted/30 cursor-pointer",
+        "hover:bg-muted/70 hover:shadow-md", // Add subtle shadow and darker background only on hover
         isDragActive && isAdmin && "border-4 border-primary ring-4 ring-primary/50 bg-primary/10",
         isUploading && "opacity-70 cursor-wait",
         isDeleting && "opacity-50 cursor-not-allowed"
