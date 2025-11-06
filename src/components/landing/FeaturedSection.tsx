@@ -42,6 +42,9 @@ const FeaturedSection: React.FC = () => {
     fetchFeaturedEvent();
   }, []);
 
+  // Use the event's link if available, otherwise use the general Humanitix page
+  const humanitixLink = featuredEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
+
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
       <div className="max-w-6xl mx-auto text-center"> {/* Added max-w-6xl mx-auto for centering */}
@@ -73,9 +76,9 @@ const FeaturedSection: React.FC = () => {
                   {featuredEvent.description || "Join me for this exciting upcoming event!"}
                 </p>
                 <Button size="lg" asChild>
-                  <Link to={featuredEvent.humanitix_link || "/events"}>
-                    {featuredEvent.humanitix_link ? "View Details & RSVP" : "View All Events"}
-                  </Link>
+                  <a href={humanitixLink} target="_blank" rel="noopener noreferrer">
+                    {featuredEvent.humanitix_link ? "View Details & RSVP" : "View on Humanitix"}
+                  </a>
                 </Button>
               </CardContent>
             </>

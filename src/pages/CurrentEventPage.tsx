@@ -75,6 +75,9 @@ const CurrentEventPage: React.FC = () => {
 
   console.log("[CurrentEventPage] Rendering content: currentEvent is", currentEvent ? 'present' : 'null', "isFetching:", isFetching);
 
+  // Use the event's link if available, otherwise use the general Humanitix page
+  const humanitixLink = currentEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
+
   return (
     <div className="py-8 md:py-12 space-y-6">
       <Card className="p-4 sm:p-6 md:p-8 shadow-lg rounded-xl border-2 border-primary">
@@ -85,11 +88,11 @@ const CurrentEventPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {currentEvent && currentEvent.humanitix_link ? (
+          {currentEvent ? (
             <>
               <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-xl border border-border min-h-[70vh] max-h-[80vh]">
                 <iframe
-                  src={currentEvent.humanitix_link}
+                  src={humanitixLink}
                   title={currentEvent.title}
                   className="absolute top-0 left-0 w-full h-full border-0"
                   allowFullScreen
@@ -98,7 +101,7 @@ const CurrentEventPage: React.FC = () => {
               </div>
               <div className="text-center">
                 <Button asChild size="lg">
-                  <a href={currentEvent.humanitix_link} target="_blank" rel="noopener noreferrer">
+                  <a href={humanitixLink} target="_blank" rel="noopener noreferrer">
                     <span>
                       <ExternalLink className="mr-2 h-4 w-4" /> View Event Details
                     </span>

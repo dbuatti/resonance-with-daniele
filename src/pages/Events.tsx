@@ -60,7 +60,7 @@ const Events: React.FC = () => {
       date: undefined,
       location: "",
       description: "",
-      humanitix_link: "",
+      humanitix_link: "https://events.humanitix.com/resonance-choir", // Updated default link
     },
   });
 
@@ -324,7 +324,7 @@ const Events: React.FC = () => {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="humanitix_link">Humanitix Link (Optional)</Label>
-                  <Input id="humanitix_link" {...addForm.register("humanitix_link")} />
+                  <Input id="humanitix_link" {...addForm.register("humanitix_link")} placeholder="https://events.humanitix.com/resonance-choir" />
                   {addForm.formState.errors.humanitix_link && (
                     <p className="text-red-500 text-sm">{addForm.formState.errors.humanitix_link.message}</p>
                   )}
@@ -500,7 +500,7 @@ const Events: React.FC = () => {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-humanitix_link">Humanitix Link (Optional)</Label>
-                <Input id="edit-humanitix_link" {...editForm.register("humanitix_link")} />
+                <Input id="edit-humanitix_link" {...editForm.register("humanitix_link")} placeholder="https://events.humanitix.com/resonance-choir" />
                 {editForm.formState.errors.humanitix_link && (
                   <p className="text-red-500 text-sm">{editForm.formState.errors.humanitix_link.message}</p>
                 )}
