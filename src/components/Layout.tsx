@@ -40,7 +40,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, profile, loading, isLoggingOut, logout } = useSession(); // Use centralized logout
+  const { user, profile, loading, isLoggingOut, logout, isActualAdmin } = useSession(); // Use isActualAdmin
   const location = useLocation();
   console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
 
@@ -89,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             Resonance with Daniele
           </Link>
           <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">
-            {user?.is_admin && <AdminViewToggle />} {/* Admin View Toggle */}
+            {isActualAdmin && <AdminViewToggle />} {/* Use isActualAdmin here */}
             <Button variant="ghost" asChild className={getNavLinkClass("/")}>
               <Link to="/">
                 <Home className="h-4 w-4" />

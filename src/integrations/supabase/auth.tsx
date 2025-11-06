@@ -40,6 +40,7 @@ interface SessionContextType {
   profileLoading: boolean; // Loading specifically for the profile data
   isLoggingOut: boolean; // Added isLoggingOut
   isAdminView: boolean; // New state: true if viewing as admin, false if viewing as regular user
+  isActualAdmin: boolean; // New: True if the user is truly an admin, regardless of isAdminView toggle
   toggleAdminView: () => void; // New function to toggle admin view
   logout: () => Promise<void>; // Added logout function to context
 }
@@ -95,8 +96,12 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   // Toggle function for admin view
   const toggleAdminView = useCallback(() => {
     setIsAdminView(prev => !prev);
+    // Invalidate all queries that depend on admin status to force refetching data based on the new view
+    queryClient.invalidateQueries({ queryKey: ['resources'] });
+    queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
+    queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
     showSuccess(`Switched to ${isAdminView ? 'User' : 'Admin'} View.`);
-  }, [isAdminView]);
+  }, [isAdminView, queryClient]);
 
   // Effect to handle Supabase auth state changes and initial session fetch
   useEffect(() => {
@@ -175,12 +180,12 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
-  // Derived user object with admin status, respecting the isAdminView toggle
+  // Derived actual admin status
   const actualIsAdmin = determineAdminStatus(session?.user?.email, profile?.is_admin);
   
+  // Derived user object with actual admin status
   const user: CustomUser | null = session?.user ? {
     ...session.user,
-    // The user object's is_admin property reflects the actual role, but we use isAdminView for UI logic
     is_admin: actualIsAdmin, 
   } : null;
 
@@ -205,12 +210,14 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   const contextValue: SessionContextType = { // Explicitly type contextValue
     session,
-    user: user ? { ...user, is_admin: user.is_admin && isAdminView } : null, // Override user.is_admin based on toggle for UI/data fetching
+    // The user object's is_admin property reflects the current view state for UI/data logic
+    user: user ? { ...user, is_admin: user.is_admin && isAdminView } : null, 
     profile,
     loading: initialLoading || profileLoading, // Overall loading is true if initial session or profile is loading
     profileLoading,
     isLoggingOut, // Provide the state
     isAdminView, // Provide the state
+    isActualAdmin: actualIsAdmin, // Provide the actual admin status
     toggleAdminView, // Provide the toggle function
     logout, // Provide the centralized logout function
   };
