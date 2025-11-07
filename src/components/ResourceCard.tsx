@@ -71,9 +71,9 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
       return { icon: <FileText className="h-6 w-6 text-primary-foreground" />, type: 'PDF Document', isPdf, isAudio: false, fileName };
     }
     if (isAudio) {
-      return { icon: <Headphones className="h-12 w-12 text-primary" />, type: 'Audio Track', isPdf: false, isAudio, fileName };
+      return { icon: <Headphones className="h-6 w-6 text-primary-foreground" />, type: 'Audio Track', isPdf: false, isAudio, fileName };
     }
-    return { icon: <File className="h-12 w-12 text-muted-foreground" />, type: 'File', isPdf: false, isAudio: false, fileName };
+    return { icon: <File className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf: false, isAudio: false, fileName };
   };
 
   const fileDetails = getFileDetails();
@@ -154,7 +154,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                   {isLink ? (
                     <LinkIcon className="h-6 w-6 text-primary" />
                   ) : (
-                    <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
+                    <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground">
                       {fileDetails.icon}
                     </div>
                   )}
@@ -174,12 +174,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         </div>
         
         {/* Title, Status, Pills, and Description Area (For PDF Backdrop Style) */}
-        <div className="px-4 pt-4 pb-2 bg-card">
+        <div className={cn("px-4 pt-4 pb-2 bg-card", useBackdropStyle && "pt-0")}>
           <div className="flex items-center justify-between mb-2">
               <CardTitle className="text-xl font-lora line-clamp-1 text-foreground">
                   {resource.title}
               </CardTitle>
-              {isAdmin && !isPublished && (
+              {isAdmin && !isPublished && !useBackdropStyle && ( // Show Draft badge here if not using backdrop style
                   <Badge variant="destructive" className="text-xs flex-shrink-0">
                       Draft
                   </Badge>
@@ -204,17 +204,33 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             )}
           </div>
 
+          {/* File Name Display for uploaded files */}
+          {isFile && fileDetails.fileName !== 'N/A' && (
+            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+              <File className="h-3 w-3" />
+              <span className="font-mono truncate max-w-[90%]">{fileDetails.fileName}</span>
+            </p>
+          )}
+
           {/* Description */}
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {resource.description}
+            {resource.description || (isLink ? "External Link" : fileDetails.type)}
           </p>
         </div>
 
         {/* Footer Content (Buttons and Date) */}
-        <CardContent className={cn("p-4", useBackdropStyle && "pt-0")}>
+        <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
-            {/* Primary Action Button (Only for non-PDF files) */}
-            {!useBackdropStyle && (
+            {/* Audio Player (Inline) */}
+            {fileDetails.isAudio && resource.url && (
+              <audio controls className="w-full h-10">
+                <source src={resource.url} type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+            )}
+
+            {/* Primary Action Button (Only for Links and non-PDF/non-Audio files) */}
+            {isLink && (
               <Button 
                 onClick={handlePrimaryAction} 
                 className="w-full" 
