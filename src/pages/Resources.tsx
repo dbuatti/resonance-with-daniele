@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, FileText, Headphones, Link as LinkIcon, Edit, Trash2, Search, Filter, SortAsc, Folder, Home, ChevronRight, AlertCircle, UploadCloud } from "lucide-react";
+import { Loader2, Plus, FileText, Headphones, Link as LinkIcon, Edit, Trash2, Search, Filter, SortAsc, Folder, Home, ChevronRight, AlertCircle, UploadCloud, Mic2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,15 @@ import { cn } from "@/lib/utils"; // Import cn
 type FilterType = 'all' | 'pdf' | 'audio' | 'link';
 type SortBy = 'title' | 'created_at';
 type SortOrder = 'asc' | 'desc';
+type VoicePartFilter = string | 'all'; // Includes specific parts and 'all'
+
+const voiceParts = [
+  "Soprano 1", "Soprano 2", "Soprano", 
+  "Alto 1", "Alto 2", "Alto", 
+  "Tenor 1", "Tenor 2", "Tenor", 
+  "Bass 1", "Bass 2", "Bass",
+  "Full Choir", "Unison", "Other"
+];
 
 const Resources: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
@@ -48,6 +57,7 @@ const Resources: React.FC = () => {
   // Filter/Sort states
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<FilterType>('all');
+  const [filterVoicePart, setFilterVoicePart] = useState<VoicePartFilter>('all'); // New state for voice part filter
   const [sortBy, setSortBy] = useState<SortBy>('created_at');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
@@ -355,7 +365,7 @@ const Resources: React.FC = () => {
 
     let filtered = resources;
 
-    // 1. Search Filtering (only applies to resources in the current view)
+    // 1. Search Filtering
     if (searchTerm) {
       const lowerCaseSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(resource =>
@@ -379,7 +389,23 @@ const Resources: React.FC = () => {
       });
     }
 
-    // 3. Sorting
+    // 3. Voice Part Filtering (New)
+    if (filterVoicePart !== 'all') {
+      filtered = filtered.filter(resource => {
+        const resourcePart = resource.voice_part || 'General / Full Choir';
+        
+        if (filterVoicePart === 'General / Full Choir') {
+          // Match resources that are explicitly 'Full Choir' or have no part assigned (null)
+          return resourcePart === 'Full Choir' || resource.voice_part === null;
+        }
+        
+        // Match resources explicitly assigned to the selected part
+        return resourcePart === filterVoicePart;
+      });
+    }
+
+
+    // 4. Sorting
     filtered.sort((a, b) => {
       let comparison = 0;
       if (sortBy === 'title') {
@@ -394,7 +420,7 @@ const Resources: React.FC = () => {
     });
 
     return filtered;
-  }, [resources, searchTerm, filterType, sortBy, sortOrder]);
+  }, [resources, searchTerm, filterType, filterVoicePart, sortBy, sortOrder]);
   // --- End Filtering and Sorting Logic ---
 
   const showSkeleton = loadingResources || loadingAllFolders;
@@ -489,6 +515,7 @@ const Resources: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                disabled={loadingResources}
               />
             </div>
 
@@ -504,6 +531,22 @@ const Resources: React.FC = () => {
                   <SelectItem value="pdf">PDF (Sheet Music)</SelectItem>
                   <SelectItem value="audio">Audio Tracks</SelectItem>
                   <SelectItem value="link">External Links</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Filter by Voice Part */}
+              <Select value={filterVoicePart} onValueChange={(value: VoicePartFilter) => setFilterVoicePart(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <Mic2 className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by Part" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Voice Parts</SelectItem>
+                  <SelectItem value="General / Full Choir">General / Full Choir</SelectItem>
+                  <Separator />
+                  {voiceParts.filter(p => p !== "Full Choir" && p !== "Unison" && p !== "Other").map(part => (
+                    <SelectItem key={part} value={part}>{part}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -599,7 +642,7 @@ const Resources: React.FC = () => {
               <Card className="p-8 text-center shadow-lg">
                 <CardTitle className="text-xl">No Content Found</CardTitle>
                 <CardDescription className="mt-2">
-                  {searchTerm || filterType !== 'all'
+                  {searchTerm || filterType !== 'all' || filterVoicePart !== 'all'
                     ? "Try adjusting your search or filters."
                     : "This folder is empty. Add a new resource or folder above."}
                 </CardDescription>
