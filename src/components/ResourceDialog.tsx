@@ -334,7 +334,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-            <div className="grid gap-6 p-6 flex-grow"> {/* Removed overflow-y-auto from here */}
+            <div className="grid gap-6 p-6 flex-grow"> {/* This is the scrollable area */}
               <FormField
                 control={form.control}
                 name="title"
@@ -412,9 +412,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="null">
-                          <div className="flex items-center gap-2">
-                            <Folder className="h-4 w-4 text-muted-foreground" /> General / Full Choir
-                          </div>
+                          General / Full Choir
                         </SelectItem>
                         {voiceParts.map((part) => (
                           <SelectItem key={part} value={part}>
