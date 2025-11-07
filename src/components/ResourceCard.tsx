@@ -73,70 +73,89 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
   const primaryButtonDetails = getPrimaryButtonDetails();
 
+  // Determine if we should use the backdrop style (PDF)
+  const useBackdropStyle = isFile && fileDetails.isPdf;
+
   return (
     <>
       <Card className={cn(
         "shadow-lg rounded-xl flex flex-col justify-between transition-shadow duration-200 hover:shadow-xl",
         !isPublished && isAdmin && "border-l-4 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20"
       )}>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {isLink ? (
-                <LinkIcon className="h-6 w-6 text-primary" />
-              ) : (
-                <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
-                  {fileDetails.icon}
-                </div>
-              )}
-              <CardTitle className="text-xl font-lora line-clamp-2">{resource.title}</CardTitle>
-            </div>
-            {isAdmin && (
-              <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs flex-shrink-0">
-                {isPublished ? "Published" : "Draft"}
-              </Badge>
-            )}
-          </div>
-          <CardDescription className="text-sm text-muted-foreground line-clamp-3 min-h-[40px] mt-2">
-            {resource.description || (isLink ? "External Link" : fileDetails.type)}
-          </CardDescription>
-        </CardHeader>
         
-        {/* Visual Preview Area for Files (Enhanced styling for immediate visibility) */}
-        {isFile && (
-          <CardContent 
-            className={cn(
-              "pt-0", // Always pt-0 to follow header
-              // Conditional padding based on file type
-              fileDetails.isPdf ? "px-0 pb-0" : "px-6 pb-4" 
-            )}
-          >
-            <div className={cn(
-              "bg-white dark:bg-card border border-border rounded-lg shadow-inner h-48 overflow-hidden",
-              // Conditional styling for PDF
-              fileDetails.isPdf ? "border-0 rounded-none" : "p-6"
-            )}>
-              {fileDetails.isPdf && resource.url ? (
-                // PDF Preview using iframe
-                <iframe
-                  src={resource.url}
-                  title={`Preview of ${resource.title}`}
-                  className="w-full h-full border-none"
-                  // The browser's native PDF viewer will render the content within this constrained space.
-                />
-              ) : (
-                // Generic File/Audio Preview
-                <div className="flex flex-col items-center justify-center text-center space-y-3 h-full">
-                  {fileDetails.icon}
-                  <p className="text-sm font-medium text-foreground line-clamp-1">{fileDetails.fileName}</p>
-                  <p className="text-xs text-muted-foreground">{fileDetails.type}</p>
+        {/* Main Content Area (Header + Preview) */}
+        <div className={cn(
+          "relative overflow-hidden",
+          useBackdropStyle ? "h-64 rounded-t-xl" : "p-6" // Fixed height for PDF backdrop
+        )}>
+          
+          {/* 1. The Backdrop (PDF Iframe or Generic Preview) */}
+          {useBackdropStyle ? (
+            <iframe
+              src={resource.url}
+              title={`Preview of ${resource.title}`}
+              className="w-full h-full border-none absolute inset-0"
+              // Ensure the iframe fills the container completely
+            />
+          ) : (
+            // Standard Header for Links and Audio/Other Files
+            <CardHeader className="p-0 pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isLink ? (
+                    <LinkIcon className="h-6 w-6 text-primary" />
+                  ) : (
+                    <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
+                      {fileDetails.icon}
+                    </div>
+                  )}
+                  <CardTitle className="text-xl font-lora line-clamp-2">{resource.title}</CardTitle>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        )}
+                {isAdmin && (
+                  <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs flex-shrink-0">
+                    {isPublished ? "Published" : "Draft"}
+                  </Badge>
+                )}
+              </div>
+              <CardDescription className="text-sm text-muted-foreground line-clamp-3 min-h-[40px] mt-2">
+                {resource.description || (isLink ? "External Link" : fileDetails.type)}
+              </CardDescription>
+            </CardHeader>
+          )}
 
-        <CardContent className="pt-0">
+          {/* 2. Overlay Metadata (Only for PDF Backdrop Style) */}
+          {useBackdropStyle && (
+            <div className={cn(
+              "absolute inset-0 p-4 flex flex-col justify-between",
+              "bg-gradient-to-b from-background/80 to-transparent dark:from-background/90"
+            )}>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
+                    {fileDetails.icon}
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-lora line-clamp-2">{resource.title}</CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground line-clamp-1">
+                      {resource.description || fileDetails.type}
+                    </CardDescription>
+                  </div>
+                </div>
+                {isAdmin && (
+                  <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs flex-shrink-0">
+                    {isPublished ? "Published" : "Draft"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Footer Content (Buttons and Date) */}
+        <CardContent className={cn(
+          "p-4",
+          useBackdropStyle ? "pt-0" : "pt-4" // Adjust top padding if backdrop was used
+        )}>
           <div className="flex flex-col gap-3">
             {/* Primary Action Button (View/Download/Listen) */}
             <Button 
