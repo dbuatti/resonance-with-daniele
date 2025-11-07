@@ -347,7 +347,11 @@ const SongVotingList: React.FC = () => {
           </div>
           <Select value={sortOrder} onValueChange={handleSortChange}>
             <SelectTrigger className="w-full sm:w-[180px]">
-              <ArrowDownWideNarrow className="mr-2 h-4 w-4 text-muted-foreground" />
+              {sortOrder === "votes_desc" ? (
+                <ThumbsUp className="mr-2 h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+              )}
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -359,113 +363,126 @@ const SongVotingList: React.FC = () => {
 
         {songSuggestions && songSuggestions.length > 0 ? (
           <ul className="space-y-4">
-            {songSuggestions.map((song) => (
-              <li key={song.id} className="flex items-start gap-4 p-4 border rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors">
-                
-                {/* Voting Button & Count */}
-                <div className="flex-shrink-0 text-center pt-1">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant={hasVoted(song.id) ? "default" : "outline"}
-                        size="icon"
-                        onClick={() => handleVote(song.id)}
-                        disabled={!user}
-                        className={cn(
-                          "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all duration-200",
-                          hasVoted(song.id) 
-                            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
-                            : "text-muted-foreground hover:bg-secondary/50 border-2"
-                        )}
-                      >
-                        <ThumbsUp className="h-5 w-5" />
-                        <span className="text-xs font-bold mt-0.5">{song.total_votes}</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {user ? (hasVoted(song.id) ? "Remove Vote" : "Cast Vote") : "Log in to vote"}
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                
-                {/* Song Details */}
-                <div className="flex-1 min-w-0 space-y-1">
-                  <h3 className="text-lg font-semibold text-foreground line-clamp-1">{song.title}</h3>
-                  <p className="text-sm text-muted-foreground">by <span className="font-medium text-foreground">{song.artist}</span></p>
-                  
-                  {/* Reason (with optional tooltip for long reasons) */}
-                  {song.reason && (
-                    <div className="flex items-start text-xs italic text-muted-foreground mt-2">
-                      <MessageSquare className="h-3 w-3 mr-1 flex-shrink-0 mt-0.5" />
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <p className="line-clamp-2 cursor-help">
-                            "{song.reason}"
-                          </p>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>{song.reason}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  )}
+            {songSuggestions.map((song, index) => {
+              // Highlight the top-voted song (only if sorting by votes and it's the first item on the first page)
+              const isTopVoted = sortOrder === "votes_desc" && currentPage === 1 && index === 0 && song.total_votes > 0;
 
-                  {/* Suggested By */}
-                  {song.profiles && (
-                    <div className="flex items-center text-xs text-muted-foreground pt-1">
-                      <Avatar className="h-5 w-5 mr-1">
-                        {song.profiles.avatar_url ? (
-                          <AvatarImage src={song.profiles.avatar_url} alt={`${song.profiles.first_name}'s avatar`} />
-                        ) : (
-                          <AvatarFallback className="bg-secondary text-secondary-foreground text-[10px]">
-                            <UserIcon className="h-3 w-3" />
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      Suggested by {song.profiles.first_name || song.profiles.last_name || "Anonymous"}
+              return (
+                <li 
+                  key={song.id} 
+                  className={cn(
+                    "flex items-start gap-4 p-4 border rounded-lg transition-colors",
+                    isTopVoted 
+                      ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10" 
+                      : "bg-muted/20 hover:bg-muted/50"
+                  )}
+                >
+                  
+                  {/* Voting Button & Count */}
+                  <div className="flex-shrink-0 text-center pt-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant={hasVoted(song.id) ? "default" : "outline"}
+                          size="icon"
+                          onClick={() => handleVote(song.id)}
+                          disabled={!user}
+                          className={cn(
+                            "h-14 w-14 rounded-full flex flex-col items-center justify-center transition-all duration-200", // Increased size
+                            hasVoted(song.id) 
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
+                              : "text-muted-foreground hover:bg-secondary/50 border-2"
+                          )}
+                        >
+                          <ThumbsUp className="h-5 w-5" />
+                          <span className="text-xs font-bold mt-0.5">{song.total_votes}</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {user ? (hasVoted(song.id) ? "Remove Vote" : "Cast Vote") : "Log in to vote"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  
+                  {/* Song Details */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h3 className="text-lg font-semibold text-foreground line-clamp-1">{song.title}</h3>
+                    <p className="text-sm text-muted-foreground">by <span className="font-medium text-foreground">{song.artist}</span></p>
+                    
+                    {/* Reason (with optional tooltip for long reasons) */}
+                    {song.reason && (
+                      <div className="flex items-start text-xs italic text-muted-foreground mt-2">
+                        <MessageSquare className="h-3 w-3 mr-1 flex-shrink-0 mt-0.5" />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="line-clamp-2 cursor-help">
+                              "{song.reason}"
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>{song.reason}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    )}
+
+                    {/* Suggested By */}
+                    {song.profiles && (
+                      <div className="flex items-center text-xs text-muted-foreground pt-1">
+                        <Avatar className="h-5 w-5 mr-1">
+                          {song.profiles.avatar_url ? (
+                            <AvatarImage src={song.profiles.avatar_url} alt={`${song.profiles.first_name}'s avatar`} />
+                          ) : (
+                            <AvatarFallback className="bg-secondary text-secondary-foreground text-[10px]">
+                              <UserIcon className="h-3 w-3" />
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        Suggested by {song.profiles.first_name || song.profiles.last_name || "Anonymous"}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Admin Actions */}
+                  {user?.is_admin && (
+                    <div className="flex flex-col gap-2 flex-shrink-0 pt-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setEditingSong(song);
+                          setIsEditSongDialogOpen(true);
+                        }}
+                      >
+                        <EditIcon className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="icon" className="h-8 w-8">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the song suggestion "{song.title}" by {song.artist}.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   )}
-                </div>
-                
-                {/* Admin Actions */}
-                {user?.is_admin && (
-                  <div className="flex flex-col gap-2 flex-shrink-0 pt-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => {
-                        setEditingSong(song);
-                        setIsEditSongDialogOpen(true);
-                      }}
-                    >
-                      <EditIcon className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon" className="h-8 w-8">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the song suggestion "{song.title}" by {song.artist}.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)}>
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <div className="text-center text-muted-foreground py-12 border-2 border-dashed border-border rounded-lg bg-muted/50">
