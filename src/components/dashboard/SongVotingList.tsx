@@ -33,7 +33,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SongSuggestion {
   id: string;
-  user_id: string | null; // Updated to allow null
+  user_id: string | null;
   title: string;
   artist: string;
   total_votes: number;
@@ -61,7 +61,7 @@ const editSongSuggestionSchema = z.object({
 
 type EditSongSuggestionFormData = z.infer<typeof editSongSuggestionSchema>;
 
-const MAX_VOTES = 3; // Constant for vote limit
+// Removed MAX_VOTES constant
 
 const SongVotingList: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
@@ -156,8 +156,7 @@ const SongVotingList: React.FC = () => {
     return userVotes?.some(vote => vote.suggestion_id === suggestionId);
   };
 
-  const votesRemaining = MAX_VOTES - (userVotes?.length || 0);
-  const canVote = votesRemaining > 0;
+  // Removed votesRemaining and canVote calculations
 
   // --- Dynamic Filtering and Sorting ---
   const filteredAndSortedSuggestions = useMemo(() => {
@@ -220,10 +219,7 @@ const SongVotingList: React.FC = () => {
       }
     } else {
       // User wants to vote
-      if (!canVote) {
-        showError(`You have reached the maximum limit of ${MAX_VOTES} votes.`);
-        return;
-      }
+      // No vote limit check needed anymore
 
       const { error } = await supabase
         .from("user_song_votes")
@@ -340,21 +336,10 @@ const SongVotingList: React.FC = () => {
       </CardHeader>
       <CardContent className="p-0">
         <CardDescription className="mb-4">
-          Vote for songs you'd like to sing! You have **{MAX_VOTES} votes** total.
+          Vote for songs you'd like to sing! The most popular suggestions will be considered for future sessions.
         </CardDescription>
 
-        {user && (
-          <Alert className={cn("mb-4", votesRemaining === 0 ? "border-destructive text-destructive" : "border-primary text-primary")}>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="font-semibold">
-              {votesRemaining === 0 ? (
-                "You have used all your votes. Un-vote a song to free up a slot."
-              ) : (
-                `You have ${votesRemaining} vote${votesRemaining !== 1 ? 's' : ''} remaining.`
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Removed Vote Limit Alert */}
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
@@ -384,7 +369,7 @@ const SongVotingList: React.FC = () => {
         </div>
 
         {filteredAndSortedSuggestions && filteredAndSortedSuggestions.length > 0 ? (
-          <ul className="space-y-3"> {/* Reduced spacing */}
+          <ul className="space-y-3">
             {filteredAndSortedSuggestions.map((song, index) => {
               // Highlight the top-voted song (only if sorting by votes and it's the first item)
               const isTopVoted = sortOrder === "votes_desc" && index === 0 && song.total_votes > 0;
@@ -400,9 +385,9 @@ const SongVotingList: React.FC = () => {
                 <li 
                   key={song.id} 
                   className={cn(
-                    "flex items-center justify-between gap-3 p-3 border rounded-lg transition-colors", // Reduced padding, changed alignment
+                    "flex items-center justify-between gap-3 p-3 border rounded-lg transition-colors",
                     isTopVoted 
-                      ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10" // Removed shadow-2xl
+                      ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10"
                       : "bg-muted/20 hover:bg-muted/50",
                     isSuggestedByCurrentUser && "border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10"
                   )}
@@ -416,13 +401,13 @@ const SongVotingList: React.FC = () => {
                           variant={votedByCurrentUser ? "default" : "outline"}
                           size="icon"
                           onClick={() => handleVote(song.id)}
-                          disabled={!user || (!votedByCurrentUser && !canVote)}
+                          disabled={!user} // Removed vote limit check
                           className={cn(
-                            "h-10 w-10 rounded-full flex flex-col items-center justify-center transition-all duration-200 p-1", // Reduced size
+                            "h-10 w-10 rounded-full flex flex-col items-center justify-center transition-all duration-200 p-1",
                             votedByCurrentUser 
                               ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
                               : "text-muted-foreground hover:bg-secondary/50 border-2",
-                            !user || (!votedByCurrentUser && !canVote) ? "opacity-50 cursor-not-allowed" : ""
+                            !user ? "opacity-50 cursor-not-allowed" : ""
                           )}
                         >
                           <ThumbsUp className="h-4 w-4" />
@@ -431,7 +416,7 @@ const SongVotingList: React.FC = () => {
                       </TooltipTrigger>
                       <TooltipContent>
                         {user ? (
-                          votedByCurrentUser ? "Remove Vote" : (canVote ? "Cast Vote" : `Max ${MAX_VOTES} votes reached`)
+                          votedByCurrentUser ? "Remove Vote" : "Cast Vote" // Simplified tooltip
                         ) : "Log in to vote"}
                       </TooltipContent>
                     </Tooltip>
@@ -525,8 +510,6 @@ const SongVotingList: React.FC = () => {
             </p>
           </div>
         )}
-
-        {/* Removed Pagination */}
       </CardContent>
 
       {/* Edit Song Suggestion Dialog */}
