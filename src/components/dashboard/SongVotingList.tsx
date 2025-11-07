@@ -1,34 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Clock, Edit as EditIcon, MessageSquare } from "lucide-react"; // Added MessageSquare
+import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Clock, Edit as EditIcon, MessageSquare, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // Import Dialog components
-import { Label } from "@/components/ui/label"; // Import Label
-import { Textarea } from "@/components/ui/textarea"; // Import Textarea
-import { useForm } from "react-hook-form"; // Import useForm
-import { zodResolver } from "@hookform/resolvers/zod"; // Import zodResolver
-import * as z from "zod"; // Import z
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
-  Form, // Import the Form component
+  Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert"; // Import Alert
 
 interface SongSuggestion {
   id: string;
@@ -37,7 +38,7 @@ interface SongSuggestion {
   artist: string;
   total_votes: number;
   created_at: string;
-  reason?: string | null; // Added new optional reason field
+  reason?: string | null;
   profiles: {
     first_name: string | null;
     last_name: string | null;
@@ -60,16 +61,16 @@ const editSongSuggestionSchema = z.object({
 
 type EditSongSuggestionFormData = z.infer<typeof editSongSuggestionSchema>;
 
+const MAX_VOTES = 3; // New constant for vote limit
+
 const SongVotingList: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortOrder, setSortOrder] = useState<"votes_desc" | "newest">("votes_desc"); // New state for sorting
-  const pageSize = 5;
+  const [sortOrder, setSortOrder] = useState<"votes_desc" | "newest">("votes_desc");
 
-  const [isEditSongDialogOpen, setIsEditSongDialogOpen] = useState(false); // State for edit dialog
-  const [editingSong, setEditingSong] = useState<SongSuggestion | null>(null); // State for song being edited
+  const [isEditSongDialogOpen, setIsEditSongDialogOpen] = useState(false);
+  const [editingSong, setEditingSong] = useState<SongSuggestion | null>(null);
 
   const editForm = useForm<EditSongSuggestionFormData>({
     resolver: zodResolver(editSongSuggestionSchema),
@@ -91,59 +92,40 @@ const SongVotingList: React.FC = () => {
     }
   }, [editingSong, editForm]);
 
-  // Fetch song suggestions with pagination and sorting
-  const fetchSongSuggestions = async (currentSearchTerm: string, page: number, pageSize: number, currentSortOrder: string): Promise<{ data: SongSuggestion[], count: number | null }> => {
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize - 1;
-
-    console.log(`[SongVotingList] Fetching song suggestions for page ${page}, sort: ${currentSortOrder}, search: ${currentSearchTerm}`);
+  // --- Data Fetching: Load ALL suggestions (up to a limit) ---
+  const fetchAllSongSuggestions = async (): Promise<SongSuggestion[]> => {
+    console.log(`[SongVotingList] Fetching all song suggestions.`);
     let query = supabase
       .from("song_suggestions")
       .select(`
         *,
         profiles (first_name, last_name, avatar_url)
-      `, { count: 'exact' });
+      `)
+      .limit(50); // Limit to 50 to prevent excessive load, assuming this is sufficient for a choir poll
 
-    if (currentSearchTerm) {
-      query = query.or(
-        `title.ilike.%${currentSearchTerm}%,artist.ilike.%${currentSearchTerm}%,reason.ilike.%${currentSearchTerm}%` // Include reason in search
-      );
-    }
-
-    if (currentSortOrder === "votes_desc") {
-      query = query.order("total_votes", { ascending: false }).order("created_at", { ascending: false });
-    } else if (currentSortOrder === "newest") {
-      query = query.order("created_at", { ascending: false });
-    }
-
-    const { data, error, count } = await query
-      .range(startIndex, endIndex);
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching song suggestions:", error);
       throw error;
     }
-    return { data: data || [], count };
+    return data || [];
   };
 
-  const { data: paginatedData, isLoading: loadingSuggestions, error: suggestionsError } = useQuery<
-    { data: SongSuggestion[], count: number | null },
+  const { data: allSuggestions, isLoading: loadingSuggestions, error: suggestionsError } = useQuery<
+    SongSuggestion[],
     Error,
-    { data: SongSuggestion[], count: number | null },
-    ['songSuggestions', string, number, number, string] // Added sortOrder to query key
+    SongSuggestion[],
+    ['songSuggestions'] // Removed pagination/search/sort from key to load all data once
   >({
-    queryKey: ['songSuggestions', searchTerm, currentPage, pageSize, sortOrder],
-    queryFn: ({ queryKey }) => fetchSongSuggestions(queryKey[1], queryKey[2], queryKey[3], queryKey[4]),
+    queryKey: ['songSuggestions'],
+    queryFn: fetchAllSongSuggestions,
     enabled: !loadingSession,
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 
-  const songSuggestions = paginatedData?.data || [];
-  const totalCount = paginatedData?.count || 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
-
-  // Fetch user's votes
+  // --- Data Fetching: Load ALL user votes ---
   const { data: userVotes, isLoading: loadingUserVotes, error: userVotesError } = useQuery<
     UserVote[],
     Error,
@@ -174,6 +156,45 @@ const SongVotingList: React.FC = () => {
     return userVotes?.some(vote => vote.suggestion_id === suggestionId);
   };
 
+  const votesRemaining = MAX_VOTES - (userVotes?.length || 0);
+  const canVote = votesRemaining > 0;
+
+  // --- Dynamic Filtering and Sorting ---
+  const filteredAndSortedSuggestions = useMemo(() => {
+    if (!allSuggestions) return [];
+
+    let filtered = allSuggestions;
+
+    // 1. Search Filtering
+    if (searchTerm) {
+      const lowerCaseSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(song =>
+        song.title.toLowerCase().includes(lowerCaseSearch) ||
+        song.artist.toLowerCase().includes(lowerCaseSearch) ||
+        song.reason?.toLowerCase().includes(lowerCaseSearch)
+      );
+    }
+
+    // 2. Sorting
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      if (sortOrder === "votes_desc") {
+        // Primary sort: votes (desc), Secondary sort: created_at (desc)
+        comparison = b.total_votes - a.total_votes;
+        if (comparison === 0) {
+          comparison = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+      } else if (sortOrder === "newest") {
+        comparison = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      return comparison;
+    });
+
+    return filtered;
+  }, [allSuggestions, searchTerm, sortOrder]);
+
+  // --- Handlers ---
+
   const handleVote = async (suggestionId: string) => {
     if (!user) {
       showError("You must be logged in to vote.");
@@ -194,11 +215,16 @@ const SongVotingList: React.FC = () => {
         showError("Failed to remove vote: " + error.message);
       } else {
         showSuccess("Vote removed!");
-        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize, sortOrder] });
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions'] }); // Invalidate all suggestions
         queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] });
       }
     } else {
       // User wants to vote
+      if (!canVote) {
+        showError(`You have reached the maximum limit of ${MAX_VOTES} votes.`);
+        return;
+      }
+
       const { error } = await supabase
         .from("user_song_votes")
         .insert({ user_id: user.id, suggestion_id: suggestionId });
@@ -208,7 +234,7 @@ const SongVotingList: React.FC = () => {
         showError("Failed to cast vote: " + error.message);
       } else {
         showSuccess("Vote cast successfully!");
-        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize, sortOrder] });
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions'] }); // Invalidate all suggestions
         queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] });
       }
     }
@@ -239,7 +265,7 @@ const SongVotingList: React.FC = () => {
         showSuccess("Song suggestion updated successfully!");
         setIsEditSongDialogOpen(false);
         setEditingSong(null);
-        queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize, sortOrder] });
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions'] });
       }
     } catch (error: any) {
       console.error("Unexpected error during song suggestion update:", error);
@@ -263,40 +289,27 @@ const SongVotingList: React.FC = () => {
       showError("Failed to delete song suggestion: " + error.message);
     } else {
       showSuccess("Song suggestion deleted!");
-      queryClient.invalidateQueries({ queryKey: ['songSuggestions', searchTerm, currentPage, pageSize, sortOrder] });
+      queryClient.invalidateQueries({ queryKey: ['songSuggestions'] });
       queryClient.invalidateQueries({ queryKey: ['userVotes', user.id] });
     }
-  };
-
-  const handlePreviousPage = () => {
-    setCurrentPage(prev => Math.max(1, prev - 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(totalPages, prev + 1));
-  };
-
-  const handleSortChange = (value: "votes_desc" | "newest") => {
-    setSortOrder(value);
-    setCurrentPage(1); // Reset to first page on sort change
   };
 
   const isLoading = loadingSuggestions || loadingUserVotes;
 
   if (isLoading) {
     return (
-      <Card className="p-6 shadow-lg rounded-xl">
+      <Card className="p-6 shadow-lg rounded-xl lg:col-span-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
           <Skeleton className="h-6 w-1/2" />
         </CardHeader>
         <CardContent className="p-0 space-y-4">
           <div className="flex gap-4 mb-4">
-            <Skeleton className="h-10 w-full" /> {/* Search bar skeleton */}
-            <Skeleton className="h-10 w-32" /> {/* Sort select skeleton */}
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-32" />
           </div>
-          {[...Array(pageSize)].map((_, i) => (
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border rounded-md">
-              <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+              <Skeleton className="h-14 w-14 rounded-full flex-shrink-0" />
               <div className="flex-1 space-y-1">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
@@ -312,7 +325,7 @@ const SongVotingList: React.FC = () => {
 
   if (suggestionsError || userVotesError) {
     return (
-      <Card className="p-6 shadow-lg rounded-xl text-center text-destructive">
+      <Card className="p-6 shadow-lg rounded-xl text-center text-destructive lg:col-span-2">
         <CardTitle>Error loading songs</CardTitle>
         <CardDescription>Failed to load song suggestions. Please try again later.</CardDescription>
       </Card>
@@ -328,8 +341,21 @@ const SongVotingList: React.FC = () => {
       </CardHeader>
       <CardContent className="p-0">
         <CardDescription className="mb-4">
-          Vote for songs you'd like to sing! The most popular suggestions will be considered for future sessions.
+          Vote for songs you'd like to sing! You have **{MAX_VOTES} votes** total.
         </CardDescription>
+
+        {user && (
+          <Alert className={cn("mb-4", votesRemaining === 0 ? "border-destructive text-destructive" : "border-primary text-primary")}>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="font-semibold">
+              {votesRemaining === 0 ? (
+                "You have used all your votes. Un-vote a song to free up a slot."
+              ) : (
+                `You have ${votesRemaining} vote${votesRemaining !== 1 ? 's' : ''} remaining.`
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
@@ -338,14 +364,11 @@ const SongVotingList: React.FC = () => {
               type="text"
               placeholder="Search songs by title, artist, or reason..."
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1); // Reset to first page on search
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 w-full"
             />
           </div>
-          <Select value={sortOrder} onValueChange={handleSortChange}>
+          <Select value={sortOrder} onValueChange={(value: "votes_desc" | "newest") => setSortOrder(value)}>
             <SelectTrigger className="w-full sm:w-[180px]">
               {sortOrder === "votes_desc" ? (
                 <ThumbsUp className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -361,12 +384,13 @@ const SongVotingList: React.FC = () => {
           </Select>
         </div>
 
-        {songSuggestions && songSuggestions.length > 0 ? (
+        {filteredAndSortedSuggestions && filteredAndSortedSuggestions.length > 0 ? (
           <ul className="space-y-4">
-            {songSuggestions.map((song, index) => {
-              // Highlight the top-voted song (only if sorting by votes and it's the first item on the first page)
-              const isTopVoted = sortOrder === "votes_desc" && currentPage === 1 && index === 0 && song.total_votes > 0;
-              const isSuggestedByCurrentUser = user && song.user_id === user.id; // Check if suggested by current user
+            {filteredAndSortedSuggestions.map((song, index) => {
+              // Highlight the top-voted song (only if sorting by votes and it's the first item)
+              const isTopVoted = sortOrder === "votes_desc" && index === 0 && song.total_votes > 0;
+              const isSuggestedByCurrentUser = user && song.user_id === user.id;
+              const votedByCurrentUser = hasVoted(song.id);
 
               return (
                 <li 
@@ -374,9 +398,9 @@ const SongVotingList: React.FC = () => {
                   className={cn(
                     "flex items-start gap-4 p-4 border rounded-lg transition-colors",
                     isTopVoted 
-                      ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10" 
+                      ? "border-primary ring-4 ring-primary/50 bg-primary/5 dark:bg-primary/10 shadow-2xl" 
                       : "bg-muted/20 hover:bg-muted/50",
-                    isSuggestedByCurrentUser && "border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10" // Highlight if suggested by current user
+                    isSuggestedByCurrentUser && "border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10"
                   )}
                 >
                   
@@ -385,15 +409,16 @@ const SongVotingList: React.FC = () => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                          variant={hasVoted(song.id) ? "default" : "outline"}
+                          variant={votedByCurrentUser ? "default" : "outline"}
                           size="icon"
                           onClick={() => handleVote(song.id)}
-                          disabled={!user}
+                          disabled={!user || (!votedByCurrentUser && !canVote)}
                           className={cn(
-                            "h-14 w-14 rounded-full flex flex-col items-center justify-center transition-all duration-200", // Increased size
-                            hasVoted(song.id) 
+                            "h-14 w-14 rounded-full flex flex-col items-center justify-center transition-all duration-200",
+                            votedByCurrentUser 
                               ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
-                              : "text-muted-foreground hover:bg-secondary/50 border-2"
+                              : "text-muted-foreground hover:bg-secondary/50 border-2",
+                            !user || (!votedByCurrentUser && !canVote) ? "opacity-50 cursor-not-allowed" : ""
                           )}
                         >
                           <ThumbsUp className="h-5 w-5" />
@@ -401,7 +426,9 @@ const SongVotingList: React.FC = () => {
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {user ? (hasVoted(song.id) ? "Remove Vote" : "Cast Vote") : "Log in to vote"}
+                        {user ? (
+                          votedByCurrentUser ? "Remove Vote" : (canVote ? "Cast Vote" : `Max ${MAX_VOTES} votes reached`)
+                        ) : "Log in to vote"}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -499,27 +526,7 @@ const SongVotingList: React.FC = () => {
           </div>
         )}
 
-        {totalCount > pageSize && (
-          <div className="flex justify-between items-center mt-6 pt-4 border-t border-border">
-            <Button
-              variant="outline"
-              onClick={handlePreviousPage}
-              disabled={currentPage === 1 || isLoading}
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages || isLoading}
-            >
-              Next <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        )}
+        {/* Removed Pagination */}
       </CardContent>
 
       {/* Edit Song Suggestion Dialog */}
