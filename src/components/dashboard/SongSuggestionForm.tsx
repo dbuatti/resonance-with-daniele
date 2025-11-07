@@ -211,7 +211,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
 
             <Button 
               type="submit" 
-              className={cn("w-full transition-all duration-300", isSubmittedSuccessfully && "bg-green-600 hover:bg-green-700")}
+              className={cn("w-full transition-all duration-300 font-bold", isSubmittedSuccessfully && "bg-green-600 hover:bg-green-700")}
               disabled={form.formState.isSubmitting || isSubmittedSuccessfully}
             >
               {isSubmittedSuccessfully ? (

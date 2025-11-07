@@ -370,9 +370,9 @@ const SongVotingList: React.FC = () => {
           </Select>
         </div>
 
-        {filteredAndSortedSuggestions && filteredAndSortedSuggestions.length > 0 ? (
-          <ul className="space-y-3">
-            {filteredAndSortedSuggestions.map((song, index) => {
+        <ul className="space-y-4"> {/* Increased vertical spacing here */}
+          {filteredAndSortedSuggestions && filteredAndSortedSuggestions.length > 0 ? (
+            filteredAndSortedSuggestions.map((song, index) => {
               // Highlight the top-voted song (only if sorting by votes and it's the first item)
               const isTopVoted = sortOrder === "votes_desc" && index === 0 && song.total_votes > 0;
               const isSuggestedByCurrentUser = user && song.user_id === user.id;
@@ -388,10 +388,10 @@ const SongVotingList: React.FC = () => {
                 <li 
                   key={song.id} 
                   className={cn(
-                    "flex items-center justify-between gap-3 p-3 border rounded-lg transition-colors",
+                    "flex items-center justify-between gap-4 p-4 border rounded-xl transition-all duration-300",
                     isTopVoted 
                       ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10"
-                      : "bg-card hover:bg-muted/50", // Use card background for list items
+                      : "bg-card hover:bg-muted/50",
                     isSuggestedByCurrentUser && "border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10"
                   )}
                 >
@@ -406,15 +406,20 @@ const SongVotingList: React.FC = () => {
                           onClick={() => handleVote(song.id)}
                           disabled={!user}
                           className={cn(
-                            "h-14 w-14 rounded-xl flex flex-col items-center justify-center transition-all duration-200 p-1",
+                            "h-16 w-16 rounded-xl flex flex-col items-center justify-center transition-all duration-200 p-1 group",
                             votedByCurrentUser 
                               ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg" 
                               : "text-muted-foreground hover:bg-secondary/50 border-2",
                             !user ? "opacity-50 cursor-not-allowed" : ""
                           )}
                         >
-                          <ThumbsUp className="h-5 w-5" />
-                          <span className="text-xs font-bold mt-0.5">{song.total_votes} Votes</span>
+                          <ThumbsUp 
+                            className={cn(
+                              "h-6 w-6 transition-colors duration-200",
+                              votedByCurrentUser ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary"
+                            )} 
+                          />
+                          <span className="text-xs font-bold mt-1">{song.total_votes} Votes</span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -427,7 +432,7 @@ const SongVotingList: React.FC = () => {
                   
                   {/* Middle Section: Song Details (Improved Hierarchy) */}
                   <div className="flex-1 min-w-0 space-y-0.5 py-1">
-                    <h3 className="text-lg font-bold text-foreground line-clamp-1">{song.title}</h3>
+                    <h3 className="text-xl font-bold font-lora text-foreground line-clamp-1">{song.title}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-1">by <span className="font-medium text-foreground">{song.artist}</span></p>
                     
                     {/* Suggested By & Reason */}
@@ -524,19 +529,19 @@ const SongVotingList: React.FC = () => {
                   )}
                 </li>
               );
-            })}
-          </ul>
-        ) : (
-          <div className="text-center text-muted-foreground py-12 border-2 border-dashed border-border rounded-lg bg-muted/50">
-            <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-xl font-semibold font-lora">No songs found!</p>
-            <p className="mt-2 max-w-sm mx-auto">
-              {searchTerm
-                ? "Try a different search term, or be the first to suggest a song using the form on the right."
-                : "Be the first to suggest a song using the form on the right!"}
-            </p>
-          </div>
-        )}
+            })
+          ) : (
+            <div className="text-center text-muted-foreground py-12 border-2 border-dashed border-border rounded-lg bg-muted/50">
+              <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-xl font-semibold font-lora">No songs found!</p>
+              <p className="mt-2 max-w-sm mx-auto">
+                {searchTerm
+                  ? "Try a different search term, or be the first to suggest a song using the form on the right."
+                  : "Be the first to suggest a song using the form on the right!"}
+              </p>
+            </div>
+          )}
+        </ul>
       </CardContent>
 
       {/* Edit Song Suggestion Dialog */}
