@@ -92,11 +92,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           
           {useBackdropStyle ? (
             <div className="relative h-full">
-              {/* Custom Header (Solid Dark Area) */}
-              <div className="absolute top-0 left-0 right-0 h-16 bg-gray-900 dark:bg-gray-900 p-4 flex items-center justify-end z-10">
-                {/* Small PDF Icon (Top Right) - REMOVED */}
-              </div>
-
+              
               {/* PDF Preview Area (Iframe) */}
               <iframe
                 src={resource.url} // Clean URL
@@ -107,7 +103,19 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 style={{ height: 'calc(100% - 64px + 40px)', marginTop: '-40px' }}
               />
 
-              {/* New: Overlay Download Button (Bottom Right) */}
+              {/* New: Transparent Overlay for Title and Status (Covers the hidden toolbar area) */}
+              <div className="absolute top-0 left-0 right-0 h-16 p-4 flex items-center justify-between z-20 bg-card/90 backdrop-blur-sm border-b border-border">
+                <CardTitle className="text-lg font-lora line-clamp-1 text-foreground">
+                  {resource.title}
+                </CardTitle>
+                {isAdmin && (
+                  <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs flex-shrink-0">
+                    {isPublished ? "Published" : "Draft"}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Download Button (Bottom Right) */}
               <Button
                   variant="secondary"
                   size="icon"
@@ -145,11 +153,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           )}
         </div>
         
-        {/* File Name Display (Only for PDF Backdrop Style) - Now showing resource title */}
+        {/* File Name Display (Only for PDF Backdrop Style) - Now showing resource description */}
         {useBackdropStyle && (
           <div className="px-4 py-2 bg-card">
-            <p className="text-xs font-sans uppercase font-semibold text-muted-foreground truncate">
-              {resource.title}
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {resource.description || fileDetails.type}
             </p>
           </div>
         )}
