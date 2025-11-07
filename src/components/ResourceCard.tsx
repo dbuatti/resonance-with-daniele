@@ -152,7 +152,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               {fileDetails.isAudio && resource.url && (
                 <div className="text-center p-4 w-full">
                   <Headphones className="h-24 w-24 text-primary mx-auto mb-4" />
-                  <p className="text-lg font-semibold text-foreground mb-4 line-clamp-1">{resource.title}</p>
+                  {/* Removed redundant title here */}
                   <audio controls src={resource.url} className="w-full max-w-xs mx-auto h-10" />
                   
                   {/* Download Button (Bottom Right - same style as PDF) */}
