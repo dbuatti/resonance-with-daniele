@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,17 +18,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Folder } from "lucide-react";
+import { Loader2, Folder, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
-import { ResourceFolder } from "@/types/Resource"; // Import ResourceFolder
-
-interface Resource {
-  id: string;
-  title: string;
-  folder_id: string | null;
-}
+import { Resource, ResourceFolder } from "@/types/Resource";
 
 interface MoveResourceDialogProps {
   isOpen: boolean;
@@ -54,7 +48,7 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
     console.log("[MoveResourceDialog] Fetching all folders.");
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("id, name, parent_folder_id, user_id, created_at, updated_at") // Select all required fields
+      .select("id, name, parent_folder_id, user_id, created_at, updated_at")
       .order("name", { ascending: true });
 
     if (error) {
@@ -72,7 +66,7 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
   >({
     queryKey: ['allResourceFolders'],
     queryFn: fetchAllFolders,
-    enabled: isOpen, // Only fetch when dialog is open
+    enabled: isOpen,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -138,22 +132,13 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
     return path;
   };
 
-  // Filter out the current folder and its children to prevent moving a folder into itself
-  const getMovableFolders = () => {
+  // Filter out the current folder of the resource, as moving it to the same place is redundant
+  const movableFolders = useMemo(() => {
     if (!allFolders || !resourceToMove) return allFolders || [];
-
-    // When moving a resource, we don't need to exclude descendants, only the current folder itself
-    // as a destination if the resource is already there.
-    const foldersToExclude = new Set<string>();
-    // Exclude the current folder of the resource, as moving it to the same place is redundant
-    if (resourceToMove.folder_id) {
-      foldersToExclude.add(resourceToMove.folder_id);
-    }
-
     return allFolders.filter(folder => folder.id !== resourceToMove.folder_id);
-  };
+  }, [allFolders, resourceToMove]);
 
-  const movableFolders = getMovableFolders();
+  const isSameFolder = selectedFolder === resourceToMove?.folder_id;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -204,13 +189,15 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isMoving}>
             Cancel
           </Button>
-          <Button onClick={handleMove} disabled={isMoving || !resourceToMove || selectedFolder === undefined || selectedFolder === resourceToMove.folder_id}>
+          <Button onClick={handleMove} disabled={isMoving || !resourceToMove || isSameFolder}>
             {isMoving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Moving...
               </>
             ) : (
-              "Move Resource"
+              <>
+                <ArrowRight className="mr-2 h-4 w-4" /> Move Resource
+              </>
             )}
           </Button>
         </DialogFooter>

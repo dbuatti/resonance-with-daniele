@@ -15,6 +15,7 @@ import ResourceCard from "@/components/ResourceCard";
 import ResourceDialog from "@/components/ResourceDialog";
 import ResourceFolderCard from "@/components/ResourceFolderCard";
 import ResourceFolderDialog from "@/components/ResourceFolderDialog";
+import MoveResourceDialog from "@/components/MoveResourceDialog"; // Import MoveResourceDialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Resource, ResourceFolder } from "@/types/Resource"; // Import ResourceFolder
 import { format } from "date-fns";
@@ -47,7 +48,10 @@ const Resources: React.FC = () => {
   // Dialog states
   const [isResourceDialogOpen, setIsResourceDialogOpen] = useState(false);
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false); // New state for Move dialog
+  
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
+  const [resourceToMove, setResourceToMove] = useState<Resource | null>(null); // New state for resource to move
   const [editingFolder, setEditingFolder] = useState<ResourceFolder | null>(null);
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<ResourceFolder | null>(null);
@@ -270,9 +274,24 @@ const Resources: React.FC = () => {
     setIsResourceDialogOpen(true);
   };
 
+  const handleOpenMoveResourceDialog = (resource: Resource) => {
+    setResourceToMove(resource);
+    setIsMoveDialogOpen(true);
+  };
+
   const handleCloseResourceDialog = () => {
     setIsResourceDialogOpen(false);
     setEditingResource(null);
+  };
+
+  const handleCloseMoveDialog = () => {
+    setIsMoveDialogOpen(false);
+    setResourceToMove(null);
+  };
+
+  const handleMoveSuccess = () => {
+    // The move dialog handles query invalidation, we just need to close it
+    handleCloseMoveDialog();
   };
 
   const handleOpenCreateFolderDialog = () => {
@@ -634,6 +653,7 @@ const Resources: React.FC = () => {
                   isAdmin={isAdmin}
                   onEdit={() => handleOpenEditResourceDialog(resource)}
                   onDelete={() => setResourceToDelete(resource)}
+                  onMove={handleOpenMoveResourceDialog} // Pass the new handler
                 />
               ))}
             </div>
@@ -666,6 +686,15 @@ const Resources: React.FC = () => {
         onClose={handleCloseFolderDialog}
         editingFolder={editingFolder}
         currentParentFolderId={currentFolderId}
+      />
+
+      {/* Move Resource Dialog */}
+      <MoveResourceDialog
+        isOpen={isMoveDialogOpen}
+        onOpenChange={setIsMoveDialogOpen}
+        resourceToMove={resourceToMove}
+        onMoveSuccess={handleMoveSuccess}
+        currentFolderId={currentFolderId}
       />
 
       {/* Delete Resource Confirmation Dialog */}

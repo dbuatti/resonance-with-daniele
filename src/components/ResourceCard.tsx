@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File } from "lucide-react";
+import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -14,6 +14,7 @@ interface ResourceCardProps {
   isAdmin: boolean | undefined;
   onEdit: (resource: Resource) => void;
   onDelete: (resource: Resource) => void;
+  onMove: (resource: Resource) => void; // New prop for move action
 }
 
 // Define colors for resource type pills
@@ -43,7 +44,7 @@ const voicePartColors: { [key: string]: string } = {
   "Other": "bg-gray-500 text-white",
 };
 
-const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, onDelete }) => {
+const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, onDelete, onMove }) => {
   
   const isFile = resource.type === 'file';
   const isLink = resource.type === 'url';
@@ -226,6 +227,13 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             
             {isAdmin && (
               <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onMove(resource)} // New Move action
+                >
+                  <ArrowRight className="h-4 w-4 mr-2" /> Move
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
