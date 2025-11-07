@@ -139,15 +139,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                   <p className="text-lg font-semibold text-foreground mb-4 line-clamp-1">{resource.title}</p>
                   <audio controls src={resource.url} className="w-full max-w-xs mx-auto h-10" />
                   
-                  {/* Download Button for Audio */}
+                  {/* Download Button (Bottom Right - same style as PDF) */}
                   <Button
                       variant="secondary"
-                      size="sm"
-                      className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
+                      size="icon"
+                      className="absolute bottom-4 right-4 z-20 h-10 w-10 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
                       onClick={handlePrimaryAction}
                       title="Download Audio"
                   >
-                      <Download className="h-4 w-4 mr-2" /> Download Audio
+                      <Download className="h-5 w-5" />
                   </Button>
                 </div>
               )}
