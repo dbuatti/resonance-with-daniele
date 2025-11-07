@@ -2,7 +2,7 @@
 
 import React, { useCallback } from "react";
 import { CardTitle } from "@/components/ui/card";
-import { Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Trash2, Loader2, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSession } from "@/integrations/supabase/auth";
@@ -38,7 +38,7 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
     }
   }, [isAdmin, folder.id, onFileUpload]);
 
-  const { getRootProps, isDragActive } = useDropzone({
+  const { getRootProps, isDragActive, isDragAccept } = useDropzone({ // Added isDragAccept
     onDrop,
     noClick: true, // Prevent clicking the card from opening the file dialog
     accept: {
@@ -65,10 +65,15 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
       {...getRootProps()}
       onClick={handleNavigateClick}
       className={cn(
-        // Minimal styling: no shadow, no border, transparent background by default
+        // Base styling
         "flex flex-col justify-between h-full transition-all duration-300 rounded-xl bg-transparent cursor-pointer",
         "hover:bg-muted/50 hover:shadow-sm", // Subtle hover effect
-        isDragActive && isAdmin && "border-4 border-primary ring-4 ring-primary/50 bg-primary/10",
+        
+        // Drag Active/Accept Feedback
+        isDragActive && isAdmin && "border-4 border-dashed",
+        isDragAccept && isAdmin && "border-primary ring-4 ring-primary/50 bg-primary/10", // Valid drop target
+        isDragActive && !isDragAccept && isAdmin && "border-destructive ring-4 ring-destructive/50 bg-destructive/10", // Invalid file type
+        
         isUploading && "opacity-70 cursor-wait",
         isDeleting && "opacity-50 cursor-not-allowed"
       )}
@@ -83,6 +88,8 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
         {/* Massive Folder Icon / Image */}
         {isUploading ? (
           <Loader2 className="h-48 w-48 text-primary mb-4 animate-spin" />
+        ) : isDragAccept && isAdmin ? (
+          <UploadCloud className="h-48 w-48 text-primary mb-4 animate-pulse" />
         ) : (
           <img 
             src="/images/folder-icon.png" 
@@ -95,6 +102,12 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
         </CardTitle>
         {isUploading && (
           <p className="text-sm text-primary mt-2 font-semibold">Uploading file...</p>
+        )}
+        {isDragAccept && isAdmin && (
+          <p className="text-sm text-primary mt-2 font-semibold">Drop file to upload</p>
+        )}
+        {isDragActive && !isDragAccept && isAdmin && (
+          <p className="text-sm text-destructive mt-2 font-semibold">Invalid file type</p>
         )}
       </div>
 
