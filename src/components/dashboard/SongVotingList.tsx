@@ -6,7 +6,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Clock, Edit as EditIcon, MessageSquare, AlertCircle } from "lucide-react";
+import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, Edit as EditIcon, MessageSquare, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,11 +29,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Alert, AlertDescription } from "@/components/ui/alert"; // Import Alert
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SongSuggestion {
   id: string;
-  user_id: string;
+  user_id: string | null; // Updated to allow null
   title: string;
   artist: string;
   total_votes: number;
@@ -61,7 +61,7 @@ const editSongSuggestionSchema = z.object({
 
 type EditSongSuggestionFormData = z.infer<typeof editSongSuggestionSchema>;
 
-const MAX_VOTES = 3; // New constant for vote limit
+const MAX_VOTES = 3; // Constant for vote limit
 
 const SongVotingList: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
@@ -101,7 +101,7 @@ const SongVotingList: React.FC = () => {
         *,
         profiles (first_name, last_name, avatar_url)
       `)
-      .limit(50); // Limit to 50 to prevent excessive load, assuming this is sufficient for a choir poll
+      .limit(50);
 
     const { data, error } = await query;
 
@@ -116,7 +116,7 @@ const SongVotingList: React.FC = () => {
     SongSuggestion[],
     Error,
     SongSuggestion[],
-    ['songSuggestions'] // Removed pagination/search/sort from key to load all data once
+    ['songSuggestions']
   >({
     queryKey: ['songSuggestions'],
     queryFn: fetchAllSongSuggestions,
@@ -308,12 +308,11 @@ const SongVotingList: React.FC = () => {
             <Skeleton className="h-10 w-32" />
           </div>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border rounded-md">
-              <Skeleton className="h-14 w-14 rounded-full flex-shrink-0" />
+            <div key={i} className="flex items-center gap-4 p-3 border rounded-md">
+              <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
               <div className="flex-1 space-y-1">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="h-3 w-1/3" />
               </div>
               <Skeleton className="h-8 w-20 flex-shrink-0" />
             </div>
@@ -325,7 +324,7 @@ const SongVotingList: React.FC = () => {
 
   if (suggestionsError || userVotesError) {
     return (
-      <Card className="p-6 shadow-lg rounded-xl text-center text-destructive lg:col-span-2">
+      <Card className="p-6 shadow-lg rounded-xl text-center text-destructive">
         <CardTitle>Error loading songs</CardTitle>
         <CardDescription>Failed to load song suggestions. Please try again later.</CardDescription>
       </Card>
@@ -385,27 +384,32 @@ const SongVotingList: React.FC = () => {
         </div>
 
         {filteredAndSortedSuggestions && filteredAndSortedSuggestions.length > 0 ? (
-          <ul className="space-y-4">
+          <ul className="space-y-3"> {/* Reduced spacing */}
             {filteredAndSortedSuggestions.map((song, index) => {
               // Highlight the top-voted song (only if sorting by votes and it's the first item)
               const isTopVoted = sortOrder === "votes_desc" && index === 0 && song.total_votes > 0;
               const isSuggestedByCurrentUser = user && song.user_id === user.id;
               const votedByCurrentUser = hasVoted(song.id);
 
+              // Determine suggested by name
+              const suggestedByName = song.user_id === null 
+                ? "Anonymous" 
+                : (song.profiles?.first_name || song.profiles?.last_name || "Member");
+
               return (
                 <li 
                   key={song.id} 
                   className={cn(
-                    "flex items-start gap-4 p-4 border rounded-lg transition-colors",
+                    "flex items-center justify-between gap-3 p-3 border rounded-lg transition-colors", // Reduced padding, changed alignment
                     isTopVoted 
-                      ? "border-primary ring-4 ring-primary/50 bg-primary/5 dark:bg-primary/10 shadow-2xl" 
+                      ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10" // Removed shadow-2xl
                       : "bg-muted/20 hover:bg-muted/50",
                     isSuggestedByCurrentUser && "border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10"
                   )}
                 >
                   
-                  {/* Voting Button & Count */}
-                  <div className="flex-shrink-0 text-center pt-1">
+                  {/* Left Section: Voting Button & Count */}
+                  <div className="flex-shrink-0 text-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -414,14 +418,14 @@ const SongVotingList: React.FC = () => {
                           onClick={() => handleVote(song.id)}
                           disabled={!user || (!votedByCurrentUser && !canVote)}
                           className={cn(
-                            "h-14 w-14 rounded-full flex flex-col items-center justify-center transition-all duration-200",
+                            "h-10 w-10 rounded-full flex flex-col items-center justify-center transition-all duration-200 p-1", // Reduced size
                             votedByCurrentUser 
                               ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
                               : "text-muted-foreground hover:bg-secondary/50 border-2",
                             !user || (!votedByCurrentUser && !canVote) ? "opacity-50 cursor-not-allowed" : ""
                           )}
                         >
-                          <ThumbsUp className="h-5 w-5" />
+                          <ThumbsUp className="h-4 w-4" />
                           <span className="text-xs font-bold mt-0.5">{song.total_votes}</span>
                         </Button>
                       </TooltipTrigger>
@@ -433,53 +437,49 @@ const SongVotingList: React.FC = () => {
                     </Tooltip>
                   </div>
                   
-                  {/* Song Details */}
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <h3 className="text-lg font-semibold text-foreground line-clamp-1">{song.title}</h3>
-                    <p className="text-sm text-muted-foreground">by <span className="font-medium text-foreground">{song.artist}</span></p>
+                  {/* Middle Section: Song Details */}
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <h3 className="text-base font-semibold text-foreground line-clamp-1">{song.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-1">by <span className="font-medium text-foreground">{song.artist}</span></p>
                     
-                    {/* Reason (with optional tooltip for long reasons) */}
-                    {song.reason && (
-                      <div className="flex items-start text-xs italic text-muted-foreground mt-2">
-                        <MessageSquare className="h-3 w-3 mr-1 flex-shrink-0 mt-0.5" />
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <p className="line-clamp-2 cursor-help">
-                              "{song.reason}"
-                            </p>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p>{song.reason}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    )}
-
-                    {/* Suggested By */}
-                    {song.profiles && (
-                      <div className="flex items-center text-xs text-muted-foreground pt-1">
-                        <Avatar className="h-5 w-5 mr-1">
+                    {/* Suggested By & Reason */}
+                    <div className="flex items-center text-xs text-muted-foreground pt-1">
+                      {song.user_id && song.profiles && (
+                        <Avatar className="h-4 w-4 mr-1">
                           {song.profiles.avatar_url ? (
                             <AvatarImage src={song.profiles.avatar_url} alt={`${song.profiles.first_name}'s avatar`} />
                           ) : (
-                            <AvatarFallback className="bg-secondary text-secondary-foreground text-[10px]">
-                              <UserIcon className="h-3 w-3" />
+                            <AvatarFallback className="bg-secondary text-secondary-foreground text-[8px]">
+                              <UserIcon className="h-2 w-2" />
                             </AvatarFallback>
                           )}
                         </Avatar>
-                        Suggested by {song.profiles.first_name || song.profiles.last_name || "Anonymous"}
-                        {isSuggestedByCurrentUser && <span className="ml-2 text-accent font-semibold">(You)</span>}
-                      </div>
-                    )}
+                      )}
+                      Suggested by {suggestedByName}
+                      {isSuggestedByCurrentUser && <span className="ml-1 text-accent font-semibold">(You)</span>}
+                      
+                      {/* Reason Tooltip */}
+                      {song.reason && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <MessageSquare className="h-3 w-3 ml-2 cursor-help text-muted-foreground hover:text-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="font-semibold">Reason:</p>
+                            <p className="italic">{song.reason}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
                   </div>
                   
-                  {/* Admin Actions */}
+                  {/* Right Section: Admin Actions */}
                   {user?.is_admin && (
-                    <div className="flex flex-col gap-2 flex-shrink-0 pt-1">
+                    <div className="flex gap-1 flex-shrink-0">
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-7 w-7"
                         onClick={() => {
                           setEditingSong(song);
                           setIsEditSongDialogOpen(true);
@@ -489,7 +489,7 @@ const SongVotingList: React.FC = () => {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="icon" className="h-8 w-8">
+                          <Button variant="destructive" size="icon" className="h-7 w-7">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>

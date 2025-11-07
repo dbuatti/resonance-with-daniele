@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form"; // Corrected import path
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,17 +18,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Music, CheckCircle2 } from "lucide-react"; // Added CheckCircle2
+import { Loader2, Music, CheckCircle2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Textarea } from "@/components/ui/textarea"; // Import Textarea
-import { cn } from "@/lib/utils"; // Import cn
-import { Link } from "react-router-dom"; // Import Link
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 
 const songSuggestionSchema = z.object({
   title: z.string().min(1, "Song title is required"),
   artist: z.string().min(1, "Artist name is required"),
-  reason: z.string().optional(), // Added new optional reason field
+  reason: z.string().optional(),
+  submit_anonymously: z.boolean().optional(), // New field for anonymous submission
 });
 
 type SongSuggestionFormData = z.infer<typeof songSuggestionSchema>;
@@ -40,14 +42,15 @@ interface SongSuggestionFormProps {
 const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdded }) => {
   const { user, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
-  const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false); // New state for success feedback
+  const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
 
   const form = useForm<SongSuggestionFormData>({
     resolver: zodResolver(songSuggestionSchema),
     defaultValues: {
       title: "",
       artist: "",
-      reason: "", // Default value for the new field
+      reason: "",
+      submit_anonymously: false, // Default to not anonymous
     },
   });
 
@@ -57,12 +60,14 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
       return;
     }
 
+    const userIdToSubmit = data.submit_anonymously ? null : user.id;
+
     try {
       const { error } = await supabase.from("song_suggestions").insert({
-        user_id: user.id,
+        user_id: userIdToSubmit, // Use null if submitting anonymously
         title: data.title,
         artist: data.artist,
-        reason: data.reason || null, // Include the new reason field
+        reason: data.reason || null,
       });
 
       if (error) {
@@ -70,10 +75,10 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
         showError("Failed to submit song suggestion: " + error.message);
       } else {
         showSuccess("Song suggestion added successfully!");
-        form.reset();
-        setIsSubmittedSuccessfully(true); // Set success state
-        setTimeout(() => setIsSubmittedSuccessfully(false), 3000); // Clear success state after 3 seconds
-        queryClient.invalidateQueries({ queryKey: ['songSuggestions'] }); // Invalidate to refetch and update UI
+        form.reset({ submit_anonymously: false }); // Reset form, keep anonymous checkbox unchecked
+        setIsSubmittedSuccessfully(true);
+        setTimeout(() => setIsSubmittedSuccessfully(false), 3000);
+        queryClient.invalidateQueries({ queryKey: ['songSuggestions'] });
         if (onSuggestionAdded) {
           onSuggestionAdded();
         }
@@ -179,6 +184,31 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
                 </FormItem>
               )}
             />
+            
+            <FormField
+              control={form.control}
+              name="submit_anonymously"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isSubmittedSuccessfully}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Submit Anonymously
+                    </FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      If checked, your name will not be displayed next to the suggestion.
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+
             <Button 
               type="submit" 
               className={cn("w-full transition-all duration-300", isSubmittedSuccessfully && "bg-green-600 hover:bg-green-700")}
