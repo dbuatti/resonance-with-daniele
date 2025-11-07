@@ -77,6 +77,9 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   // Determine if we should use the backdrop style (PDF)
   const useBackdropStyle = isFile && fileDetails.isPdf;
 
+  // Prepare PDF URL with parameters to hide toolbar
+  const pdfUrl = resource.url && fileDetails.isPdf ? `${resource.url}#toolbar=0&navpanes=0` : resource.url;
+
   return (
     <>
       <Card className={cn(
@@ -87,15 +90,14 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Main Content Area (Header + Preview) */}
         <div className={cn(
           "relative overflow-hidden",
-          // Fixed height for PDF backdrop, rounded top corners
-          useBackdropStyle ? "h-64 rounded-t-xl" : "p-6 rounded-xl" 
+          useBackdropStyle ? "h-64 rounded-t-xl" : "p-6" // Fixed height for PDF backdrop
         )}>
           
           {/* 1. The Backdrop (PDF Iframe or Standard Header) */}
           {useBackdropStyle ? (
             <>
               <iframe
-                src={resource.url}
+                src={pdfUrl} // Use the modified URL here
                 title={`Preview of ${resource.title}`}
                 className="w-full h-full border-none absolute inset-0"
               />
@@ -115,7 +117,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                     <div>
                       <CardTitle className="text-xl font-lora line-clamp-1 text-primary-foreground">{resource.title}</CardTitle>
                       <CardDescription className="text-sm line-clamp-1 text-primary-foreground/80">
-                        {fileDetails.type}
+                        {resource.description || fileDetails.type}
                       </CardDescription>
                     </div>
                   </div>
