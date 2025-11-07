@@ -96,8 +96,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     <Card className={cn(
         "shadow-lg rounded-xl flex flex-col justify-between transition-shadow duration-200 hover:shadow-xl",
         !isPublished && isAdmin && "border-l-4 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20",
-        // Apply col-span-full if using media backdrop
-        useMediaBackdrop && "col-span-full"
+        // Apply col-span-full from md breakpoint up to force a new row
+        useMediaBackdrop && "md:col-span-full"
       )}>
         
         {/* Main Content Area (Preview for PDF/Audio) */}
