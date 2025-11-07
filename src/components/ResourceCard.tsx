@@ -91,7 +91,20 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
   // Unified action handler: open URL in new tab (browser handles PDF/Audio/Link)
   const handlePrimaryAction = () => {
-    if (resource.url) {
+    if (!resource.url) return;
+
+    if (isFile) {
+      // For files (PDF/Audio), force download using a temporary anchor tag
+      const link = document.createElement('a');
+      link.href = resource.url;
+      // Use the original filename if available, otherwise use the title
+      link.download = resource.original_filename || resource.title; 
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showSuccess(`Downloading ${resource.title}...`);
+    } else {
+      // For external links, open in a new tab
       window.open(resource.url, '_blank');
     }
   };
