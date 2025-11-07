@@ -131,7 +131,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           )}
         </div>
         
-        {/* Title, Pills, File Details, and Description Area (Main Display) */}
+        {/* Title, Pills, and Description Area (Main Display) */}
         <div className={cn("px-4 pt-4 pb-2 bg-card", useBackdropStyle && "pt-0")}>
           <div className="flex items-start justify-between mb-2">
               {/* 1. Title and Icon (Only for non-PDF files) */}
@@ -154,7 +154,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               )}
           </div>
           
-          {/* Pills Section & File Name (Combined for compactness) */}
+          {/* Pills Section (Consolidated) */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {/* Resource Type Pill */}
             <Badge className={cn("text-xs font-semibold", resourcePillClass)}>
@@ -170,14 +170,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 {resource.voice_part}
               </Badge>
             )}
-            
-            {/* File Name Display for uploaded files */}
-            {isFile && fileDetails.fileName !== 'N/A' && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0">
-                    <File className="h-3 w-3" />
-                    <span className="font-mono truncate max-w-[90%]">{fileDetails.fileName}</span>
-                </p>
-            )}
           </div>
 
           {/* Description */}
@@ -189,14 +181,14 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Footer Content (Buttons and Date) */}
         <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
-            {/* Audio Player (Inline) - FIX: Removed type attribute */}
+            {/* Audio Player (Inline) */}
             {fileDetails.isAudio && resource.url && (
               <audio controls src={resource.url} className="w-full h-10">
                 Your browser does not support the audio element.
               </audio>
             )}
 
-            {/* Primary Action Button (Only for Links and non-PDF/non-Audio files) */}
+            {/* Primary Action Button (Only for Links) */}
             {isLink && (
               <Button 
                 onClick={handlePrimaryAction} 
