@@ -106,14 +106,14 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {isFile && (
           <CardContent 
             className={cn(
-              "pt-0 pb-4",
-              // Remove horizontal padding for edge-to-edge preview
-              fileDetails.isPdf ? "px-0" : "px-6" 
+              "pt-0", // Always pt-0 to follow header
+              // Conditional padding based on file type
+              fileDetails.isPdf ? "px-0 pb-0" : "px-6 pb-4" 
             )}
           >
             <div className={cn(
               "bg-white dark:bg-card border border-border rounded-lg shadow-inner h-48 overflow-hidden",
-              // Remove border and rounded corners for PDF preview to truly hit the edges
+              // Conditional styling for PDF
               fileDetails.isPdf ? "border-0 rounded-none" : "p-6"
             )}>
               {fileDetails.isPdf && resource.url ? (
