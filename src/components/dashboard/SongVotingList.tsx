@@ -6,7 +6,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, Edit as EditIcon, MessageSquare, AlertCircle } from "lucide-react";
+import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, Edit as EditIcon, MessageSquare, AlertCircle, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -60,8 +60,6 @@ const editSongSuggestionSchema = z.object({
 });
 
 type EditSongSuggestionFormData = z.infer<typeof editSongSuggestionSchema>;
-
-// Removed MAX_VOTES constant
 
 const SongVotingList: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
@@ -156,8 +154,6 @@ const SongVotingList: React.FC = () => {
     return userVotes?.some(vote => vote.suggestion_id === suggestionId);
   };
 
-  // Removed votesRemaining and canVote calculations
-
   // --- Dynamic Filtering and Sorting ---
   const filteredAndSortedSuggestions = useMemo(() => {
     if (!allSuggestions) return [];
@@ -219,8 +215,6 @@ const SongVotingList: React.FC = () => {
       }
     } else {
       // User wants to vote
-      // No vote limit check needed anymore
-
       const { error } = await supabase
         .from("user_song_votes")
         .insert({ user_id: user.id, suggestion_id: suggestionId });
@@ -339,8 +333,6 @@ const SongVotingList: React.FC = () => {
           Vote for songs you'd like to sing! The most popular suggestions will be considered for future sessions.
         </CardDescription>
 
-        {/* Removed Vote Limit Alert */}
-
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -401,7 +393,7 @@ const SongVotingList: React.FC = () => {
                           variant={votedByCurrentUser ? "default" : "outline"}
                           size="icon"
                           onClick={() => handleVote(song.id)}
-                          disabled={!user} // Removed vote limit check
+                          disabled={!user}
                           className={cn(
                             "h-10 w-10 rounded-full flex flex-col items-center justify-center transition-all duration-200 p-1",
                             votedByCurrentUser 
@@ -416,7 +408,7 @@ const SongVotingList: React.FC = () => {
                       </TooltipTrigger>
                       <TooltipContent>
                         {user ? (
-                          votedByCurrentUser ? "Remove Vote" : "Cast Vote" // Simplified tooltip
+                          votedByCurrentUser ? "Remove Vote" : "Cast Vote"
                         ) : "Log in to vote"}
                       </TooltipContent>
                     </Tooltip>
