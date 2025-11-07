@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2 } from "lucide-react";
+import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, Download, File, ArrowRight, Mic2 } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -65,8 +65,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     const url = resource.url.toLowerCase();
     const isPdf = url.endsWith('.pdf');
     const isAudio = url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a');
-
-    // We no longer need to parse the filename from the URL path, we use original_filename
     
     if (isPdf) {
       return { icon: <FileText className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf, isAudio: false };
@@ -112,7 +110,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Main Content Area (Preview for PDF/Audio) */}
         <div className={cn(
           "relative overflow-hidden",
-          useMediaBackdrop ? "h-64 rounded-t-xl" : "hidden"
+          useMediaBackdrop ? "rounded-t-xl" : "hidden"
         )}>
           
           {useMediaBackdrop && (
@@ -120,7 +118,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               
               {/* Content specific to PDF */}
               {fileDetails.isPdf && resource.url && (
-                <>
+                <div className="relative w-full h-64">
                   {/* PDF Preview Area (Iframe) */}
                   <iframe
                     src={resource.url} // Clean URL
@@ -139,25 +137,18 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                   >
                       <Download className="h-5 w-5" />
                   </Button>
-                </>
+                </div>
               )}
 
-              {/* Content specific to Audio */}
+              {/* Content specific to Audio (Improved Layout) */}
               {fileDetails.isAudio && resource.url && (
-                <div className="text-center p-4 w-full">
-                  <Headphones className="h-24 w-24 text-primary mx-auto mb-4" />
-                  <audio controls src={resource.url} className="w-full max-w-xs mx-auto h-10" />
+                <div className="p-6 w-full space-y-4">
+                  <div className="flex items-center justify-center">
+                    <Headphones className="h-16 w-16 text-primary" />
+                  </div>
+                  <audio controls src={resource.url} className="w-full h-10" />
                   
-                  {/* Download Button (Bottom Right - same style as PDF) */}
-                  <Button
-                      variant="secondary"
-                      size="icon"
-                      className="absolute bottom-4 right-4 z-20 h-10 w-10 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-                      onClick={handlePrimaryAction}
-                      title="Download Audio"
-                  >
-                      <Download className="h-5 w-5" />
-                  </Button>
+                  {/* Download Button (Bottom Right - removed from preview, consolidated to main action) */}
                 </div>
               )}
             </div>
@@ -168,7 +159,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         <div className={cn(
           "px-4 pb-2", 
           // If media backdrop is used, increase top padding significantly
-          useMediaBackdrop ? "pt-6 bg-card/80 backdrop-blur-sm" : "pt-4 bg-transparent"
+          useMediaBackdrop ? "pt-4 bg-card/80 backdrop-blur-sm" : "pt-4 bg-transparent"
         )}>
           
           {/* Header Row: Icon + Title + Pills + Draft Badge */}
