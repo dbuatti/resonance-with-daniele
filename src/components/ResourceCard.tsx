@@ -17,12 +17,20 @@ interface ResourceCardProps {
   onMove: (resource: Resource) => void; // New prop for move action
 }
 
-// Define colors for resource type pills
-const resourceTypeColors = {
-  pdf: "bg-red-500 hover:bg-red-600 text-white",
-  audio: "bg-green-500 hover:bg-green-600 text-white",
-  link: "bg-blue-500 hover:bg-blue-600 text-white",
-  default: "bg-muted text-muted-foreground",
+// Define colors for resource type pills (White background, colored text/border)
+const resourcePillStyles: { [key: string]: { text: string, border: string } } = {
+  pdf: { text: "text-red-600", border: "border-red-300" },
+  audio: { text: "text-green-600", border: "border-green-300" },
+  link: { text: "text-blue-600", border: "border-blue-300" },
+  default: { text: "text-muted-foreground", border: "border-border" },
+};
+
+// Define colors for card backgrounds
+const resourceCardBackgrounds: { [key: string]: string } = {
+  pdf: "bg-pastel-pdf dark:bg-pastel-pdf-dark",
+  audio: "bg-pastel-audio dark:bg-pastel-audio-dark",
+  link: "bg-pastel-link dark:bg-pastel-link-dark",
+  default: "bg-card",
 };
 
 // Define colors for voice part pills (using a simple scheme for now)
@@ -77,10 +85,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
   const fileDetails = getFileDetails();
 
-  // Determine resource type for pill
+  // Determine resource type for pill and card background
   const resourcePillType = fileDetails.isPdf ? 'pdf' : fileDetails.isAudio ? 'audio' : isLink ? 'link' : 'default';
   const resourcePillText = fileDetails.isPdf ? 'PDF' : fileDetails.isAudio ? 'Audio' : isLink ? 'Link' : 'File';
-  const resourcePillClass = resourceTypeColors[resourcePillType] || resourceTypeColors.default;
+  const pillStyle = resourcePillStyles[resourcePillType] || resourcePillStyles.default;
+  const cardBackgroundClass = resourceCardBackgrounds[resourcePillType] || resourceCardBackgrounds.default;
 
   // New unified backdrop style flag
   const useMediaBackdrop = isFile && (fileDetails.isPdf || fileDetails.isAudio);
@@ -95,8 +104,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   return (
     <Card className={cn(
         "shadow-lg rounded-xl flex flex-col justify-between transition-shadow duration-200 hover:shadow-xl",
+        cardBackgroundClass, // Apply pastel background here
         !isPublished && isAdmin && "border-l-4 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20",
-        // Removed: md:col-span-full class to restore small width layout
       )}>
         
         {/* Main Content Area (Preview for PDF/Audio) */}
@@ -156,7 +165,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         </div>
         
         {/* Title, Pills, and Description Area (Main Display) */}
-        <div className={cn("px-4 pt-4 pb-2 bg-card", useMediaBackdrop && "pt-0")}>
+        <div className={cn("px-4 pt-4 pb-2", useMediaBackdrop ? "pt-0 bg-card/80 backdrop-blur-sm" : "bg-transparent")}>
           
           {/* Header Row: Icon + Title + Pills + Draft Badge */}
           <div className="flex items-start justify-between gap-2 mb-2">
@@ -191,7 +200,14 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 )}
                 
                 {/* Resource Type Pill */}
-                <Badge className={cn("text-xs font-semibold", resourcePillClass)}>
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "text-xs font-semibold bg-card border", 
+                    pillStyle.text, 
+                    pillStyle.border
+                  )}
+                >
                   {resourcePillText}
                 </Badge>
                 

@@ -60,7 +60,7 @@ export default {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
           primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground)",
           accent: "hsl(var(--sidebar-accent))",
           "accent-foreground": "hsl(var(--sidebar-accent-foreground)",
           border: "hsl(var(--sidebar-border))",
@@ -78,6 +78,19 @@ export default {
         'hero-description-foreground': {
           DEFAULT: 'hsl(220 10% 40%)', // Muted foreground for description
           dark: 'hsl(220 10% 70%)',    // Lighter muted foreground for dark mode
+        },
+        // New Pastel Colors for Resources
+        'pastel-pdf': {
+          DEFAULT: 'hsl(0 80% 95%)', // Very light red/pink
+          dark: 'hsl(0 40% 20%)',
+        },
+        'pastel-audio': {
+          DEFAULT: 'hsl(120 60% 95%)', // Very light green
+          dark: 'hsl(120 20% 20%)',
+        },
+        'pastel-link': {
+          DEFAULT: 'hsl(240 80% 95%)', // Very light blue
+          dark: 'hsl(240 40% 20%)',
         },
       },
       borderRadius: {
