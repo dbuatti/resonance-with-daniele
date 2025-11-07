@@ -35,15 +35,43 @@ import ReportIssueButton from "./ReportIssueButton";
 import UnreadIssueReportsNotice from "./UnreadIssueReportsNotice";
 import AdminViewToggle from "./AdminViewToggle"; // Import the new component
 import { Badge } from "@/components/ui/badge"; // Import Badge
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+// Query function to fetch unread announcement count (simulated)
+const fetchUnreadAnnouncementCount = async (): Promise<number> => {
+  // NOTE: This is a placeholder query. In a real app, this would query a user_announcement_read_status table.
+  // For now, we check if any announcement was created in the last 24 hours.
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  
+  const { count, error } = await supabase
+    .from("announcements")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", oneDayAgo);
+
+  if (error) {
+    console.error("Error fetching unread announcement count:", error);
+    return 0;
+  }
+  return count || 0;
+};
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, profile, loading, isLoggingOut, logout, isActualAdmin, incompleteTasksCount, isProfileCompleted, isSurveyCompleted } = useSession(); // Destructure new fields
   const location = useLocation();
   console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
+
+  // Fetch unread announcement count
+  const { data: unreadAnnouncementCount } = useQuery<number, Error, number, ['unreadAnnouncementCount']>({
+    queryKey: ['unreadAnnouncementCount'],
+    queryFn: fetchUnreadAnnouncementCount,
+    enabled: !!user,
+    refetchInterval: 60 * 1000, // Check every minute
+  });
 
   const handleLogout = async () => {
     await logout(); // Call the centralized logout function
@@ -92,9 +120,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <nav className="hidden sm:flex flex-wrap justify-end gap-2 items-center">
             {isActualAdmin && <AdminViewToggle />} {/* Use isActualAdmin here */}
             <Button variant="ghost" asChild className={getNavLinkClass("/")}>
-              <Link to="/">
+              <Link to="/" className="relative">
                 <Home className="h-4 w-4" />
                 <span>Home</span>
+                {unreadAnnouncementCount && unreadAnnouncementCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1 -right-3 h-4 w-4 p-0 flex items-center justify-center text-xs font-bold rounded-full ring-2 ring-primary">
+                    {unreadAnnouncementCount}
+                  </Badge>
+                )}
               </Link>
             </Button>
             {!user && ( // Only show "Learn More" if user is not logged in

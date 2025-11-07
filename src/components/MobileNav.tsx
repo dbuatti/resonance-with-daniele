@@ -21,11 +21,39 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/integrations/supabase/auth";
 import { Badge } from "@/components/ui/badge"; // Import Badge
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+// Query function to fetch unread announcement count (simulated)
+const fetchUnreadAnnouncementCount = async (): Promise<number> => {
+  // NOTE: This is a placeholder query. In a real app, this would query a user_announcement_read_status table.
+  // For now, we check if any announcement was created in the last 24 hours.
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  
+  const { count, error } = await supabase
+    .from("announcements")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", oneDayAgo);
+
+  if (error) {
+    console.error("Error fetching unread announcement count:", error);
+    return 0;
+  }
+  return count || 0;
+};
 
 const MobileNav: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user, profile, loading, isLoggingOut, logout, incompleteTasksCount } = useSession(); // Access session context
+
+  // Fetch unread announcement count
+  const { data: unreadAnnouncementCount } = useQuery<number, Error, number, ['unreadAnnouncementCount']>({
+    queryKey: ['unreadAnnouncementCount'],
+    queryFn: fetchUnreadAnnouncementCount,
+    enabled: !!user,
+    refetchInterval: 60 * 1000, // Check every minute
+  });
 
   const getNavLinkClass = (path: string) =>
     cn(
@@ -56,8 +84,15 @@ const MobileNav: React.FC = () => {
         </SheetHeader>
         <nav className="flex flex-col gap-2 flex-grow">
           <Link to="/" className={getNavLinkClass("/")} onClick={() => setIsOpen(false)}>
-            <Home className="h-5 w-5" />
-            <span>Home</span>
+            <div className="relative flex items-center gap-3">
+              <Home className="h-5 w-5" />
+              <span>Home</span>
+              {unreadAnnouncementCount && unreadAnnouncementCount > 0 && (
+                <Badge variant="destructive" className="absolute -top-1 left-16 h-4 w-4 p-0 flex items-center justify-center text-xs font-bold rounded-full ring-2 ring-card">
+                  {unreadAnnouncementCount}
+                </Badge>
+              )}
+            </div>
           </Link>
           {!user && ( // Only show "Learn More" if user is not logged in
             <Link to="/learn-more" className={getNavLinkClass("/learn-more")} onClick={() => setIsOpen(false)}>
