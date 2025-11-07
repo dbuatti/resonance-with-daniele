@@ -111,11 +111,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Main Content Area (Preview for PDF/Audio) */}
         <div className={cn(
           "relative overflow-hidden",
+          // Only apply rounded-t-xl if it's a media backdrop, otherwise it's hidden
           useMediaBackdrop ? "rounded-t-xl" : "hidden"
         )}>
           
           {useMediaBackdrop && (
-            <div className="relative h-full flex items-center justify-center bg-muted/50 dark:bg-muted/30"> {/* Adjusted dark mode background */}
+            <div className="relative h-full flex items-center justify-center"> {/* Removed bg-muted/50 here, let children manage background */}
               
               {/* Content specific to PDF */}
               {fileDetails.isPdf && resource.url && (
@@ -156,8 +157,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Title, Pills, and Description Area (Main Display) */}
         <div className={cn(
           "px-4 pb-2", 
-          // If media backdrop is used, increase top padding significantly
-          useMediaBackdrop ? "pt-4 bg-card/80 backdrop-blur-sm" : "pt-4 bg-transparent"
+          // If media backdrop is used, reduce top padding to integrate with player/preview
+          useMediaBackdrop ? "pt-4 bg-transparent" : "pt-4 bg-transparent"
         )}>
           
           {/* Header Row: Icon + Title + Pills + Draft Badge */}
