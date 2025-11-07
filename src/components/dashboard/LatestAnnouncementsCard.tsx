@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useSession } from "@/integrations/supabase/auth"; // Import useSession to check for authenticated user
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils"; // Import cn
 
 interface Announcement {
   id: string;
@@ -100,11 +101,15 @@ const LatestAnnouncementsCard: React.FC = () => {
     );
   }
 
+  // Apply high-contrast styling to the card
   return (
-    <Card className="shadow-lg rounded-xl">
+    <Card className={cn(
+      "shadow-lg rounded-xl border-l-4 border-primary",
+      "bg-primary/5 dark:bg-primary/10" // Subtle primary background
+    )}>
       <CardHeader>
-        <CardTitle className="text-xl font-lora flex items-center gap-2">
-          <BellRing className="h-6 w-6 text-primary" /> Latest Announcements
+        <CardTitle className="text-xl font-lora flex items-center gap-2 text-primary">
+          <BellRing className="h-6 w-6" /> Latest Announcements
         </CardTitle>
         <CardDescription>Important updates from Daniele.</CardDescription>
       </CardHeader>

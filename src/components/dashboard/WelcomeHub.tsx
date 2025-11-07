@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText, User as UserIcon, Settings, ClipboardList } from "lucide-react";
+import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText, User as UserIcon, Settings, ClipboardList, CheckCircle2 } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,9 @@ import { useQuery } from "@tanstack/react-query";
 import LatestAnnouncementsCard from "@/components/dashboard/LatestAnnouncementsCard";
 import CoreHubLinks from "@/components/dashboard/CoreHubLinks"; // Import new component
 import { Button } from "@/components/ui/button"; // Ensure Button is imported
+import { getResourcePillType } from "@/types/Resource"; // Import helper
+import { Badge } from "@/components/ui/badge"; // Import Badge
+import { cn } from "@/lib/utils"; // Import cn
 
 interface Event {
   id: string;
@@ -27,54 +30,92 @@ interface Resource {
   title: string;
   description?: string;
   url: string;
+  type: 'file' | 'url' | 'youtube' | 'lyrics';
 }
+
+// Define colors for resource type pills (White background, colored text/border)
+const resourcePillStyles: { [key: string]: { text: string, border: string } } = {
+  pdf: { text: "text-red-600", border: "border-red-300" },
+  audio: { text: "text-green-600", border: "border-green-300" },
+  link: { text: "text-blue-600", border: "border-blue-300" },
+  youtube: { text: "text-purple-600", border: "border-purple-300" },
+  lyrics: { text: "text-orange-600", border: "border-orange-300" },
+  default: { text: "text-muted-foreground", border: "border-border" },
+};
 
 const WelcomeHub: React.FC = () => {
   const { user, profile, loading: loadingSession } = useSession();
 
-  // Fetch upcoming event using react-query
+  // --- Data Fetching ---
+
+  // 1. Fetch upcoming event
   const { data: upcomingEvent, isLoading: loadingEvent } = useQuery<
-    Event | null, // TQueryFnData
-    Error,          // TError
-    Event | null, // TData (the type of the 'data' property)
-    ['upcomingEvent'] // TQueryKey
+    Event | null,
+    Error,
+    Event | null,
+    ['upcomingEvent']
   >({
     queryKey: ['upcomingEvent'],
     queryFn: async () => {
-      console.log("[WelcomeHub] Fetching upcoming event.");
       const { data, error: fetchError } = await supabase
         .from("events")
         .select("*")
         .gte("date", format(new Date(), "yyyy-MM-dd"))
         .order("date", { ascending: true })
         .limit(1)
-        .single(); // Use single to get one object or null
+        .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+      if (fetchError && fetchError.code !== 'PGRST116') {
         console.error("[WelcomeHub] Error fetching upcoming event:", fetchError);
-        throw fetchError; // Re-throw to be caught by react-query's error handling
+        throw fetchError;
       }
-      console.log("[WelcomeHub] Upcoming event fetched:", data);
       return data || null;
     },
-    enabled: !loadingSession, // Only fetch if session is not loading
-    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    enabled: !loadingSession,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
-  // Fetch recent resources using react-query
+  // 2. Check RSVP status for the upcoming event
+  const { data: hasRsvpd, isLoading: loadingRsvp } = useQuery<
+    boolean,
+    Error,
+    boolean,
+    ['eventRsvpStatus', string | undefined]
+  >({
+    queryKey: ['eventRsvpStatus', upcomingEvent?.id],
+    queryFn: async () => {
+      if (!user?.id || !upcomingEvent?.id) return false;
+      
+      const { count, error } = await supabase
+        .from("event_rsvps")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("event_id", upcomingEvent.id);
+
+      if (error) {
+        console.error("[WelcomeHub] Error fetching RSVP status:", error);
+        throw error;
+      }
+      return (count || 0) > 0;
+    },
+    enabled: !loadingSession && !!user?.id && !!upcomingEvent?.id,
+    staleTime: 30 * 1000, // Check RSVP status frequently
+  });
+
+  // 3. Fetch recent resources
   const { data: recentResources, isLoading: loadingResources } = useQuery<
-    Resource[], // TQueryFnData
-    Error,          // TError
-    Resource[], // TData (the type of the 'data' property)
-    ['recentResources'] // TQueryKey
+    Resource[],
+    Error,
+    Resource[],
+    ['recentResources']
   >({
     queryKey: ['recentResources'],
     queryFn: async () => {
-      console.log("[WelcomeHub] Fetching recent resources.");
       const { data, error } = await supabase
         .from("resources")
-        .select("id, title, description, url")
+        .select("id, title, description, url, type") // Select type
+        .eq("is_published", true) // Only show published resources
         .order("created_at", { ascending: false })
         .limit(3);
 
@@ -82,15 +123,15 @@ const WelcomeHub: React.FC = () => {
         console.error("[WelcomeHub] Error fetching recent resources:", error);
         throw error;
       }
-      console.log("[WelcomeHub] Recent resources fetched:", data);
       return data || [];
     },
-    enabled: !loadingSession, // Only fetch if session is not loading
-    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    enabled: !loadingSession,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
-  // Determine if survey is completed based on the profile from context
+  // --- Derived State ---
+
   const isSurveyCompleted = profile ? (
     profile.how_heard !== null ||
     (profile.motivation !== null && profile.motivation.length > 0) ||
@@ -104,14 +145,11 @@ const WelcomeHub: React.FC = () => {
     profile.suggestions !== null
   ) : false;
 
-  // Determine if profile (first_name, last_name) is completed
   const isProfileCompleted = profile && profile.first_name && profile.last_name;
-
-  // Overall loading state for WelcomeHub
-  const isLoading = loadingSession || loadingEvent || loadingResources;
+  const isLoading = loadingSession || loadingEvent || loadingResources || loadingRsvp;
+  const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
 
   if (isLoading) {
-    console.log("[WelcomeHub] Rendering skeleton due to loadingSession, loadingEvent, or loadingResources being true.");
     return (
       <div className="py-8 md:py-12 space-y-8">
         <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
@@ -121,24 +159,47 @@ const WelcomeHub: React.FC = () => {
             <Skeleton className="h-6 w-1/2 mx-auto mb-6" />
           </CardHeader>
           <CardContent className="space-y-6">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <Skeleton className="h-32 w-full" />
               <Skeleton className="h-32 w-full" />
               <Skeleton className="h-32 w-full" />
               <Skeleton className="h-32 w-full" />
             </div>
-            <Skeleton className="h-10 w-48 mx-auto" />
+            <Skeleton className="h-32 w-full" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
-  console.log("[WelcomeHub] Rendering content for user:", user?.id, "First Name:", firstName);
+  // --- UI Rendering ---
+
+  const renderResourceBadge = (resource: Resource) => {
+    const pillType = getResourcePillType(resource);
+    const style = resourcePillStyles[pillType] || resourcePillStyles.default;
+    let text = pillType.charAt(0).toUpperCase() + pillType.slice(1);
+    if (pillType === 'pdf') text = 'Sheet Music';
+    if (pillType === 'audio') text = 'Audio';
+    if (pillType === 'link') text = 'Link';
+    if (pillType === 'youtube') text = 'YouTube';
+
+    return (
+      <Badge 
+        variant="outline" 
+        className={cn(
+          "text-xs font-semibold bg-card border", 
+          style.text, 
+          style.border
+        )}
+      >
+        {text}
+      </Badge>
+    );
+  };
 
   return (
     <div className="py-8 md:py-12 space-y-8">
@@ -152,24 +213,14 @@ const WelcomeHub: React.FC = () => {
           <CardTitle className="text-4xl md:text-5xl font-extrabold text-center text-foreground mb-4 font-lora">
             Welcome, {firstName} to the Resonance with Daniele Hub!
           </CardTitle>
-          <p className="text-center text-xl md:text-2xl font-semibold text-foreground mb-6 font-lora">
-            🎶 Sing. Connect. Shine. 🎶
+          <p className="text-center text-lg text-muted-foreground mb-6">
+            I believe in the transformative power of singing — not just as performance, but as connection, expression, and joy.
           </p>
         </CardHeader>
         <CardContent className="text-lg text-muted-foreground space-y-6">
-          <p className="mb-6">
-            Welcome! I’m Daniele Buatti, and I’m thrilled to share this space with you. I believe in the transformative power of singing — not just as performance, but as connection, expression, and joy.
-          </p>
-          <p className="mb-8">
-            This hub is your go-to space for everything choir-related:
-          </p>
           
           {/* Core Hub Links (New Visual Cards) */}
           <CoreHubLinks />
-
-          <p className="mt-6 mb-8">
-            No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others.
-          </p>
 
           {/* Profile Completion Card */}
           {!isProfileCompleted && (
@@ -239,18 +290,35 @@ const WelcomeHub: React.FC = () => {
                 {upcomingEvent ? (
                   <div className="space-y-3">
                     <h3 className="text-xl font-bold text-foreground">{upcomingEvent.title}</h3>
-                    <p className="text-base text-muted-foreground">
-                      <span className="font-semibold text-primary">{format(new Date(upcomingEvent.date), "EEEE, PPP")}</span>
-                      {upcomingEvent.location && <span className="block text-sm">{upcomingEvent.location}</span>}
+                    
+                    {/* Prominent Date Display */}
+                    <p className="text-2xl font-extrabold text-primary flex items-center gap-2">
+                      <CalendarDays className="h-6 w-6" />
+                      {format(new Date(upcomingEvent.date), "EEEE, PPP")}
                     </p>
+                    
+                    {upcomingEvent.location && <p className="block text-sm text-muted-foreground">{upcomingEvent.location}</p>}
+                    
                     {upcomingEvent.description && (
                       <p className="text-sm text-muted-foreground line-clamp-3">{upcomingEvent.description}</p>
                     )}
-                    <Button size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90" asChild>
-                      <Link to={upcomingEvent.humanitix_link || "/current-event"}>
-                        {upcomingEvent.humanitix_link ? "View Details & RSVP" : "View Event Page"}
-                      </Link>
-                    </Button>
+                    
+                    {/* RSVP Button Logic */}
+                    {hasRsvpd ? (
+                      <Button 
+                        size="lg" 
+                        className="w-full mt-4 bg-green-600 text-white hover:bg-green-700"
+                        disabled
+                      >
+                        <CheckCircle2 className="mr-2 h-4 w-4" /> RSVP Confirmed
+                      </Button>
+                    ) : (
+                      <Button size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90" asChild>
+                        <Link to={upcomingEvent.humanitix_link || "/current-event"}>
+                          {upcomingEvent.humanitix_link ? "View Details & RSVP" : "View Event Page"}
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center text-muted-foreground py-4">
@@ -276,14 +344,13 @@ const WelcomeHub: React.FC = () => {
                   <ul className="space-y-3">
                     {recentResources.map((resource) => (
                       <li key={resource.id} className="flex items-start gap-2">
-                        <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+                        <div className="flex-shrink-0 mt-1">
+                          {renderResourceBadge(resource)}
+                        </div>
                         <div>
                           <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
                             {resource.title}
                           </a>
-                          {resource.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-1">{resource.description}</p>
-                          )}
                         </div>
                       </li>
                     ))}
