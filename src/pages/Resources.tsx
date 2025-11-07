@@ -20,7 +20,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Resource, ResourceFolder } from "@/types/Resource"; // Import ResourceFolder
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom"; // Import useSearchParams
 import { useDropzone } from "react-dropzone"; // Import useDropzone
 import { cn } from "@/lib/utils"; // Import cn
 
@@ -41,9 +41,10 @@ const voiceParts = [
 const Resources: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams(); // Initialize search params
 
-  // State for current folder navigation
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  // State for current folder navigation, derived from URL
+  const currentFolderId = searchParams.get('folderId');
 
   // Dialog states
   const [isResourceDialogOpen, setIsResourceDialogOpen] = useState(false);
@@ -211,6 +212,7 @@ const Resources: React.FC = () => {
         type: 'file' as const,
         is_published: true,
         folder_id: folderId,
+        original_filename: file.name, // Store original filename
       };
 
       const { error: dbError } = await supabase
@@ -260,7 +262,11 @@ const Resources: React.FC = () => {
   // --- Handlers ---
 
   const handleNavigate = (folderId: string | null) => {
-    setCurrentFolderId(folderId);
+    if (folderId) {
+      setSearchParams({ folderId: folderId });
+    } else {
+      setSearchParams({}); // Clear folderId param to go to root
+    }
     setSearchTerm(""); // Clear search on navigation
   };
 
@@ -368,7 +374,15 @@ const Resources: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ['resources'] }); // Invalidate all resources
         queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] }); // Invalidate all folders
         queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
-        setCurrentFolderId(null); // Navigate back to root
+        
+        // If the deleted folder was the current view, navigate to its parent or root
+        if (currentFolderId === folderId) {
+            const parentFolder = allFolders?.find(f => f.id === folderId)?.parent_folder_id || null;
+            handleNavigate(parentFolder);
+        } else {
+            // If a subfolder was deleted, just invalidate the current view
+            queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId] });
+        }
         setFolderToDelete(null);
       }
     } catch (e: any) {
