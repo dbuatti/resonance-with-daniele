@@ -95,9 +95,9 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   };
 
   const getPrimaryActionText = () => {
-    if (isLink) return "View Link";
-    if (fileDetails.isPdf) return "View / Download PDF";
-    if (fileDetails.isAudio) return "Listen / Download Audio";
+    if (isLink) return "View External Link";
+    if (fileDetails.isPdf) return "Download Sheet Music";
+    if (fileDetails.isAudio) return "Download Audio File";
     return "View Resource";
   };
 
@@ -116,29 +116,28 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         )}>
           
           {useMediaBackdrop && (
-            <div className="relative h-full flex items-center justify-center"> {/* Removed bg-muted/50 here, let children manage background */}
+            <div className="relative h-full flex items-center justify-center">
               
               {/* Content specific to PDF */}
               {fileDetails.isPdf && resource.url && (
-                <div className="relative w-full h-64">
+                <div 
+                  className="relative w-full h-64 cursor-pointer group"
+                  onClick={handlePrimaryAction} // Make the preview area clickable
+                >
                   {/* PDF Preview Area (Iframe) */}
                   <iframe
                     src={resource.url} // Clean URL
                     title={`Preview of ${resource.title}`}
-                    className="w-full border-none absolute left-0 right-0 top-0" 
+                    className="w-full border-none absolute left-0 right-0 top-0 pointer-events-none" // Disable interaction on iframe
                     style={{ height: 'calc(100% + 40px)', marginTop: '-40px' }}
                   />
 
-                  {/* Download Button (Bottom Right) */}
-                  <Button
-                      variant="secondary"
-                      size="icon"
-                      className="absolute bottom-4 right-4 z-20 h-10 w-10 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-                      onClick={handlePrimaryAction}
-                      title="Download / View PDF"
-                  >
-                      <Download className="h-5 w-5" />
-                  </Button>
+                  {/* Overlay for Clickability */}
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                    <Button size="lg" className="shadow-xl">
+                      <FileSearch className="h-5 w-5 mr-2" /> View Preview
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -157,7 +156,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Title, Pills, and Description Area (Main Display) */}
         <div className={cn(
           "px-4 pb-2", 
-          // If media backdrop is used, reduce top padding to integrate with player/preview
           useMediaBackdrop ? "pt-4 bg-transparent" : "pt-4 bg-transparent"
         )}>
           
@@ -223,7 +221,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
           {/* Description */}
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {resource.description || ""}
+            {resource.description || "No description provided."}
           </p>
         </div>
 
@@ -231,7 +229,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
             {/* Primary Action Button (Visible for all non-admin users) */}
-            {/* Only show for PDF and Link now, Audio uses its own integrated download button */}
+            {/* Show for PDF and Link, Audio uses integrated download button */}
             {!isAdmin && resource.url && (fileDetails.isPdf || isLink) && (
               <Button 
                 onClick={handlePrimaryAction} 
@@ -243,6 +241,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               </Button>
             )}
             
+            {/* Admin Actions */}
             {isAdmin && (
               <div className="flex justify-end gap-1">
                 <Tooltip>

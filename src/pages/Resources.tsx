@@ -485,6 +485,15 @@ const Resources: React.FC = () => {
   const showSkeleton = loadingResources || loadingAllFolders;
   const hasResources = Object.values(categorizedResources).some(arr => arr.length > 0);
 
+  // Helper to determine if a filter is active for visual feedback
+  const isFilterActive = (filter: FilterType | VoicePartFilter | SortBy | SortOrder, value: string) => {
+    if (filter === filterType && filter !== 'all' && value === filter) return true;
+    if (filter === filterVoicePart && filter !== 'all' && value === filter) return true;
+    if (filter === sortBy && value === filter) return true;
+    if (filter === sortOrder && value === filter) return true;
+    return false;
+  };
+
   if (loadingSession) {
     return (
       <div className="min-h-[calc(100vh-80px)] p-4">
@@ -541,7 +550,7 @@ const Resources: React.FC = () => {
     <div className="space-y-8 py-8">
       <header className="text-center space-y-2">
         <h1 className="text-4xl font-bold font-lora">Member Resources</h1>
-        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
           Access sheet music, audio tracks, and important links for current and upcoming performances.
         </p>
       </header>
@@ -567,6 +576,8 @@ const Resources: React.FC = () => {
         
         {/* Controls Section: Search, Filter, Sort, and Add Buttons */}
         <div className="flex flex-col gap-4 mb-6">
+          
+          {/* Row 1: Search and Admin CTAs */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="relative flex-1 w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -578,72 +589,73 @@ const Resources: React.FC = () => {
                 disabled={loadingResources}
               />
             </div>
-
-            <div className="flex gap-4 w-full sm:w-auto justify-end">
-              {/* Filter by Type */}
-              <Select value={filterType} onValueChange={(value: FilterType) => setFilterType(value)}>
-                <SelectTrigger className="w-[150px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="pdf">PDF (Sheet Music)</SelectItem>
-                  <SelectItem value="audio">Audio Tracks</SelectItem>
-                  <SelectItem value="link">External Links</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Filter by Voice Part */}
-              <Select value={filterVoicePart} onValueChange={(value: VoicePartFilter) => setFilterVoicePart(value)}>
-                <SelectTrigger className="w-[180px]">
-                  <Mic2 className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by Part" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Voice Parts</SelectItem>
-                  <SelectItem value="General / Full Choir">General / Full Choir</SelectItem>
-                  <Separator />
-                  {voiceParts.filter(p => p !== "Full Choir" && p !== "Unison" && p !== "Other").map(part => (
-                    <SelectItem key={part} value={part}>{part}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Sort By */}
-              <Select value={sortBy} onValueChange={(value: SortBy) => setSortBy(value)}>
-                <SelectTrigger className="w-[150px]">
-                  <SortAsc className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Sort By" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="created_at">Date Added</SelectItem>
-                  <SelectItem value="title">Title</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Sort Order Toggle */}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                title={sortOrder === 'asc' ? "Sort Descending" : "Sort Ascending"}
-              >
-                <SortAsc className={`h-4 w-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
-              </Button>
-            </div>
+            
+            {isAdmin && (
+              <div className="flex gap-4 w-full sm:w-auto justify-end">
+                <Button onClick={handleOpenCreateFolderDialog} variant="secondary">
+                  <Folder className="mr-2 h-4 w-4" /> Add New Folder
+                </Button>
+                <Button onClick={handleOpenCreateResourceDialog}>
+                  <Plus className="mr-2 h-4 w-4" /> Add New Resource
+                </Button>
+              </div>
+            )}
           </div>
 
-          {isAdmin && (
-            <div className="flex justify-end gap-4">
-              <Button onClick={handleOpenCreateFolderDialog} variant="secondary">
-                <Folder className="mr-2 h-4 w-4" /> Add New Folder
-              </Button>
-              <Button onClick={handleOpenCreateResourceDialog}>
-                <Plus className="mr-2 h-4 w-4" /> Add New Resource
-              </Button>
-            </div>
-          )}
+          {/* Row 2: Filters and Sort */}
+          <div className="flex flex-wrap gap-3 justify-start sm:justify-end">
+            {/* Filter by Type */}
+            <Select value={filterType} onValueChange={(value: FilterType) => setFilterType(value)}>
+              <SelectTrigger className={cn("w-[150px]", filterType !== 'all' && "bg-primary/10 border-primary text-primary")}>
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="pdf">PDF (Sheet Music)</SelectItem>
+                <SelectItem value="audio">Audio Tracks</SelectItem>
+                <SelectItem value="link">External Links</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Filter by Voice Part */}
+            <Select value={filterVoicePart} onValueChange={(value: VoicePartFilter) => setFilterVoicePart(value)}>
+              <SelectTrigger className={cn("w-[180px]", filterVoicePart !== 'all' && "bg-primary/10 border-primary text-primary")}>
+                <Mic2 className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by Part" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Voice Parts</SelectItem>
+                <SelectItem value="General / Full Choir">General / Full Choir</SelectItem>
+                <Separator />
+                {voiceParts.filter(p => p !== "Full Choir" && p !== "Unison" && p !== "Other").map(part => (
+                  <SelectItem key={part} value={part}>{part}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Sort By */}
+            <Select value={sortBy} onValueChange={(value: SortBy) => setSortBy(value)}>
+              <SelectTrigger className="w-[150px]">
+                <SortAsc className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">Date Added</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Sort Order Toggle */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              title={sortOrder === 'asc' ? "Sort Descending" : "Sort Ascending"}
+            >
+              <SortAsc className={`h-4 w-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
+            </Button>
+          </div>
         </div>
 
         {/* Content Display: Folders then Resources */}
