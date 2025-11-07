@@ -293,13 +293,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             </div>
           </div>
 
-          {/* Original Filename (Admin only, or if description is missing) */}
-          {isFile && resource.original_filename && (
-            <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
-              <span className="font-mono text-foreground/80">File: {resource.original_filename}</span>
-            </p>
-          )}
-
           {/* Description */}
           <p className="text-sm text-muted-foreground line-clamp-2">
             {resource.description || "No description provided."}
