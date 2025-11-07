@@ -168,13 +168,13 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         <div className={cn("px-4 pt-4 pb-2", useMediaBackdrop ? "pt-0 bg-card/80 backdrop-blur-sm" : "bg-transparent")}>
           
           {/* Header Row: Icon + Title + Pills + Draft Badge */}
-          <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-center justify-between gap-2 mb-2">
             
             {/* Left Side: Icon + Title */}
-            <div className="flex items-start gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
                 {/* Icon (Non-Media Backdrop only) */}
                 {!useMediaBackdrop && (
-                    <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground mt-1">
+                    <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground">
                         {isLink ? <LinkIcon className="h-6 w-6" /> : fileDetails.icon}
                     </div>
                 )}
@@ -188,7 +188,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             </div>
             
             {/* Right Side: Pills and Draft Badge */}
-            <div className="flex flex-wrap justify-end items-center gap-2 flex-shrink-0 mt-1">
+            <div className="flex flex-wrap justify-end items-center gap-2 flex-shrink-0">
                 {/* Voice Part Pill */}
                 {resource.voice_part && (
                   <Badge 
