@@ -94,8 +94,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             <div className="relative h-full">
               {/* Custom Header (Solid Dark Area) */}
               <div className="absolute top-0 left-0 right-0 h-16 bg-gray-900 dark:bg-gray-900 p-4 flex items-center justify-end z-10">
-                {/* Title (Top Left) - REMOVED */}
-                
                 {/* Small PDF Icon (Top Right) */}
                 <div className="flex-shrink-0">
                   <FileText className="h-5 w-5 text-primary-foreground/70" />
@@ -152,7 +150,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         
         {/* File Name Display (Only for PDF Backdrop Style) - Now showing resource title */}
         {useBackdropStyle && (
-          <div className="px-4 py-2 bg-muted/50 border-t border-border">
+          <div className="px-4 py-2 bg-card"> {/* Changed bg-muted/50 to bg-card and removed border-t */}
             <p className="text-xs font-sans uppercase font-semibold text-muted-foreground truncate">
               {resource.title}
             </p>
@@ -160,7 +158,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         )}
 
         {/* Footer Content (Buttons and Date) */}
-        <CardContent className="p-4">
+        <CardContent className={cn("p-4", useBackdropStyle && "pt-0")}> {/* Removed top padding if PDF */}
           <div className="flex flex-col gap-3">
             {/* Primary Action Button (Only for non-PDF files) */}
             {!useBackdropStyle && (
