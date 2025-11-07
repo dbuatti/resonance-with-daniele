@@ -23,7 +23,6 @@ import { Separator } from "@/components/ui/separator";
 import { Link, useSearchParams } from "react-router-dom"; // Import useSearchParams
 import { useDropzone } from "react-dropzone"; // Import useDropzone
 import { cn } from "@/lib/utils"; // Import cn
-import ResourceSection from "@/components/ResourceSection"; // Import new component
 import SortableResourceList from "@/components/SortableResourceList"; // Import new component
 
 // Define Filter and Sort types
@@ -581,6 +580,19 @@ const Resources: React.FC = () => {
     );
   };
 
+  const renderResourceSection = (title: string, resources: Resource[]) => {
+    if (resources.length === 0) return null;
+
+    return (
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold font-lora text-foreground border-b pb-2 border-border/50">
+          {title}
+        </h2>
+        {renderResourceList(resources)}
+      </section>
+    );
+  };
+
   return (
     <div className="space-y-8 py-8">
       <header className="text-center space-y-2">
@@ -740,29 +752,18 @@ const Resources: React.FC = () => {
           {/* Categorized Resources */}
           {hasResources ? (
             <div className="space-y-10">
-              {/* PDF Resources */}
-              <section className="space-y-4">
-                <h2 className="text-2xl font-bold font-lora text-foreground border-b pb-2 border-border/50">
-                  PDF Resources (Sheet Music, Lyrics)
-                </h2>
-                {renderResourceList(categorizedResources.pdf)}
-              </section>
-
-              {/* Audio Resources */}
-              <section className="space-y-4">
-                <h2 className="text-2xl font-bold font-lora text-foreground border-b pb-2 border-border/50">
-                  Audio Resources (Practice Tracks)
-                </h2>
-                {renderResourceList(categorizedResources.audio)}
-              </section>
-
-              {/* External Links */}
-              <section className="space-y-4">
-                <h2 className="text-2xl font-bold font-lora text-foreground border-b pb-2 border-border/50">
-                  External Links
-                </h2>
-                {renderResourceList(categorizedResources.links)}
-              </section>
+              {renderResourceSection(
+                "PDF Resources (Sheet Music, Lyrics)",
+                categorizedResources.pdf
+              )}
+              {renderResourceSection(
+                "Audio Resources (Practice Tracks)",
+                categorizedResources.audio
+              )}
+              {renderResourceSection(
+                "External Links",
+                categorizedResources.links
+              )}
             </div>
           ) : (
             currentSubFolders.length === 0 && (
