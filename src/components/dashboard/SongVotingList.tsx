@@ -345,7 +345,7 @@ const SongVotingList: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground" /> {/* Increased contrast */}
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/80" /> {/* Increased contrast */}
             <Input
               type="text"
               placeholder="Search songs by title, artist, or reason..."
@@ -389,16 +389,16 @@ const SongVotingList: React.FC = () => {
                   key={song.id} 
                   className={cn(
                     "flex items-center justify-between gap-4 p-4 border rounded-xl transition-all duration-300",
-                    // Removed confusing yellow border logic
+                    // Removed confusing yellow border logic, relying on primary/accent for status
                     isTopVoted 
                       ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10"
                       : "bg-card hover:bg-muted/50",
-                    isSuggestedByCurrentUser && "border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10"
+                    isSuggestedByCurrentUser && "border-l-4 border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10" // Subtle vertical strip
                   )}
                 >
                   
                   {/* Left Section: Voting Button & Count (Prominent) */}
-                  <div className="flex-shrink-0 text-center self-center"> {/* Added self-center */}
+                  <div className="flex-shrink-0 text-center self-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -408,10 +408,10 @@ const SongVotingList: React.FC = () => {
                           disabled={!user}
                           className={cn(
                             "h-16 w-16 rounded-xl flex flex-col items-center justify-center transition-all duration-200 p-1 group",
-                            // Active state: Primary background fill, white text/icon
+                            // Voted State: Solid Primary background, white text/icon
                             votedByCurrentUser 
                               ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg" 
-                              // Default state: Outline, Primary text/icon, subtle hover
+                              // Default State: Primary border, Primary text/icon, light hover fill
                               : "border-primary text-primary hover:bg-primary/10",
                             !user ? "opacity-50 cursor-not-allowed" : ""
                           )}
@@ -434,7 +434,7 @@ const SongVotingList: React.FC = () => {
                   </div>
                   
                   {/* Middle Section: Song Details (Improved Hierarchy) */}
-                  <div className="flex-1 min-w-0 space-y-0.5 py-1 self-center"> {/* Added self-center */}
+                  <div className="flex-1 min-w-0 space-y-0.5 py-1 self-center">
                     <h3 className="text-xl font-bold font-lora text-foreground line-clamp-1">{song.title}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-1">by <span className="font-medium text-foreground">{song.artist}</span></p>
                     
@@ -471,7 +471,7 @@ const SongVotingList: React.FC = () => {
                   
                   {/* Right Section: Actions (Dropdown Menu) */}
                   {canEditOrDelete && (
-                    <div className="flex-shrink-0 self-center"> {/* Added self-center */}
+                    <div className="flex-shrink-0 self-center">
                       <DropdownMenu>
                         <Tooltip>
                           <DropdownMenuTrigger asChild>
