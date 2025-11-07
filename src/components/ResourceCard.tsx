@@ -181,7 +181,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 
                 <div className="flex-1 min-w-0">
                     {/* Title */}
-                    <CardTitle className="text-xl font-lora line-clamp-1 text-foreground">
+                    <CardTitle className="text-xl font-lora line-clamp-1 text-foreground my-0">
                         {resource.title}
                     </CardTitle>
                 </div>
