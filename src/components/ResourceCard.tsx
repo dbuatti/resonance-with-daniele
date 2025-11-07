@@ -107,9 +107,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           <CardContent 
             className={cn(
               "pt-0 pb-4",
+              // Remove horizontal padding for edge-to-edge preview
+              fileDetails.isPdf ? "px-0" : "px-6" 
             )}
           >
-            <div className="bg-white dark:bg-card border border-border rounded-lg shadow-inner h-48 overflow-hidden">
+            <div className={cn(
+              "bg-white dark:bg-card border border-border rounded-lg shadow-inner h-48 overflow-hidden",
+              // Remove border and rounded corners for PDF preview to truly hit the edges
+              fileDetails.isPdf ? "border-0 rounded-none" : "p-6"
+            )}>
               {fileDetails.isPdf && resource.url ? (
                 // PDF Preview using iframe
                 <iframe
@@ -120,7 +126,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 />
               ) : (
                 // Generic File/Audio Preview
-                <div className="p-6 flex flex-col items-center justify-center text-center space-y-3 h-full">
+                <div className="flex flex-col items-center justify-center text-center space-y-3 h-full">
                   {fileDetails.icon}
                   <p className="text-sm font-medium text-foreground line-clamp-1">{fileDetails.fileName}</p>
                   <p className="text-xs text-muted-foreground">{fileDetails.type}</p>
