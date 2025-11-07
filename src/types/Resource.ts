@@ -7,6 +7,7 @@ export interface Resource {
   folder_id: string | null; // Added folder_id
   is_published: boolean;
   created_at: string;
+  voice_part: string | null; // New: Voice part (e.g., 'Soprano 1', 'Alto')
 }
 
 export interface ResourceFolder {

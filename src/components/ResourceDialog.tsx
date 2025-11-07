@@ -39,7 +39,8 @@ const resourceSchema = z.object({
   type: z.enum(['file', 'url'], { required_error: "Resource type is required" }),
   url: z.string().optional().nullable(),
   is_published: z.boolean().default(true),
-  folder_id: z.string().optional().nullable(), // Added folder_id
+  folder_id: z.string().optional().nullable(),
+  voice_part: z.string().optional().nullable(), // New field
 });
 
 type ResourceFormData = z.infer<typeof resourceSchema>;
@@ -50,6 +51,14 @@ interface ResourceDialogProps {
   editingResource: Resource | null;
   currentFolderId: string | null; // The folder ID where the user is currently located
 }
+
+const voiceParts = [
+  "Soprano 1", "Soprano 2", "Soprano", 
+  "Alto 1", "Alto 2", "Alto", 
+  "Tenor 1", "Tenor 2", "Tenor", 
+  "Bass 1", "Bass 2", "Bass",
+  "Full Choir", "Unison", "Other"
+];
 
 const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editingResource, currentFolderId }) => {
   const { user } = useSession();
@@ -67,6 +76,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       url: null,
       is_published: true,
       folder_id: null,
+      voice_part: null, // Default value for new field
     },
   });
 
@@ -127,7 +137,8 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         type: editingResource.type,
         url: editingResource.url || null,
         is_published: editingResource.is_published,
-        folder_id: editingResource.folder_id || null, // Set folder_id for editing
+        folder_id: editingResource.folder_id || null,
+        voice_part: editingResource.voice_part || null, // Set voice_part for editing
       });
       setSelectedFile(null);
       setRemoveFileRequested(false);
@@ -138,7 +149,8 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         type: 'file',
         url: null,
         is_published: true,
-        folder_id: currentFolderId || null, // Set default folder_id to current view
+        folder_id: currentFolderId || null,
+        voice_part: null, // Default value for new field
       });
       setSelectedFile(null);
       setRemoveFileRequested(false);
@@ -280,7 +292,8 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         url: finalUrl,
         type: data.type,
         is_published: data.is_published,
-        folder_id: data.folder_id || null, // Include folder_id
+        folder_id: data.folder_id || null,
+        voice_part: data.voice_part || null, // Include new field
       };
 
       const { error: dbError } = await supabase
@@ -373,6 +386,40 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                       <SelectItem value="url">
                         <div className="flex items-center gap-2"><LinkIcon className="h-4 w-4" /> External Link (URL)</div>
                       </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="voice_part"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Voice Part (Optional)</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value === "null" ? null : value)}
+                    value={field.value || "null"}
+                    disabled={isSaving}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select voice part" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="null">
+                        <div className="flex items-center gap-2">
+                          <Folder className="h-4 w-4 text-muted-foreground" /> General / Full Choir
+                        </div>
+                      </SelectItem>
+                      {voiceParts.map((part) => (
+                        <SelectItem key={part} value={part}>
+                          {part}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

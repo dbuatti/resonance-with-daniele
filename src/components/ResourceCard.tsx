@@ -16,6 +16,33 @@ interface ResourceCardProps {
   onDelete: (resource: Resource) => void;
 }
 
+// Define colors for resource type pills
+const resourceTypeColors = {
+  pdf: "bg-red-500 hover:bg-red-600 text-white",
+  audio: "bg-green-500 hover:bg-green-600 text-white",
+  link: "bg-blue-500 hover:bg-blue-600 text-white",
+  default: "bg-muted text-muted-foreground",
+};
+
+// Define colors for voice part pills (using a simple scheme for now)
+const voicePartColors: { [key: string]: string } = {
+  "Soprano 1": "bg-pink-200 text-pink-800",
+  "Soprano 2": "bg-pink-300 text-pink-800",
+  "Soprano": "bg-pink-400 text-pink-900",
+  "Alto 1": "bg-purple-200 text-purple-800",
+  "Alto 2": "bg-purple-300 text-purple-800",
+  "Alto": "bg-purple-400 text-purple-900",
+  "Tenor 1": "bg-blue-200 text-blue-800",
+  "Tenor 2": "bg-blue-300 text-blue-800",
+  "Tenor": "bg-blue-400 text-blue-900",
+  "Bass 1": "bg-green-200 text-green-800",
+  "Bass 2": "bg-green-300 text-green-800",
+  "Bass": "bg-green-400 text-green-900",
+  "Full Choir": "bg-primary text-primary-foreground",
+  "Unison": "bg-indigo-500 text-white",
+  "Other": "bg-gray-500 text-white",
+};
+
 const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, onDelete }) => {
   
   const isFile = resource.type === 'file';
@@ -40,7 +67,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     }
     
     if (isPdf) {
-      // Use a smaller icon for the top right corner, but the main icon is large
       return { icon: <FileText className="h-6 w-6 text-primary-foreground" />, type: 'PDF Document', isPdf, isAudio: false, fileName };
     }
     if (isAudio) {
@@ -50,6 +76,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   };
 
   const fileDetails = getFileDetails();
+
+  // Determine resource type for pill
+  const resourcePillType = fileDetails.isPdf ? 'pdf' : fileDetails.isAudio ? 'audio' : isLink ? 'link' : 'default';
+  const resourcePillText = fileDetails.isPdf ? 'PDF' : fileDetails.isAudio ? 'Audio' : isLink ? 'Link' : 'File';
+  const resourcePillClass = resourceTypeColors[resourcePillType] || resourceTypeColors.default;
 
   // Unified action handler: open URL in new tab (browser handles PDF/Audio/Link)
   const handlePrimaryAction = () => {
@@ -141,24 +172,42 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           )}
         </div>
         
-        {/* New: Title, Status, and Description Area (For PDF Backdrop Style) */}
-        {useBackdropStyle && (
-          <div className="px-4 pt-4 pb-2 bg-card">
-            <div className="flex items-center justify-between mb-1">
-                <CardTitle className="text-xl font-lora line-clamp-1 text-foreground">
-                    {resource.title}
-                </CardTitle>
-                {isAdmin && !isPublished && (
-                    <Badge variant="destructive" className="text-xs flex-shrink-0">
-                        Draft
-                    </Badge>
-                )}
-            </div>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {resource.description}
-            </p>
+        {/* Title, Status, Pills, and Description Area (For PDF Backdrop Style) */}
+        <div className="px-4 pt-4 pb-2 bg-card">
+          <div className="flex items-center justify-between mb-2">
+              <CardTitle className="text-xl font-lora line-clamp-1 text-foreground">
+                  {resource.title}
+              </CardTitle>
+              {isAdmin && !isPublished && (
+                  <Badge variant="destructive" className="text-xs flex-shrink-0">
+                      Draft
+                  </Badge>
+              )}
           </div>
-        )}
+          
+          {/* Pills Section */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {/* Resource Type Pill */}
+            <Badge className={cn("text-xs font-semibold", resourcePillClass)}>
+              {resourcePillText}
+            </Badge>
+
+            {/* Voice Part Pill */}
+            {resource.voice_part && (
+              <Badge 
+                variant="secondary" 
+                className={cn("text-xs font-semibold", voicePartColors[resource.voice_part] || voicePartColors.Other)}
+              >
+                {resource.voice_part}
+              </Badge>
+            )}
+          </div>
+
+          {/* Description */}
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {resource.description}
+          </p>
+        </div>
 
         {/* Footer Content (Buttons and Date) */}
         <CardContent className={cn("p-4", useBackdropStyle && "pt-0")}>
