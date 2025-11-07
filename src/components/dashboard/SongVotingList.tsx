@@ -345,13 +345,13 @@ const SongVotingList: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground" /> {/* Increased contrast */}
             <Input
               type="text"
               placeholder="Search songs by title, artist, or reason..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full"
+              className="pl-9 pr-4 py-2 w-full placeholder:text-foreground/70" // Increased contrast
             />
           </div>
           <Select value={sortOrder} onValueChange={(value: "votes_desc" | "newest") => setSortOrder(value)}>
@@ -389,6 +389,7 @@ const SongVotingList: React.FC = () => {
                   key={song.id} 
                   className={cn(
                     "flex items-center justify-between gap-4 p-4 border rounded-xl transition-all duration-300",
+                    // Removed confusing yellow border logic
                     isTopVoted 
                       ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10"
                       : "bg-card hover:bg-muted/50",
@@ -397,7 +398,7 @@ const SongVotingList: React.FC = () => {
                 >
                   
                   {/* Left Section: Voting Button & Count (Prominent) */}
-                  <div className="flex-shrink-0 text-center">
+                  <div className="flex-shrink-0 text-center self-center"> {/* Added self-center */}
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -407,16 +408,18 @@ const SongVotingList: React.FC = () => {
                           disabled={!user}
                           className={cn(
                             "h-16 w-16 rounded-xl flex flex-col items-center justify-center transition-all duration-200 p-1 group",
+                            // Active state: Primary background fill, white text/icon
                             votedByCurrentUser 
                               ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg" 
-                              : "text-muted-foreground hover:bg-secondary/50 border-2",
+                              // Default state: Outline, Primary text/icon, subtle hover
+                              : "border-primary text-primary hover:bg-primary/10",
                             !user ? "opacity-50 cursor-not-allowed" : ""
                           )}
                         >
                           <ThumbsUp 
                             className={cn(
                               "h-6 w-6 transition-colors duration-200",
-                              votedByCurrentUser ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary"
+                              votedByCurrentUser ? "text-primary-foreground" : "text-primary group-hover:text-primary"
                             )} 
                           />
                           <span className="text-xs font-bold mt-1">{song.total_votes} Votes</span>
@@ -431,7 +434,7 @@ const SongVotingList: React.FC = () => {
                   </div>
                   
                   {/* Middle Section: Song Details (Improved Hierarchy) */}
-                  <div className="flex-1 min-w-0 space-y-0.5 py-1">
+                  <div className="flex-1 min-w-0 space-y-0.5 py-1 self-center"> {/* Added self-center */}
                     <h3 className="text-xl font-bold font-lora text-foreground line-clamp-1">{song.title}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-1">by <span className="font-medium text-foreground">{song.artist}</span></p>
                     
@@ -468,7 +471,7 @@ const SongVotingList: React.FC = () => {
                   
                   {/* Right Section: Actions (Dropdown Menu) */}
                   {canEditOrDelete && (
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 self-center"> {/* Added self-center */}
                       <DropdownMenu>
                         <Tooltip>
                           <DropdownMenuTrigger asChild>
