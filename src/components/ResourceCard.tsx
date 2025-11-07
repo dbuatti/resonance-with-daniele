@@ -93,11 +93,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           {useBackdropStyle ? (
             <div className="relative h-full">
               {/* Custom Header (Solid Dark Area) */}
-              <div className="absolute top-0 left-0 right-0 h-16 bg-gray-900 dark:bg-gray-900 p-4 flex items-center justify-between z-10">
-                {/* Title (Top Left) - Simplified */}
-                <div className="flex items-center gap-3 max-w-[80%]">
-                  <CardTitle className="text-2xl font-lora line-clamp-1 text-primary-foreground">{resource.title}</CardTitle>
-                </div>
+              <div className="absolute top-0 left-0 right-0 h-16 bg-gray-900 dark:bg-gray-900 p-4 flex items-center justify-end z-10">
+                {/* Title (Top Left) - REMOVED */}
                 
                 {/* Small PDF Icon (Top Right) */}
                 <div className="flex-shrink-0">
