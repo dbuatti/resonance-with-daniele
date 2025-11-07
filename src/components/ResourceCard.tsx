@@ -40,7 +40,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     }
     
     if (isPdf) {
-      return { icon: <FileText className="h-8 w-8 text-primary-foreground" />, type: 'PDF Document', isPdf, isAudio: false, fileName };
+      // Use a smaller icon for the top right corner, but the main icon is large
+      return { icon: <FileText className="h-6 w-6 text-primary-foreground" />, type: 'PDF Document', isPdf, isAudio: false, fileName };
     }
     if (isAudio) {
       return { icon: <Headphones className="h-12 w-12 text-primary" />, type: 'Audio Track', isPdf: false, isAudio, fileName };
@@ -86,16 +87,47 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Main Content Area (Header + Preview) */}
         <div className={cn(
           "relative overflow-hidden",
-          useBackdropStyle ? "h-64 rounded-t-xl" : "p-6" // Fixed height for PDF backdrop
+          // Fixed height for PDF backdrop, rounded top corners
+          useBackdropStyle ? "h-64 rounded-t-xl" : "p-6 rounded-xl" 
         )}>
           
           {/* 1. The Backdrop (PDF Iframe or Standard Header) */}
           {useBackdropStyle ? (
-            <iframe
-              src={resource.url}
-              title={`Preview of ${resource.title}`}
-              className="w-full h-full border-none absolute inset-0"
-            />
+            <>
+              <iframe
+                src={resource.url}
+                title={`Preview of ${resource.title}`}
+                className="w-full h-full border-none absolute inset-0"
+              />
+              {/* 2. Overlay Metadata for PDF Backdrop Style */}
+              <div className={cn(
+                "absolute inset-0 p-4 flex flex-col justify-between",
+                // Dark overlay for contrast, matching the mock-up's dark header area
+                "bg-gradient-to-b from-black/60 to-transparent" 
+              )}>
+                <div className="flex items-start justify-between w-full">
+                  {/* Title and Description (Top Left) */}
+                  <div className="flex items-center gap-3 max-w-[80%]">
+                    {/* Large Icon (as seen in mock-up) */}
+                    <div className="bg-primary p-3 rounded-full flex-shrink-0">
+                      <FileText className="h-6 w-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-lora line-clamp-1 text-primary-foreground">{resource.title}</CardTitle>
+                      <CardDescription className="text-sm line-clamp-1 text-primary-foreground/80">
+                        {fileDetails.type}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  
+                  {/* Small PDF Icon (Top Right - following user's text request) */}
+                  <div className="flex-shrink-0 mt-1">
+                    <FileText className="h-5 w-5 text-primary-foreground/70" />
+                  </div>
+                </div>
+                {/* Bottom of overlay is empty, allowing PDF content to show */}
+              </div>
+            </>
           ) : (
             // Standard Header for Links and Audio/Other Files
             <CardHeader className="p-0 pb-2">
@@ -121,45 +153,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               </CardDescription>
             </CardHeader>
           )}
-
-          {/* 2. Overlay Metadata (Only for PDF Backdrop Style) */}
-          {useBackdropStyle && (
-            <div className={cn(
-              "absolute inset-0 p-4 flex flex-col justify-between",
-              // Dark gradient overlay for contrast
-              "bg-gradient-to-b from-black/60 to-transparent" 
-            )}>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  {/* Icon with solid primary background */}
-                  <div className="bg-primary p-2 rounded-full flex-shrink-0">
-                    {fileDetails.icon}
-                  </div>
-                  <div>
-                    {/* Title and Description with high contrast text */}
-                    <CardTitle className="text-xl font-lora line-clamp-2 text-primary-foreground">{resource.title}</CardTitle>
-                    <CardDescription className="text-sm line-clamp-1 text-primary-foreground/80">
-                      {resource.description || fileDetails.type}
-                    </CardDescription>
-                  </div>
-                </div>
-                {isAdmin && (
-                  <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs flex-shrink-0">
-                    {isPublished ? "Published" : "Draft"}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
         </div>
         
         {/* Footer Content (Buttons and Date) */}
         <CardContent className="p-4">
           <div className="flex flex-col gap-3">
-            {/* Primary Action Button (View/Download/Listen) */}
+            {/* Primary Action Button (View/Download/Listen) - Full width */}
             <Button 
               onClick={handlePrimaryAction} 
-              className="w-full" 
+              className="w-full"
               disabled={!resource.url}
             >
               {primaryButtonDetails.icon}
@@ -167,27 +169,36 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             </Button>
             
             {isAdmin && (
-              <div className="flex justify-end gap-2 mt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEdit(resource)}
-                >
-                  <Edit className="h-4 w-4 mr-2" /> Edit
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={() => onDelete(resource)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" /> Delete
-                </Button>
+              <div className="flex justify-between items-center mt-2">
+                {/* Admin Actions (Left) */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEdit(resource)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" /> Edit
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => onDelete(resource)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                  </Button>
+                </div>
+                {/* Date Added (Right) */}
+                <p className="text-xs text-muted-foreground">
+                  Added: {format(new Date(resource.created_at), "MMM d, yyyy")}
+                </p>
               </div>
             )}
+            {!isAdmin && (
+                <p className="text-xs text-muted-foreground mt-3 text-right">
+                    Added: {format(new Date(resource.created_at), "MMM d, yyyy")}
+                </p>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mt-3 text-right">
-            Added: {format(new Date(resource.created_at), "MMM d, yyyy")}
-          </p>
         </CardContent>
       </Card>
     </>
