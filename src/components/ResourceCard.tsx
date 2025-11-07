@@ -8,7 +8,6 @@ import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import PdfPreviewDialog from './PdfPreviewDialog'; // Import the new component
 
 interface ResourceCardProps {
   resource: Resource;
@@ -18,7 +17,6 @@ interface ResourceCardProps {
 }
 
 const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, onDelete }) => {
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const isFile = resource.type === 'file';
   const isLink = resource.type === 'url';
@@ -52,16 +50,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
   const fileDetails = getFileDetails();
 
-  const handleOpenPreview = () => {
-    if (fileDetails.isPdf && resource.url) {
-      setIsPreviewOpen(true);
-    } else if (resource.url) {
-      // For non-PDF files (like audio) and links, open directly in a new tab
-      window.open(resource.url, '_blank');
-    }
-  };
-
-  const handleDownloadAction = () => {
+  // Unified action handler: open URL in new tab (browser handles PDF/Audio/Link)
+  const handlePrimaryAction = () => {
     if (resource.url) {
       window.open(resource.url, '_blank');
     }
@@ -70,7 +60,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   // Determine the primary button text and icon based on type
   const getPrimaryButtonDetails = () => {
     if (fileDetails.isPdf) {
-      return { text: "Download File", icon: <Download className="h-4 w-4 mr-2" /> };
+      return { text: "View / Download PDF", icon: <Download className="h-4 w-4 mr-2" /> };
     }
     if (fileDetails.isAudio) {
       return { text: "Listen to Audio", icon: <Headphones className="h-4 w-4 mr-2" /> };
@@ -78,7 +68,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     if (isLink) {
       return { text: "View Link", icon: <ExternalLink className="h-4 w-4 mr-2" /> };
     }
-    return { text: "Download File", icon: <Download className="h-4 w-4 mr-2" /> };
+    return { text: "View Resource", icon: <FileSearch className="h-4 w-4 mr-2" /> };
   };
 
   const primaryButtonDetails = getPrimaryButtonDetails();
@@ -112,33 +102,26 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           </CardDescription>
         </CardHeader>
         
-        {/* Visual Preview Area for Files (Clickable for PDF Preview) */}
+        {/* Visual Preview Area for Files (Enhanced styling for immediate visibility) */}
         {isFile && (
           <CardContent 
             className={cn(
               "pt-0 pb-4",
-              fileDetails.isPdf && resource.url && "cursor-pointer hover:opacity-90 transition-opacity"
             )}
-            onClick={fileDetails.isPdf ? handleOpenPreview : undefined}
           >
-            <div className="bg-muted/50 border border-border rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-3">
+            <div className="bg-white dark:bg-card border border-border rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
               {fileDetails.icon}
               <p className="text-sm font-medium text-foreground line-clamp-1">{fileDetails.fileName}</p>
               <p className="text-xs text-muted-foreground">{fileDetails.type}</p>
-              {fileDetails.isPdf && resource.url && (
-                <div className="flex items-center text-primary text-sm font-semibold mt-2">
-                  <FileSearch className="h-4 w-4 mr-1" /> Click to Preview
-                </div>
-              )}
             </div>
           </CardContent>
         )}
 
         <CardContent className="pt-0">
           <div className="flex flex-col gap-3">
-            {/* Primary Action Button (Download for PDF, Listen for Audio, View for Link) */}
+            {/* Primary Action Button (View/Download/Listen) */}
             <Button 
-              onClick={fileDetails.isPdf ? handleDownloadAction : handleOpenPreview} 
+              onClick={handlePrimaryAction} 
               className="w-full" 
               disabled={!resource.url}
             >
@@ -146,29 +129,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               <span>{primaryButtonDetails.text}</span>
             </Button>
             
-            {/* Secondary Action Button (Only needed if primary action is not Download) */}
-            {isFile && fileDetails.isPdf && ( // If primary is Download (for PDF), offer Preview as secondary
-              <Button 
-                onClick={handleOpenPreview} 
-                variant="outline"
-                className="w-full" 
-                disabled={!resource.url}
-              >
-                <FileSearch className="h-4 w-4 mr-2" /> Open Full Preview
-              </Button>
-            )}
-            
-            {isFile && fileDetails.isAudio && ( // If primary is Listen (for Audio), offer Download as secondary
-              <Button 
-                onClick={handleDownloadAction} 
-                variant="outline"
-                className="w-full" 
-                disabled={!resource.url}
-              >
-                <Download className="h-4 w-4 mr-2" /> Download File
-              </Button>
-            )}
-
             {isAdmin && (
               <div className="flex justify-end gap-2 mt-2">
                 <Button
@@ -193,16 +153,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           </p>
         </CardContent>
       </Card>
-      
-      {/* PDF Preview Dialog */}
-      {fileDetails.isPdf && (
-        <PdfPreviewDialog
-          isOpen={isPreviewOpen}
-          onClose={() => setIsPreviewOpen(false)}
-          pdfUrl={resource.url}
-          title={resource.title}
-        />
-      )}
     </>
   );
 };
