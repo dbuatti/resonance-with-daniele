@@ -336,6 +336,10 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
   const title = editingResource ? "Edit Resource" : "Create New Resource";
   const submitButtonText = editingResource ? "Save Changes" : "Create Resource";
   const hasFileOrUrl = (editingResource?.url && !removeFileRequested) || selectedFile;
+  
+  // FIX: Define the variables needed for the disabled prop here
+  const isFileResource = currentType === 'file' || currentType === 'lyrics';
+  const isUrlResource = currentType === 'url' || currentType === 'youtube';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
