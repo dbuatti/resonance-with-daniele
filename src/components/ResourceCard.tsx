@@ -97,23 +97,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               <iframe
                 src={resource.url} // Clean URL
                 title={`Preview of ${resource.title}`}
-                // Start below the header (top-16)
-                className="w-full border-none absolute left-0 right-0 top-16" 
-                // Height: 100% of container minus header height (64px) + 40px offset (to hide toolbar)
-                style={{ height: 'calc(100% - 64px + 40px)', marginTop: '-40px' }}
+                // Adjusted positioning: start at top-0
+                className="w-full border-none absolute left-0 right-0 top-0" 
+                // Adjusted height: 100% of container + 40px offset (to hide toolbar)
+                style={{ height: 'calc(100% + 40px)', marginTop: '-40px' }}
               />
-
-              {/* New: Transparent Overlay for Title and Status (Covers the hidden toolbar area) */}
-              <div className="absolute top-0 left-0 right-0 h-16 p-4 flex items-center justify-between z-20 bg-card/90 backdrop-blur-sm border-b border-border">
-                <CardTitle className="text-lg font-lora line-clamp-1 text-foreground">
-                  {resource.title}
-                </CardTitle>
-                {isAdmin && !isPublished && ( // Only show if admin AND NOT published (i.e., Draft)
-                  <Badge variant="destructive" className="text-xs flex-shrink-0">
-                    Draft
-                  </Badge>
-                )}
-              </div>
 
               {/* Download Button (Bottom Right) */}
               <Button
@@ -153,9 +141,19 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           )}
         </div>
         
-        {/* Resource Description (Only for PDF Backdrop Style) */}
+        {/* New: Title, Status, and Description Area (For PDF Backdrop Style) */}
         {useBackdropStyle && (
-          <div className="px-4 py-2 bg-card">
+          <div className="px-4 pt-4 pb-2 bg-card">
+            <div className="flex items-center justify-between mb-1">
+                <CardTitle className="text-xl font-lora line-clamp-1 text-foreground">
+                    {resource.title}
+                </CardTitle>
+                {isAdmin && !isPublished && (
+                    <Badge variant="destructive" className="text-xs flex-shrink-0">
+                        Draft
+                    </Badge>
+                )}
+            </div>
             <p className="text-sm text-muted-foreground line-clamp-2">
               {resource.description}
             </p>
