@@ -12,9 +12,16 @@ const SongSuggestionsPage: React.FC = () => {
       <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
         Suggest new songs for the choir to learn and vote on your favorites!
       </p>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <SongVotingList />
-        <SongSuggestionForm />
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Song Voting List (Takes 2/3 width on large screens) */}
+        <div className="lg:col-span-2">
+          <SongVotingList />
+        </div>
+        
+        {/* Song Suggestion Form (Takes 1/3 width on large screens) */}
+        <div className="lg:col-span-1">
+          <SongSuggestionForm />
+        </div>
       </div>
     </div>
   );
