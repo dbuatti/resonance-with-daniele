@@ -767,32 +767,32 @@ const Resources: React.FC = () => {
 
           {currentSubFolders.length > 0 && hasResources && !debouncedSearchTerm && <Separator />}
 
-          {/* Categorized Resources - ORDERED AS SPECIFIED */}
-          <div className="space-y-10">
-            {renderResourceSection(
-              "Sheet Music (PDF)",
-              categorizedResources.pdf
-            )}
-            {renderResourceSection(
-              "Lyrics Resources",
-              categorizedResources.lyrics
-            )}
-            {renderResourceSection(
-              "Audio Resources (Practice Tracks)",
-              categorizedResources.audio
-            )}
-            {renderResourceSection(
-              "Video Resources (YouTube Clips)",
-              categorizedResources.youtube
-            )}
-            {renderResourceSection(
-              "External Links",
-              categorizedResources.links
-            )}
-          </div>
-          
-          {/* Empty State */}
-          {!hasResources && currentSubFolders.length === 0 && (
+          {/* Categorized Resources */}
+          {hasResources ? (
+            <div className="space-y-10">
+              {renderResourceSection(
+                "Sheet Music (PDF)",
+                categorizedResources.pdf
+              )}
+              {renderResourceSection(
+                "Lyrics (PDF/Text)",
+                categorizedResources.lyrics
+              )}
+              {renderResourceSection(
+                "Audio Resources (Practice Tracks)",
+                categorizedResources.audio
+              )}
+              {renderResourceSection(
+                "YouTube Clips",
+                categorizedResources.youtube
+              )}
+              {renderResourceSection(
+                "External Links",
+                categorizedResources.links
+              )}
+            </div>
+          ) : (
+            currentSubFolders.length === 0 && (
               <Card className="p-8 text-center shadow-lg">
                 <CardTitle className="text-xl">No Content Found</CardTitle>
                 <CardDescription className="mt-2">
@@ -802,7 +802,7 @@ const Resources: React.FC = () => {
                 </CardDescription>
               </Card>
             )
-          }
+          )}
         </div>
       </div>
 

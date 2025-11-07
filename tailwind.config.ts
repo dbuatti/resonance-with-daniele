@@ -92,13 +92,13 @@ export default {
           DEFAULT: 'hsl(240 80% 95%)', // Very light blue
           dark: 'hsl(240 40% 20%)',
         },
-        'pastel-youtube': { // UPDATED: Light, neutral blue (#C3E0F7)
-          DEFAULT: '#C3E0F7',
-          dark: 'hsl(210 40% 20%)',
+        'pastel-youtube': { // New: Light Purple
+          DEFAULT: 'hsl(270 80% 95%)',
+          dark: 'hsl(270 40% 20%)',
         },
-        'pastel-lyrics': { // UPDATED: Light, dusty rose/pink (#F5C7D3)
-          DEFAULT: '#F5C7D3',
-          dark: 'hsl(340 40% 20%)',
+        'pastel-lyrics': { // New: Light Orange
+          DEFAULT: 'hsl(30 80% 95%)',
+          dark: 'hsl(30 40% 20%)',
         },
       },
       borderRadius: {
