@@ -82,15 +82,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   const resourcePillText = fileDetails.isPdf ? 'PDF' : fileDetails.isAudio ? 'Audio' : isLink ? 'Link' : 'File';
   const resourcePillClass = resourceTypeColors[resourcePillType] || resourceTypeColors.default;
 
+  // New unified backdrop style flag
+  const useMediaBackdrop = isFile && (fileDetails.isPdf || fileDetails.isAudio);
+
   // Unified action handler: open URL in new tab (browser handles PDF/Audio/Link)
   const handlePrimaryAction = () => {
     if (resource.url) {
       window.open(resource.url, '_blank');
     }
   };
-
-  // Determine if we should use the backdrop style (PDF)
-  const useBackdropStyle = isFile && fileDetails.isPdf;
 
   return (
     <>
@@ -99,45 +99,70 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         !isPublished && isAdmin && "border-l-4 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20"
       )}>
         
-        {/* Main Content Area (Preview for PDF) */}
+        {/* Main Content Area (Preview for PDF/Audio) */}
         <div className={cn(
           "relative overflow-hidden",
-          useBackdropStyle ? "h-64 rounded-t-xl" : "hidden" // Only show this block for PDF backdrop
+          useMediaBackdrop ? "h-64 rounded-t-xl" : "hidden" // Use useMediaBackdrop
         )}>
           
-          {useBackdropStyle && (
-            <div className="relative h-full">
+          {useMediaBackdrop && (
+            <div className="relative h-full flex items-center justify-center bg-muted/50">
               
-              {/* PDF Preview Area (Iframe) */}
-              <iframe
-                src={resource.url} // Clean URL
-                title={`Preview of ${resource.title}`}
-                className="w-full border-none absolute left-0 right-0 top-0" 
-                style={{ height: 'calc(100% + 40px)', marginTop: '-40px' }}
-              />
+              {/* Content specific to PDF */}
+              {fileDetails.isPdf && resource.url && (
+                <>
+                  {/* PDF Preview Area (Iframe) */}
+                  <iframe
+                    src={resource.url} // Clean URL
+                    title={`Preview of ${resource.title}`}
+                    className="w-full border-none absolute left-0 right-0 top-0" 
+                    style={{ height: 'calc(100% + 40px)', marginTop: '-40px' }}
+                  />
 
-              {/* Download Button (Bottom Right) */}
-              <Button
-                  variant="secondary"
-                  size="icon"
-                  className="absolute bottom-4 right-4 z-20 h-10 w-10 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-                  onClick={handlePrimaryAction}
-                  title="Download / View PDF"
-              >
-                  <Download className="h-5 w-5" />
-              </Button>
+                  {/* Download Button (Bottom Right) */}
+                  <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute bottom-4 right-4 z-20 h-10 w-10 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+                      onClick={handlePrimaryAction}
+                      title="Download / View PDF"
+                  >
+                      <Download className="h-5 w-5" />
+                  </Button>
+                </>
+              )}
+
+              {/* Content specific to Audio */}
+              {fileDetails.isAudio && resource.url && (
+                <div className="text-center p-4 w-full">
+                  <Headphones className="h-24 w-24 text-primary mx-auto mb-4" />
+                  <p className="text-lg font-semibold text-foreground mb-4 line-clamp-1">{resource.title}</p>
+                  <audio controls src={resource.url} className="w-full max-w-xs mx-auto h-10" />
+                  
+                  {/* Download Button for Audio */}
+                  <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
+                      onClick={handlePrimaryAction}
+                      title="Download Audio"
+                  >
+                      <Download className="h-4 w-4 mr-2" /> Download Audio
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
         
         {/* Title, Pills, and Description Area (Main Display) */}
-        <div className={cn("px-4 pt-4 pb-2 bg-card", useBackdropStyle && "pt-0")}>
+        <div className={cn("px-4 pt-4 pb-2 bg-card", useMediaBackdrop && "pt-0")}>
           
           {/* Header Row: Icon + Title + Pills + Draft Badge */}
           <div className="flex items-start gap-2 mb-2">
             
-            {/* Icon (Non-PDF only) */}
-            {!useBackdropStyle && (
+            {/* Icon (Non-Media Backdrop only) */}
+            {!useMediaBackdrop && (
                 <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground mt-1">
                     {isLink ? <LinkIcon className="h-6 w-6" /> : fileDetails.icon}
                 </div>
@@ -185,13 +210,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Footer Content (Buttons and Date) */}
         <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
-            {/* Audio Player (Inline) - FIX: Removed type attribute */}
-            {fileDetails.isAudio && resource.url && (
-              <audio controls src={resource.url} className="w-full h-10">
-                Your browser does not support the audio element.
-              </audio>
-            )}
-
             {/* Primary Action Button (Only for Links) */}
             {isLink && (
               <Button 
@@ -209,7 +227,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onMove(resource)} // New Move action
+                  onClick={() => onMove(resource)}
                 >
                   <ArrowRight className="h-4 w-4 mr-2" /> Move
                 </Button>
