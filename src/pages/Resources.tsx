@@ -636,7 +636,7 @@ const Resources: React.FC = () => {
 
             {/* Sort By */}
             <Select value={sortBy} onValueChange={(value: SortBy) => setSortBy(value)}>
-              <SelectTrigger className={cn("w-[150px]", sortBy !== 'created_at' && "bg-primary/10 border-primary text-primary")}>
+              <SelectTrigger className="w-[150px]">
                 <SortAsc className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Sort By" />
               </SelectTrigger>

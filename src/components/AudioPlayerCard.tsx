@@ -142,7 +142,7 @@ const AudioPlayerCard: React.FC<AudioPlayerCardProps> = ({ src, onDownload, titl
         {/* Download Button (Prominent CTA) */}
         <Button 
           variant="default"
-          className="w-full" // Removed mt-4 to tighten spacing
+          className="w-full mt-4" 
           onClick={onDownload}
           disabled={!isLoaded}
         >
