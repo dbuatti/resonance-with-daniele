@@ -6,6 +6,7 @@ import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/utils/toast'; // Import toast functions
+import { ResourceFolder } from '@/types/Resource'; // Import ResourceFolder for profile type
 
 export interface Profile {
   id: string;
@@ -41,6 +42,9 @@ interface SessionContextType {
   isLoggingOut: boolean; // Added isLoggingOut
   isAdminView: boolean; // New state: true if viewing as admin, false if viewing as regular user
   isActualAdmin: boolean; // New: True if the user is truly an admin, regardless of isAdminView toggle
+  isProfileCompleted: boolean; // NEW
+  isSurveyCompleted: boolean; // NEW
+  incompleteTasksCount: number; // NEW
   toggleAdminView: () => void; // New function to toggle admin view
   logout: () => Promise<void>; // Added logout function to context
 }
@@ -131,10 +135,10 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   // Use react-query to fetch and cache the user profile
   const { data: profile, isLoading: profileLoading } = useQuery<
-    Profile | null, // TQueryFnData: The type of data returned by the queryFn
-    Error,          // TError: The type of error that can be thrown
-    Profile | null, // TData: The type of data in the cache (defaults to TQueryFnData if omitted)
-    ['profile', string | null | undefined] // TQueryKey: Explicitly define the tuple type here
+    Profile | null, // TQueryFnData
+    Error,          // TError
+    Profile | null, // TData
+    ['profile', string | null | undefined] // TQueryKey
   >({
     queryKey: ['profile', session?.user?.id],
     queryFn: async () => {
@@ -189,6 +193,24 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     is_admin: actualIsAdmin, 
   } : null;
 
+  // Derived states for completion status (NEW LOGIC)
+  const isProfileCompleted = profile ? !!(profile.first_name && profile.last_name) : false;
+
+  const isSurveyCompleted = profile ? (
+    profile.how_heard !== null ||
+    (profile.motivation !== null && profile.motivation.length > 0) ||
+    profile.attended_session !== null ||
+    profile.singing_experience !== null ||
+    profile.session_frequency !== null ||
+    profile.preferred_time !== null ||
+    (profile.music_genres !== null && profile.music_genres.length > 0) ||
+    profile.choir_goals !== null ||
+    profile.inclusivity_importance !== null ||
+    profile.suggestions !== null
+  ) : false;
+
+  const incompleteTasksCount = (isProfileCompleted ? 0 : 1) + (isSurveyCompleted ? 0 : 1);
+
   // Handle redirects for unauthenticated users trying to access protected routes
   useEffect(() => {
     if (!initialLoading && !isLoggingOut) { // Only redirect if not initially loading and not in the middle of logging out
@@ -218,6 +240,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     isLoggingOut, // Provide the state
     isAdminView, // Provide the state
     isActualAdmin: actualIsAdmin, // Provide the actual admin status
+    isProfileCompleted, // NEW
+    isSurveyCompleted, // NEW
+    incompleteTasksCount, // NEW
     toggleAdminView, // Provide the toggle function
     logout, // Provide the centralized logout function
   };

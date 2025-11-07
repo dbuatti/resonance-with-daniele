@@ -20,11 +20,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/integrations/supabase/auth";
+import { Badge } from "@/components/ui/badge"; // Import Badge
 
 const MobileNav: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user, profile, loading, isLoggingOut, logout } = useSession(); // Access session context
+  const { user, profile, loading, isLoggingOut, logout, incompleteTasksCount } = useSession(); // Access session context
 
   const getNavLinkClass = (path: string) =>
     cn(
@@ -85,15 +86,22 @@ const MobileNav: React.FC = () => {
                 </Link>
               )}
               <Link to="/profile" className={getNavLinkClass("/profile")} onClick={() => setIsOpen(false)}>
-                <Avatar className="h-7 w-7">
-                  {avatarUrl ? (
-                    <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
-                  ) : (
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                      <UserIcon className="h-4 w-4" />
-                    </AvatarFallback>
+                <div className="relative flex items-center">
+                  <Avatar className="h-7 w-7">
+                    {avatarUrl ? (
+                      <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
+                    ) : (
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        <UserIcon className="h-4 w-4" />
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  {incompleteTasksCount > 0 && (
+                    <Badge variant="destructive" className="absolute top-0 left-5 h-4 w-4 p-0 flex items-center justify-center text-xs font-bold rounded-full ring-2 ring-card">
+                      {incompleteTasksCount}
+                    </Badge>
                   )}
-                </Avatar>
+                </div>
                 <span>My Profile</span>
               </Link>
               <Button

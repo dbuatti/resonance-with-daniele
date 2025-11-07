@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"; // Ensure Button is imported
 import { getResourcePillType, Resource, ResourceFolder } from "@/types/Resource"; // Import Resource and ResourceFolder
 import { Badge } from "@/components/ui/badge"; // Import Badge
 import { cn } from "@/lib/utils"; // Import cn
+import SetupChecklistCard from "@/components/dashboard/SetupChecklistCard"; // NEW IMPORT
 
 interface Event {
   id: string;
@@ -151,20 +152,7 @@ const WelcomeHub: React.FC = () => {
 
   // --- Derived State ---
 
-  const isSurveyCompleted = profile ? (
-    profile.how_heard !== null ||
-    (profile.motivation !== null && profile.motivation.length > 0) ||
-    profile.attended_session !== null ||
-    profile.singing_experience !== null ||
-    profile.session_frequency !== null ||
-    profile.preferred_time !== null ||
-    (profile.music_genres !== null && profile.music_genres.length > 0) ||
-    profile.choir_goals !== null ||
-    profile.inclusivity_importance !== null ||
-    profile.suggestions !== null
-  ) : false;
-
-  const isProfileCompleted = profile && profile.first_name && profile.last_name;
+  // Note: isSurveyCompleted and isProfileCompleted are now derived from useSession() in auth.tsx
   const isLoading = loadingSession || loadingEvent || loadingResources || loadingRsvp || loadingNominatedFolder;
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
 
@@ -241,6 +229,9 @@ const WelcomeHub: React.FC = () => {
           {/* Core Hub Links (New Visual Cards) */}
           <CoreHubLinks />
 
+          {/* Setup Checklist Card (NEW INTEGRATED STATUS BLOCK) */}
+          <SetupChecklistCard />
+
           {/* Nominated Folder Card (Next Song) */}
           {nominatedFolder && (
             <Card className="bg-accent/10 border-l-4 border-accent p-6 shadow-md rounded-xl mt-8 dark:bg-accent/20">
@@ -260,56 +251,6 @@ const WelcomeHub: React.FC = () => {
                 >
                   <Link to={`/resources?folderId=${nominatedFolder.id}`}>
                     <Folder className="mr-2 h-4 w-4" /> Go to Folder
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Profile Completion Card */}
-          {!isProfileCompleted && (
-            <Card className="bg-primary/10 border-primary text-primary-foreground p-6 shadow-md rounded-xl mt-8 dark:bg-primary/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
-                <CardTitle className="text-xl font-lora flex items-center gap-2">
-                  <UserIcon className="h-6 w-6 text-primary" /> Complete Your Profile!
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0 space-y-4">
-                <p className="text-base">
-                  Please take a moment to add your first and last name to your profile. This helps me connect with you better!
-                </p>
-                <Button 
-                  size="sm" 
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 w-full" 
-                  asChild
-                >
-                  <Link to="/profile">
-                    <Settings className="mr-2 h-4 w-4" /> Go to My Profile
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Survey Completion Card */}
-          {!isSurveyCompleted && (
-            <Card className="bg-accent/10 border-accent text-accent-foreground p-6 shadow-md rounded-xl mt-8 dark:bg-accent/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
-                <CardTitle className="text-xl font-lora flex items-center gap-2">
-                  <ClipboardList className="h-6 w-6 text-accent" /> Complete Your Survey!
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0 space-y-4">
-                <p className="text-base">
-                  Help me tailor the choir experience to your needs and preferences by filling out a quick market research survey. It only takes a few minutes!
-                </p>
-                <Button 
-                  size="sm" 
-                  className="bg-accent text-accent-foreground hover:bg-accent/90 w-full dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90" 
-                  asChild
-                >
-                  <Link to="/profile/survey">
-                    <Settings className="mr-2 h-4 w-4" /> Go to Profile & Survey
                   </Link>
                 </Button>
               </CardContent>

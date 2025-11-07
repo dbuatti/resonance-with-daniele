@@ -34,13 +34,14 @@ import {
 import ReportIssueButton from "./ReportIssueButton";
 import UnreadIssueReportsNotice from "./UnreadIssueReportsNotice";
 import AdminViewToggle from "./AdminViewToggle"; // Import the new component
+import { Badge } from "@/components/ui/badge"; // Import Badge
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, profile, loading, isLoggingOut, logout, isActualAdmin } = useSession(); // Use isActualAdmin
+  const { user, profile, loading, isLoggingOut, logout, isActualAdmin, incompleteTasksCount, isProfileCompleted, isSurveyCompleted } = useSession(); // Destructure new fields
   const location = useLocation();
   console.log("[Layout] User:", user ? user.id : 'null', "Profile:", profile ? 'present' : 'null', "Loading:", loading, "Path:", location.pathname);
 
@@ -138,7 +139,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
+                    <Button variant="ghost" className="relative flex items-center gap-2 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
                       <Avatar className="h-7 w-7">
                         {avatarUrl ? (
                           <AvatarImage src={avatarUrl} alt={`${displayName}'s avatar`} className="object-cover" />
@@ -149,6 +150,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         )}
                       </Avatar>
                       <span>{displayName}</span>
+                      {incompleteTasksCount > 0 && (
+                        <Badge variant="destructive" className="absolute top-0 right-0 h-4 w-4 p-0 flex items-center justify-center text-xs font-bold rounded-full">
+                          {incompleteTasksCount}
+                        </Badge>
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -161,6 +167,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    
+                    {incompleteTasksCount > 0 && (
+                      <>
+                        <DropdownMenuLabel className="font-bold text-destructive">
+                          Action Required ({incompleteTasksCount})
+                        </DropdownMenuLabel>
+                        {!isProfileCompleted && (
+                          <DropdownMenuItem asChild>
+                            <Link to="/profile" className="flex items-center text-destructive">
+                              <UserIcon className="mr-2 h-4 w-4" />
+                              <span>Complete Profile</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                        {!isSurveyCompleted && (
+                          <DropdownMenuItem asChild>
+                            <Link to="/profile/survey" className="flex items-center text-destructive">
+                              <FileText className="mr-2 h-4 w-4" />
+                              <span>Complete Survey</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="flex items-center">
                         <Settings className="mr-2 h-4 w-4" />
