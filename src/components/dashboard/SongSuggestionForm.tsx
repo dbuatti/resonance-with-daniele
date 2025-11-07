@@ -22,6 +22,8 @@ import { Loader2, Music, CheckCircle2 } from "lucide-react"; // Added CheckCircl
 import { useQueryClient } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea"; // Import Textarea
 import { cn } from "@/lib/utils"; // Import cn
+import { Link } from "react-router-dom"; // Import Link
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 
 const songSuggestionSchema = z.object({
   title: z.string().min(1, "Song title is required"),
@@ -36,7 +38,7 @@ interface SongSuggestionFormProps {
 }
 
 const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdded }) => {
-  const { user } = useSession();
+  const { user, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false); // New state for success feedback
 
@@ -81,6 +83,44 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
       showError("An unexpected error occurred: " + error.message);
     }
   };
+
+  if (loadingSession) {
+    return (
+      <Card className="p-6 shadow-lg rounded-xl">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
+          <Skeleton className="h-6 w-1/2" />
+        </CardHeader>
+        <CardContent className="p-0 space-y-4">
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-10 w-full mb-4" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-10 w-full mb-4" />
+          <Skeleton className="h-24 w-full mb-4" />
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Card className="p-6 shadow-lg rounded-xl text-center border-l-4 border-primary">
+        <CardHeader className="flex flex-row items-center justify-center space-y-0 p-0 mb-4">
+          <CardTitle className="text-xl font-lora flex items-center gap-2">
+            <Music className="h-6 w-6 text-primary" /> Suggest a Song
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <CardDescription className="mb-4">
+            You must be logged in to suggest new songs for the choir.
+          </CardDescription>
+          <Button asChild className="w-full">
+            <Link to="/login">Log In to Suggest</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 shadow-lg rounded-xl">

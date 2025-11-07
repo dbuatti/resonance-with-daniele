@@ -366,6 +366,7 @@ const SongVotingList: React.FC = () => {
             {songSuggestions.map((song, index) => {
               // Highlight the top-voted song (only if sorting by votes and it's the first item on the first page)
               const isTopVoted = sortOrder === "votes_desc" && currentPage === 1 && index === 0 && song.total_votes > 0;
+              const isSuggestedByCurrentUser = user && song.user_id === user.id; // Check if suggested by current user
 
               return (
                 <li 
@@ -374,7 +375,8 @@ const SongVotingList: React.FC = () => {
                     "flex items-start gap-4 p-4 border rounded-lg transition-colors",
                     isTopVoted 
                       ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10" 
-                      : "bg-muted/20 hover:bg-muted/50"
+                      : "bg-muted/20 hover:bg-muted/50",
+                    isSuggestedByCurrentUser && "border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10" // Highlight if suggested by current user
                   )}
                 >
                   
@@ -439,6 +441,7 @@ const SongVotingList: React.FC = () => {
                           )}
                         </Avatar>
                         Suggested by {song.profiles.first_name || song.profiles.last_name || "Anonymous"}
+                        {isSuggestedByCurrentUser && <span className="ml-2 text-accent font-semibold">(You)</span>}
                       </div>
                     )}
                   </div>
