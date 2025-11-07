@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2 } from "lucide-react";
+import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2, MoreVertical, Copy, Info } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import AudioPlayerCard from './AudioPlayerCard'; // Import the new component
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { showSuccess, showError } from "@/utils/toast";
 
 interface ResourceCardProps {
   resource: Resource;
@@ -94,6 +96,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     }
   };
 
+  const handleShare = () => {
+    if (resource.url) {
+      navigator.clipboard.writeText(resource.url);
+      showSuccess("Resource link copied to clipboard!");
+    } else {
+      showError("Resource does not have a direct link to share.");
+    }
+  };
+
   const getPrimaryActionText = () => {
     if (isLink) return "View External Link";
     if (fileDetails.isPdf) return "Download Sheet Music";
@@ -103,11 +114,81 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
   return (
     <Card className={cn(
-        "shadow-lg rounded-xl flex flex-col justify-between transition-shadow duration-200 hover:shadow-xl",
+        "shadow-lg rounded-xl flex flex-col justify-between transition-shadow duration-200 hover:shadow-xl relative",
         cardBackgroundClass, // Apply pastel background here
         !isPublished && isAdmin && "border-l-4 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20",
       )}>
         
+        {/* ADMIN CONTEXT MENU (Absolute Positioned) */}
+        {isAdmin && (
+          <div className="absolute top-2 right-2 z-20">
+            <DropdownMenu>
+              <Tooltip>
+                <DropdownMenuTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/70 hover:text-foreground hover:bg-background/50">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                </DropdownMenuTrigger>
+                <TooltipContent>More Actions</TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" className="w-56">
+                
+                {/* 1. View Details / File Info (Opens Edit Dialog for now) */}
+                <DropdownMenuItem onClick={() => onEdit(resource)}>
+                  <Info className="mr-2 h-4 w-4" />
+                  <span>View Details / Edit</span>
+                </DropdownMenuItem>
+                
+                {/* 2. Share Resource (Copy Link) */}
+                {resource.url && (
+                  <DropdownMenuItem onClick={handleShare}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    <span>Share Resource (Copy Link)</span>
+                  </DropdownMenuItem>
+                )}
+                
+                <DropdownMenuSeparator />
+                
+                {/* 3. Move to Folder */}
+                <DropdownMenuItem onClick={() => onMove(resource)}>
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  <span>Move to Folder</span>
+                </DropdownMenuItem>
+                
+                {/* 4. Delete */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem 
+                      onSelect={(e) => e.preventDefault()} // Prevent menu closing when opening AlertDialog
+                      className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Resource Deletion</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete the resource: <strong>{resource.title}</strong>? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDelete(resource)} className="bg-destructive hover:bg-destructive/90">
+                        Delete Resource
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+
         {/* Main Content Area (Preview for PDF/Audio) */}
         <div className={cn(
           "relative overflow-hidden",
@@ -241,50 +322,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               </Button>
             )}
             
-            {/* Admin Actions */}
-            {isAdmin && (
-              <div className="flex justify-end gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onMove(resource)}
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Move Resource</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onEdit(resource)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Edit Resource</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onDelete(resource)} // Call onDelete directly to set state in parent
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Delete Resource</TooltipContent>
-                </Tooltip>
-              </div>
-            )}
+            {/* Admin Actions (REMOVED - now in context menu) */}
           </div>
         </CardContent>
       </Card>
