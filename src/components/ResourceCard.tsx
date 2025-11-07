@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2, MoreVertical, Copy, Info } from "lucide-react";
+import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2, MoreVertical, Copy, Info, Youtube } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -27,6 +27,8 @@ const resourcePillStyles: { [key: string]: { text: string, border: string } } = 
   pdf: { text: "text-red-600", border: "border-red-300" },
   audio: { text: "text-green-600", border: "border-green-300" },
   link: { text: "text-blue-600", border: "border-blue-300" },
+  youtube: { text: "text-purple-600", border: "border-purple-300" },
+  lyrics: { text: "text-orange-600", border: "border-orange-300" },
   default: { text: "text-muted-foreground", border: "border-border" },
 };
 
@@ -35,6 +37,8 @@ const resourceCardBackgrounds: { [key: string]: string } = {
   pdf: "bg-pastel-pdf dark:bg-pastel-pdf-dark",
   audio: "bg-pastel-audio dark:bg-pastel-audio-dark",
   link: "bg-pastel-link dark:bg-pastel-link-dark",
+  youtube: "bg-pastel-youtube dark:bg-pastel-youtube-dark",
+  lyrics: "bg-pastel-lyrics dark:bg-pastel-lyrics-dark",
   default: "bg-card",
 };
 
@@ -57,10 +61,24 @@ const voicePartColors: { [key: string]: string } = {
   "Other": "bg-gray-500 text-white",
 };
 
+// Helper to extract YouTube video ID and create embed URL
+const getYouTubeEmbedUrl = (url: string | null): string | null => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  
+  if (match && match[2].length === 11) {
+    return `https://www.youtube.com/embed/${match[2]}?rel=0&showinfo=0&modestbranding=1`;
+  }
+  return null;
+};
+
 const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, onDelete, onMove }) => {
   
-  const isFile = resource.type === 'file';
+  const isFile = resource.type === 'file' || resource.type === 'lyrics';
   const isLink = resource.type === 'url';
+  const isYoutube = resource.type === 'youtube';
+  const isLyrics = resource.type === 'lyrics';
   const isPublished = resource.is_published;
 
   const getFileDetails = () => {
@@ -81,20 +99,45 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   const fileDetails = getFileDetails();
 
   // Determine resource type for pill and card background
-  const resourcePillType = fileDetails.isPdf ? 'pdf' : fileDetails.isAudio ? 'audio' : isLink ? 'link' : 'default';
-  const resourcePillText = fileDetails.isPdf ? 'PDF' : fileDetails.isAudio ? 'Audio' : isLink ? 'Link' : 'File';
+  let resourcePillType: keyof typeof resourcePillStyles;
+  let resourcePillText: string;
+  let primaryIcon: React.ReactNode;
+
+  if (isYoutube) {
+    resourcePillType = 'youtube';
+    resourcePillText = 'YouTube';
+    primaryIcon = <Youtube className="h-6 w-6 text-primary-foreground" />;
+  } else if (isLyrics) {
+    resourcePillType = 'lyrics';
+    resourcePillText = 'Lyrics';
+    primaryIcon = <Mic2 className="h-6 w-6 text-primary-foreground" />;
+  } else if (isLink) {
+    resourcePillType = 'link';
+    resourcePillText = 'Link';
+    primaryIcon = <LinkIcon className="h-6 w-6 text-primary-foreground" />;
+  } else if (isFile) {
+    resourcePillType = fileDetails.isPdf ? 'pdf' : fileDetails.isAudio ? 'audio' : 'default';
+    resourcePillText = fileDetails.isPdf ? 'PDF' : fileDetails.isAudio ? 'Audio' : 'File';
+    primaryIcon = fileDetails.icon;
+  } else {
+    resourcePillType = 'default';
+    resourcePillText = 'Resource';
+    primaryIcon = <File className="h-6 w-6 text-primary-foreground" />;
+  }
+
   const pillStyle = resourcePillStyles[resourcePillType] || resourcePillStyles.default;
   const cardBackgroundClass = resourceCardBackgrounds[resourcePillType] || resourceCardBackgrounds.default;
 
-  // New unified backdrop style flag
-  const useMediaBackdrop = isFile && (fileDetails.isPdf || fileDetails.isAudio);
+  // Unified backdrop style flag: true for PDF, Audio, and YouTube
+  const useMediaBackdrop = isFile && (fileDetails.isPdf || fileDetails.isAudio) || isYoutube;
+  const youtubeEmbedUrl = isYoutube ? getYouTubeEmbedUrl(resource.url) : null;
 
   // Unified action handler: open URL in new tab (browser handles PDF/Audio/Link)
   const handlePrimaryAction = () => {
     if (!resource.url) return;
 
     if (isFile) {
-      // For files (PDF/Audio), force download using a temporary anchor tag
+      // For files (PDF/Audio/Lyrics PDF), force download using a temporary anchor tag
       const link = document.createElement('a');
       link.href = resource.url;
       // Use the original filename if available, otherwise use the title
@@ -104,7 +147,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
       document.body.removeChild(link);
       showSuccess(`Downloading ${resource.title}...`);
     } else {
-      // For external links, open in a new tab
+      // For external links (URL/YouTube), open in a new tab
       window.open(resource.url, '_blank');
     }
   };
@@ -119,7 +162,9 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   };
 
   const getPrimaryActionText = () => {
+    if (isYoutube) return "Watch on YouTube";
     if (isLink) return "View External Link";
+    if (isLyrics) return "Download Lyrics";
     if (fileDetails.isPdf) return "Download Sheet Music";
     if (fileDetails.isAudio) return "Download Audio File";
     return "View Resource";
@@ -202,7 +247,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           </div>
         )}
 
-        {/* Main Content Area (Preview for PDF/Audio) */}
+        {/* Main Content Area (Preview for PDF/Audio/YouTube) */}
         <div className={cn(
           "relative overflow-hidden",
           // Only apply rounded-t-xl if it's a media backdrop, otherwise it's hidden
@@ -212,8 +257,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           {useMediaBackdrop && (
             <div className="relative h-full flex items-center justify-center">
               
-              {/* Content specific to PDF */}
-              {fileDetails.isPdf && resource.url && (
+              {/* Content specific to PDF/Lyrics PDF */}
+              {(fileDetails.isPdf || isLyrics) && resource.url && (
                 <div 
                   className="relative w-full h-64 cursor-pointer group"
                   onClick={handlePrimaryAction} // Make the preview area clickable
@@ -243,6 +288,20 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                   onDownload={handlePrimaryAction} // Use the primary action handler for download
                 />
               )}
+
+              {/* Content specific to YouTube */}
+              {isYoutube && youtubeEmbedUrl && (
+                <div className="relative w-full aspect-video">
+                  <iframe
+                    className="w-full h-full"
+                    src={youtubeEmbedUrl}
+                    title={resource.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -261,7 +320,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 {/* Icon (Non-Media Backdrop only) */}
                 {!useMediaBackdrop && (
                     <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground">
-                        {isLink ? <LinkIcon className="h-6 w-6" /> : fileDetails.icon}
+                        {primaryIcon}
                     </div>
                 )}
                 
@@ -318,14 +377,14 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
             {/* Primary Action Button (Visible for all non-admin users) */}
-            {/* Show for PDF and Link, Audio uses integrated download button */}
-            {!isAdmin && resource.url && (fileDetails.isPdf || isLink) && (
+            {/* Show for PDF, Lyrics, Link, Audio uses integrated download button */}
+            {!isAdmin && resource.url && (fileDetails.isPdf || isLink || isYoutube || isLyrics) && (
               <Button 
                 onClick={handlePrimaryAction} 
                 className="w-full" 
                 disabled={!resource.url}
               >
-                {isLink ? <ExternalLink className="h-4 w-4 mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                {isYoutube ? <Youtube className="h-4 w-4 mr-2" /> : isLink ? <ExternalLink className="h-4 w-4 mr-2" /> : <Download className="h-4 w-4 mr-2" />}
                 <span>{getPrimaryActionText()}</span>
               </Button>
             )}

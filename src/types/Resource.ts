@@ -3,7 +3,7 @@ export interface Resource {
   title: string;
   description: string | null;
   url: string | null;
-  type: 'file' | 'url'; // 'file' for uploaded files, 'url' for external links
+  type: 'file' | 'url' | 'youtube' | 'lyrics'; // 'file' for uploaded files, 'url' for external links, 'youtube', 'lyrics'
   folder_id: string | null; // Added folder_id
   is_published: boolean;
   created_at: string;

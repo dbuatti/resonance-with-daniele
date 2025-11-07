@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, FileText, Headphones, Link as LinkIcon, Edit, Trash2, Search, Filter, SortAsc, Folder, Home, ChevronRight, AlertCircle, UploadCloud, Mic2 } from "lucide-react";
+import { Loader2, Plus, FileText, Headphones, Link as LinkIcon, Edit, Trash2, Search, Filter, SortAsc, Folder, Home, ChevronRight, AlertCircle, UploadCloud, Mic2, Youtube } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ import SortableResourceList from "@/components/SortableResourceList"; // Import 
 import { useDebounce } from "@/hooks/use-debounce"; // Import useDebounce
 
 // Define Filter and Sort types
-type FilterType = 'all' | 'pdf' | 'audio' | 'link';
+type FilterType = 'all' | 'pdf' | 'audio' | 'link' | 'youtube' | 'lyrics'; // Updated FilterType
 type SortBy = 'title' | 'created_at' | 'sort_order'; // Added sort_order
 type SortOrder = 'asc' | 'desc';
 type VoicePartFilter = string | 'all'; // Includes specific parts and 'all'
@@ -423,6 +423,12 @@ const Resources: React.FC = () => {
         if (filterType === 'link') {
           return resource.type === 'url';
         }
+        if (filterType === 'youtube') {
+          return resource.type === 'youtube';
+        }
+        if (filterType === 'lyrics') {
+          return resource.type === 'lyrics';
+        }
         if (resource.type === 'file' && resource.url) {
           const url = resource.url.toLowerCase();
           if (filterType === 'pdf') return url.endsWith('.pdf');
@@ -477,9 +483,15 @@ const Resources: React.FC = () => {
     const pdf: Resource[] = [];
     const audio: Resource[] = [];
     const links: Resource[] = [];
+    const youtube: Resource[] = [];
+    const lyrics: Resource[] = [];
 
     filteredAndSortedResources.forEach(resource => {
-        if (resource.type === 'url') {
+        if (resource.type === 'youtube') {
+            youtube.push(resource);
+        } else if (resource.type === 'lyrics') {
+            lyrics.push(resource);
+        } else if (resource.type === 'url') {
             links.push(resource);
         } else if (resource.type === 'file' && resource.url) {
             const url = resource.url.toLowerCase();
@@ -493,7 +505,7 @@ const Resources: React.FC = () => {
             }
         }
     });
-    return { pdf, audio, links };
+    return { pdf, audio, links, youtube, lyrics };
   }, [filteredAndSortedResources]);
   // --- End Resource Categorization ---
 
@@ -663,8 +675,10 @@ const Resources: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="pdf">PDF (Sheet Music)</SelectItem>
+                <SelectItem value="pdf">Sheet Music (PDF)</SelectItem>
+                <SelectItem value="lyrics">Lyrics (PDF/Text)</SelectItem>
                 <SelectItem value="audio">Audio Tracks</SelectItem>
+                <SelectItem value="youtube">YouTube Clips</SelectItem>
                 <SelectItem value="link">External Links</SelectItem>
               </SelectContent>
             </Select>
@@ -757,12 +771,20 @@ const Resources: React.FC = () => {
           {hasResources ? (
             <div className="space-y-10">
               {renderResourceSection(
-                "PDF Resources (Sheet Music, Lyrics)",
+                "Sheet Music (PDF)",
                 categorizedResources.pdf
+              )}
+              {renderResourceSection(
+                "Lyrics (PDF/Text)",
+                categorizedResources.lyrics
               )}
               {renderResourceSection(
                 "Audio Resources (Practice Tracks)",
                 categorizedResources.audio
+              )}
+              {renderResourceSection(
+                "YouTube Clips",
+                categorizedResources.youtube
               )}
               {renderResourceSection(
                 "External Links",

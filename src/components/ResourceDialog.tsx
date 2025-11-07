@@ -9,7 +9,7 @@ import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, Link as LinkIcon, CheckCircle2, Folder } from "lucide-react";
+import { Loader2, FileText, Link as LinkIcon, CheckCircle2, Folder, Youtube, Mic2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -36,7 +36,7 @@ import ResourceUpload from './ResourceUpload';
 const resourceSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  type: z.enum(['file', 'url'], { required_error: "Resource type is required" }),
+  type: z.enum(['file', 'url', 'youtube', 'lyrics'], { required_error: "Resource type is required" }),
   url: z.string().optional().nullable(),
   is_published: z.boolean().default(true),
   folder_id: z.string().optional().nullable(),
@@ -230,12 +230,15 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
     }
 
     // Validation checks specific to resource type
-    if (data.type === 'file' && !selectedFile && !editingResource?.url && !removeFileRequested) {
+    const isFileResource = data.type === 'file' || data.type === 'lyrics';
+    const isUrlResource = data.type === 'url' || data.type === 'youtube';
+
+    if (isFileResource && !selectedFile && !editingResource?.url && !removeFileRequested) {
       showError("Please select a file to upload.");
       return;
     }
-    if (data.type === 'url' && (!data.url || !z.string().url().safeParse(data.url).success)) {
-      showError("Please enter a valid URL for the link resource.");
+    if (isUrlResource && (!data.url || !z.string().url().safeParse(data.url).success)) {
+      showError("Please enter a valid URL.");
       return;
     }
 
@@ -244,13 +247,16 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
     let resourceId = editingResource?.id;
     let uploadError: Error | null = null;
     let deleteError: Error | null = null;
-    let finalOriginalFilename: string | null = editingResource?.original_filename || null; // NEW: Track original filename
+    let finalOriginalFilename: string | null = editingResource?.original_filename || null;
 
     try {
-      // 1. Handle File Deletion (if requested or type changed from file to url)
+      // 1. Handle File Deletion (if requested or type changed from file/lyrics to url/youtube)
+      const wasFile = editingResource?.type === 'file' || editingResource?.type === 'lyrics';
+      const isNowUrl = data.type === 'url' || data.type === 'youtube';
+
       const shouldDeleteOldFile = 
         (removeFileRequested && editingResource?.url) ||
-        (editingResource?.type === 'file' && data.type === 'url' && editingResource?.url);
+        (wasFile && isNowUrl && editingResource?.url);
 
       if (shouldDeleteOldFile) {
         const { error } = await deleteFile(editingResource.url!);
@@ -262,8 +268,8 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         finalOriginalFilename = null; // Clear original filename if file is deleted
       }
 
-      // 2. Handle File Upload (if a new file is selected)
-      if (selectedFile) {
+      // 2. Handle File Upload (if a new file is selected and type is file/lyrics)
+      if (selectedFile && isFileResource) {
         // If creating a new resource, we need an ID first. If editing, use existing ID.
         if (!resourceId) {
           resourceId = crypto.randomUUID();
@@ -279,10 +285,10 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       }
 
       // 3. Determine final URL based on type
-      if (data.type === 'url') {
+      if (isUrlResource) {
         finalUrl = data.url || null;
         finalOriginalFilename = null; // Clear original filename if it's a link
-      } else if (data.type === 'file' && !finalUrl) {
+      } else if (isFileResource && !finalUrl) {
         // If it's a file type but no file is uploaded/retained, throw error
         throw new Error("File resource type requires an uploaded file.");
       }
@@ -374,7 +380,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Resource Type</FormLabel>
-                    <Select onValueChange={(value: 'file' | 'url') => {
+                    <Select onValueChange={(value: 'file' | 'url' | 'youtube' | 'lyrics') => {
                       field.onChange(value);
                       setSelectedFile(null);
                       setRemoveFileRequested(false);
@@ -387,7 +393,13 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="file">
-                          <div className="flex items-center gap-2"><FileText className="h-4 w-4" /> File Upload (PDF/Audio)</div>
+                          <div className="flex items-center gap-2"><FileText className="h-4 w-4" /> Sheet Music (PDF/Audio)</div>
+                        </SelectItem>
+                        <SelectItem value="lyrics">
+                          <div className="flex items-center gap-2"><Mic2 className="h-4 w-4" /> Lyrics (PDF/Text)</div>
+                        </SelectItem>
+                        <SelectItem value="youtube">
+                          <div className="flex items-center gap-2"><Youtube className="h-4 w-4" /> YouTube Clip</div>
                         </SelectItem>
                         <SelectItem value="url">
                           <div className="flex items-center gap-2"><LinkIcon className="h-4 w-4" /> External Link (URL)</div>
@@ -467,10 +479,10 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                 )}
               />
 
-              {currentType === 'file' && (
+              {(currentType === 'file' || currentType === 'lyrics') && (
                 <ResourceUpload
-                  currentFileUrl={editingResource?.type === 'file' && !removeFileRequested ? editingResource.url : null}
-                  originalFilename={editingResource?.type === 'file' && !removeFileRequested ? editingResource.original_filename : null} // NEW PROP
+                  currentFileUrl={(currentType === 'file' || currentType === 'lyrics') && !removeFileRequested ? editingResource?.url || null : null}
+                  originalFilename={(currentType === 'file' || currentType === 'lyrics') && !removeFileRequested ? editingResource?.original_filename || null : null}
                   onFileChange={handleFileChange}
                   onRemoveRequested={handleRemoveRequested}
                   isSaving={isSaving}
@@ -479,16 +491,16 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                 />
               )}
 
-              {currentType === 'url' && (
+              {(currentType === 'url' || currentType === 'youtube') && (
                 <FormField
                   control={form.control}
                   name="url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>External URL</FormLabel>
+                      <FormLabel>{currentType === 'youtube' ? 'YouTube URL' : 'External URL'}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="https://youtube.com/watch?v=..." 
+                          placeholder={currentType === 'youtube' ? "https://youtube.com/watch?v=..." : "https://external-link.com"} 
                           {...field} 
                           value={field.value || ''}
                           onChange={(e) => field.onChange(e.target.value)}
@@ -530,7 +542,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
               <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving || (currentType === 'file' && !hasFileOrUrl)}>
+              <Button type="submit" disabled={isSaving || (isFileResource && !hasFileOrUrl && !isUrlResource)}>
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
