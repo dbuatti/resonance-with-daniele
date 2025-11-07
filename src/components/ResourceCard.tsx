@@ -8,6 +8,8 @@ import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface ResourceCardProps {
   resource: Resource;
@@ -225,7 +227,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           {/* Original Filename (Admin only, or if description is missing) */}
           {isFile && resource.original_filename && (
             <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
-              Original File: <span className="font-mono text-foreground/80">{resource.original_filename}</span>
+              <span className="font-mono text-foreground/80">File: {resource.original_filename}</span>
             </p>
           )}
 
@@ -251,28 +253,63 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             )}
             
             {isAdmin && (
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onMove(resource)}
-                >
-                  <ArrowRight className="h-4 w-4 mr-2" /> Move
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEdit(resource)}
-                >
-                  <Edit className="h-4 w-4 mr-2" /> Edit
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={() => onDelete(resource)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" /> Delete
-                </Button>
+              <div className="flex justify-end gap-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onMove(resource)}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Move Resource</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onEdit(resource)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Edit Resource</TooltipContent>
+                </Tooltip>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="h-8 w-8"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete Resource</TooltipContent>
+                    </Tooltip>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Resource Deletion</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete the resource: <strong>{resource.title}</strong>? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDelete(resource)}>
+                        Delete Resource
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             )}
           </div>
