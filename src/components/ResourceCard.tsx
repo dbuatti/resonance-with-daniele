@@ -77,9 +77,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   // Determine if we should use the backdrop style (PDF)
   const useBackdropStyle = isFile && fileDetails.isPdf;
 
-  // Prepare PDF URL with parameters to hide toolbar
-  const pdfUrl = resource.url && fileDetails.isPdf ? `${resource.url}#toolbar=0&navpanes=0` : resource.url;
-
   return (
     <>
       <Card className={cn(
@@ -90,46 +87,43 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Main Content Area (Header + Preview) */}
         <div className={cn(
           "relative overflow-hidden",
-          useBackdropStyle ? "h-64 rounded-t-xl" : "p-6" // Fixed height for PDF backdrop
+          useBackdropStyle ? "h-64 rounded-t-xl" : "p-6 rounded-xl" // Fixed height for PDF backdrop
         )}>
           
-          {/* 1. The Backdrop (PDF Iframe or Standard Header) */}
           {useBackdropStyle ? (
-            <>
-              <iframe
-                src={pdfUrl} // Use the modified URL here
-                title={`Preview of ${resource.title}`}
-                className="w-full h-full border-none absolute inset-0"
-              />
-              {/* 2. Overlay Metadata for PDF Backdrop Style */}
-              <div className={cn(
-                "absolute inset-0 p-4 flex flex-col justify-between",
-                // Dark overlay for contrast, matching the mock-up's dark header area
-                "bg-gradient-to-b from-black/60 to-transparent" 
-              )}>
-                <div className="flex items-start justify-between w-full">
-                  {/* Title and Description (Top Left) */}
-                  <div className="flex items-center gap-3 max-w-[80%]">
-                    {/* Large Icon (as seen in mock-up) */}
-                    <div className="bg-primary p-3 rounded-full flex-shrink-0">
-                      <FileText className="h-6 w-6 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-lora line-clamp-1 text-primary-foreground">{resource.title}</CardTitle>
-                      <CardDescription className="text-sm line-clamp-1 text-primary-foreground/80">
-                        {resource.description || fileDetails.type}
-                      </CardDescription>
-                    </div>
+            <div className="relative h-full">
+              {/* Custom Header (Solid Dark Area) */}
+              <div className="absolute top-0 left-0 right-0 h-16 bg-gray-900 dark:bg-gray-900 p-4 flex items-center justify-between z-10">
+                {/* Title and Description (Top Left) */}
+                <div className="flex items-center gap-3 max-w-[80%]">
+                  {/* Large Icon */}
+                  <div className="bg-primary p-3 rounded-full flex-shrink-0">
+                    <FileText className="h-6 w-6 text-primary-foreground" />
                   </div>
-                  
-                  {/* Small PDF Icon (Top Right - following user's text request) */}
-                  <div className="flex-shrink-0 mt-1">
-                    <FileText className="h-5 w-5 text-primary-foreground/70" />
+                  <div>
+                    <CardTitle className="text-xl font-lora line-clamp-1 text-primary-foreground">{resource.title}</CardTitle>
+                    <CardDescription className="text-sm line-clamp-1 text-primary-foreground/80">
+                      {resource.description || fileDetails.type}
+                    </CardDescription>
                   </div>
                 </div>
-                {/* Bottom of overlay is empty, allowing PDF content to show */}
+                
+                {/* Small PDF Icon (Top Right) */}
+                <div className="flex-shrink-0">
+                  <FileText className="h-5 w-5 text-primary-foreground/70" />
+                </div>
               </div>
-            </>
+
+              {/* PDF Preview Area (Iframe) */}
+              <iframe
+                src={resource.url} // Clean URL
+                title={`Preview of ${resource.title}`}
+                // Start below the header (top-16)
+                className="w-full border-none absolute left-0 right-0 top-16" 
+                // Height: 100% of container minus header height (64px) + 40px offset (to hide toolbar)
+                style={{ height: 'calc(100% - 64px + 40px)', marginTop: '-40px' }}
+              />
+            </div>
           ) : (
             // Standard Header for Links and Audio/Other Files
             <CardHeader className="p-0 pb-2">
