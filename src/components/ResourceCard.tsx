@@ -40,7 +40,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     }
     
     if (isPdf) {
-      return { icon: <FileText className="h-12 w-12 text-primary" />, type: 'PDF Document', isPdf, isAudio: false, fileName };
+      return { icon: <FileText className="h-8 w-8 text-primary-foreground" />, type: 'PDF Document', isPdf, isAudio: false, fileName };
     }
     if (isAudio) {
       return { icon: <Headphones className="h-12 w-12 text-primary" />, type: 'Audio Track', isPdf: false, isAudio, fileName };
@@ -89,13 +89,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           useBackdropStyle ? "h-64 rounded-t-xl" : "p-6" // Fixed height for PDF backdrop
         )}>
           
-          {/* 1. The Backdrop (PDF Iframe or Generic Preview) */}
+          {/* 1. The Backdrop (PDF Iframe or Standard Header) */}
           {useBackdropStyle ? (
             <iframe
               src={resource.url}
               title={`Preview of ${resource.title}`}
               className="w-full h-full border-none absolute inset-0"
-              // Ensure the iframe fills the container completely
             />
           ) : (
             // Standard Header for Links and Audio/Other Files
@@ -127,16 +126,19 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           {useBackdropStyle && (
             <div className={cn(
               "absolute inset-0 p-4 flex flex-col justify-between",
-              "bg-gradient-to-b from-background/80 to-transparent dark:from-background/90"
+              // Dark gradient overlay for contrast
+              "bg-gradient-to-b from-black/60 to-transparent" 
             )}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
+                  {/* Icon with solid primary background */}
+                  <div className="bg-primary p-2 rounded-full flex-shrink-0">
                     {fileDetails.icon}
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-lora line-clamp-2">{resource.title}</CardTitle>
-                    <CardDescription className="text-sm text-muted-foreground line-clamp-1">
+                    {/* Title and Description with high contrast text */}
+                    <CardTitle className="text-xl font-lora line-clamp-2 text-primary-foreground">{resource.title}</CardTitle>
+                    <CardDescription className="text-sm line-clamp-1 text-primary-foreground/80">
                       {resource.description || fileDetails.type}
                     </CardDescription>
                   </div>
@@ -152,10 +154,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         </div>
         
         {/* Footer Content (Buttons and Date) */}
-        <CardContent className={cn(
-          "p-4",
-          useBackdropStyle ? "pt-0" : "pt-4" // Adjust top padding if backdrop was used
-        )}>
+        <CardContent className="p-4">
           <div className="flex flex-col gap-3">
             {/* Primary Action Button (View/Download/Listen) */}
             <Button 
