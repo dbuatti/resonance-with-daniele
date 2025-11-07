@@ -56,12 +56,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     const isPdf = url.endsWith('.pdf');
     const isAudio = url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a');
 
-    // Attempt to extract file name from URL path
+    // Attempt to extract file name from URL path (kept for internal logic, but not displayed)
     const urlObj = new URL(resource.url);
     const pathSegments = urlObj.pathname.split('/');
     let fileName = pathSegments[pathSegments.length - 1];
     
-    // Clean up potential prefixes (UUID/timestamp)
     fileName = fileName.replace(/^\d+-/, '');
     if (fileName.includes('/')) {
         fileName = fileName.split('/').pop() || fileName;
@@ -133,43 +132,48 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         
         {/* Title, Pills, and Description Area (Main Display) */}
         <div className={cn("px-4 pt-4 pb-2 bg-card", useBackdropStyle && "pt-0")}>
-          <div className="flex items-start justify-between mb-2">
-              {/* 1. Title and Icon (Only for non-PDF files) */}
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {!useBackdropStyle && (
-                    <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground">
-                        {isLink ? <LinkIcon className="h-6 w-6" /> : fileDetails.icon}
-                    </div>
-                )}
-                <CardTitle className="text-xl font-lora line-clamp-2 text-foreground">
+          
+          {/* Header Row: Icon + Title + Pills + Draft Badge */}
+          <div className="flex items-start gap-2 mb-2">
+            
+            {/* Icon (Non-PDF only) */}
+            {!useBackdropStyle && (
+                <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground mt-1">
+                    {isLink ? <LinkIcon className="h-6 w-6" /> : fileDetails.icon}
+                </div>
+            )}
+            
+            <div className="flex-1 min-w-0">
+                {/* Title */}
+                <CardTitle className="text-xl font-lora line-clamp-1 text-foreground mb-1">
                     {resource.title}
                 </CardTitle>
-              </div>
-              
-              {/* 2. Draft Badge (Admin only) */}
-              {isAdmin && !isPublished && (
-                  <Badge variant="destructive" className="text-xs flex-shrink-0 ml-2">
-                      Draft
-                  </Badge>
-              )}
-          </div>
-          
-          {/* Pills Section (Consolidated) */}
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            {/* Resource Type Pill */}
-            <Badge className={cn("text-xs font-semibold", resourcePillClass)}>
-              {resourcePillText}
-            </Badge>
+                
+                {/* Pills and Draft Badge (Inline below title, minimal vertical space) */}
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Resource Type Pill */}
+                    <Badge className={cn("text-xs font-semibold", resourcePillClass)}>
+                      {resourcePillText}
+                    </Badge>
 
-            {/* Voice Part Pill */}
-            {resource.voice_part && (
-              <Badge 
-                variant="secondary" 
-                className={cn("text-xs font-semibold", voicePartColors[resource.voice_part] || voicePartColors.Other)}
-              >
-                {resource.voice_part}
-              </Badge>
-            )}
+                    {/* Voice Part Pill */}
+                    {resource.voice_part && (
+                      <Badge 
+                        variant="secondary" 
+                        className={cn("text-xs font-semibold", voicePartColors[resource.voice_part] || voicePartColors.Other)}
+                      >
+                        {resource.voice_part}
+                      </Badge>
+                    )}
+                    
+                    {/* Draft Badge (Admin only) */}
+                    {isAdmin && !isPublished && (
+                        <Badge variant="destructive" className="text-xs">
+                            Draft
+                        </Badge>
+                    )}
+                </div>
+            </div>
           </div>
 
           {/* Description */}
@@ -181,7 +185,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Footer Content (Buttons and Date) */}
         <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
-            {/* Audio Player (Inline) */}
+            {/* Audio Player (Inline) - FIX: Removed type attribute */}
             {fileDetails.isAudio && resource.url && (
               <audio controls src={resource.url} className="w-full h-10">
                 Your browser does not support the audio element.
