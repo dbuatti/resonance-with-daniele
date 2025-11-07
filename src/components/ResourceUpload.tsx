@@ -10,56 +10,36 @@ import { showSuccess } from "@/utils/toast";
 
 interface ResourceUploadProps {
   currentFileUrl: string | null; // The URL of the file currently associated with the resource (e.g., from Supabase Storage)
+  originalFilename: string | null; // NEW: The original filename stored in the DB
   onFileChange: (file: File | null) => void; // Callback for when a new file is selected or cleared
   onRemoveRequested: () => void; // Callback for when user explicitly requests removal of the current file
   isSaving: boolean; // Prop to indicate if parent is saving, for loading states
   selectedFile: File | null; // The file currently selected in the parent form state
-  folderPathDisplay: string | null; // New prop: The human-readable path of the current folder
+  folderPathDisplay: string | null; // The human-readable path of the current folder
 }
 
 const ResourceUpload: React.FC<ResourceUploadProps> = ({
   currentFileUrl,
+  originalFilename, // Use this new prop
   onFileChange,
   onRemoveRequested,
   isSaving,
   selectedFile,
-  folderPathDisplay, // Destructure the new prop
+  folderPathDisplay,
 }) => {
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedFile) {
+      // If a new file is selected, use its name
       setPreviewFileName(selectedFile.name);
-    } else if (currentFileUrl) {
-      // Extract file name from URL
-      try {
-        const url = new URL(currentFileUrl);
-        // The path is usually /storage/v1/object/public/bucket_name/user_id/folder/filename
-        const pathSegments = url.pathname.split('/');
-        // Find the last segment which should be the filename (potentially with UUID/timestamp prefix)
-        let fileName = pathSegments[pathSegments.length - 1];
-
-        // If the file name contains a timestamp prefix (e.g., 1678886400000-my-file.pdf), remove it
-        const timestampRegex = /^\d+-/;
-        if (timestampRegex.test(fileName)) {
-          fileName = fileName.replace(timestampRegex, '');
-        }
-        
-        // If the file name contains a UUID prefix (e.g., uuid/filename.pdf), extract the last part
-        if (fileName.includes('/')) {
-            fileName = fileName.split('/').pop() || fileName;
-        }
-
-        setPreviewFileName(fileName || "Uploaded File");
-      } catch (e) {
-        // If URL parsing fails, fall back to simple extraction
-        const urlParts = currentFileUrl.split('/');
-        setPreviewFileName(urlParts[urlParts.length - 1] || "Uploaded File");
-      }
+    } else if (currentFileUrl && originalFilename) {
+      // If an existing file is present, use the stored original filename
+      setPreviewFileName(originalFilename);
     } else {
       setPreviewFileName(null);
     }
-  }, [selectedFile, currentFileUrl]);
+  }, [selectedFile, currentFileUrl, originalFilename]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {

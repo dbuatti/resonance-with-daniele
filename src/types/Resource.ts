@@ -8,6 +8,7 @@ export interface Resource {
   is_published: boolean;
   created_at: string;
   voice_part: string | null; // New: Voice part (e.g., 'Soprano 1', 'Alto')
+  original_filename: string | null; // New: Original filename before server renaming
 }
 
 export interface ResourceFolder {

@@ -64,23 +64,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     const isPdf = url.endsWith('.pdf');
     const isAudio = url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a');
 
-    // Attempt to extract file name from URL path (kept for internal logic, but not displayed)
-    const urlObj = new URL(resource.url);
-    const pathSegments = urlObj.pathname.split('/');
-    let fileName = pathSegments[pathSegments.length - 1];
-    
-    fileName = fileName.replace(/^\d+-/, '');
-    if (fileName.includes('/')) {
-        fileName = fileName.split('/').pop() || fileName;
-    }
+    // We no longer need to parse the filename from the URL path, we use original_filename
     
     if (isPdf) {
-      return { icon: <FileText className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf, isAudio: false, fileName };
+      return { icon: <FileText className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf, isAudio: false };
     }
     if (isAudio) {
-      return { icon: <Headphones className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf: false, isAudio, fileName };
+      return { icon: <Headphones className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf: false, isAudio };
     }
-    return { icon: <File className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf: false, isAudio: false, fileName };
+    return { icon: <File className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf: false, isAudio: false };
   };
 
   const fileDetails = getFileDetails();
@@ -152,7 +144,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               {fileDetails.isAudio && resource.url && (
                 <div className="text-center p-4 w-full">
                   <Headphones className="h-24 w-24 text-primary mx-auto mb-4" />
-                  {/* Removed redundant title here */}
                   <audio controls src={resource.url} className="w-full max-w-xs mx-auto h-10" />
                   
                   {/* Download Button (Bottom Right - same style as PDF) */}
@@ -230,6 +221,13 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 )}
             </div>
           </div>
+
+          {/* Original Filename (Admin only, or if description is missing) */}
+          {isFile && resource.original_filename && (
+            <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+              Original File: <span className="font-mono text-foreground/80">{resource.original_filename}</span>
+            </p>
+          )}
 
           {/* Description */}
           <p className="text-sm text-muted-foreground line-clamp-2">

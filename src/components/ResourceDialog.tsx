@@ -244,6 +244,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
     let resourceId = editingResource?.id;
     let uploadError: Error | null = null;
     let deleteError: Error | null = null;
+    let finalOriginalFilename: string | null = editingResource?.original_filename || null; // NEW: Track original filename
 
     try {
       // 1. Handle File Deletion (if requested or type changed from file to url)
@@ -258,6 +259,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
           throw new Error("Failed to delete old file.");
         }
         finalUrl = null;
+        finalOriginalFilename = null; // Clear original filename if file is deleted
       }
 
       // 2. Handle File Upload (if a new file is selected)
@@ -273,11 +275,13 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
           throw new Error("Failed to upload new file.");
         }
         finalUrl = url;
+        finalOriginalFilename = selectedFile.name; // Store the original name
       }
 
       // 3. Determine final URL based on type
       if (data.type === 'url') {
         finalUrl = data.url || null;
+        finalOriginalFilename = null; // Clear original filename if it's a link
       } else if (data.type === 'file' && !finalUrl) {
         // If it's a file type but no file is uploaded/retained, throw error
         throw new Error("File resource type requires an uploaded file.");
@@ -293,7 +297,8 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         type: data.type,
         is_published: data.is_published,
         folder_id: data.folder_id || null,
-        voice_part: data.voice_part || null, // Include new field
+        voice_part: data.voice_part || null,
+        original_filename: finalOriginalFilename, // NEW: Include original filename
       };
 
       const { error: dbError } = await supabase
@@ -465,6 +470,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
               {currentType === 'file' && (
                 <ResourceUpload
                   currentFileUrl={editingResource?.type === 'file' && !removeFileRequested ? editingResource.url : null}
+                  originalFilename={editingResource?.type === 'file' && !removeFileRequested ? editingResource.original_filename : null} // NEW PROP
                   onFileChange={handleFileChange}
                   onRemoveRequested={handleRemoveRequested}
                   isSaving={isSaving}
