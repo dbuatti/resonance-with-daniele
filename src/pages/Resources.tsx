@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Link, useSearchParams } from "react-router-dom"; // Import useSearchParams
 import { useDropzone } from "react-dropzone"; // Import useDropzone
 import { cn } from "@/lib/utils"; // Import cn
+import ResourceSection from "@/components/ResourceSection"; // Import new component
 
 // Define Filter and Sort types
 type FilterType = 'all' | 'pdf' | 'audio' | 'link';
@@ -456,7 +457,33 @@ const Resources: React.FC = () => {
   }, [resources, searchTerm, filterType, filterVoicePart, sortBy, sortOrder]);
   // --- End Filtering and Sorting Logic ---
 
+  // --- Resource Categorization for Display ---
+  const categorizedResources = useMemo(() => {
+    const pdf: Resource[] = [];
+    const audio: Resource[] = [];
+    const links: Resource[] = [];
+
+    filteredAndSortedResources.forEach(resource => {
+        if (resource.type === 'url') {
+            links.push(resource);
+        } else if (resource.type === 'file' && resource.url) {
+            const url = resource.url.toLowerCase();
+            if (url.endsWith('.pdf')) {
+                pdf.push(resource);
+            } else if (url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a')) {
+                audio.push(resource);
+            } else {
+                // Fallback for other file types, treat as links for now
+                links.push(resource);
+            }
+        }
+    });
+    return { pdf, audio, links };
+  }, [filteredAndSortedResources]);
+  // --- End Resource Categorization ---
+
   const showSkeleton = loadingResources || loadingAllFolders;
+  const hasResources = Object.values(categorizedResources).some(arr => arr.length > 0);
 
   if (loadingSession) {
     return (
@@ -655,21 +682,35 @@ const Resources: React.FC = () => {
             </div>
           )}
 
-          {currentSubFolders.length > 0 && filteredAndSortedResources.length > 0 && <Separator />}
+          {currentSubFolders.length > 0 && hasResources && <Separator />}
 
-          {/* Resources */}
-          {filteredAndSortedResources.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredAndSortedResources.map((resource) => (
-                <ResourceCard
-                  key={resource.id}
-                  resource={resource}
-                  isAdmin={isAdmin}
-                  onEdit={() => handleOpenEditResourceDialog(resource)}
-                  onDelete={() => setResourceToDelete(resource)}
-                  onMove={handleOpenMoveResourceDialog} // Pass the new handler
-                />
-              ))}
+          {/* Categorized Resources */}
+          {hasResources ? (
+            <div className="space-y-10">
+              <ResourceSection
+                title="PDF Resources (Sheet Music, Lyrics)"
+                resources={categorizedResources.pdf}
+                isAdmin={isAdmin}
+                onEdit={handleOpenEditResourceDialog}
+                onDelete={(resource) => setResourceToDelete(resource)}
+                onMove={handleOpenMoveResourceDialog}
+              />
+              <ResourceSection
+                title="Audio Resources (Practice Tracks)"
+                resources={categorizedResources.audio}
+                isAdmin={isAdmin}
+                onEdit={handleOpenEditResourceDialog}
+                onDelete={(resource) => setResourceToDelete(resource)}
+                onMove={handleOpenMoveResourceDialog}
+              />
+              <ResourceSection
+                title="External Links"
+                resources={categorizedResources.links}
+                isAdmin={isAdmin}
+                onEdit={handleOpenEditResourceDialog}
+                onDelete={(resource) => setResourceToDelete(resource)}
+                onMove={handleOpenMoveResourceDialog}
+              />
             </div>
           ) : (
             currentSubFolders.length === 0 && (
