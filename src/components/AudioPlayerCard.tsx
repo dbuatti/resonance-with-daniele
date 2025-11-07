@@ -11,7 +11,9 @@ interface AudioPlayerCardProps {
   title: string;
 }
 
+// Helper function to format time as M:SS
 const formatTime = (seconds: number): string => {
+  if (isNaN(seconds) || seconds < 0) return "0:00";
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -82,65 +84,71 @@ const AudioPlayerCard: React.FC<AudioPlayerCardProps> = ({ src, onDownload, titl
   }, [handleTimeUpdate, handleLoadedMetadata, handleEnded]);
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const remainingTime = duration - currentTime;
 
   return (
-    <div className="p-4 bg-muted/50 dark:bg-muted/30 rounded-t-xl">
+    <div className="w-full">
       <audio ref={audioRef} src={src} preload="metadata" title={title} />
       
-      <div className="flex items-center space-x-4">
-        {/* Play/Pause Button */}
-        <Button
-          variant="default"
-          size="icon"
-          className="h-12 w-12 rounded-full shadow-lg flex-shrink-0"
-          onClick={togglePlayPause}
-          disabled={!isLoaded}
-        >
-          {!isLoaded ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : isPlaying ? (
-            <Pause className="h-6 w-6 fill-current" />
-          ) : (
-            <Play className="h-6 w-6 fill-current" />
-          )}
-        </Button>
-
-        {/* Progress Bar and Time */}
-        <div className="flex-1 min-w-0 space-y-1">
-          {/* Progress Bar */}
-          <div
-            className="relative h-2 w-full bg-border rounded-full cursor-pointer group"
-            onClick={handleSeek}
+      {/* Structured Control Area (Two-Tone Background) */}
+      <div className="p-4 pt-6 bg-secondary/50 dark:bg-secondary/30 rounded-t-xl space-y-4">
+        
+        <div className="flex items-center space-x-4">
+          {/* Play/Pause Button */}
+          <Button
+            variant="default"
+            size="icon"
+            className="h-12 w-12 rounded-full shadow-xl flex-shrink-0 transition-transform duration-150 hover:scale-[1.02]"
+            onClick={togglePlayPause}
+            disabled={!isLoaded}
           >
-            <div
-              className="absolute top-0 left-0 h-full bg-primary rounded-full"
-              style={{ width: `${progressPercentage}%` }}
-            />
-            {/* Scrubber Handle */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-primary shadow-md transition-all duration-100"
-              style={{ left: `calc(${progressPercentage}% - 8px)` }}
-            />
-          </div>
+            {!isLoaded ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : isPlaying ? (
+              <Pause className="h-6 w-6 fill-current" />
+            ) : (
+              <Play className="h-6 w-6 fill-current" />
+            )}
+          </Button>
 
-          {/* Time Display */}
-          <div className="flex justify-between text-sm font-mono">
-            <span className="font-bold text-foreground">{formatTime(currentTime)}</span>
-            <span className="text-muted-foreground">-{formatTime(remainingTime)}</span>
+          {/* Progress Bar and Time */}
+          <div className="flex-1 min-w-0 space-y-2">
+            {/* Progress Bar (Thicker, Primary Color) */}
+            <div
+              className="relative h-4 w-full bg-border rounded-full cursor-pointer group"
+              onClick={handleSeek}
+            >
+              <div
+                className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-100"
+                style={{ width: `${progressPercentage}%` }}
+              />
+              {/* Scrubber Handle */}
+              <div
+                className={cn(
+                  "absolute top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-primary shadow-lg transition-all duration-100 border-2 border-white dark:border-gray-800",
+                  !isLoaded && "hidden"
+                )}
+                style={{ left: `calc(${progressPercentage}% - 10px)` }}
+              />
+            </div>
+
+            {/* Time Display (Current / Total) */}
+            <div className="flex justify-between text-sm font-mono">
+              <span className="font-bold text-foreground">{formatTime(currentTime)}</span>
+              <span className="text-muted-foreground">{formatTime(duration)}</span>
+            </div>
           </div>
         </div>
+        
+        {/* Download Button (Prominent CTA) */}
+        <Button 
+          variant="default" // Use primary color for prominence
+          className="w-full mt-4" 
+          onClick={onDownload}
+          disabled={!isLoaded}
+        >
+          <Download className="mr-2 h-4 w-4" /> Download Audio File
+        </Button>
       </div>
-      
-      {/* Download Button (Option B: Keep download separate but prominent) */}
-      <Button 
-        variant="secondary" 
-        className="w-full mt-4" 
-        onClick={onDownload}
-        disabled={!isLoaded}
-      >
-        <Download className="mr-2 h-4 w-4" /> Download Audio File
-      </Button>
     </div>
   );
 };
