@@ -165,7 +165,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         </div>
         
         {/* Title, Pills, and Description Area (Main Display) */}
-        <div className={cn("px-4 pt-4 pb-2", useMediaBackdrop ? "pt-0 bg-card/80 backdrop-blur-sm" : "bg-transparent")}>
+        <div className={cn(
+          "px-4 pb-2", 
+          // If media backdrop is used, override pt-4 with pt-6 for better spacing below the media area
+          useMediaBackdrop ? "pt-6 bg-card/80 backdrop-blur-sm" : "pt-4 bg-transparent"
+        )}>
           
           {/* Header Row: Icon + Title + Pills + Draft Badge */}
           <div className="flex items-center justify-between gap-2 mb-2">
