@@ -108,9 +108,9 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 <CardTitle className="text-lg font-lora line-clamp-1 text-foreground">
                   {resource.title}
                 </CardTitle>
-                {isAdmin && (
-                  <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs flex-shrink-0">
-                    {isPublished ? "Published" : "Draft"}
+                {isAdmin && !isPublished && ( // Only show if admin AND NOT published (i.e., Draft)
+                  <Badge variant="destructive" className="text-xs flex-shrink-0">
+                    Draft
                   </Badge>
                 )}
               </div>
@@ -140,9 +140,9 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                   )}
                   <CardTitle className="text-xl font-lora line-clamp-2">{resource.title}</CardTitle>
                 </div>
-                {isAdmin && (
-                  <Badge variant={isPublished ? "secondary" : "destructive"} className="text-xs flex-shrink-0">
-                    {isPublished ? "Published" : "Draft"}
+                {isAdmin && !isPublished && ( // Only show if admin AND NOT published (i.e., Draft)
+                  <Badge variant="destructive" className="text-xs flex-shrink-0">
+                    Draft
                   </Badge>
                 )}
               </div>
