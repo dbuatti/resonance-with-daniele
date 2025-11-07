@@ -328,199 +328,201 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-lora">{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 py-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Sheet Music - Bohemian Rhapsody" {...field} disabled={isSaving} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Practice track for Soprano part..." {...field} className="min-h-[80px]" disabled={isSaving} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Resource Type</FormLabel>
-                  <Select onValueChange={(value: 'file' | 'url') => {
-                    field.onChange(value);
-                    setSelectedFile(null);
-                    setRemoveFileRequested(false);
-                    form.setValue('url', null);
-                  }} defaultValue={field.value} disabled={isSaving}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select resource type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="file">
-                        <div className="flex items-center gap-2"><FileText className="h-4 w-4" /> File Upload (PDF/Audio)</div>
-                      </SelectItem>
-                      <SelectItem value="url">
-                        <div className="flex items-center gap-2"><LinkIcon className="h-4 w-4" /> External Link (URL)</div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="voice_part"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Voice Part (Optional)</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(value === "null" ? null : value)}
-                    value={field.value || "null"}
-                    disabled={isSaving}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select voice part" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="null">
-                        <div className="flex items-center gap-2">
-                          <Folder className="h-4 w-4 text-muted-foreground" /> General / Full Choir
-                        </div>
-                      </SelectItem>
-                      {voiceParts.map((part) => (
-                        <SelectItem key={part} value={part}>
-                          {part}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="folder_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Folder Location</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(value === "null" ? null : value)}
-                    value={field.value || "null"}
-                    disabled={isSaving || loadingFolders}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select folder (Root)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="null">
-                        <div className="flex items-center gap-2">
-                          <Folder className="h-4 w-4 text-muted-foreground" /> Home (Root)
-                        </div>
-                      </SelectItem>
-                      {allFolders?.map((folder) => (
-                        <SelectItem key={folder.id} value={folder.id}>
-                          <div className="flex items-center gap-2">
-                            <Folder className="h-4 w-4 text-muted-foreground" /> {getFolderPathDisplay(folder.id)}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {currentType === 'file' && (
-              <ResourceUpload
-                currentFileUrl={editingResource?.type === 'file' && !removeFileRequested ? editingResource.url : null}
-                onFileChange={handleFileChange}
-                onRemoveRequested={handleRemoveRequested}
-                isSaving={isSaving}
-                selectedFile={selectedFile}
-                folderPathDisplay={getFolderPathDisplay(form.watch('folder_id') || null)}
-              />
-            )}
-
-            {currentType === 'url' && (
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <div className="grid gap-6 py-4 overflow-y-auto flex-grow">
               <FormField
                 control={form.control}
-                name="url"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>External URL</FormLabel>
+                    <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="https://youtube.com/watch?v=..." 
-                        {...field} 
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        disabled={isSaving} 
-                      />
+                      <Input placeholder="Sheet Music - Bohemian Rhapsody" {...field} disabled={isSaving} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
 
-            <FormField
-              control={form.control}
-              name="is_published"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Practice track for Soprano part..." {...field} className="min-h-[80px]" disabled={isSaving} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resource Type</FormLabel>
+                    <Select onValueChange={(value: 'file' | 'url') => {
+                      field.onChange(value);
+                      setSelectedFile(null);
+                      setRemoveFileRequested(false);
+                      form.setValue('url', null);
+                    }} defaultValue={field.value} disabled={isSaving}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select resource type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="file">
+                          <div className="flex items-center gap-2"><FileText className="h-4 w-4" /> File Upload (PDF/Audio)</div>
+                        </SelectItem>
+                        <SelectItem value="url">
+                          <div className="flex items-center gap-2"><LinkIcon className="h-4 w-4" /> External Link (URL)</div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="voice_part"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Voice Part (Optional)</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "null" ? null : value)}
+                      value={field.value || "null"}
                       disabled={isSaving}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Publish Resource
-                    </FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      If checked, this resource will be visible to all logged-in members.
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select voice part" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="null">
+                          <div className="flex items-center gap-2">
+                            <Folder className="h-4 w-4 text-muted-foreground" /> General / Full Choir
+                          </div>
+                        </SelectItem>
+                        {voiceParts.map((part) => (
+                          <SelectItem key={part} value={part}>
+                            {part}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <DialogFooter>
+              <FormField
+                control={form.control}
+                name="folder_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Folder Location</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "null" ? null : value)}
+                      value={field.value || "null"}
+                      disabled={isSaving || loadingFolders}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select folder (Root)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="null">
+                          <div className="flex items-center gap-2">
+                            <Folder className="h-4 w-4 text-muted-foreground" /> Home (Root)
+                          </div>
+                        </SelectItem>
+                        {allFolders?.map((folder) => (
+                          <SelectItem key={folder.id} value={folder.id}>
+                            <div className="flex items-center gap-2">
+                              <Folder className="h-4 w-4 text-muted-foreground" /> {getFolderPathDisplay(folder.id)}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {currentType === 'file' && (
+                <ResourceUpload
+                  currentFileUrl={editingResource?.type === 'file' && !removeFileRequested ? editingResource.url : null}
+                  onFileChange={handleFileChange}
+                  onRemoveRequested={handleRemoveRequested}
+                  isSaving={isSaving}
+                  selectedFile={selectedFile}
+                  folderPathDisplay={getFolderPathDisplay(form.watch('folder_id') || null)}
+                />
+              )}
+
+              {currentType === 'url' && (
+                <FormField
+                  control={form.control}
+                  name="url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>External URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://youtube.com/watch?v=..." 
+                          {...field} 
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          disabled={isSaving} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="is_published"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isSaving}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Publish Resource
+                      </FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        If checked, this resource will be visible to all logged-in members.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancel
               </Button>
