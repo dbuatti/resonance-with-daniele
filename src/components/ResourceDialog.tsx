@@ -328,13 +328,13 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col p-0"> {/* Removed default padding */}
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col p-0 overflow-hidden"> {/* Added overflow-hidden to DialogContent */}
+        <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle className="font-lora">{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-            <div className="grid gap-6 p-6 overflow-y-auto flex-grow"> {/* Added p-6 here */}
+            <div className="grid gap-6 p-6 overflow-y-auto flex-grow"> {/* This is the scrollable area */}
               <FormField
                 control={form.control}
                 name="title"
@@ -522,7 +522,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
               />
             </div>
 
-            <DialogFooter className="p-6 pt-4 border-t border-border">
+            <DialogFooter className="p-6 pt-4 border-t border-border flex-shrink-0">
               <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancel
               </Button>
