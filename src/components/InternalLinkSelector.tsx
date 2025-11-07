@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Resource, ResourceFolder } from "@/types/Resource";
 import { Loader2, Home, CalendarDays, FileText, Music, Folder, Link as LinkIcon, Mic2, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button"; // FIX: Added Button import
 
 interface InternalLinkSelectorProps {
   value: string;
@@ -77,7 +78,7 @@ const InternalLinkSelector: React.FC<InternalLinkSelectorProps> = ({ value, onCh
   const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("id, name, parent_folder_id")
+      .select("*") // FIX: Select all fields to satisfy ResourceFolder type
       .order("name", { ascending: true });
     if (error) throw new Error("Failed to load folders.");
     return data || [];
@@ -98,7 +99,7 @@ const InternalLinkSelector: React.FC<InternalLinkSelectorProps> = ({ value, onCh
   const fetchAllResources = async (): Promise<Resource[]> => {
     const { data, error } = await supabase
       .from("resources")
-      .select("id, title, type, folder_id")
+      .select("*") // FIX: Select all fields to satisfy Resource type
       .eq("is_published", true) // Only show published resources
       .order("title", { ascending: true });
     if (error) throw new Error("Failed to load resources.");
