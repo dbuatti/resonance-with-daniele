@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText, User as UserIcon, Settings, ClipboardList, CheckCircle2 } from "lucide-react";
+import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText, User as UserIcon, Settings, ClipboardList, CheckCircle2, Folder } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import LatestAnnouncementsCard from "@/components/dashboard/LatestAnnouncementsCard";
 import CoreHubLinks from "@/components/dashboard/CoreHubLinks"; // Import new component
 import { Button } from "@/components/ui/button"; // Ensure Button is imported
-import { getResourcePillType } from "@/types/Resource"; // Import helper
+import { getResourcePillType, Resource, ResourceFolder } from "@/types/Resource"; // Import Resource and ResourceFolder
 import { Badge } from "@/components/ui/badge"; // Import Badge
 import { cn } from "@/lib/utils"; // Import cn
 
@@ -23,14 +23,6 @@ interface Event {
   location?: string;
   description?: string;
   humanitix_link?: string;
-}
-
-interface Resource {
-  id: string;
-  title: string;
-  description?: string;
-  url: string;
-  type: 'file' | 'url' | 'youtube' | 'lyrics';
 }
 
 // Define colors for resource type pills (White background, colored text/border)
@@ -114,7 +106,7 @@ const WelcomeHub: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("resources")
-        .select("id, title, description, url, type") // Select type
+        .select("id, title, description, url, type, folder_id, is_published, created_at, voice_part, original_filename, sort_order") // Select all fields for full Resource type compatibility
         .eq("is_published", true) // Only show published resources
         .order("created_at", { ascending: false })
         .limit(3);
@@ -124,6 +116,33 @@ const WelcomeHub: React.FC = () => {
         throw error;
       }
       return data || [];
+    },
+    enabled: !loadingSession,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // 4. Fetch nominated folder (Next Song)
+  const { data: nominatedFolder, isLoading: loadingNominatedFolder } = useQuery<
+    ResourceFolder | null,
+    Error,
+    ResourceFolder | null,
+    ['nominatedFolder']
+  >({
+    queryKey: ['nominatedFolder'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("resource_folders")
+        .select("*")
+        .eq("is_nominated_for_dashboard", true)
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("[WelcomeHub] Error fetching nominated folder:", error);
+        throw error;
+      }
+      return data || null;
     },
     enabled: !loadingSession,
     staleTime: 5 * 60 * 1000,
@@ -146,7 +165,7 @@ const WelcomeHub: React.FC = () => {
   ) : false;
 
   const isProfileCompleted = profile && profile.first_name && profile.last_name;
-  const isLoading = loadingSession || loadingEvent || loadingResources || loadingRsvp;
+  const isLoading = loadingSession || loadingEvent || loadingResources || loadingRsvp || loadingNominatedFolder;
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
 
   if (isLoading) {
@@ -221,6 +240,31 @@ const WelcomeHub: React.FC = () => {
           
           {/* Core Hub Links (New Visual Cards) */}
           <CoreHubLinks />
+
+          {/* Nominated Folder Card (Next Song) */}
+          {nominatedFolder && (
+            <Card className="bg-accent/10 border-l-4 border-accent p-6 shadow-md rounded-xl mt-8 dark:bg-accent/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
+                <CardTitle className="text-xl font-lora flex items-center gap-2 text-accent-foreground">
+                  <Music className="h-6 w-6 text-accent" /> Next Song Practice: {nominatedFolder.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 space-y-4">
+                <p className="text-base text-muted-foreground">
+                  All resources for our next song are ready! Click below to access sheet music, audio tracks, and lyrics.
+                </p>
+                <Button 
+                  size="sm" 
+                  className="bg-accent text-accent-foreground hover:bg-accent/90 w-full dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90" 
+                  asChild
+                >
+                  <Link to={`/resources?folderId=${nominatedFolder.id}`}>
+                    <Folder className="mr-2 h-4 w-4" /> Go to Folder
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Profile Completion Card */}
           {!isProfileCompleted && (

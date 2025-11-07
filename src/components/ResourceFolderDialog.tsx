@@ -73,7 +73,7 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
   const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("id, name, parent_folder_id, user_id, created_at, updated_at") // Select all required fields
+      .select("*") // Select all fields to include is_nominated_for_dashboard
       .order("name", { ascending: true });
 
     if (error) {
@@ -182,6 +182,8 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
       user_id: user.id,
       name: data.name,
       parent_folder_id: data.parent_folder_id || null,
+      // Preserve nomination status if editing
+      is_nominated_for_dashboard: editingFolder?.is_nominated_for_dashboard ?? false,
     };
 
     try {

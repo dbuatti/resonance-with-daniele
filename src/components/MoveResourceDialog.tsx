@@ -48,7 +48,7 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
     console.log("[MoveResourceDialog] Fetching all folders.");
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("id, name, parent_folder_id, user_id, created_at, updated_at")
+      .select("*") // Select all fields to include is_nominated_for_dashboard
       .order("name", { ascending: true });
 
     if (error) {

@@ -2,13 +2,14 @@
 
 import React, { useCallback } from "react";
 import { CardTitle } from "@/components/ui/card";
-import { Edit, Trash2, Loader2, UploadCloud } from "lucide-react";
+import { Edit, Trash2, Loader2, UploadCloud, Star, StarOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSession } from "@/integrations/supabase/auth";
 import { ResourceFolder } from "@/types/Resource";
 import { cn } from "@/lib/utils";
 import { useDropzone } from "react-dropzone";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip
 
 interface ResourceFolderCardProps {
   folder: ResourceFolder;
@@ -18,6 +19,7 @@ interface ResourceFolderCardProps {
   isDeleting: boolean;
   onFileUpload: (file: File, folderId: string) => void;
   isUploading: boolean;
+  onToggleNomination: (folder: ResourceFolder) => void; // New prop
 }
 
 const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
@@ -28,6 +30,7 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
   isDeleting,
   onFileUpload,
   isUploading,
+  onToggleNomination, // Destructure new prop
 }) => {
   const { user } = useSession();
   const isAdmin = user?.is_admin;
@@ -69,6 +72,9 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
         "flex flex-col justify-between h-full transition-all duration-300 rounded-xl bg-transparent cursor-pointer",
         "hover:bg-muted/50 hover:shadow-sm", // Subtle hover effect
         
+        // Nomination highlight
+        folder.is_nominated_for_dashboard && "border-4 border-accent ring-4 ring-accent/50 bg-accent/5 dark:bg-accent/10",
+
         // Drag Active/Accept Feedback
         isDragActive && isAdmin && "border-4 border-dashed",
         isDragAccept && isAdmin && "border-primary ring-4 ring-primary/50 bg-primary/10", // Valid drop target
@@ -85,6 +91,13 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
           "flex-grow rounded-t-xl"
         )}
       >
+        {/* Nomination Badge */}
+        {folder.is_nominated_for_dashboard && (
+          <div className="absolute top-2 left-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold shadow-md flex items-center gap-1">
+            <Star className="h-3 w-3 fill-current" /> Next Song
+          </div>
+        )}
+
         {/* Massive Folder Icon / Image */}
         {isUploading ? (
           <Loader2 className="h-48 w-48 text-primary mb-4 animate-spin" />
@@ -114,6 +127,29 @@ const ResourceFolderCard: React.FC<ResourceFolderCardProps> = ({
       {/* Admin Actions (if applicable) - Visually separated footer */}
       {isAdmin && (
         <div className="pt-2 pb-4 px-4 flex justify-end gap-2 border-t border-border bg-muted/30 rounded-b-xl">
+          
+          {/* Nomination Toggle Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onToggleNomination(folder)}
+                disabled={isDeleting || isUploading}
+                className="admin-action-button"
+              >
+                {folder.is_nominated_for_dashboard ? (
+                  <StarOff className="h-4 w-4 text-accent" />
+                ) : (
+                  <Star className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {folder.is_nominated_for_dashboard ? "Un-nominate from Dashboard" : "Nominate for Dashboard (Next Song)"}
+            </TooltipContent>
+          </Tooltip>
+
           <Button
             variant="outline"
             size="sm"

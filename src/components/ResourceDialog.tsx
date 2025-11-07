@@ -86,7 +86,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
   const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("id, name, parent_folder_id, user_id, created_at, updated_at") // Select all required fields
+      .select("*") // Select all fields to include is_nominated_for_dashboard
       .order("name", { ascending: true });
 
     if (error) {

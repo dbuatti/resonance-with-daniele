@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, FileText, Headphones, Link as LinkIcon, Edit, Trash2, Search, Filter, SortAsc, Folder, Home, ChevronRight, AlertCircle, UploadCloud, Mic2, Youtube } from "lucide-react";
+import { Loader2, Plus, FileText, Headphones, Link as LinkIcon, Edit, Trash2, Search, Filter, SortAsc, Folder, Home, ChevronRight, AlertCircle, UploadCloud, Mic2, Youtube, StarOff, Star } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -331,6 +331,45 @@ const Resources: React.FC = () => {
     setEditingFolder(null);
   };
 
+  const handleToggleNomination = async (folder: ResourceFolder) => {
+    if (!isAdmin) return;
+
+    const newStatus = !folder.is_nominated_for_dashboard;
+
+    // If nominating, check if another folder is already nominated and un-nominate it first
+    if (newStatus) {
+      const currentNominated = allFolders?.find(f => f.is_nominated_for_dashboard);
+      if (currentNominated && currentNominated.id !== folder.id) {
+        // Un-nominate the old one first
+        const { error: unNominateError } = await supabase
+          .from("resource_folders")
+          .update({ is_nominated_for_dashboard: false, updated_at: new Date().toISOString() })
+          .eq("id", currentNominated.id);
+        
+        if (unNominateError) {
+          showError("Failed to un-nominate previous folder.");
+          return;
+        }
+      }
+    }
+
+    // Nominate/Un-nominate the target folder
+    const { error } = await supabase
+      .from("resource_folders")
+      .update({ is_nominated_for_dashboard: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", folder.id);
+
+    if (error) {
+      console.error("Error updating nomination status:", error);
+      showError(`Failed to ${newStatus ? 'nominate' : 'un-nominate'} folder: ${error.message}`);
+    } else {
+      showSuccess(`Folder "${folder.name}" ${newStatus ? 'nominated' : 'un-nominated'} successfully!`);
+      // Invalidate all folder and dashboard queries
+      queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] });
+      queryClient.invalidateQueries({ queryKey: ['nominatedFolder'] });
+    }
+  };
+
   const handleDeleteResource = async () => {
     if (!resourceToDelete || !isAdmin) return;
 
@@ -390,6 +429,7 @@ const Resources: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ['resources'] }); // Invalidate all resources
         queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] }); // Invalidate all folders
         queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
+        queryClient.invalidateQueries({ queryKey: ['nominatedFolder'] });
         
         // If the deleted folder was the current view, navigate to its parent or root
         if (currentFolderId === folderId) {
@@ -760,6 +800,7 @@ const Resources: React.FC = () => {
                   isDeleting={isDeletingFolder}
                   onFileUpload={(file) => handleFileUploadToFolder(file, folder.id)}
                   isUploading={isUploadingFileToFolder === folder.id}
+                  onToggleNomination={handleToggleNomination}
                 />
               ))}
             </div>
