@@ -334,7 +334,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-            <div className="grid gap-6 py-4 overflow-y-auto flex-grow">
+            <div className="grid gap-6 py-4 overflow-y-auto flex-grow pr-4"> {/* Added pr-4 for scrollbar padding */}
               <FormField
                 control={form.control}
                 name="title"
