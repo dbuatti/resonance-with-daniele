@@ -273,36 +273,19 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                   </TooltipTrigger>
                   <TooltipContent>Edit Resource</TooltipContent>
                 </Tooltip>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="h-8 w-8"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Delete Resource</TooltipContent>
-                    </Tooltip>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Confirm Resource Deletion</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete the resource: <strong>{resource.title}</strong>? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDelete(resource)}>
-                        Delete Resource
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onDelete(resource)} // Call onDelete directly to set state in parent
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Resource</TooltipContent>
+                </Tooltip>
               </div>
             )}
           </div>
