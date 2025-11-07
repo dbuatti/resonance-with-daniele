@@ -24,6 +24,7 @@ import { Link, useSearchParams } from "react-router-dom"; // Import useSearchPar
 import { useDropzone } from "react-dropzone"; // Import useDropzone
 import { cn } from "@/lib/utils"; // Import cn
 import SortableResourceList from "@/components/SortableResourceList"; // Import new component
+import { useDebounce } from "@/hooks/use-debounce"; // Import useDebounce
 
 // Define Filter and Sort types
 type FilterType = 'all' | 'pdf' | 'audio' | 'link';
@@ -61,7 +62,8 @@ const Resources: React.FC = () => {
   const [isUploadingFileToFolder, setIsUploadingFileToFolder] = useState<string | null>(null); // Folder ID being uploaded to
 
   // Filter/Sort states
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // Local state for input field
+  const debouncedSearchTerm = useDebounce(searchInput, 300); // Debounced state for query
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [filterVoicePart, setFilterVoicePart] = useState<VoicePartFilter>('all'); // New state for voice part filter
   const [sortBy, setSortBy] = useState<SortBy>('sort_order'); // Default to custom sort order
@@ -137,9 +139,9 @@ const Resources: React.FC = () => {
     Resource[],
     Error,
     Resource[],
-    ['resources', string | null, string] // Query key now includes folderId AND searchTerm
+    ['resources', string | null, string] // Query key now includes folderId AND debouncedSearchTerm
   >({
-    queryKey: ['resources', currentFolderId, searchTerm],
+    queryKey: ['resources', currentFolderId, debouncedSearchTerm],
     queryFn: ({ queryKey }) => fetchResources(queryKey[1], queryKey[2]),
     enabled: !loadingSession,
     staleTime: 5 * 60 * 1000,
@@ -151,9 +153,9 @@ const Resources: React.FC = () => {
   // Get sub-folders for the current view
   const currentSubFolders = useMemo(() => {
     // Only show subfolders if no search term is active
-    if (searchTerm) return [];
+    if (debouncedSearchTerm) return [];
     return allFolders?.filter(f => f.parent_folder_id === currentFolderId) || [];
-  }, [allFolders, currentFolderId, searchTerm]);
+  }, [allFolders, currentFolderId, debouncedSearchTerm]);
 
   // Build Breadcrumbs
   const breadcrumbs = useMemo(() => {
@@ -281,7 +283,7 @@ const Resources: React.FC = () => {
     } else {
       setSearchParams({}); // Clear folderId param to go to root
     }
-    setSearchTerm(""); // Clear search on navigation
+    setSearchInput(""); // Clear local search input on navigation
   };
 
   const handleOpenCreateResourceDialog = () => {
@@ -632,8 +634,8 @@ const Resources: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/80" />
               <Input
                 placeholder="Search resources..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchInput} // Use local state for input
+                onChange={(e) => setSearchInput(e.target.value)} // Update local state
                 className="pl-10 placeholder:text-foreground/70"
                 disabled={loadingResources}
               />
@@ -749,7 +751,7 @@ const Resources: React.FC = () => {
             </div>
           )}
 
-          {currentSubFolders.length > 0 && hasResources && !searchTerm && <Separator />}
+          {currentSubFolders.length > 0 && hasResources && !debouncedSearchTerm && <Separator />}
 
           {/* Categorized Resources */}
           {hasResources ? (
@@ -772,7 +774,7 @@ const Resources: React.FC = () => {
               <Card className="p-8 text-center shadow-lg">
                 <CardTitle className="text-xl">No Content Found</CardTitle>
                 <CardDescription className="mt-2">
-                  {searchTerm || filterType !== 'all' || filterVoicePart !== 'all'
+                  {debouncedSearchTerm || filterType !== 'all' || filterVoicePart !== 'all'
                     ? "Try adjusting your search or filters."
                     : "This folder is empty. Add a new resource or folder above."}
                 </CardDescription>
