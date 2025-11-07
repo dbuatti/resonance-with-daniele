@@ -90,22 +90,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     }
   };
 
-  // Determine the primary button text and icon based on type
-  const getPrimaryButtonDetails = () => {
-    if (fileDetails.isPdf) {
-      return { text: "View / Download PDF", icon: <Download className="h-4 w-4 mr-2" /> };
-    }
-    if (fileDetails.isAudio) {
-      return { text: "Listen to Audio", icon: <Headphones className="h-4 w-4 mr-2" /> };
-    }
-    if (isLink) {
-      return { text: "View Link", icon: <ExternalLink className="h-4 w-4 mr-2" /> };
-    }
-    return { text: "View Resource", icon: <FileSearch className="h-4 w-4 mr-2" /> };
-  };
-
-  const primaryButtonDetails = getPrimaryButtonDetails();
-
   // Determine if we should use the backdrop style (PDF)
   const useBackdropStyle = isFile && fileDetails.isPdf;
 
@@ -116,22 +100,20 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         !isPublished && isAdmin && "border-l-4 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20"
       )}>
         
-        {/* Main Content Area (Header + Preview) */}
+        {/* Main Content Area (Preview for PDF) */}
         <div className={cn(
           "relative overflow-hidden",
-          useBackdropStyle ? "h-64 rounded-t-xl" : "p-6 rounded-xl" // Fixed height for PDF backdrop
+          useBackdropStyle ? "h-64 rounded-t-xl" : "hidden" // Only show this block for PDF backdrop
         )}>
           
-          {useBackdropStyle ? (
+          {useBackdropStyle && (
             <div className="relative h-full">
               
               {/* PDF Preview Area (Iframe) */}
               <iframe
                 src={resource.url} // Clean URL
                 title={`Preview of ${resource.title}`}
-                // Adjusted positioning: start at top-0
                 className="w-full border-none absolute left-0 right-0 top-0" 
-                // Adjusted height: 100% of container + 40px offset (to hide toolbar)
                 style={{ height: 'calc(100% + 40px)', marginTop: '-40px' }}
               />
 
@@ -146,48 +128,34 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                   <Download className="h-5 w-5" />
               </Button>
             </div>
-          ) : (
-            // Standard Header for Links and Audio/Other Files
-            <CardHeader className="p-0 pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {isLink ? (
-                    <LinkIcon className="h-6 w-6 text-primary" />
-                  ) : (
-                    <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground">
-                      {fileDetails.icon}
-                    </div>
-                  )}
-                  <CardTitle className="text-xl font-lora line-clamp-2">{resource.title}</CardTitle>
-                </div>
-                {isAdmin && !isPublished && ( // Only show if admin AND NOT published (i.e., Draft)
-                  <Badge variant="destructive" className="text-xs flex-shrink-0">
-                    Draft
-                  </Badge>
-                )}
-              </div>
-              <CardDescription className="text-sm text-muted-foreground line-clamp-3 min-h-[40px] mt-2">
-                {resource.description || (isLink ? "External Link" : fileDetails.type)}
-              </CardDescription>
-            </CardHeader>
           )}
         </div>
         
-        {/* Title, Status, Pills, and Description Area (For PDF Backdrop Style) */}
+        {/* Title, Pills, File Details, and Description Area (Main Display) */}
         <div className={cn("px-4 pt-4 pb-2 bg-card", useBackdropStyle && "pt-0")}>
-          <div className="flex items-center justify-between mb-2">
-              <CardTitle className="text-xl font-lora line-clamp-1 text-foreground">
-                  {resource.title}
-              </CardTitle>
-              {isAdmin && !isPublished && !useBackdropStyle && ( // Show Draft badge here if not using backdrop style
-                  <Badge variant="destructive" className="text-xs flex-shrink-0">
+          <div className="flex items-start justify-between mb-2">
+              {/* 1. Title and Icon (Only for non-PDF files) */}
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {!useBackdropStyle && (
+                    <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground">
+                        {isLink ? <LinkIcon className="h-6 w-6" /> : fileDetails.icon}
+                    </div>
+                )}
+                <CardTitle className="text-xl font-lora line-clamp-2 text-foreground">
+                    {resource.title}
+                </CardTitle>
+              </div>
+              
+              {/* 2. Draft Badge (Admin only) */}
+              {isAdmin && !isPublished && (
+                  <Badge variant="destructive" className="text-xs flex-shrink-0 ml-2">
                       Draft
                   </Badge>
               )}
           </div>
           
-          {/* Pills Section */}
-          <div className="flex flex-wrap gap-2 mb-3">
+          {/* Pills Section & File Name (Combined for compactness) */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
             {/* Resource Type Pill */}
             <Badge className={cn("text-xs font-semibold", resourcePillClass)}>
               {resourcePillText}
@@ -202,15 +170,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 {resource.voice_part}
               </Badge>
             )}
+            
+            {/* File Name Display for uploaded files */}
+            {isFile && fileDetails.fileName !== 'N/A' && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0">
+                    <File className="h-3 w-3" />
+                    <span className="font-mono truncate max-w-[90%]">{fileDetails.fileName}</span>
+                </p>
+            )}
           </div>
-
-          {/* File Name Display for uploaded files */}
-          {isFile && fileDetails.fileName !== 'N/A' && (
-            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-              <File className="h-3 w-3" />
-              <span className="font-mono truncate max-w-[90%]">{fileDetails.fileName}</span>
-            </p>
-          )}
 
           {/* Description */}
           <p className="text-sm text-muted-foreground line-clamp-2">
@@ -221,10 +189,9 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Footer Content (Buttons and Date) */}
         <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
-            {/* Audio Player (Inline) */}
+            {/* Audio Player (Inline) - FIX: Removed type attribute */}
             {fileDetails.isAudio && resource.url && (
-              <audio controls className="w-full h-10">
-                <source src={resource.url} type="audio/mpeg" />
+              <audio controls src={resource.url} className="w-full h-10">
                 Your browser does not support the audio element.
               </audio>
             )}
@@ -236,8 +203,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 className="w-full" 
                 disabled={!resource.url}
               >
-                {primaryButtonDetails.icon}
-                <span>{primaryButtonDetails.text}</span>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                <span>View Link</span>
               </Button>
             )}
             
