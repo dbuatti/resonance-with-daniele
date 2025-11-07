@@ -153,11 +153,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           )}
         </div>
         
-        {/* File Name Display (Only for PDF Backdrop Style) */}
+        {/* File Name Display (Only for PDF Backdrop Style) - Now showing resource title */}
         {useBackdropStyle && (
           <div className="px-4 py-2 bg-muted/50 border-t border-border">
             <p className="text-xs font-sans uppercase font-semibold text-muted-foreground truncate">
-              {fileDetails.fileName}
+              {resource.title}
             </p>
           </div>
         )}
