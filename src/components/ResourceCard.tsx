@@ -109,10 +109,23 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               "pt-0 pb-4",
             )}
           >
-            <div className="bg-white dark:bg-card border border-border rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
-              {fileDetails.icon}
-              <p className="text-sm font-medium text-foreground line-clamp-1">{fileDetails.fileName}</p>
-              <p className="text-xs text-muted-foreground">{fileDetails.type}</p>
+            <div className="bg-white dark:bg-card border border-border rounded-lg shadow-inner h-48 overflow-hidden">
+              {fileDetails.isPdf && resource.url ? (
+                // PDF Preview using iframe
+                <iframe
+                  src={resource.url}
+                  title={`Preview of ${resource.title}`}
+                  className="w-full h-full border-none"
+                  // The browser's native PDF viewer will render the content within this constrained space.
+                />
+              ) : (
+                // Generic File/Audio Preview
+                <div className="p-6 flex flex-col items-center justify-center text-center space-y-3 h-full">
+                  {fileDetails.icon}
+                  <p className="text-sm font-medium text-foreground line-clamp-1">{fileDetails.fileName}</p>
+                  <p className="text-xs text-muted-foreground">{fileDetails.type}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         )}
