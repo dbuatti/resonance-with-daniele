@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import AudioPlayerCard from './AudioPlayerCard'; // Import the new component
 
 interface ResourceCardProps {
   resource: Resource;
@@ -66,8 +67,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     const isPdf = url.endsWith('.pdf');
     const isAudio = url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a');
 
-    // We no longer need to parse the filename from the URL path, we use original_filename
-    
     if (isPdf) {
       return { icon: <FileText className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf, isAudio: false };
     }
@@ -142,16 +141,13 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 </div>
               )}
 
-              {/* Content specific to Audio (Improved Layout) */}
+              {/* Content specific to Audio (NEW CUSTOM PLAYER) */}
               {fileDetails.isAudio && resource.url && (
-                <div className="p-6 w-full space-y-4">
-                  <div className="flex items-center justify-center">
-                    <Headphones className="h-16 w-16 text-primary" />
-                  </div>
-                  <audio controls src={resource.url} className="w-full h-10" />
-                  
-                  {/* Download Button (Bottom Right - removed from preview, consolidated to main action) */}
-                </div>
+                <AudioPlayerCard 
+                  src={resource.url} 
+                  title={resource.title} 
+                  onDownload={handlePrimaryAction} // Use the primary action handler for download
+                />
               )}
             </div>
           )}
@@ -234,7 +230,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
             {/* Primary Action Button (Visible for all non-admin users) */}
-            {!isAdmin && resource.url && (
+            {/* Only show for PDF and Link now, Audio uses its own integrated download button */}
+            {!isAdmin && resource.url && (fileDetails.isPdf || isLink) && (
               <Button 
                 onClick={handlePrimaryAction} 
                 className="w-full" 
