@@ -94,18 +94,10 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             <div className="relative h-full">
               {/* Custom Header (Solid Dark Area) */}
               <div className="absolute top-0 left-0 right-0 h-16 bg-gray-900 dark:bg-gray-900 p-4 flex items-center justify-between z-10">
-                {/* Title and Description (Top Left) */}
+                {/* Title (Top Left) - Simplified */}
                 <div className="flex items-center gap-3 max-w-[80%]">
-                  {/* Large Icon */}
-                  <div className="bg-primary p-3 rounded-full flex-shrink-0">
-                    <FileText className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-lora line-clamp-1 text-primary-foreground">{resource.title}</CardTitle>
-                    <CardDescription className="text-sm line-clamp-1 text-primary-foreground/80">
-                      {resource.description || fileDetails.type}
-                    </CardDescription>
-                  </div>
+                  <CardTitle className="text-2xl font-lora line-clamp-1 text-primary-foreground">{resource.title}</CardTitle>
+                  {/* Removed CardDescription (PDF Document text) */}
                 </div>
                 
                 {/* Small PDF Icon (Top Right) */}
@@ -151,6 +143,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           )}
         </div>
         
+        {/* New: File Name Display (Only for PDF Backdrop Style) */}
+        {useBackdropStyle && (
+          <div className="px-4 py-2 bg-muted/50 border-t border-border">
+            <p className="text-xs font-sans uppercase font-semibold text-muted-foreground truncate">
+              {fileDetails.fileName}
+            </p>
+          </div>
+        )}
+
         {/* Footer Content (Buttons and Date) */}
         <CardContent className="p-4">
           <div className="flex flex-col gap-3">
