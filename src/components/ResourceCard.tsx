@@ -203,7 +203,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
           {/* Description */}
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {resource.description || (isLink ? "External Link" : fileDetails.type)}
+            {resource.description || ""}
           </p>
         </div>
 
