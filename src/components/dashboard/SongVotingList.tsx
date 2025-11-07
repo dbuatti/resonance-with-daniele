@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/form";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DialogDescription } from "@/components/ui/dialog"; // Import DialogDescription
 
 interface SongSuggestion {
   id: string;
@@ -510,7 +511,7 @@ const SongVotingList: React.FC = () => {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Song Suggestion</DialogTitle>
-              <CardDescription>Update the details for this song suggestion.</CardDescription>
+              <DialogDescription>Update the details for this song suggestion.</DialogDescription> {/* Added DialogDescription */}
             </DialogHeader>
             <Form {...editForm}>
               <form onSubmit={editForm.handleSubmit(handleEditSongSubmit)} className="grid gap-6 py-4">
