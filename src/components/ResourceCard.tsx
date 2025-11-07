@@ -97,7 +97,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 {/* Title (Top Left) - Simplified */}
                 <div className="flex items-center gap-3 max-w-[80%]">
                   <CardTitle className="text-2xl font-lora line-clamp-1 text-primary-foreground">{resource.title}</CardTitle>
-                  {/* Removed CardDescription (PDF Document text) */}
                 </div>
                 
                 {/* Small PDF Icon (Top Right) */}
@@ -115,6 +114,17 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
                 // Height: 100% of container minus header height (64px) + 40px offset (to hide toolbar)
                 style={{ height: 'calc(100% - 64px + 40px)', marginTop: '-40px' }}
               />
+
+              {/* New: Overlay Download Button (Bottom Right) */}
+              <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute bottom-4 right-4 z-20 h-10 w-10 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={handlePrimaryAction}
+                  title="Download / View PDF"
+              >
+                  <Download className="h-5 w-5" />
+              </Button>
             </div>
           ) : (
             // Standard Header for Links and Audio/Other Files
@@ -143,7 +153,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           )}
         </div>
         
-        {/* New: File Name Display (Only for PDF Backdrop Style) */}
+        {/* File Name Display (Only for PDF Backdrop Style) */}
         {useBackdropStyle && (
           <div className="px-4 py-2 bg-muted/50 border-t border-border">
             <p className="text-xs font-sans uppercase font-semibold text-muted-foreground truncate">
@@ -155,45 +165,35 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Footer Content (Buttons and Date) */}
         <CardContent className="p-4">
           <div className="flex flex-col gap-3">
-            {/* Primary Action Button (View/Download/Listen) - Full width */}
-            <Button 
-              onClick={handlePrimaryAction} 
-              className="w-full"
-              disabled={!resource.url}
-            >
-              {primaryButtonDetails.icon}
-              <span>{primaryButtonDetails.text}</span>
-            </Button>
+            {/* Primary Action Button (Only for non-PDF files) */}
+            {!useBackdropStyle && (
+              <Button 
+                onClick={handlePrimaryAction} 
+                className="w-full" 
+                disabled={!resource.url}
+              >
+                {primaryButtonDetails.icon}
+                <span>{primaryButtonDetails.text}</span>
+              </Button>
+            )}
             
             {isAdmin && (
-              <div className="flex justify-between items-center mt-2">
-                {/* Admin Actions (Left) */}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onEdit(resource)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" /> Edit
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={() => onDelete(resource)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </Button>
-                </div>
-                {/* Date Added (Right) */}
-                <p className="text-xs text-muted-foreground">
-                  Added: {format(new Date(resource.created_at), "MMM d, yyyy")}
-                </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(resource)}
+                >
+                  <Edit className="h-4 w-4 mr-2" /> Edit
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => onDelete(resource)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                </Button>
               </div>
-            )}
-            {!isAdmin && (
-                <p className="text-xs text-muted-foreground mt-3 text-right">
-                    Added: {format(new Date(resource.created_at), "MMM d, yyyy")}
-                </p>
             )}
           </div>
         </CardContent>
