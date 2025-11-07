@@ -91,7 +91,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
 
   if (loadingSession) {
     return (
-      <Card className="p-6 shadow-lg rounded-xl">
+      <Card className="p-6 shadow-lg rounded-xl bg-muted/50 dark:bg-muted/30">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
           <Skeleton className="h-6 w-1/2" />
         </CardHeader>
@@ -109,7 +109,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
 
   if (!user) {
     return (
-      <Card className="p-6 shadow-lg rounded-xl text-center border-l-4 border-primary">
+      <Card className="p-6 shadow-lg rounded-xl text-center border-l-4 border-primary bg-muted/50 dark:bg-muted/30">
         <CardHeader className="flex flex-row items-center justify-center space-y-0 p-0 mb-4">
           <CardTitle className="text-xl font-lora flex items-center gap-2">
             <Music className="h-6 w-6 text-primary" /> Suggest a Song
@@ -128,7 +128,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
   }
 
   return (
-    <Card className="p-6 shadow-lg rounded-xl">
+    <Card className="p-6 shadow-lg rounded-xl bg-muted/50 dark:bg-muted/30">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
         <CardTitle className="text-xl font-lora flex items-center gap-2">
           <Music className="h-6 w-6 text-primary" /> Suggest a Song

@@ -6,7 +6,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, Edit as EditIcon, MessageSquare, AlertCircle, Clock } from "lucide-react";
+import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, Edit as EditIcon, MessageSquare, AlertCircle, Clock, MoreVertical, Copy, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,7 +30,8 @@ import {
 } from "@/components/ui/form";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DialogDescription } from "@/components/ui/dialog"; // Import DialogDescription
+import { DialogDescription } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // Import DropdownMenu components
 
 interface SongSuggestion {
   id: string;
@@ -232,8 +233,15 @@ const SongVotingList: React.FC = () => {
   };
 
   const handleEditSongSubmit = async (data: EditSongSuggestionFormData) => {
-    if (!user || !user.is_admin || !editingSong) {
-      showError("You must be an administrator and select a song to edit.");
+    if (!user || !editingSong) {
+      showError("You must be logged in and select a song to edit.");
+      return;
+    }
+
+    // Check if user is admin OR the original suggester
+    const canEdit = user.is_admin || user.id === editingSong.user_id;
+    if (!canEdit) {
+      showError("You do not have permission to edit this suggestion.");
       return;
     }
 
@@ -265,11 +273,12 @@ const SongVotingList: React.FC = () => {
   };
 
   const handleDeleteSongSuggestion = async (suggestionId: string) => {
-    if (!user || !user.is_admin) {
-      showError("You do not have permission to delete song suggestions.");
+    if (!user) {
+      showError("You must be logged in to delete song suggestions.");
       return;
     }
 
+    // RLS handles permission check (only admin or owner can delete)
     const { error } = await supabase
       .from("song_suggestions")
       .delete()
@@ -368,6 +377,7 @@ const SongVotingList: React.FC = () => {
               const isTopVoted = sortOrder === "votes_desc" && index === 0 && song.total_votes > 0;
               const isSuggestedByCurrentUser = user && song.user_id === user.id;
               const votedByCurrentUser = hasVoted(song.id);
+              const canEditOrDelete = user?.is_admin || isSuggestedByCurrentUser;
 
               // Determine suggested by name
               const suggestedByName = song.user_id === null 
@@ -381,30 +391,30 @@ const SongVotingList: React.FC = () => {
                     "flex items-center justify-between gap-3 p-3 border rounded-lg transition-colors",
                     isTopVoted 
                       ? "border-primary ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/10"
-                      : "bg-muted/20 hover:bg-muted/50",
+                      : "bg-card hover:bg-muted/50", // Use card background for list items
                     isSuggestedByCurrentUser && "border-accent ring-1 ring-accent/50 bg-accent/5 dark:bg-accent/10"
                   )}
                 >
                   
-                  {/* Left Section: Voting Button & Count */}
+                  {/* Left Section: Voting Button & Count (Prominent) */}
                   <div className="flex-shrink-0 text-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant={votedByCurrentUser ? "default" : "outline"}
-                          size="icon"
+                          size="lg"
                           onClick={() => handleVote(song.id)}
                           disabled={!user}
                           className={cn(
-                            "h-10 w-10 rounded-full flex flex-col items-center justify-center transition-all duration-200 p-1",
+                            "h-14 w-14 rounded-xl flex flex-col items-center justify-center transition-all duration-200 p-1",
                             votedByCurrentUser 
-                              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg" 
                               : "text-muted-foreground hover:bg-secondary/50 border-2",
                             !user ? "opacity-50 cursor-not-allowed" : ""
                           )}
                         >
-                          <ThumbsUp className="h-4 w-4" />
-                          <span className="text-xs font-bold mt-0.5">{song.total_votes}</span>
+                          <ThumbsUp className="h-5 w-5" />
+                          <span className="text-xs font-bold mt-0.5">{song.total_votes} Votes</span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -415,9 +425,9 @@ const SongVotingList: React.FC = () => {
                     </Tooltip>
                   </div>
                   
-                  {/* Middle Section: Song Details */}
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <h3 className="text-base font-semibold text-foreground line-clamp-1">{song.title}</h3>
+                  {/* Middle Section: Song Details (Improved Hierarchy) */}
+                  <div className="flex-1 min-w-0 space-y-0.5 py-1">
+                    <h3 className="text-lg font-bold text-foreground line-clamp-1">{song.title}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-1">by <span className="font-medium text-foreground">{song.artist}</span></p>
                     
                     {/* Suggested By & Reason */}
@@ -451,41 +461,65 @@ const SongVotingList: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Right Section: Admin Actions */}
-                  {user?.is_admin && (
-                    <div className="flex gap-1 flex-shrink-0">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => {
-                          setEditingSong(song);
-                          setIsEditSongDialogOpen(true);
-                        }}
-                      >
-                        <EditIcon className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="icon" className="h-7 w-7">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the song suggestion "{song.title}" by {song.artist}.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                  {/* Right Section: Actions (Dropdown Menu) */}
+                  {canEditOrDelete && (
+                    <div className="flex-shrink-0">
+                      <DropdownMenu>
+                        <Tooltip>
+                          <DropdownMenuTrigger asChild>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                          </DropdownMenuTrigger>
+                          <TooltipContent>Actions</TooltipContent>
+                        </Tooltip>
+                        <DropdownMenuContent align="end" className="w-48">
+                          
+                          {/* Edit Action */}
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setEditingSong(song);
+                              setIsEditSongDialogOpen(true);
+                            }}
+                            disabled={!canEditOrDelete}
+                          >
+                            <EditIcon className="mr-2 h-4 w-4" />
+                            <span>Edit Suggestion</span>
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+                          
+                          {/* Delete Action */}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem 
+                                onSelect={(e) => e.preventDefault()}
+                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                disabled={!canEditOrDelete}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete the song suggestion "{song.title}" by {song.artist}.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)} className="bg-destructive hover:bg-destructive/90">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   )}
                 </li>
@@ -511,7 +545,7 @@ const SongVotingList: React.FC = () => {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-lora">Edit Song Suggestion</DialogTitle>
-              <DialogDescription>Update the details for this song suggestion.</DialogDescription> {/* Added DialogDescription */}
+              <DialogDescription>Update the details for this song suggestion.</DialogDescription>
             </DialogHeader>
             <Form {...editForm}>
               <form onSubmit={editForm.handleSubmit(handleEditSongSubmit)} className="grid gap-6 py-4">
