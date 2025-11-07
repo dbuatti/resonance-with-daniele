@@ -24,10 +24,11 @@ import { Link, useSearchParams } from "react-router-dom"; // Import useSearchPar
 import { useDropzone } from "react-dropzone"; // Import useDropzone
 import { cn } from "@/lib/utils"; // Import cn
 import ResourceSection from "@/components/ResourceSection"; // Import new component
+import SortableResourceList from "@/components/SortableResourceList"; // Import new component
 
 // Define Filter and Sort types
 type FilterType = 'all' | 'pdf' | 'audio' | 'link';
-type SortBy = 'title' | 'created_at';
+type SortBy = 'title' | 'created_at' | 'sort_order'; // Added sort_order
 type SortOrder = 'asc' | 'desc';
 type VoicePartFilter = string | 'all'; // Includes specific parts and 'all'
 
@@ -64,8 +65,8 @@ const Resources: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [filterVoicePart, setFilterVoicePart] = useState<VoicePartFilter>('all'); // New state for voice part filter
-  const [sortBy, setSortBy] = useState<SortBy>('created_at');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [sortBy, setSortBy] = useState<SortBy>('sort_order'); // Default to custom sort order
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc'); // Custom order is usually ascending
 
   const isAdmin = user?.is_admin;
 
@@ -101,7 +102,8 @@ const Resources: React.FC = () => {
     let query = supabase
       .from("resources")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("sort_order", { ascending: true }) // Default sort by custom order
+      .order("created_at", { ascending: false }); // Secondary sort
 
     // FIX: Use is.null for root folder (folderId === null)
     if (folderId === null) {
@@ -214,6 +216,7 @@ const Resources: React.FC = () => {
         is_published: true,
         folder_id: folderId,
         original_filename: file.name, // Store original filename
+        sort_order: 0, // Default to 0, will be re-sorted by admin later
       };
 
       const { error: dbError } = await supabase
@@ -439,19 +442,28 @@ const Resources: React.FC = () => {
     }
 
 
-    // 4. Sorting
-    filtered.sort((a, b) => {
-      let comparison = 0;
-      if (sortBy === 'title') {
-        comparison = a.title.localeCompare(b.title);
-      } else if (sortBy === 'created_at') {
-        const dateA = new Date(a.created_at).getTime();
-        const dateB = new Date(b.created_at).getTime();
-        comparison = dateA - dateB;
-      }
+    // 4. Sorting (Only apply manual sorting if not using custom order)
+    if (sortBy !== 'sort_order') {
+      filtered.sort((a, b) => {
+        let comparison = 0;
+        if (sortBy === 'title') {
+          comparison = a.title.localeCompare(b.title);
+        } else if (sortBy === 'created_at') {
+          const dateA = new Date(a.created_at).getTime();
+          const dateB = new Date(b.created_at).getTime();
+          comparison = dateA - dateB;
+        }
 
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
+        return sortOrder === 'asc' ? comparison : -comparison;
+      });
+    } else if (sortBy === 'sort_order') {
+        // If sorting by custom order, use the existing order from the fetched data
+        filtered.sort((a, b) => {
+            const orderA = a.sort_order ?? 0;
+            const orderB = b.sort_order ?? 0;
+            return sortOrder === 'asc' ? orderA - orderB : orderB - orderA;
+        });
+    }
 
     return filtered;
   }, [resources, searchTerm, filterType, filterVoicePart, sortBy, sortOrder]);
@@ -484,15 +496,6 @@ const Resources: React.FC = () => {
 
   const showSkeleton = loadingResources || loadingAllFolders;
   const hasResources = Object.values(categorizedResources).some(arr => arr.length > 0);
-
-  // Helper to determine if a filter is active for visual feedback
-  const isFilterActive = (filter: FilterType | VoicePartFilter | SortBy | SortOrder, value: string) => {
-    if (filter === filterType && filter !== 'all' && value === filter) return true;
-    if (filter === filterVoicePart && filter !== 'all' && value === filter) return true;
-    if (filter === sortBy && value === filter) return true;
-    if (filter === sortOrder && value === filter) return true;
-    return false;
-  };
 
   if (loadingSession) {
     return (
@@ -545,6 +548,38 @@ const Resources: React.FC = () => {
       </div>
     );
   }
+
+  // Helper to render the resource list, using SortableResourceList if admin and sorting by custom order
+  const renderResourceList = (resources: Resource[]) => {
+    if (isAdmin && sortBy === 'sort_order') {
+      return (
+        <SortableResourceList
+          resources={resources}
+          isAdmin={isAdmin}
+          currentFolderId={currentFolderId}
+          onEdit={handleOpenEditResourceDialog}
+          onDelete={(resource) => setResourceToDelete(resource)}
+          onMove={handleOpenMoveResourceDialog}
+        />
+      );
+    }
+
+    // Default rendering (used for non-admins or when sorting by other criteria)
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {resources.map((resource) => (
+          <ResourceCard
+            key={resource.id}
+            resource={resource}
+            isAdmin={isAdmin}
+            onEdit={handleOpenEditResourceDialog}
+            onDelete={(resource) => setResourceToDelete(resource)}
+            onMove={handleOpenMoveResourceDialog}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8 py-8">
@@ -635,23 +670,29 @@ const Resources: React.FC = () => {
             </Select>
 
             {/* Sort By */}
-            <Select value={sortBy} onValueChange={(value: SortBy) => setSortBy(value)}>
+            <Select value={sortBy} onValueChange={(value: SortBy) => {
+                setSortBy(value);
+                // If switching to custom order, default to asc
+                if (value === 'sort_order') setSortOrder('asc');
+            }}>
               <SelectTrigger className="w-[150px]">
                 <SortAsc className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Sort By" />
               </SelectTrigger>
               <SelectContent>
+                {isAdmin && <SelectItem value="sort_order">Custom Order</SelectItem>}
                 <SelectItem value="created_at">Date Added</SelectItem>
                 <SelectItem value="title">Title</SelectItem>
               </SelectContent>
             </Select>
 
-            {/* Sort Order Toggle */}
+            {/* Sort Order Toggle (Disabled if sorting by custom order) */}
             <Button
               variant="outline"
               size="icon"
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
               title={sortOrder === 'asc' ? "Sort Descending" : "Sort Ascending"}
+              disabled={sortBy === 'sort_order'}
             >
               <SortAsc className={`h-4 w-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
             </Button>
@@ -699,30 +740,29 @@ const Resources: React.FC = () => {
           {/* Categorized Resources */}
           {hasResources ? (
             <div className="space-y-10">
-              <ResourceSection
-                title="PDF Resources (Sheet Music, Lyrics)"
-                resources={categorizedResources.pdf}
-                isAdmin={isAdmin}
-                onEdit={handleOpenEditResourceDialog}
-                onDelete={(resource) => setResourceToDelete(resource)}
-                onMove={handleOpenMoveResourceDialog}
-              />
-              <ResourceSection
-                title="Audio Resources (Practice Tracks)"
-                resources={categorizedResources.audio}
-                isAdmin={isAdmin}
-                onEdit={handleOpenEditResourceDialog}
-                onDelete={(resource) => setResourceToDelete(resource)}
-                onMove={handleOpenMoveResourceDialog}
-              />
-              <ResourceSection
-                title="External Links"
-                resources={categorizedResources.links}
-                isAdmin={isAdmin}
-                onEdit={handleOpenEditResourceDialog}
-                onDelete={(resource) => setResourceToDelete(resource)}
-                onMove={handleOpenMoveResourceDialog}
-              />
+              {/* PDF Resources */}
+              <section className="space-y-4">
+                <h2 className="text-2xl font-bold font-lora text-foreground border-b pb-2 border-border/50">
+                  PDF Resources (Sheet Music, Lyrics)
+                </h2>
+                {renderResourceList(categorizedResources.pdf)}
+              </section>
+
+              {/* Audio Resources */}
+              <section className="space-y-4">
+                <h2 className="text-2xl font-bold font-lora text-foreground border-b pb-2 border-border/50">
+                  Audio Resources (Practice Tracks)
+                </h2>
+                {renderResourceList(categorizedResources.audio)}
+              </section>
+
+              {/* External Links */}
+              <section className="space-y-4">
+                <h2 className="text-2xl font-bold font-lora text-foreground border-b pb-2 border-border/50">
+                  External Links
+                </h2>
+                {renderResourceList(categorizedResources.links)}
+              </section>
             </div>
           ) : (
             currentSubFolders.length === 0 && (
