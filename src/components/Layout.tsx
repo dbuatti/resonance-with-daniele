@@ -104,12 +104,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </Link>
               </Button>
             )}
-            <Button variant="ghost" asChild className={cn(getNavLinkClass("/current-event"), "text-accent font-bold")}>
-              <Link to="/current-event">
-                <CalendarDays className="h-4 w-4" />
-                <span>COMING UP!</span>
-              </Link>
-            </Button>
             {user ? (
               <>
                 {console.log("[Layout] User is logged in, rendering authenticated nav links.")}

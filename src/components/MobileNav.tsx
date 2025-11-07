@@ -64,10 +64,6 @@ const MobileNav: React.FC = () => {
               <span>Learn More</span>
             </Link>
           )}
-          <Link to="/current-event" className={cn(getNavLinkClass("/current-event"), "text-accent font-bold")} onClick={() => setIsOpen(false)}>
-            <CalendarDays className="h-5 w-5" />
-            <span>COMING UP!</span>
-          </Link>
           {!loading && user ? (
             <>
               <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>

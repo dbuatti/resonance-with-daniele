@@ -3,15 +3,15 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { CalendarDays, Music, Mic2, Users, Camera, Link as LinkIcon, FileText, User as UserIcon, Settings, ClipboardList } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import QuickActionsCard from "@/components/dashboard/QuickActionsCard";
-import LatestAnnouncementsCard from "@/components/dashboard/LatestAnnouncementsCard"; // Import the new LatestAnnouncementsCard
+import LatestAnnouncementsCard from "@/components/dashboard/LatestAnnouncementsCard";
+import CoreHubLinks from "@/components/dashboard/CoreHubLinks"; // Import new component
+import { Button } from "@/components/ui/button"; // Ensure Button is imported
 
 interface Event {
   id: string;
@@ -113,10 +113,10 @@ const WelcomeHub: React.FC = () => {
   if (isLoading) {
     console.log("[WelcomeHub] Rendering skeleton due to loadingSession, loadingEvent, or loadingResources being true.");
     return (
-      <div className="py-8 md:py-12 space-y-8"> {/* Removed px-4 for consistent padding */}
+      <div className="py-8 md:py-12 space-y-8">
         <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
           <CardHeader className="text-center">
-            <Skeleton className="w-32 h-32 rounded-full mx-auto mb-6" />
+            <Skeleton className="w-40 h-40 rounded-full mx-auto mb-6" />
             <Skeleton className="h-10 w-3/4 mx-auto mb-4" />
             <Skeleton className="h-6 w-1/2 mx-auto mb-6" />
           </CardHeader>
@@ -124,19 +124,11 @@ const WelcomeHub: React.FC = () => {
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-5/6" />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-              <Card className="shadow-md border border-border p-4 space-y-2">
-                <Skeleton className="h-6 w-1/3" />
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </Card>
-              <Card className="shadow-md border border-border p-4 space-y-2">
-                <Skeleton className="h-6 w-1/3" />
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
             </div>
             <Skeleton className="h-10 w-48 mx-auto" />
           </CardContent>
@@ -149,13 +141,13 @@ const WelcomeHub: React.FC = () => {
   console.log("[WelcomeHub] Rendering content for user:", user?.id, "First Name:", firstName);
 
   return (
-    <div className="py-8 md:py-12 space-y-8"> {/* Removed px-4 for consistent padding */}
+    <div className="py-8 md:py-12 space-y-8">
       <Card className="p-6 md:p-10 shadow-lg rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
         <CardHeader className="text-center">
           <img
             src="/images/daniele-buatti-headshot.jpeg"
             alt="Daniele Buatti"
-            className="w-32 h-32 rounded-full object-cover shadow-md mx-auto mb-6"
+            className="w-40 h-40 rounded-full object-cover shadow-md mx-auto mb-6"
           />
           <CardTitle className="text-4xl md:text-5xl font-extrabold text-center text-foreground mb-4 font-lora">
             Welcome, {firstName} to the Resonance with Daniele Hub!
@@ -166,58 +158,20 @@ const WelcomeHub: React.FC = () => {
         </CardHeader>
         <CardContent className="text-lg text-muted-foreground space-y-6">
           <p className="mb-6">
-            Welcome! I’m Daniele Buatti, and I’m thrilled to share this space with you. I’ve been working in musical theatre, vocal coaching, and music direction for years, and I believe in the transformative power of singing — not just as performance, but as connection, expression, and joy.
+            Welcome! I’m Daniele Buatti, and I’m thrilled to share this space with you. I believe in the transformative power of singing — not just as performance, but as connection, expression, and joy.
           </p>
           <p className="mb-8">
             This hub is your go-to space for everything choir-related:
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"> {/* Added mb-8 here */}
-            <div className="flex items-start gap-3">
-              <CalendarDays className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-foreground text-xl font-lora">Rehearsals & Events</h3>
-                <p className="text-base">See the calendar, RSVP, and get updates in real time.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Music className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-foreground text-xl font-lora">Songs & Resources</h3>
-                <p className="text-base">Access sheet music, audio tracks, and video tutorials to guide your practice.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Mic2 className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-foreground text-xl font-lora">Vocal Exercises & Warm-Ups</h3>
-                <p className="text-base">Explore exercises to strengthen, release, and resonate your voice.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Users className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-foreground text-xl font-lora">Community & Connection</h3>
-                <p className="text-base">Chat, share, and celebrate with fellow singers.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Camera className="h-6 w-6 text-foreground flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-foreground text-xl font-lora">Performance Highlights & Media</h3>
-                <p className="text-base">Relive moments from past concerts or see what’s coming next.</p>
-              </div>
-            </div>
-          </div>
+          {/* Core Hub Links (New Visual Cards) */}
+          <CoreHubLinks />
 
-          <p className="mt-6 mb-8"> {/* Added mb-8 here */}
-            No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others. I celebrate all voices and all identities, and everyone is invited to shine their unique light here.
+          <p className="mt-6 mb-8">
+            No matter your experience — whether you’ve sung in choirs before or simply love singing in the shower — this is your safe, welcoming, and fun space to grow your voice and connect with others.
           </p>
 
-          {/* Quick Actions Card - Moved here */}
-          <QuickActionsCard />
-
-          {/* New: Profile Completion Card */}
+          {/* Profile Completion Card */}
           {!isProfileCompleted && (
             <Card className="bg-primary/10 border-primary text-primary-foreground p-6 shadow-md rounded-xl mt-8 dark:bg-primary/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
@@ -242,6 +196,7 @@ const WelcomeHub: React.FC = () => {
             </Card>
           )}
 
+          {/* Survey Completion Card */}
           {!isSurveyCompleted && (
             <Card className="bg-accent/10 border-accent text-accent-foreground p-6 shadow-md rounded-xl mt-8 dark:bg-accent/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
@@ -266,39 +221,41 @@ const WelcomeHub: React.FC = () => {
             </Card>
           )}
 
-          {/* Latest Announcements Card */}
+          {/* Latest Announcements Card (Full Width) */}
           <LatestAnnouncementsCard />
 
+          {/* Next Event & Recent Resources Grid (Equal Two-Column Grid) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            {/* Upcoming Event Card */}
-            <Card className="shadow-md border border-border">
-              <CardHeader>
-                <CardTitle className="text-xl font-lora flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5 text-foreground" /> Next Event
+            
+            {/* Next Event Card (Prominent, Action-Oriented) */}
+            <Card className="shadow-md border border-border p-6 bg-primary/5 dark:bg-primary/10">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle className="text-2xl font-lora flex items-center gap-2 text-primary">
+                  <CalendarDays className="h-6 w-6" /> Next Event
                 </CardTitle>
                 <CardDescription>Your next opportunity to sing!</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {upcomingEvent ? (
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-foreground">{upcomingEvent.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(upcomingEvent.date), "PPP")}
-                      {upcomingEvent.location && ` at ${upcomingEvent.location}`}
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-bold text-foreground">{upcomingEvent.title}</h3>
+                    <p className="text-base text-muted-foreground">
+                      <span className="font-semibold text-primary">{format(new Date(upcomingEvent.date), "EEEE, PPP")}</span>
+                      {upcomingEvent.location && <span className="block text-sm">{upcomingEvent.location}</span>}
                     </p>
                     {upcomingEvent.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{upcomingEvent.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-3">{upcomingEvent.description}</p>
                     )}
-                    <Button size="sm" className="w-full mt-2" asChild>
-                      <Link to={upcomingEvent.humanitix_link || "/events"}>
-                        {upcomingEvent.humanitix_link ? "View Details" : "View All Events"}
+                    <Button size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90" asChild>
+                      <Link to={upcomingEvent.humanitix_link || "/current-event"}>
+                        {upcomingEvent.humanitix_link ? "View Details & RSVP" : "View Event Page"}
                       </Link>
                     </Button>
                   </div>
                 ) : (
-                  <div className="text-center text-muted-foreground">
-                    <p>No upcoming events.</p>
-                    <Button variant="link" className="p-0 h-auto" asChild>
+                  <div className="text-center text-muted-foreground py-4">
+                    <p>No upcoming events scheduled right now.</p>
+                    <Button variant="link" className="p-0 h-auto mt-2" asChild>
                       <Link to="/events">View all events</Link>
                     </Button>
                   </div>
@@ -309,8 +266,8 @@ const WelcomeHub: React.FC = () => {
             {/* Recent Resources Card */}
             <Card className="shadow-md border border-border">
               <CardHeader>
-                <CardTitle className="text-xl font-lora flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-foreground" /> Recent Resources
+                <CardTitle className="text-2xl font-lora flex items-center gap-2">
+                  <FileText className="h-6 w-6 text-primary" /> Recent Resources
                 </CardTitle>
                 <CardDescription>Fresh materials to help you practice.</CardDescription>
               </CardHeader>
@@ -336,7 +293,7 @@ const WelcomeHub: React.FC = () => {
                   </ul>
                 ) : (
                   <div className="text-center text-muted-foreground">
-                    <p>No recent resources found yet.</p> {/* Improved empty state message */}
+                    <p>No recent resources found yet.</p>
                     <Button variant="link" className="p-0 h-auto" asChild>
                       <Link to="/resources">View all resources</Link>
                     </Button>
@@ -345,10 +302,6 @@ const WelcomeHub: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-
-          {/* Removed Song Suggestions Card */}
-
-          {/* Removed Manage My Profile Button */}
 
           <p className="text-center">
             💡 Learn more about me and my work:{" "}
