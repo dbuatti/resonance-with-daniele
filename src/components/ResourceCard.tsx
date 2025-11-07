@@ -293,10 +293,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             </div>
           </div>
 
-          {/* Description */}
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {resource.description || "No description provided."}
-          </p>
+          {/* Description - Only render if description exists */}
+          {resource.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {resource.description}
+            </p>
+          )}
         </div>
 
         {/* Footer Content (Buttons and Date) */}
