@@ -261,67 +261,69 @@ const AdminAnnouncementsPage: React.FC = () => {
               <DialogTitle className="font-lora">Create New Announcement</DialogTitle>
               <CardDescription>Write a new message to share with the choir.</CardDescription>
             </DialogHeader>
-            <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" {...addForm.register("title")} />
-                {addForm.formState.errors.title && (
-                  <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
-                )}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="content">Content</Label>
-                <Textarea id="content" {...addForm.register("content")} className="min-h-[100px]" />
-                {addForm.formState.errors.content && (
-                  <p className="text-red-500 text-sm">{addForm.formState.errors.content.message}</p>
-                )}
-              </div>
-              
-              {/* Internal Link Selector */}
-              <FormField
-                control={addForm.control}
-                name="link_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link URL (Optional)</FormLabel>
-                    <FormControl>
-                      <InternalLinkSelector
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        disabled={addForm.formState.isSubmitting}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid gap-2">
-                <Label htmlFor="link_url_manual">Or enter external URL manually</Label>
-                <Input 
-                  id="link_url_manual" 
-                  placeholder="https://external-link.com" 
-                  value={addForm.watch("link_url") || ""}
-                  onChange={(e) => addForm.setValue("link_url", e.target.value, { shouldValidate: true })}
-                  disabled={addForm.formState.isSubmitting}
-                />
-                {addForm.formState.errors.link_url && (
-                  <p className="text-red-500 text-sm">{addForm.formState.errors.link_url.message}</p>
-                )}
-              </div>
-
-              <DialogFooter>
-                <Button type="submit" disabled={addForm.formState.isSubmitting}>
-                  {addForm.formState.isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publishing...
-                    </>
-                  ) : (
-                    "Publish Announcement"
+            <Form {...addForm}> {/* CORRECTED: Wrap form content with <Form> */}
+              <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="grid gap-6 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input id="title" {...addForm.register("title")} />
+                  {addForm.formState.errors.title && (
+                    <p className="text-red-500 text-sm">{addForm.formState.errors.title.message}</p>
                   )}
-                </Button>
-              </DialogFooter>
-            </form>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="content">Content</Label>
+                  <Textarea id="content" {...addForm.register("content")} className="min-h-[100px]" />
+                  {addForm.formState.errors.content && (
+                    <p className="text-red-500 text-sm">{addForm.formState.errors.content.message}</p>
+                  )}
+                </div>
+                
+                {/* Internal Link Selector */}
+                <FormField
+                  control={addForm.control}
+                  name="link_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link URL (Optional)</FormLabel>
+                      <FormControl>
+                        <InternalLinkSelector
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          disabled={addForm.formState.isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="link_url_manual">Or enter external URL manually</Label>
+                  <Input 
+                    id="link_url_manual" 
+                    placeholder="https://external-link.com" 
+                    value={addForm.watch("link_url") || ""}
+                    onChange={(e) => addForm.setValue("link_url", e.target.value, { shouldValidate: true })}
+                    disabled={addForm.formState.isSubmitting}
+                  />
+                  {addForm.formState.errors.link_url && (
+                    <p className="text-red-500 text-sm">{addForm.formState.errors.link_url.message}</p>
+                  )}
+                </div>
+
+                <DialogFooter>
+                  <Button type="submit" disabled={addForm.formState.isSubmitting}>
+                    {addForm.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publishing...
+                      </>
+                    ) : (
+                      "Publish Announcement"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form> {/* CORRECTED: Close <Form> tag */}
           </DialogContent>
         </Dialog>
       </div>
@@ -415,67 +417,69 @@ const AdminAnnouncementsPage: React.FC = () => {
               <DialogTitle className="font-lora">Edit Announcement</DialogTitle>
               <CardDescription>Update the details of your announcement.</CardDescription>
             </DialogHeader>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-title">Title</Label>
-                <Input id="edit-title" {...editForm.register("title")} />
-                {editForm.formState.errors.title && (
-                  <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
-                )}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-content">Content</Label>
-                <Textarea id="edit-content" {...editForm.register("content")} className="min-h-[100px]" />
-                {editForm.formState.errors.content && (
-                  <p className="text-red-500 text-sm">{editForm.formState.errors.content.message}</p>
-                )}
-              </div>
-              
-              {/* Internal Link Selector for Edit */}
-              <FormField
-                control={editForm.control}
-                name="link_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link URL (Optional)</FormLabel>
-                    <FormControl>
-                      <InternalLinkSelector
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        disabled={editForm.formState.isSubmitting}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid gap-2">
-                <Label htmlFor="edit-link_url_manual">Or enter external URL manually</Label>
-                <Input 
-                  id="edit-link_url_manual" 
-                  placeholder="https://external-link.com" 
-                  value={editForm.watch("link_url") || ""}
-                  onChange={(e) => editForm.setValue("link_url", e.target.value, { shouldValidate: true })}
-                  disabled={editForm.formState.isSubmitting}
-                />
-                {editForm.formState.errors.link_url && (
-                  <p className="text-red-500 text-sm">{editForm.formState.errors.link_url.message}</p>
-                )}
-              </div>
-
-              <DialogFooter>
-                <Button type="submit" disabled={editForm.formState.isSubmitting}>
-                  {editForm.formState.isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="grid gap-6 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-title">Title</Label>
+                  <Input id="edit-title" {...editForm.register("title")} />
+                  {editForm.formState.errors.title && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.title.message}</p>
                   )}
-                </Button>
-              </DialogFooter>
-            </form>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-content">Content</Label>
+                  <Textarea id="edit-content" {...editForm.register("content")} className="min-h-[100px]" />
+                  {editForm.formState.errors.content && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.content.message}</p>
+                  )}
+                </div>
+                
+                {/* Internal Link Selector for Edit */}
+                <FormField
+                  control={editForm.control}
+                  name="link_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link URL (Optional)</FormLabel>
+                      <FormControl>
+                        <InternalLinkSelector
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          disabled={editForm.formState.isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-link_url_manual">Or enter external URL manually</Label>
+                  <Input 
+                    id="edit-link_url_manual" 
+                    placeholder="https://external-link.com" 
+                    value={editForm.watch("link_url") || ""}
+                    onChange={(e) => editForm.setValue("link_url", e.target.value, { shouldValidate: true })}
+                    disabled={editForm.formState.isSubmitting}
+                  />
+                  {editForm.formState.errors.link_url && (
+                    <p className="text-red-500 text-sm">{editForm.formState.errors.link_url.message}</p>
+                  )}
+                </div>
+
+                <DialogFooter>
+                  <Button type="submit" disabled={editForm.formState.isSubmitting}>
+                    {editForm.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       )}
