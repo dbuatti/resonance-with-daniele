@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight } from "lucide-react";
+import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2 } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -101,6 +101,13 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     }
   };
 
+  const getPrimaryActionText = () => {
+    if (isLink) return "View Link";
+    if (fileDetails.isPdf) return "View / Download PDF";
+    if (fileDetails.isAudio) return "Listen / Download Audio";
+    return "View Resource";
+  };
+
   return (
     <Card className={cn(
         "shadow-lg rounded-xl flex flex-col justify-between transition-shadow duration-200 hover:shadow-xl",
@@ -115,7 +122,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         )}>
           
           {useMediaBackdrop && (
-            <div className="relative h-full flex items-center justify-center bg-muted/50">
+            <div className="relative h-full flex items-center justify-center bg-muted/50 dark:bg-muted/30"> {/* Adjusted dark mode background */}
               
               {/* Content specific to PDF */}
               {fileDetails.isPdf && resource.url && (
@@ -167,7 +174,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Title, Pills, and Description Area (Main Display) */}
         <div className={cn(
           "px-4 pb-2", 
-          // If media backdrop is used, override pt-4 with pt-6 for better spacing below the media area
+          // If media backdrop is used, increase top padding significantly
           useMediaBackdrop ? "pt-6 bg-card/80 backdrop-blur-sm" : "pt-4 bg-transparent"
         )}>
           
@@ -233,15 +240,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {/* Footer Content (Buttons and Date) */}
         <CardContent className="p-4 pt-2">
           <div className="flex flex-col gap-3">
-            {/* Primary Action Button (Only for Links) */}
-            {isLink && (
+            {/* Primary Action Button (Visible for all non-admin users) */}
+            {!isAdmin && resource.url && (
               <Button 
                 onClick={handlePrimaryAction} 
                 className="w-full" 
                 disabled={!resource.url}
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                <span>View Link</span>
+                {isLink ? <ExternalLink className="h-4 w-4 mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                <span>{getPrimaryActionText()}</span>
               </Button>
             )}
             
