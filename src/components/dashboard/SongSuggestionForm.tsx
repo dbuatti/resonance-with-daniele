@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form"; // Corrected import path
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,9 +18,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Music } from "lucide-react";
+import { Loader2, Music, CheckCircle2 } from "lucide-react"; // Added CheckCircle2
 import { useQueryClient } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea"; // Import Textarea
+import { cn } from "@/lib/utils"; // Import cn
 
 const songSuggestionSchema = z.object({
   title: z.string().min(1, "Song title is required"),
@@ -37,6 +38,7 @@ interface SongSuggestionFormProps {
 const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdded }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
+  const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false); // New state for success feedback
 
   const form = useForm<SongSuggestionFormData>({
     resolver: zodResolver(songSuggestionSchema),
@@ -67,6 +69,8 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
       } else {
         showSuccess("Song suggestion added successfully!");
         form.reset();
+        setIsSubmittedSuccessfully(true); // Set success state
+        setTimeout(() => setIsSubmittedSuccessfully(false), 3000); // Clear success state after 3 seconds
         queryClient.invalidateQueries({ queryKey: ['songSuggestions'] }); // Invalidate to refetch and update UI
         if (onSuggestionAdded) {
           onSuggestionAdded();
@@ -98,7 +102,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
                 <FormItem>
                   <FormLabel>Song Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Bohemian Rhapsody" {...field} />
+                    <Input placeholder="Bohemian Rhapsody" {...field} disabled={isSubmittedSuccessfully} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -111,7 +115,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
                 <FormItem>
                   <FormLabel>Artist</FormLabel>
                   <FormControl>
-                    <Input placeholder="Queen" {...field} />
+                    <Input placeholder="Queen" {...field} disabled={isSubmittedSuccessfully} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -128,14 +132,23 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
                       placeholder="I love the harmonies in this song, and it would be a fun challenge for the choir!"
                       className="resize-y min-h-[80px]"
                       {...field}
+                      disabled={isSubmittedSuccessfully}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? (
+            <Button 
+              type="submit" 
+              className={cn("w-full transition-all duration-300", isSubmittedSuccessfully && "bg-green-600 hover:bg-green-700")}
+              disabled={form.formState.isSubmitting || isSubmittedSuccessfully}
+            >
+              {isSubmittedSuccessfully ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" /> Suggested!
+                </>
+              ) : form.formState.isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
                 </>

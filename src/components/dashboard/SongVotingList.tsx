@@ -6,7 +6,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { showSuccess, showError } from "@/utils/toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Clock, Edit as EditIcon } from "lucide-react"; // Added EditIcon
+import { ThumbsUp, Loader2, Music, User as UserIcon, Search, Trash2, ChevronLeft, ChevronRight, ArrowDownWideNarrow, Clock, Edit as EditIcon, MessageSquare } from "lucide-react"; // Added MessageSquare
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,6 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip
 
 interface SongSuggestion {
   id: string;
@@ -321,8 +322,8 @@ const SongVotingList: React.FC = () => {
   return (
     <Card className="p-6 shadow-lg rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
-        <CardTitle className="text-xl font-lora flex items-center gap-2">
-          <Music className="h-6 w-6 text-primary" /> Suggested Songs
+        <CardTitle className="text-2xl font-lora flex items-center gap-2">
+          <Music className="h-7 w-7 text-primary" /> Suggested Songs
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -330,7 +331,7 @@ const SongVotingList: React.FC = () => {
           Vote for songs you'd like to sing! The most popular suggestions will be considered for future sessions.
         </CardDescription>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -359,35 +360,64 @@ const SongVotingList: React.FC = () => {
         {songSuggestions && songSuggestions.length > 0 ? (
           <ul className="space-y-4">
             {songSuggestions.map((song) => (
-              <li key={song.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border rounded-md bg-muted/20">
-                <div className="flex-shrink-0 text-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleVote(song.id)}
-                    disabled={!user}
-                    className={cn(
-                      "h-10 w-10 rounded-full flex flex-col items-center justify-center",
-                      hasVoted(song.id) ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-muted-foreground hover:bg-muted"
-                    )}
-                  >
-                    <ThumbsUp className="h-5 w-5" />
-                    <span className="text-xs font-semibold">{song.total_votes}</span>
-                  </Button>
+              <li key={song.id} className="flex items-start gap-4 p-4 border rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors">
+                
+                {/* Voting Button & Count */}
+                <div className="flex-shrink-0 text-center pt-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={hasVoted(song.id) ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => handleVote(song.id)}
+                        disabled={!user}
+                        className={cn(
+                          "h-12 w-12 rounded-full flex flex-col items-center justify-center transition-all duration-200",
+                          hasVoted(song.id) 
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
+                            : "text-muted-foreground hover:bg-secondary/50 border-2"
+                        )}
+                      >
+                        <ThumbsUp className="h-5 w-5" />
+                        <span className="text-xs font-bold mt-0.5">{song.total_votes}</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {user ? (hasVoted(song.id) ? "Remove Vote" : "Cast Vote") : "Log in to vote"}
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
-                  <p className="text-sm text-muted-foreground">by {song.artist}</p>
+                
+                {/* Song Details */}
+                <div className="flex-1 min-w-0 space-y-1">
+                  <h3 className="text-lg font-semibold text-foreground line-clamp-1">{song.title}</h3>
+                  <p className="text-sm text-muted-foreground">by <span className="font-medium text-foreground">{song.artist}</span></p>
+                  
+                  {/* Reason (with optional tooltip for long reasons) */}
                   {song.reason && (
-                    <p className="text-xs italic text-muted-foreground mt-1">"{song.reason}"</p>
+                    <div className="flex items-start text-xs italic text-muted-foreground mt-2">
+                      <MessageSquare className="h-3 w-3 mr-1 flex-shrink-0 mt-0.5" />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="line-clamp-2 cursor-help">
+                            "{song.reason}"
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>{song.reason}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   )}
+
+                  {/* Suggested By */}
                   {song.profiles && (
-                    <div className="flex items-center text-xs text-muted-foreground mt-1">
-                      <Avatar className="h-4 w-4 mr-1">
+                    <div className="flex items-center text-xs text-muted-foreground pt-1">
+                      <Avatar className="h-5 w-5 mr-1">
                         {song.profiles.avatar_url ? (
                           <AvatarImage src={song.profiles.avatar_url} alt={`${song.profiles.first_name}'s avatar`} />
                         ) : (
-                          <AvatarFallback className="bg-secondary text-secondary-foreground text-[8px]">
+                          <AvatarFallback className="bg-secondary text-secondary-foreground text-[10px]">
                             <UserIcon className="h-3 w-3" />
                           </AvatarFallback>
                         )}
@@ -396,12 +426,14 @@ const SongVotingList: React.FC = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* Admin Actions */}
                 {user?.is_admin && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 flex-shrink-0 pt-1">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8 flex-shrink-0"
+                      className="h-8 w-8"
                       onClick={() => {
                         setEditingSong(song);
                         setIsEditSongDialogOpen(true);
@@ -411,7 +443,7 @@ const SongVotingList: React.FC = () => {
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon" className="h-8 w-8 flex-shrink-0">
+                        <Button variant="destructive" size="icon" className="h-8 w-8">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
@@ -436,12 +468,13 @@ const SongVotingList: React.FC = () => {
             ))}
           </ul>
         ) : (
-          <div className="text-center text-muted-foreground py-8">
-            <p className="text-xl font-semibold">No songs found!</p>
-            <p className="mt-2">
+          <div className="text-center text-muted-foreground py-12 border-2 border-dashed border-border rounded-lg bg-muted/50">
+            <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-xl font-semibold font-lora">No songs found!</p>
+            <p className="mt-2 max-w-sm mx-auto">
               {searchTerm
-                ? "Try a different search term, or be the first to suggest a song."
-                : "Be the first to suggest a song using the form above."}
+                ? "Try a different search term, or be the first to suggest a song using the form on the right."
+                : "Be the first to suggest a song using the form on the right!"}
             </p>
           </div>
         )}
