@@ -96,19 +96,28 @@ const Resources: React.FC = () => {
   });
 
   // 2. Fetch resources for the current folder
-  const fetchResources = async (folderId: string | null): Promise<Resource[]> => {
-    console.log(`[ResourcesPage] Fetching resources for folder ID: ${folderId}`);
+  const fetchResources = async (folderId: string | null, currentSearchTerm: string): Promise<Resource[]> => {
+    console.log(`[ResourcesPage] Fetching resources for folder ID: ${folderId} with search: ${currentSearchTerm}`);
+    
     let query = supabase
       .from("resources")
       .select("*")
       .order("sort_order", { ascending: true }) // Default sort by custom order
       .order("created_at", { ascending: false }); // Secondary sort
 
-    // FIX: Use is.null for root folder (folderId === null)
-    if (folderId === null) {
-      query = query.is("folder_id", null);
+    // If a search term is present, perform a global search (ignore folderId filter)
+    if (currentSearchTerm) {
+      const searchPattern = `%${currentSearchTerm}%`;
+      query = query.or(
+        `title.ilike.${searchPattern},description.ilike.${searchPattern},original_filename.ilike.${searchPattern}`
+      );
     } else {
-      query = query.eq("folder_id", folderId);
+      // If no search term, filter by the current folder ID
+      if (folderId === null) {
+        query = query.is("folder_id", null);
+      } else {
+        query = query.eq("folder_id", folderId);
+      }
     }
 
     if (!isAdmin) {
@@ -128,10 +137,10 @@ const Resources: React.FC = () => {
     Resource[],
     Error,
     Resource[],
-    ['resources', string | null]
+    ['resources', string | null, string] // Query key now includes folderId AND searchTerm
   >({
-    queryKey: ['resources', currentFolderId],
-    queryFn: ({ queryKey }) => fetchResources(queryKey[1]),
+    queryKey: ['resources', currentFolderId, searchTerm],
+    queryFn: ({ queryKey }) => fetchResources(queryKey[1], queryKey[2]),
     enabled: !loadingSession,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -141,8 +150,10 @@ const Resources: React.FC = () => {
 
   // Get sub-folders for the current view
   const currentSubFolders = useMemo(() => {
+    // Only show subfolders if no search term is active
+    if (searchTerm) return [];
     return allFolders?.filter(f => f.parent_folder_id === currentFolderId) || [];
-  }, [allFolders, currentFolderId]);
+  }, [allFolders, currentFolderId, searchTerm]);
 
   // Build Breadcrumbs
   const breadcrumbs = useMemo(() => {
@@ -401,15 +412,9 @@ const Resources: React.FC = () => {
 
     let filtered = resources;
 
-    // 1. Search Filtering
-    if (searchTerm) {
-      const lowerCaseSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(resource =>
-        resource.title.toLowerCase().includes(lowerCaseSearch) ||
-        resource.description?.toLowerCase().includes(lowerCaseSearch)
-      );
-    }
-
+    // 1. Local Search Filtering (only needed if we fetched globally, but we rely on DB search now)
+    // We only apply local filters (type, voice part) here.
+    
     // 2. Type Filtering
     if (filterType !== 'all') {
       filtered = filtered.filter(resource => {
@@ -425,23 +430,21 @@ const Resources: React.FC = () => {
       });
     }
 
-    // 3. Voice Part Filtering (New)
+    // 3. Voice Part Filtering
     if (filterVoicePart !== 'all') {
       filtered = filtered.filter(resource => {
         const resourcePart = resource.voice_part || 'General / Full Choir';
         
         if (filterVoicePart === 'General / Full Choir') {
-          // Match resources that are explicitly 'Full Choir' or have no part assigned (null)
           return resourcePart === 'Full Choir' || resource.voice_part === null;
         }
         
-        // Match resources explicitly assigned to the selected part
         return resourcePart === filterVoicePart;
       });
     }
 
 
-    // 4. Sorting (Only apply manual sorting if not using custom order)
+    // 4. Sorting
     if (sortBy !== 'sort_order') {
       filtered.sort((a, b) => {
         let comparison = 0;
@@ -456,7 +459,6 @@ const Resources: React.FC = () => {
         return sortOrder === 'asc' ? comparison : -comparison;
       });
     } else if (sortBy === 'sort_order') {
-        // If sorting by custom order, use the existing order from the fetched data
         filtered.sort((a, b) => {
             const orderA = a.sort_order ?? 0;
             const orderB = b.sort_order ?? 0;
@@ -465,7 +467,7 @@ const Resources: React.FC = () => {
     }
 
     return filtered;
-  }, [resources, searchTerm, filterType, filterVoicePart, sortBy, sortOrder]);
+  }, [resources, filterType, filterVoicePart, sortBy, sortOrder]);
   // --- End Filtering and Sorting Logic ---
 
   // --- Resource Categorization for Display ---
@@ -627,12 +629,12 @@ const Resources: React.FC = () => {
           {/* Row 1: Search and Admin CTAs */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="relative flex-1 w-full sm:w-auto">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/80" />
               <Input
                 placeholder="Search resources..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 placeholder:text-foreground/70"
                 disabled={loadingResources}
               />
             </div>
@@ -729,7 +731,7 @@ const Resources: React.FC = () => {
             </div>
           )}
 
-          {/* Folders */}
+          {/* Folders (Hidden during global search) */}
           {currentSubFolders.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentSubFolders.map((folder) => (
@@ -747,7 +749,7 @@ const Resources: React.FC = () => {
             </div>
           )}
 
-          {currentSubFolders.length > 0 && hasResources && <Separator />}
+          {currentSubFolders.length > 0 && hasResources && !searchTerm && <Separator />}
 
           {/* Categorized Resources */}
           {hasResources ? (
