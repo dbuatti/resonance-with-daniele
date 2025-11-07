@@ -139,7 +139,11 @@ const WelcomeHub: React.FC = () => {
         .limit(1)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
+      // Robust error handling for single() query when no row is found (PGRST116)
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null; // No nominated folder found
+        }
         console.error("[WelcomeHub] Error fetching nominated folder:", error);
         throw error;
       }
