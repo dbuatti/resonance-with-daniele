@@ -2,17 +2,19 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BellRing, Loader2 } from "lucide-react";
+import { BellRing, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useSession } from "@/integrations/supabase/auth"; // Import useSession to check for authenticated user
+import { Button } from "@/components/ui/button";
 
 interface Announcement {
   id: string;
   title: string;
   content: string;
+  link_url: string | null; // Added link_url
   created_at: string;
 }
 
@@ -24,7 +26,7 @@ const LatestAnnouncementsCard: React.FC = () => {
     console.log("[LatestAnnouncementsCard] Fetching latest announcements.");
     const { data, error } = await supabase
       .from("announcements")
-      .select("id, title, content, created_at")
+      .select("id, title, content, link_url, created_at") // Select link_url
       .order("created_at", { ascending: false })
       .limit(3); // Fetch up to 3 latest announcements
 
@@ -112,6 +114,13 @@ const LatestAnnouncementsCard: React.FC = () => {
             <h3 className="font-semibold text-foreground text-lg">{announcement.title}</h3>
             <p className="text-sm text-muted-foreground mb-1">{format(new Date(announcement.created_at), "PPP")}</p>
             <p className="text-sm text-muted-foreground">{announcement.content}</p>
+            {announcement.link_url && (
+              <Button variant="link" className="p-0 h-auto mt-2 text-primary hover:underline" asChild>
+                <a href={announcement.link_url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-1 h-4 w-4" /> View Details
+                </a>
+              </Button>
+            )}
           </div>
         ))}
       </CardContent>

@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, PlusCircle, Edit, Trash2, BellRing, AlertCircle } from "lucide-react";
+import { Loader2, PlusCircle, Edit, Trash2, BellRing, AlertCircle, ExternalLink } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -25,6 +25,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 const announcementSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),
+  link_url: z.string().url("Must be a valid URL").optional().or(z.literal("")), // New field
 });
 
 type AnnouncementFormData = z.infer<typeof announcementSchema>;
@@ -34,6 +35,7 @@ interface Announcement {
   user_id: string;
   title: string;
   content: string;
+  link_url: string | null; // New field
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +60,7 @@ const AdminAnnouncementsPage: React.FC = () => {
     defaultValues: {
       title: "",
       content: "",
+      link_url: "", // Default value for new field
     },
   });
 
@@ -66,6 +69,7 @@ const AdminAnnouncementsPage: React.FC = () => {
     defaultValues: {
       title: "",
       content: "",
+      link_url: "", // Default value for new field
     },
   });
 
@@ -105,6 +109,7 @@ const AdminAnnouncementsPage: React.FC = () => {
       editForm.reset({
         title: editingAnnouncement.title,
         content: editingAnnouncement.content,
+        link_url: editingAnnouncement.link_url || "", // Set link_url for editing
       });
     }
   }, [editingAnnouncement, editForm]);
@@ -115,11 +120,12 @@ const AdminAnnouncementsPage: React.FC = () => {
       return;
     }
 
-    const { title, content } = data;
+    const { title, content, link_url } = data;
     const { error } = await supabase.from("announcements").insert({
       user_id: user.id,
       title,
       content,
+      link_url: link_url || null, // Save link_url
     });
 
     if (error) {
@@ -127,7 +133,7 @@ const AdminAnnouncementsPage: React.FC = () => {
       showError("Failed to add announcement: " + error.message);
     } else {
       showSuccess("Announcement added successfully!");
-      addForm.reset();
+      addForm.reset({ link_url: "" }); // Reset form, keeping link_url empty
       setIsAddDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['adminAnnouncements'] }); // Invalidate to refetch and update UI
       queryClient.invalidateQueries({ queryKey: ['latestAnnouncements'] }); // Invalidate the public announcements list
@@ -140,12 +146,13 @@ const AdminAnnouncementsPage: React.FC = () => {
       return;
     }
 
-    const { title, content } = data;
+    const { title, content, link_url } = data;
     const { error } = await supabase
       .from("announcements")
       .update({
         title,
         content,
+        link_url: link_url || null, // Update link_url
         updated_at: new Date().toISOString(),
       })
       .eq("id", editingAnnouncement.id); // RLS handles user_id check
@@ -257,6 +264,13 @@ const AdminAnnouncementsPage: React.FC = () => {
                   <p className="text-red-500 text-sm">{addForm.formState.errors.content.message}</p>
                 )}
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="link_url">Link URL (Optional)</Label>
+                <Input id="link_url" {...addForm.register("link_url")} placeholder="https://yourwebsite.com/page" />
+                {addForm.formState.errors.link_url && (
+                  <p className="text-red-500 text-sm">{addForm.formState.errors.link_url.message}</p>
+                )}
+              </div>
               <DialogFooter>
                 <Button type="submit" disabled={addForm.formState.isSubmitting}>
                   {addForm.formState.isSubmitting ? (
@@ -291,6 +305,7 @@ const AdminAnnouncementsPage: React.FC = () => {
                   <TableRow>
                     <TableHead>Title</TableHead>
                     <TableHead>Content</TableHead>
+                    <TableHead>Link</TableHead>
                     <TableHead>Published On</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -301,6 +316,13 @@ const AdminAnnouncementsPage: React.FC = () => {
                       <TableCell className="font-medium">{announcement.title}</TableCell>
                       <TableCell className="text-muted-foreground line-clamp-2 max-w-xs">
                         {announcement.content}
+                      </TableCell>
+                      <TableCell>
+                        {announcement.link_url ? (
+                          <a href={announcement.link_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                            <ExternalLink className="h-4 w-4" /> View Link
+                          </a>
+                        ) : "N/A"}
                       </TableCell>
                       <TableCell>{format(new Date(announcement.created_at), "PPP")}</TableCell>
                       <TableCell className="text-right">
@@ -367,6 +389,13 @@ const AdminAnnouncementsPage: React.FC = () => {
                 <Textarea id="edit-content" {...editForm.register("content")} className="min-h-[100px]" />
                 {editForm.formState.errors.content && (
                   <p className="text-red-500 text-sm">{editForm.formState.errors.content.message}</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-link_url">Link URL (Optional)</Label>
+                <Input id="edit-link_url" {...editForm.register("link_url")} placeholder="https://yourwebsite.com/page" />
+                {editForm.formState.errors.link_url && (
+                  <p className="text-red-500 text-sm">{editForm.formState.errors.link_url.message}</p>
                 )}
               </div>
               <DialogFooter>
