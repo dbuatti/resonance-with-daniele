@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle } from "lucide-react";
+import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle, MapPin, Clock, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import EventDialog from "@/components/events/EventDialog";
+import { cn } from "@/lib/utils";
 
 interface Event {
   id: string;
@@ -63,8 +64,7 @@ const Events: React.FC = () => {
       const { error } = await supabase
         .from("events")
         .delete()
-        .eq("id", eventId)
-        .eq("user_id", user.id);
+        .eq("id", eventId);
 
       if (error) throw error;
       showSuccess("Event deleted successfully!");
@@ -78,16 +78,15 @@ const Events: React.FC = () => {
   const showSkeleton = isLoading && !events;
 
   return (
-    <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora">
-        {showSkeleton ? <Skeleton className="h-10 w-3/4 mx-auto" /> : "Upcoming Events"}
-      </h1>
-      
-      {!showSkeleton && (
-        <p className="text-lg text-center text-muted-foreground">
-          Stay up-to-date with all my choir's performances, rehearsals, and social gatherings.
+    <div className="space-y-10 py-8 md:py-12">
+      <header className="text-center space-y-4">
+        <h1 className="text-4xl md:text-5xl font-extrabold font-lora tracking-tight">
+          Upcoming Events
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Join us for rehearsals, performances, and social gatherings. We'd love to see you there!
         </p>
-      )}
+      </header>
 
       {fetchError && (
         <Alert variant="destructive" className="max-w-2xl mx-auto">
@@ -96,89 +95,128 @@ const Events: React.FC = () => {
         </Alert>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 max-w-4xl mx-auto">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search events..."
+            placeholder="Search by title, location, or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-4 py-2 w-full"
+            className="pl-10 h-12 text-lg rounded-xl shadow-sm border-muted-foreground/20 focus:border-primary"
             disabled={isLoading}
           />
         </div>
         
-        {user && (
-          <Button onClick={() => { setEditingEvent(null); setIsDialogOpen(true); }}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Event
+        {user?.is_admin && (
+          <Button size="lg" onClick={() => { setEditingEvent(null); setIsDialogOpen(true); }} className="rounded-xl h-12 px-6 font-bold">
+            <PlusCircle className="mr-2 h-5 w-5" /> Add Event
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {showSkeleton ? (
           [...Array(6)].map((_, i) => (
-            <Card key={i} className="shadow-lg rounded-xl">
-              <CardHeader><Skeleton className="h-6 w-3/4 mb-2" /><Skeleton className="h-4 w-1/2" /></CardHeader>
-              <CardContent className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-10 w-full" /></CardContent>
-            </Card>
-          ))
-        ) : events && events.length === 0 ? (
-          <div className="col-span-full text-center p-8 bg-card rounded-xl shadow-lg flex flex-col items-center justify-center space-y-4">
-            <CalendarDays className="h-16 w-16 text-muted-foreground" />
-            <p className="text-xl text-muted-foreground font-semibold font-lora">No events found yet!</p>
-            {!user && <Button asChild className="mt-4"><Link to="/login">Login to Add Events</Link></Button>}
-          </div>
-        ) : (
-          events?.map((event) => (
-            <Card key={event.id} className="shadow-lg rounded-xl hover:shadow-xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-medium font-lora">{event.title}</CardTitle>
-                <CalendarDays className="h-6 w-6 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <p className="text-sm text-muted-foreground">Date: {format(new Date(event.date), "PPP")}</p>
-                {event.location && <p className="text-sm text-muted-foreground">Location: {event.location}</p>}
-                {event.description && <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>}
-                {event.humanitix_link ? (
-                  <Button asChild className="w-full">
-                    <a href={event.humanitix_link} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="mr-2 h-4 w-4" /> View on Humanitix
-                    </a>
-                  </Button>
-                ) : (
-                  <Button variant="outline" className="w-full" disabled>No Humanitix Link</Button>
-                )}
-                {user && user.id === event.user_id && (
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" size="sm" onClick={() => { setEditingEvent(event); setIsDialogOpen(true); }}>
-                      <Edit className="h-4 w-4 mr-2" /> Edit
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm"><Trash2 className="h-4 w-4 mr-2" /> Delete</Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(event.id)}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                )}
+            <Card key={i} className="shadow-lg rounded-2xl overflow-hidden border-none">
+              <div className="h-48 bg-muted animate-pulse" />
+              <CardContent className="p-6 space-y-4">
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-20 w-full" />
               </CardContent>
             </Card>
           ))
+        ) : events && events.length === 0 ? (
+          <div className="col-span-full text-center py-20 bg-muted/30 rounded-3xl border-2 border-dashed border-muted-foreground/20">
+            <CalendarDays className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-20" />
+            <h3 className="text-2xl font-bold font-lora text-muted-foreground">No events found</h3>
+            <p className="text-muted-foreground mt-2">Try adjusting your search or check back later.</p>
+          </div>
+        ) : (
+          events?.map((event) => {
+            const eventDate = new Date(event.date);
+            const isPast = eventDate < new Date();
+            
+            return (
+              <Card key={event.id} className={cn(
+                "group flex flex-col overflow-hidden transition-all duration-300 border-none shadow-md hover:shadow-xl bg-card rounded-2xl",
+                isPast && "opacity-60 grayscale-[0.5]"
+              )}>
+                {/* Date Header */}
+                <div className="bg-primary p-4 text-primary-foreground flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 opacity-80" />
+                    <span className="text-sm font-bold uppercase tracking-widest">
+                      {format(eventDate, "EEEE, MMM do")}
+                    </span>
+                  </div>
+                  {isPast && <Badge variant="secondary" className="bg-white/20 text-white border-none">Past Event</Badge>}
+                </div>
+
+                <CardContent className="p-6 flex-grow flex flex-col gap-4">
+                  <div className="space-y-2">
+                    <CardTitle className="text-2xl font-bold font-lora leading-tight group-hover:text-primary transition-colors">
+                      {event.title}
+                    </CardTitle>
+                    {event.location && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">{event.location}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {event.description && (
+                    <p className="text-muted-foreground line-clamp-3 leading-relaxed text-sm">
+                      {event.description}
+                    </p>
+                  )}
+
+                  <div className="mt-auto pt-4 flex flex-col gap-3">
+                    {event.humanitix_link ? (
+                      <Button asChild className="w-full font-bold group/btn" size="lg">
+                        <a href={event.humanitix_link} target="_blank" rel="noopener noreferrer">
+                          RSVP on Humanitix <ExternalLink className="ml-2 h-4 w-4" />
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button variant="outline" className="w-full" disabled>Details Coming Soon</Button>
+                    )}
+
+                    {user?.is_admin && (
+                      <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
+                        <Button variant="ghost" size="sm" onClick={() => { setEditingEvent(event); setIsDialogOpen(true); }} className="text-muted-foreground hover:text-primary">
+                          <Edit className="h-4 w-4 mr-2" /> Edit
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Event?</AlertDialogTitle>
+                              <AlertDialogDescription>This will permanently remove "{event.title}".</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(event.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
 
-      {user && (
+      {user?.is_admin && (
         <EventDialog 
           isOpen={isDialogOpen} 
           onClose={() => setIsDialogOpen(false)} 

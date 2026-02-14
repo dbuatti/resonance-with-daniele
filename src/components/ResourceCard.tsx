@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2, MoreVertical, Copy, Info, Youtube } from "lucide-react";
+import { FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2, MoreVertical, Copy, Info, Youtube, Trash2 } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
-import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import AudioPlayerCard from './AudioPlayerCard'; // Import the new component
+import AudioPlayerCard from './AudioPlayerCard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { showSuccess, showError } from "@/utils/toast";
 
@@ -19,54 +18,40 @@ interface ResourceCardProps {
   isAdmin: boolean | undefined;
   onEdit: (resource: Resource) => void;
   onDelete: (resource: Resource) => void;
-  onMove: (resource: Resource) => void; // New prop for move action
+  onMove: (resource: Resource) => void;
 }
 
-// Define colors for resource type pills (White background, colored text/border)
-const resourcePillStyles: { [key: string]: { text: string, border: string } } = {
-  pdf: { text: "text-red-600", border: "border-red-300" },
-  audio: { text: "text-green-600", border: "border-green-300" },
-  link: { text: "text-blue-600", border: "border-blue-300" },
-  youtube: { text: "text-purple-600", border: "border-purple-300" },
-  lyrics: { text: "text-orange-600", border: "border-orange-300" },
-  default: { text: "text-muted-foreground", border: "border-border" },
+const resourcePillStyles: { [key: string]: { text: string, border: string, bg: string } } = {
+  pdf: { text: "text-red-600", border: "border-red-200", bg: "bg-red-50" },
+  audio: { text: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
+  link: { text: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
+  youtube: { text: "text-purple-600", border: "border-purple-200", bg: "bg-purple-50" },
+  lyrics: { text: "text-orange-600", border: "border-orange-200", bg: "bg-orange-50" },
+  default: { text: "text-muted-foreground", border: "border-border", bg: "bg-muted" },
 };
 
-// Define colors for card backgrounds
-const resourceCardBackgrounds: { [key: string]: string } = {
-  pdf: "bg-pastel-pdf dark:bg-pastel-pdf-dark",
-  audio: "bg-pastel-audio dark:bg-pastel-audio-dark",
-  link: "bg-pastel-link dark:bg-pastel-link-dark",
-  youtube: "bg-pastel-youtube dark:bg-pastel-youtube-dark",
-  lyrics: "bg-pastel-lyrics dark:bg-pastel-lyrics-dark",
-  default: "bg-card",
-};
-
-// Define colors for voice part pills (using a simple scheme for now)
 const voicePartColors: { [key: string]: string } = {
-  "Soprano 1": "bg-pink-200 text-pink-800",
-  "Soprano 2": "bg-pink-300 text-pink-800",
-  "Soprano": "bg-pink-400 text-pink-900",
-  "Alto 1": "bg-purple-200 text-purple-800",
-  "Alto 2": "bg-purple-300 text-purple-800",
-  "Alto": "bg-purple-400 text-purple-900",
-  "Tenor 1": "bg-blue-200 text-blue-800",
-  "Tenor 2": "bg-blue-300 text-blue-800",
-  "Tenor": "bg-blue-400 text-blue-900",
-  "Bass 1": "bg-green-200 text-green-800",
-  "Bass 2": "bg-green-300 text-green-800",
-  "Bass": "bg-green-400 text-green-900",
-  "Full Choir": "bg-primary text-primary-foreground",
-  "Unison": "bg-indigo-500 text-white",
-  "Other": "bg-gray-500 text-white",
+  "Soprano 1": "bg-pink-100 text-pink-700 border-pink-200",
+  "Soprano 2": "bg-pink-100 text-pink-700 border-pink-200",
+  "Soprano": "bg-pink-100 text-pink-700 border-pink-200",
+  "Alto 1": "bg-purple-100 text-purple-700 border-purple-200",
+  "Alto 2": "bg-purple-100 text-purple-700 border-purple-200",
+  "Alto": "bg-purple-100 text-purple-700 border-purple-200",
+  "Tenor 1": "bg-blue-100 text-blue-700 border-blue-200",
+  "Tenor 2": "bg-blue-100 text-blue-700 border-blue-200",
+  "Tenor": "bg-blue-100 text-blue-700 border-blue-200",
+  "Bass 1": "bg-green-100 text-green-700 border-green-200",
+  "Bass 2": "bg-green-100 text-green-700 border-green-200",
+  "Bass": "bg-green-100 text-green-700 border-green-200",
+  "Full Choir": "bg-primary/10 text-primary border-primary/20",
+  "Unison": "bg-indigo-100 text-indigo-700 border-indigo-200",
+  "Other": "bg-gray-100 text-gray-700 border-gray-200",
 };
 
-// Helper to extract YouTube video ID and create embed URL
 const getYouTubeEmbedUrl = (url: string | null): string | null => {
   if (!url) return null;
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
-  
   if (match && match[2].length === 11) {
     return `https://www.youtube.com/embed/${match[2]}?rel=0&showinfo=0&modestbranding=1`;
   }
@@ -74,7 +59,6 @@ const getYouTubeEmbedUrl = (url: string | null): string | null => {
 };
 
 const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, onDelete, onMove }) => {
-  
   const isFile = resource.type === 'file' || resource.type === 'lyrics';
   const isLink = resource.type === 'url';
   const isYoutube = resource.type === 'youtube';
@@ -82,23 +66,15 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   const isPublished = resource.is_published;
 
   const getFileDetails = () => {
-    if (!resource.url) return { icon: <FileText className="h-12 w-12 text-muted-foreground" />, type: 'File', isPdf: false, isAudio: false, fileName: 'N/A' };
+    if (!resource.url) return { isPdf: false, isAudio: false };
     const url = resource.url.toLowerCase();
-    const isPdf = url.endsWith('.pdf');
-    const isAudio = url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a');
-
-    if (isPdf) {
-      return { icon: <FileText className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf, isAudio: false };
-    }
-    if (isAudio) {
-      return { icon: <Headphones className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf: false, isAudio };
-    }
-    return { icon: <File className="h-6 w-6 text-primary-foreground" />, type: 'File', isPdf: false, isAudio: false };
+    return {
+      isPdf: url.endsWith('.pdf'),
+      isAudio: url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.ogg') || url.endsWith('.m4a')
+    };
   };
 
   const fileDetails = getFileDetails();
-
-  // Determine resource type for pill and card background
   let resourcePillType: keyof typeof resourcePillStyles;
   let resourcePillText: string;
   let primaryIcon: React.ReactNode;
@@ -106,48 +82,40 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
   if (isYoutube) {
     resourcePillType = 'youtube';
     resourcePillText = 'YouTube';
-    primaryIcon = <Youtube className="h-6 w-6 text-primary-foreground" />;
+    primaryIcon = <Youtube className="h-5 w-5" />;
   } else if (isLyrics) {
     resourcePillType = 'lyrics';
     resourcePillText = 'Lyrics';
-    primaryIcon = <Mic2 className="h-6 w-6 text-primary-foreground" />;
+    primaryIcon = <Mic2 className="h-5 w-5" />;
   } else if (isLink) {
     resourcePillType = 'link';
     resourcePillText = 'Link';
-    primaryIcon = <LinkIcon className="h-6 w-6 text-primary-foreground" />;
+    primaryIcon = <LinkIcon className="h-5 w-5" />;
   } else if (isFile) {
     resourcePillType = fileDetails.isPdf ? 'pdf' : fileDetails.isAudio ? 'audio' : 'default';
     resourcePillText = fileDetails.isPdf ? 'PDF' : fileDetails.isAudio ? 'Audio' : 'File';
-    primaryIcon = fileDetails.icon;
+    primaryIcon = fileDetails.isPdf ? <FileText className="h-5 w-5" /> : <Headphones className="h-5 w-5" />;
   } else {
     resourcePillType = 'default';
     resourcePillText = 'Resource';
-    primaryIcon = <File className="h-6 w-6 text-primary-foreground" />;
+    primaryIcon = <File className="h-5 w-5" />;
   }
 
   const pillStyle = resourcePillStyles[resourcePillType] || resourcePillStyles.default;
-  const cardBackgroundClass = resourceCardBackgrounds[resourcePillType] || resourceCardBackgrounds.default;
-
-  // Unified backdrop style flag: true for PDF, Audio, and YouTube
-  const useMediaBackdrop = isFile && (fileDetails.isPdf || fileDetails.isAudio) || isYoutube;
+  const useMediaBackdrop = (isFile && (fileDetails.isPdf || fileDetails.isAudio)) || isYoutube;
   const youtubeEmbedUrl = isYoutube ? getYouTubeEmbedUrl(resource.url) : null;
 
-  // Unified action handler: open URL in new tab (browser handles PDF/Audio/Link)
   const handlePrimaryAction = () => {
     if (!resource.url) return;
-
     if (isFile) {
-      // For files (PDF/Audio/Lyrics PDF), force download using a temporary anchor tag
       const link = document.createElement('a');
       link.href = resource.url;
-      // Use the original filename if available, otherwise use the title
       link.download = resource.original_filename || resource.title; 
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       showSuccess(`Downloading ${resource.title}...`);
     } else {
-      // For external links (URL/YouTube), open in a new tab
       window.open(resource.url, '_blank');
     }
   };
@@ -156,243 +124,137 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     if (resource.url) {
       navigator.clipboard.writeText(resource.url);
       showSuccess("Resource link copied to clipboard!");
-    } else {
-      showError("Resource does not have a direct link to share.");
     }
   };
 
   const getPrimaryActionText = () => {
     if (isYoutube) return "Watch on YouTube";
-    if (isLink) return "View External Link";
+    if (isLink) return "View Link";
     if (isLyrics) return "Download Lyrics";
-    if (fileDetails.isPdf) return "Download Sheet Music";
-    if (fileDetails.isAudio) return "Download Audio File";
+    if (fileDetails.isPdf) return "Download PDF";
+    if (fileDetails.isAudio) return "Download Audio";
     return "View Resource";
   };
 
   return (
     <Card className={cn(
-        "shadow-lg rounded-xl flex flex-col justify-between transition-shadow duration-200 hover:shadow-xl relative",
-        cardBackgroundClass, // Apply pastel background here
-        !isPublished && isAdmin && "border-l-4 border-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20",
-      )}>
-        
-        {/* ADMIN CONTEXT MENU (Absolute Positioned) */}
-        {isAdmin && (
-          <div className="absolute top-2 right-2 z-20">
+      "group flex flex-col overflow-hidden transition-all duration-300 border-none shadow-md hover:shadow-xl bg-card",
+      !isPublished && isAdmin && "ring-2 ring-yellow-500/50"
+    )}>
+      {/* Media Preview Area */}
+      {useMediaBackdrop && (
+        <div className="relative aspect-video bg-muted overflow-hidden">
+          {fileDetails.isPdf || isLyrics ? (
+            <div className="relative w-full h-full cursor-pointer group/preview" onClick={handlePrimaryAction}>
+              <iframe
+                src={resource.url!}
+                title={resource.title}
+                className="w-full h-full border-none pointer-events-none scale-110 origin-top"
+                style={{ marginTop: '-20px' }}
+              />
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                <Button size="sm" className="shadow-lg">
+                  <FileSearch className="h-4 w-4 mr-2" /> Preview
+                </Button>
+              </div>
+            </div>
+          ) : fileDetails.isAudio ? (
+            <div className="h-full flex items-center justify-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+              <AudioPlayerCard src={resource.url!} title={resource.title} onDownload={handlePrimaryAction} />
+            </div>
+          ) : isYoutube && youtubeEmbedUrl ? (
+            <iframe
+              className="w-full h-full"
+              src={youtubeEmbedUrl}
+              title={resource.title}
+              allowFullScreen
+            />
+          ) : null}
+        </div>
+      )}
+
+      {/* Content Area */}
+      <CardContent className="p-5 flex-grow flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1 flex-1 min-w-0">
+            <div className="flex flex-wrap gap-2 mb-2">
+              <Badge variant="outline" className={cn("text-[10px] uppercase tracking-widest font-bold", pillStyle.bg, pillStyle.text, pillStyle.border)}>
+                {resourcePillText}
+              </Badge>
+              {resource.voice_part && (
+                <Badge variant="outline" className={cn("text-[10px] uppercase tracking-widest font-bold border", voicePartColors[resource.voice_part] || voicePartColors.Other)}>
+                  {resource.voice_part}
+                </Badge>
+              )}
+              {isAdmin && !isPublished && (
+                <Badge variant="destructive" className="text-[10px] uppercase tracking-widest font-bold">Draft</Badge>
+              )}
+            </div>
+            <CardTitle className="text-lg font-bold font-lora leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+              {resource.title}
+            </CardTitle>
+            {resource.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                {resource.description}
+              </p>
+            )}
+          </div>
+
+          {/* Admin Actions */}
+          {isAdmin && (
             <DropdownMenu>
-              <Tooltip>
-                <DropdownMenuTrigger asChild>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/70 hover:text-foreground hover:bg-background/50">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                </DropdownMenuTrigger>
-                <TooltipContent>More Actions</TooltipContent>
-              </Tooltip>
-              <DropdownMenuContent align="end" className="w-56">
-                
-                {/* 1. View Details / File Info (Opens Edit Dialog for now) */}
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground hover:text-foreground">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => onEdit(resource)}>
-                  <Info className="mr-2 h-4 w-4" />
-                  <span>View Details / Edit</span>
+                  <Info className="mr-2 h-4 w-4" /> Edit Details
                 </DropdownMenuItem>
-                
-                {/* 2. Share Resource (Copy Link) */}
-                {resource.url && (
-                  <DropdownMenuItem onClick={handleShare}>
-                    <Copy className="mr-2 h-4 w-4" />
-                    <span>Share Resource (Copy Link)</span>
-                  </DropdownMenuItem>
-                )}
-                
-                <DropdownMenuSeparator />
-                
-                {/* 3. Move to Folder */}
+                <DropdownMenuItem onClick={handleShare}>
+                  <Copy className="mr-2 h-4 w-4" /> Copy Link
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onMove(resource)}>
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                  <span>Move to Folder</span>
+                  <ArrowRight className="mr-2 h-4 w-4" /> Move to Folder
                 </DropdownMenuItem>
-                
-                {/* 4. Delete */}
+                <DropdownMenuSeparator />
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <DropdownMenuItem 
-                      onSelect={(e) => e.preventDefault()} // Prevent menu closing when opening AlertDialog
-                      className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Delete</span>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Confirm Resource Deletion</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete the resource: <strong>{resource.title}</strong>? This action cannot be undone.
-                      </AlertDialogDescription>
+                      <AlertDialogTitle>Delete Resource?</AlertDialogTitle>
+                      <AlertDialogDescription>This will permanently remove "{resource.title}".</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDelete(resource)} className="bg-destructive hover:bg-destructive/90">
-                        Delete Resource
-                      </AlertDialogAction>
+                      <AlertDialogAction onClick={() => onDelete(resource)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          )}
+        </div>
+
+        {/* Primary Action Button (for non-audio resources) */}
+        {!fileDetails.isAudio && (
+          <Button 
+            onClick={handlePrimaryAction} 
+            className="w-full mt-auto font-bold group/btn"
+            variant={isYoutube ? "secondary" : "default"}
+          >
+            {isYoutube ? <Youtube className="h-4 w-4 mr-2" /> : isLink ? <ExternalLink className="h-4 w-4 mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+            {getPrimaryActionText()}
+            <ArrowRight className="ml-2 h-4 w-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
+          </Button>
         )}
-
-        {/* Main Content Area (Preview for PDF/Audio/YouTube) */}
-        <div className={cn(
-          "relative overflow-hidden",
-          // Only apply rounded-t-xl if it's a media backdrop, otherwise it's hidden
-          useMediaBackdrop ? "rounded-t-xl" : "hidden"
-        )}>
-          
-          {useMediaBackdrop && (
-            <div className="relative h-full flex items-center justify-center">
-              
-              {/* Content specific to PDF/Lyrics PDF */}
-              {(fileDetails.isPdf || isLyrics) && resource.url && (
-                <div 
-                  className="relative w-full h-64 cursor-pointer group"
-                  onClick={handlePrimaryAction} // Make the preview area clickable
-                >
-                  {/* PDF Preview Area (Iframe) */}
-                  <iframe
-                    src={resource.url} // Clean URL
-                    title={`Preview of ${resource.title}`}
-                    className="w-full border-none absolute left-0 right-0 top-0 pointer-events-none" // Disable interaction on iframe
-                    style={{ height: 'calc(100% + 40px)', marginTop: '-40px' }}
-                  />
-
-                  {/* Overlay for Clickability */}
-                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                    <Button size="lg" className="shadow-xl">
-                      <FileSearch className="h-5 w-5 mr-2" /> View Preview
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Content specific to Audio (NEW CUSTOM PLAYER) */}
-              {fileDetails.isAudio && resource.url && (
-                <AudioPlayerCard 
-                  src={resource.url} 
-                  title={resource.title} 
-                  onDownload={handlePrimaryAction} // Use the primary action handler for download
-                />
-              )}
-
-              {/* Content specific to YouTube */}
-              {isYoutube && youtubeEmbedUrl && (
-                <div className="relative w-full aspect-video">
-                  <iframe
-                    className="w-full h-full"
-                    src={youtubeEmbedUrl}
-                    title={resource.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        
-        {/* Title, Pills, and Description Area (Main Display) */}
-        <div className={cn(
-          "px-4 pb-2", 
-          useMediaBackdrop ? "pt-4 bg-transparent" : "pt-4 bg-transparent"
-        )}>
-          
-          {/* Header Row: Icon + Title + Pills + Draft Badge */}
-          <div className="flex items-center justify-between gap-2 mb-2">
-            
-            {/* Left Side: Icon + Title */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-                {/* Icon (Non-Media Backdrop only) */}
-                {!useMediaBackdrop && (
-                    <div className="bg-primary p-2 rounded-full flex-shrink-0 text-primary-foreground">
-                        {primaryIcon}
-                    </div>
-                )}
-                
-                <div className="flex-1 min-w-0">
-                    {/* Title */}
-                    <CardTitle className="text-xl font-lora line-clamp-1 text-foreground my-0">
-                        {resource.title}
-                    </CardTitle>
-                </div>
-            </div>
-            
-            {/* Right Side: Pills and Draft Badge */}
-            <div className="flex flex-wrap justify-end items-center gap-2 flex-shrink-0">
-                {/* Voice Part Pill */}
-                {resource.voice_part && (
-                  <Badge 
-                    variant="secondary" 
-                    className={cn("text-xs font-semibold", voicePartColors[resource.voice_part] || voicePartColors.Other)}
-                  >
-                    {resource.voice_part}
-                  </Badge>
-                )}
-                
-                {/* Resource Type Pill */}
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    "text-xs font-semibold bg-card border", 
-                    pillStyle.text, 
-                    pillStyle.border
-                  )}
-                >
-                  {resourcePillText}
-                </Badge>
-                
-                {/* Draft Badge (Admin only) */}
-                {isAdmin && !isPublished && (
-                    <Badge variant="destructive" className="text-xs">
-                        Draft
-                    </Badge>
-                )}
-            </div>
-          </div>
-
-          {/* Description - Only render if description exists */}
-          {resource.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {resource.description}
-            </p>
-          )}
-        </div>
-
-        {/* Footer Content (Buttons and Date) */}
-        <CardContent className="p-4 pt-2">
-          <div className="flex flex-col gap-3">
-            {/* Primary Action Button (Visible for all non-admin users) */}
-            {/* Show for PDF, Lyrics, Link, Audio uses integrated download button */}
-            {!isAdmin && resource.url && (fileDetails.isPdf || isLink || isYoutube || isLyrics) && (
-              <Button 
-                onClick={handlePrimaryAction} 
-                className="w-full" 
-                disabled={!resource.url}
-              >
-                {isYoutube ? <Youtube className="h-4 w-4 mr-2" /> : isLink ? <ExternalLink className="h-4 w-4 mr-2" /> : <Download className="h-4 w-4 mr-2" />}
-                <span>{getPrimaryActionText()}</span>
-              </Button>
-            )}
-            
-            {/* Admin Actions (REMOVED - now in context menu) */}
-          </div>
-        </CardContent>
-      </Card>
+      </CardContent>
+    </Card>
   );
 };
 
