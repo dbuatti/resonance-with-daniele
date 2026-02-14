@@ -3,7 +3,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Mic2, SortAsc, Folder, Plus } from "lucide-react";
+import { Search, Filter, Mic2, SortAsc, Folder, Plus, X, RotateCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ interface ResourceControlsProps {
   sortOrder: 'asc' | 'desc';
   setSortOrder: (val: 'asc' | 'desc') => void;
   voiceParts: string[];
+  onResetFilters: () => void; // New prop
 }
 
 const ResourceControls: React.FC<ResourceControlsProps> = ({
@@ -42,7 +43,10 @@ const ResourceControls: React.FC<ResourceControlsProps> = ({
   sortOrder,
   setSortOrder,
   voiceParts,
+  onResetFilters,
 }) => {
+  const hasActiveFilters = filterType !== 'all' || filterVoicePart !== 'all' || searchInput !== "";
+
   return (
     <div className="flex flex-col gap-4 mb-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -52,9 +56,19 @@ const ResourceControls: React.FC<ResourceControlsProps> = ({
             placeholder="Search resources..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10 placeholder:text-foreground/70"
+            className="pl-10 pr-10 placeholder:text-foreground/70"
             disabled={loadingResources}
           />
+          {searchInput && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchInput("")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         
         {isAdmin && (
@@ -69,7 +83,18 @@ const ResourceControls: React.FC<ResourceControlsProps> = ({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-3 justify-start sm:justify-end">
+      <div className="flex flex-wrap gap-3 justify-start sm:justify-end items-center">
+        {hasActiveFilters && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onResetFilters}
+            className="text-muted-foreground hover:text-primary"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" /> Reset Filters
+          </Button>
+        )}
+
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className={cn("w-[150px]", filterType !== 'all' && "bg-primary/10 border-primary text-primary")}>
             <Filter className="h-4 w-4 mr-2" />

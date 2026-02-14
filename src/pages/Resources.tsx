@@ -120,6 +120,14 @@ const Resources: React.FC = () => {
     setSearchInput("");
   };
 
+  const handleResetFilters = () => {
+    setSearchInput("");
+    setFilterType('all');
+    setFilterVoicePart('all');
+    setSortBy('sort_order');
+    setSortOrder('asc');
+  };
+
   const handleFileUploadToFolder = useCallback(async (file: File, folderId: string | null) => {
     if (!isAdmin || !user) return;
     setIsUploadingFileToFolder(folderId || 'root');
@@ -231,6 +239,7 @@ const Resources: React.FC = () => {
           isAdmin={isAdmin} onAddFolder={() => setIsFolderDialogOpen(true)} onAddResource={() => setIsResourceDialogOpen(true)}
           filterType={filterType} setFilterType={setFilterType} filterVoicePart={filterVoicePart} setFilterVoicePart={setFilterVoicePart}
           sortBy={sortBy} setSortBy={setSortBy} sortOrder={sortOrder} setSortOrder={setSortOrder} voiceParts={voiceParts}
+          onResetFilters={handleResetFilters}
         />
 
         <div {...getMainRootProps()} className={cn("space-y-8 p-4 rounded-xl relative", isMainDragActive && isAdmin && "border-4 border-dashed border-primary/50 bg-primary/5")}>
