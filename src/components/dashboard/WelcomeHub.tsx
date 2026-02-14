@@ -102,6 +102,14 @@ const WelcomeHub: React.FC = () => {
   });
 
   const isLoading = loadingSession || loadingEvent || loadingResources || loadingRsvp || loadingNominatedFolder;
+  
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
 
   if (isLoading) {
@@ -138,7 +146,7 @@ const WelcomeHub: React.FC = () => {
           </div>
           <div className="text-center md:text-left space-y-4">
             <h1 className="text-4xl md:text-5xl font-extrabold font-lora leading-tight">
-              Welcome back, {firstName}!
+              {getGreeting()}, {firstName}!
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl">
               Ready to find your resonance today? Explore your resources, check upcoming events, and stay connected with our community.

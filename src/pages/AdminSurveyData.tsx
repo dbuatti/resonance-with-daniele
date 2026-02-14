@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import SurveyMetricsCard from "@/components/admin/SurveyMetricsCard";
 import { showError } from "@/utils/toast";
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import { useQuery } from "@tanstack/react-query";
+import BackButton from "@/components/ui/BackButton";
 
 interface Profile {
   id: string;
@@ -28,7 +29,7 @@ interface Profile {
   inclusivity_importance: string | null;
   suggestions: string | null;
   updated_at: string;
-  voice_type: string[] | null; // Added voice_type
+  voice_type: string[] | null;
 }
 
 const AdminSurveyData: React.FC = () => {
@@ -42,35 +43,21 @@ const AdminSurveyData: React.FC = () => {
     }
   }, [user, loadingSession, navigate]);
 
-  // Query function for fetching profiles
   const fetchProfiles = async (): Promise<Profile[]> => {
-    console.log("[AdminSurveyData] Fetching all profiles for survey data.");
     const { data, error } = await supabase
       .from("profiles")
       .select("*, email")
       .order("updated_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching profiles for survey data:", error);
-      throw new Error("Failed to load survey data.");
-    }
-    console.log("[AdminSurveyData] Profiles fetched successfully:", data?.length, "profiles.");
+    if (error) throw new Error("Failed to load survey data.");
     return data || [];
   };
 
-  // Use react-query for profiles data
-  const { data: profiles, isLoading: loadingProfiles, error: fetchError } = useQuery<
-    Profile[], // TQueryFnData
-    Error,          // TError
-    Profile[], // TData (the type of the 'data' property)
-    ['adminProfiles'] // TQueryKey
-  >({
+  const { data: profiles, isLoading: loadingProfiles, error: fetchError } = useQuery<Profile[], Error>({
     queryKey: ['adminProfiles'],
     queryFn: fetchProfiles,
-    enabled: !loadingSession && !!user?.is_admin, // Only fetch if session is not loading and user is admin
-    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    enabled: !loadingSession && !!user?.is_admin,
+    staleTime: 5 * 60 * 1000,
   });
 
   if (loadingProfiles) {
@@ -90,28 +77,22 @@ const AdminSurveyData: React.FC = () => {
     );
   }
 
-  if (!user || !user.is_admin) {
-    return null;
-  }
-
-  if (fetchError) {
-    return (
-      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl p-6 shadow-lg rounded-xl text-center">
-          <CardTitle className="text-2xl font-lora text-destructive">Error Loading Data</CardTitle>
-          <CardDescription className="text-muted-foreground">{fetchError.message}</CardDescription>
-        </Card>
-      </div>
-    );
-  }
+  if (!user || !user.is_admin) return null;
 
   return (
     <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora">Member Survey Data & Insights</h1>
-      <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-        Explore aggregated survey responses to understand your community's preferences and feedback.
-      </p>
-      <SurveyMetricsCard profiles={profiles || []} loading={loadingProfiles} />
+      <div className="max-w-6xl mx-auto px-4">
+        <BackButton className="mb-6" to="/admin" />
+        
+        <header className="text-center space-y-4 mb-12">
+          <h1 className="text-4xl font-bold text-center font-lora">Member Survey Data & Insights</h1>
+          <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
+            Explore aggregated survey responses to understand your community's preferences and feedback.
+          </p>
+        </header>
+        
+        <SurveyMetricsCard profiles={profiles || []} loading={loadingProfiles} />
+      </div>
     </div>
   );
 };
