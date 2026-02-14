@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Resource, ResourceFolder } from "@/types/Resource";
 import { Loader2, Home, CalendarDays, FileText, Music, Folder, Link as LinkIcon, Mic2, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button"; // FIX: Added Button import
+import { Button } from "@/components/ui/button";
 
 interface InternalLinkSelectorProps {
   value: string;
@@ -36,7 +36,7 @@ const staticPages = [
   { path: "/learn-more", name: "Learn More", icon: Home },
 ];
 
-// Helper to get the full path display for a folder (replicated logic)
+// Helper to get the full path display for a folder
 const getFolderPathDisplay = (folderId: string | null, allFolders: ResourceFolder[] | undefined) => {
   if (folderId === null) return "Home (Root)";
   const folder = allFolders?.find(f => f.id === folderId);
@@ -78,7 +78,7 @@ const InternalLinkSelector: React.FC<InternalLinkSelectorProps> = ({ value, onCh
   const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("*") // FIX: Select all fields to satisfy ResourceFolder type
+      .select("*")
       .order("name", { ascending: true });
     if (error) throw new Error("Failed to load folders.");
     return data || [];
@@ -99,8 +99,8 @@ const InternalLinkSelector: React.FC<InternalLinkSelectorProps> = ({ value, onCh
   const fetchAllResources = async (): Promise<Resource[]> => {
     const { data, error } = await supabase
       .from("resources")
-      .select("*") // FIX: Select all fields to satisfy Resource type
-      .eq("is_published", true) // Only show published resources
+      .select("*")
+      .eq("is_published", true)
       .order("title", { ascending: true });
     if (error) throw new Error("Failed to load resources.");
     return data || [];
@@ -144,7 +144,7 @@ const InternalLinkSelector: React.FC<InternalLinkSelectorProps> = ({ value, onCh
       links.resources = allResources.map(resource => {
         const folderPath = resource.folder_id ? ` (${getFolderPathDisplay(resource.folder_id, allFolders)})` : ' (Root)';
         return {
-          path: resource.url || `/resources?folderId=${resource.folder_id || ''}`, // Link to resource URL or its folder
+          path: resource.url || `/resources?folderId=${resource.folder_id || ''}`,
           name: `${resource.title}${resource.url ? '' : folderPath}`,
           icon: getResourceIcon(resource.type),
         };

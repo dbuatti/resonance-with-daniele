@@ -24,7 +24,7 @@ interface ResourceControlsProps {
   sortOrder: 'asc' | 'desc';
   setSortOrder: (val: 'asc' | 'desc') => void;
   voiceParts: string[];
-  onResetFilters: () => void; // New prop
+  onResetFilters: () => void;
 }
 
 const ResourceControls: React.FC<ResourceControlsProps> = ({
