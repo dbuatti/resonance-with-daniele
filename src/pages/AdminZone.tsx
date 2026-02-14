@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertCircle, Mail, BellRing } from "lucide-react"; // Added BellRing icon
+import { AlertCircle, Mail, BellRing, Users, BarChart3, Settings } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -49,37 +49,62 @@ const AdminZone: React.FC = () => {
     );
   }
 
+  const adminTools = [
+    {
+      title: "Member Management",
+      description: "View all member profiles, manage roles, and edit details.",
+      icon: <Users className="h-6 w-6 text-primary" />,
+      link: "/admin/members",
+      label: "Manage Members"
+    },
+    {
+      title: "Survey Insights",
+      description: "Analyze aggregated data and feedback from member surveys.",
+      icon: <BarChart3 className="h-6 w-6 text-primary" />,
+      link: "/admin/survey-data",
+      label: "View Survey Data"
+    },
+    {
+      title: "Announcements",
+      description: "Create and manage important updates for the choir community.",
+      icon: <BellRing className="h-6 w-6 text-primary" />,
+      link: "/admin/announcements",
+      label: "Manage Announcements"
+    }
+  ];
+
   return (
-    <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora">Welcome to the Admin Zone, Daniele!</h1>
-      <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-        This area is exclusively for administrators. Here you can manage various aspects of the choir's operations.
-      </p>
+    <div className="space-y-10 py-8 md:py-12">
+      <header className="text-center space-y-4">
+        <h1 className="text-4xl md:text-5xl font-extrabold font-lora tracking-tight">
+          Admin Command Center
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Welcome back, Daniele. Here you can oversee all aspects of the Resonance community.
+        </p>
+      </header>
 
       <AdminDashboardOverview />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">View Survey Data</CardTitle>
-          <CardDescription>Analyze aggregated insights from member surveys.</CardDescription>
-          <Link to="/admin/survey-data" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            View Survey Data
-          </Link>
-        </Card>
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">Manage Members</CardTitle>
-          <CardDescription>View all member profiles and manage their roles.</CardDescription>
-          <Link to="/admin/members" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            Manage Members
-          </Link>
-        </Card>
-        <Card className="shadow-lg rounded-xl p-6 text-center">
-          <CardTitle className="text-xl font-lora mb-2">Manage Announcements</CardTitle>
-          <CardDescription>Create, edit, and delete choir announcements.</CardDescription>
-          <Link to="/admin/announcements" className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
-            <BellRing className="mr-2 h-4 w-4" /> Manage Announcements
-          </Link>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {adminTools.map((tool, i) => (
+          <Card key={i} className="shadow-lg rounded-2xl border-none bg-card hover:shadow-xl transition-all duration-300 group">
+            <CardHeader>
+              <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                {tool.icon}
+              </div>
+              <CardTitle className="text-xl font-bold font-lora">{tool.title}</CardTitle>
+              <CardDescription className="text-sm leading-relaxed">
+                {tool.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full font-bold" variant="secondary">
+                <Link to={tool.link}>{tool.label}</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

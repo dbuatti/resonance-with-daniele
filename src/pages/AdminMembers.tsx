@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, Trash2, Edit as EditIcon } from "lucide-react";
+import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +16,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import MemberEditDialog from "@/components/admin/MemberEditDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Profile {
   id: string;
@@ -115,90 +116,139 @@ const AdminMembers: React.FC = () => {
   };
 
   if (loadingProfiles) {
-    return <div className="p-8"><Skeleton className="h-10 w-full" /></div>;
+    return (
+      <div className="space-y-6 py-8">
+        <Skeleton className="h-12 w-1/2 mx-auto" />
+        <Card className="max-w-6xl mx-auto"><CardContent className="p-8"><Skeleton className="h-64 w-full" /></CardContent></Card>
+      </div>
+    );
   }
 
   if (!user || !user.is_admin) return null;
 
   return (
-    <div className="space-y-6 py-8">
-      <h1 className="text-4xl font-bold text-center font-lora">Manage Member Profiles</h1>
-      <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-        View and manage all registered member profiles, including their roles.
-      </p>
+    <div className="space-y-8 py-8 md:py-12">
+      <header className="text-center space-y-4">
+        <h1 className="text-4xl font-bold font-lora">Member Directory</h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Manage the Resonance community, update roles, and review member profiles.
+        </p>
+      </header>
 
-      <Card className="w-full max-w-6xl mx-auto p-6 shadow-lg rounded-xl">
-        <CardHeader>
-          <CardTitle className="text-2xl font-lora">Member List</CardTitle>
-          <CardDescription>Change user roles or view their detailed survey responses.</CardDescription>
+      <Card className="w-full max-w-6xl mx-auto shadow-xl border-none overflow-hidden rounded-2xl">
+        <CardHeader className="bg-muted/30 border-b border-border/50">
+          <CardTitle className="text-2xl font-bold font-lora">All Members</CardTitle>
+          <CardDescription>Total registered members: {profiles?.length || 0}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {profiles && profiles.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8"><p className="text-xl font-semibold">No profiles found.</p></div>
+            <div className="text-center text-muted-foreground py-20">
+              <UserIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
+              <p className="text-xl font-semibold">No members found.</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/20">
                   <TableRow>
-                    <TableHead className="min-w-[180px]">Name</TableHead>
-                    <TableHead className="min-w-[220px]">Email</TableHead>
-                    <TableHead className="w-[120px]">Role</TableHead>
-                    <TableHead className="w-[120px]">Survey Status</TableHead>
-                    <TableHead className="text-right w-[200px]">Actions</TableHead>
+                    <TableHead className="pl-6 py-4">Member</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Survey Status</TableHead>
+                    <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {profiles?.map((profile) => (
-                    <TableRow key={profile.id}>
-                      <TableCell className="font-medium">
-                        <Tooltip>
-                          <TooltipTrigger asChild><span className="truncate max-w-[180px] inline-block">{profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}</span></TooltipTrigger>
-                          <TooltipContent><p>{profile.first_name || profile.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : profile.email || "N/A"}</p></TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip>
-                          <TooltipTrigger asChild><span className="truncate max-w-[220px] inline-block">{profile.email || "N/A"}</span></TooltipTrigger>
-                          <TooltipContent><p>{profile.email || "N/A"}</p></TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={profile.is_admin ? "admin" : "user"}
-                          onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
-                          disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id || isDeletingUser === profile.id}
-                        >
-                          <SelectTrigger className="w-full"><SelectValue placeholder="Select role" /></SelectTrigger>
-                          <SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="user">User</SelectItem></SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        {hasSurveyResponses(profile) ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">Responded</Badge>
-                        ) : (
-                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => { setEditingMember(profile); setIsEditProfileDialogOpen(true); }}>
-                            <EditIcon className="mr-2 h-4 w-4" /> Edit Profile
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm" disabled={profile.id === user.id || isDeletingUser === profile.id}>
-                                {isDeletingUser === profile.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />} Delete
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader><AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-                              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(profile.id, profile.first_name || profile.email || "Unknown User")}>Delete User</AlertDialogAction></AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {profiles?.map((profile) => {
+                    const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+                    const displayName = fullName || profile.email?.split('@')[0] || "New Member";
+                    
+                    return (
+                      <TableRow key={profile.id} className="hover:bg-muted/10 transition-colors">
+                        <TableCell className="pl-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                              <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
+                              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                                {displayName.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-foreground leading-tight">{displayName}</span>
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Mail className="h-3 w-3" /> {profile.email}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={profile.is_admin ? "admin" : "user"}
+                              onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
+                              disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id || isDeletingUser === profile.id}
+                            >
+                              <SelectTrigger className={cn(
+                                "w-[110px] h-8 text-xs font-bold uppercase tracking-wider rounded-full border-none shadow-sm",
+                                profile.is_admin ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+                              )}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {isUpdatingAdminStatus === profile.id && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {hasSurveyResponses(profile) ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px] uppercase tracking-widest font-bold">Complete</Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px] uppercase tracking-widest font-bold">Pending</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right pr-6">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => { setEditingMember(profile); setIsEditProfileDialogOpen(true); }}
+                              className="h-8 px-3 text-xs font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
+                            >
+                              <EditIcon className="mr-1.5 h-3.5 w-3.5" /> Edit
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  disabled={profile.id === user.id || isDeletingUser === profile.id}
+                                  className="h-8 px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  {isDeletingUser === profile.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Member Account?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently remove <strong>{displayName}</strong> and all their associated data. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteUser(profile.id, displayName)} className="bg-destructive hover:bg-destructive/90">
+                                    Delete Account
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
-import { User as UserIcon, LogOut, Loader2 } from "lucide-react";
+import { User as UserIcon, LogOut, Loader2, Save, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -25,6 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
 
 const profileSchema = z.object({
   first_name: z.string().min(1, "First name is required").optional().or(z.literal("")),
@@ -133,7 +134,7 @@ const ProfileDetails: React.FC = () => {
 
   if (loadingSession) {
     return (
-      <Card className="w-full p-6 md:p-8 shadow-lg rounded-xl">
+      <Card className="w-full max-w-2xl mx-auto p-6 md:p-8 shadow-lg rounded-2xl border-none">
         <CardHeader className="text-center">
           <Skeleton className="w-24 h-24 rounded-full mx-auto mb-4" />
           <Skeleton className="h-8 w-1/2 mx-auto mb-2" />
@@ -152,73 +153,105 @@ const ProfileDetails: React.FC = () => {
   const displayAvatarUrl = selectedAvatarFile ? URL.createObjectURL(selectedAvatarFile) : profile?.avatar_url;
 
   return (
-    <Card className="w-full p-6 md:p-8 shadow-lg rounded-xl">
-      <CardHeader className="text-center">
-        <Avatar className="w-24 h-24 mx-auto mb-4">
-          {displayAvatarUrl ? (
-            <AvatarImage src={displayAvatarUrl} className="object-cover" />
-          ) : (
-            <AvatarFallback className="bg-primary text-primary-foreground"><UserIcon className="h-12 w-12" /></AvatarFallback>
+    <Card className="w-full max-w-2xl mx-auto shadow-xl border-none rounded-2xl overflow-hidden">
+      <CardHeader className="text-center bg-muted/30 pb-8 border-b border-border/50">
+        <div className="relative inline-block mx-auto mb-4">
+          <Avatar className="w-28 h-28 border-4 border-background shadow-xl">
+            {displayAvatarUrl ? (
+              <AvatarImage src={displayAvatarUrl} className="object-cover" />
+            ) : (
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                <UserIcon className="h-14 w-14" />
+              </AvatarFallback>
+            )}
+          </Avatar>
+          {profile?.is_admin && (
+            <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-0.5 text-[10px] uppercase tracking-widest font-bold shadow-lg">
+              <ShieldCheck className="h-3 w-3 mr-1" /> Admin
+            </Badge>
           )}
-        </Avatar>
-        <CardTitle className="text-3xl font-bold font-lora">My Profile</CardTitle>
-        <CardDescription className="text-muted-foreground">Manage your personal information.</CardDescription>
+        </div>
+        <CardTitle className="text-3xl font-bold font-lora">Personal Details</CardTitle>
+        <CardDescription className="text-muted-foreground">
+          Update your information and how you appear to the community.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-8">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
-            <div className="grid gap-2">
-              <Label>Email</Label>
-              <Input value={user.email || ""} disabled className="bg-muted" />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="grid gap-6">
+              <div className="grid gap-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
+                <Input value={user.email || ""} disabled className="bg-muted/50 font-medium" />
+                <p className="text-[10px] text-muted-foreground italic">Your email is used for login and cannot be changed here.</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="first_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground">First Name</FormLabel>
+                      <FormControl><Input {...field} disabled={isSavingProfile} className="rounded-xl" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="last_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Last Name</FormLabel>
+                      <FormControl><Input {...field} disabled={isSavingProfile} className="rounded-xl" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <AvatarUpload
+                currentAvatarUrl={profile?.avatar_url || null}
+                onFileChange={handleAvatarFileChange}
+                onRemoveRequested={handleRemoveAvatarRequested}
+                isSaving={isSavingProfile}
+                selectedFile={selectedAvatarFile}
+              />
+
+              <FormField
+                control={form.control}
+                name="voice_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Your Voice Type(s)</FormLabel>
+                    <FormControl>
+                      <VoiceTypeSelector value={field.value || []} onChange={field.onChange} disabled={isSavingProfile} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <FormField
-              control={form.control}
-              name="first_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl><Input {...field} disabled={isSavingProfile} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="last_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl><Input {...field} disabled={isSavingProfile} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <AvatarUpload
-              currentAvatarUrl={profile?.avatar_url || null}
-              onFileChange={handleAvatarFileChange}
-              onRemoveRequested={handleRemoveAvatarRequested}
-              isSaving={isSavingProfile}
-              selectedFile={selectedAvatarFile}
-            />
-            <FormField
-              control={form.control}
-              name="voice_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Voice Type(s)</FormLabel>
-                  <FormControl>
-                    <VoiceTypeSelector value={field.value || []} onChange={field.onChange} disabled={isSavingProfile} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full" disabled={isSavingProfile}>
-              {isSavingProfile ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Profile"}
-            </Button>
-            <Button variant="outline" onClick={logout} className="w-full text-destructive hover:bg-destructive hover:text-white" disabled={isLoggingOut}>
-              {isLoggingOut ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging Out...</> : <><LogOut className="mr-2 h-4 w-4" /> Sign Out</>}
-            </Button>
+
+            <div className="pt-4 space-y-4">
+              <Button type="submit" className="w-full h-12 font-bold text-lg rounded-xl shadow-lg shadow-primary/20" disabled={isSavingProfile}>
+                {isSavingProfile ? (
+                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Saving Changes...</>
+                ) : (
+                  <><Save className="mr-2 h-5 w-5" /> Save Profile</>
+                )}
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                onClick={logout} 
+                className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/5 font-bold uppercase tracking-widest text-xs" 
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />} Sign Out
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>
