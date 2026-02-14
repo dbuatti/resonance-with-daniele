@@ -2,167 +2,128 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BellRing, Loader2, ExternalLink } from "lucide-react";
+import { BellRing, ExternalLink, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { useSession } from "@/integrations/supabase/auth"; // Import useSession to check for authenticated user
+import { useSession } from "@/integrations/supabase/auth";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils"; // Import cn
-import { Badge } from "@/components/ui/badge"; // Import Badge
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface Announcement {
   id: string;
   title: string;
   content: string;
-  link_url: string | null; // Added link_url
+  link_url: string | null;
   created_at: string;
-  is_read: boolean; // Assume this field exists or is derived (we will treat all as unread for now until we implement read status)
+  is_read: boolean;
 }
 
 const LatestAnnouncementsCard: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
 
-  // Query function for fetching announcements
   const fetchAnnouncements = async (): Promise<Announcement[]> => {
-    console.log("[LatestAnnouncementsCard] Fetching latest announcements.");
-    // NOTE: Since we don't have a user-specific read status column yet, we will simulate 'unread' by checking if it was created in the last 24 hours.
-    // In a real app, this would query a user_announcement_read_status table.
     const { data, error } = await supabase
       .from("announcements")
-      .select("id, title, content, link_url, created_at") // Select link_url
+      .select("id, title, content, link_url, created_at")
       .order("created_at", { ascending: false })
-      .limit(3); // Fetch up to 3 latest announcements
+      .limit(3);
 
-    if (error) {
-      console.error("[LatestAnnouncementsCard] Error fetching announcements:", error);
-      throw error;
-    }
+    if (error) throw error;
     
-    // Simulate read status: treat the newest announcement as 'unread' if it's less than 24 hours old.
     const now = new Date();
-    const announcementsWithStatus = (data || []).map((announcement, index) => {
+    return (data || []).map((announcement) => {
       const createdDate = new Date(announcement.created_at);
-      // For simplicity, mark the newest one as unread if it's recent.
       const isRecent = (now.getTime() - createdDate.getTime()) < (24 * 60 * 60 * 1000);
       return {
         ...announcement,
-        is_read: !isRecent, // If recent, treat as unread (is_read=false)
+        is_read: !isRecent,
       };
     });
-
-    console.log("[LatestAnnouncementsCard] Announcements fetched:", announcementsWithStatus.length, "announcements.");
-    return announcementsWithStatus;
   };
 
-  // Use react-query for announcements data
-  const { data: announcements, isLoading, error } = useQuery<
-    Announcement[],
-    Error,
-    Announcement[],
-    ['latestAnnouncements']
-  >({
+  const { data: announcements, isLoading, error } = useQuery<Announcement[], Error, Announcement[], ['latestAnnouncements']>({
     queryKey: ['latestAnnouncements'],
     queryFn: fetchAnnouncements,
-    enabled: !loadingSession && !!user, // Only fetch if session is not loading and user is authenticated
-    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
+    enabled: !loadingSession && !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   const unreadCount = (announcements || []).filter(a => !a.is_read).length;
 
   if (isLoading) {
-    return (
-      <Card className="shadow-lg rounded-xl">
-        <CardHeader>
-          <Skeleton className="h-6 w-1/2 mb-2" />
-          <Skeleton className="h-4 w-3/4" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-5/6" />
-          <Skeleton className="h-4 w-full" />
-        </CardContent>
-      </Card>
-    );
+    return <Skeleton className="h-64 w-full rounded-xl" />;
   }
 
-  if (error) {
+  if (error || !announcements || announcements.length === 0) {
     return (
-      <Card className="shadow-lg rounded-xl text-destructive">
+      <Card className="shadow-lg border-none">
         <CardHeader>
           <CardTitle className="text-xl font-lora flex items-center gap-2">
-            <BellRing className="h-6 w-6 text-destructive" /> Announcements
+            <BellRing className="h-5 w-5 text-primary" /> Announcements
           </CardTitle>
-          <CardDescription>Error loading announcements.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm">{error.message}</p>
+        <CardContent className="text-center text-muted-foreground py-8">
+          <p>No announcements at the moment.</p>
         </CardContent>
       </Card>
     );
   }
 
-  if (!announcements || announcements.length === 0) {
-    return (
-      <Card className="shadow-lg rounded-xl">
-        <CardHeader>
-          <CardTitle className="text-xl font-lora flex items-center gap-2">
-            <BellRing className="h-6 w-6 text-primary" /> Announcements
-          </CardTitle>
-          <CardDescription>Important updates from Daniele.</CardDescription>
-        </CardHeader>
-        <CardContent className="text-center text-muted-foreground py-4">
-          <p>No new announcements at the moment.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Apply high-contrast styling to the card based on unread status
   return (
     <Card className={cn(
-      "shadow-lg rounded-xl border-l-4",
-      unreadCount > 0 ? "border-primary bg-primary/5 dark:bg-primary/10" : "border-border bg-card"
+      "shadow-lg border-none overflow-hidden transition-all duration-300",
+      unreadCount > 0 ? "ring-2 ring-primary/20 bg-primary/5 dark:bg-primary/10" : "bg-card"
     )}>
-      <CardHeader className="relative">
-        <CardTitle className={cn(
-          "text-xl font-lora flex items-center gap-2",
-          unreadCount > 0 ? "text-primary" : "text-foreground"
-        )}>
-          <BellRing className="h-6 w-6" /> Latest Announcements
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-2xl font-lora flex items-center gap-2">
+            <BellRing className={cn("h-6 w-6", unreadCount > 0 ? "text-primary animate-pulse" : "text-muted-foreground")} /> 
+            Latest Updates
+          </CardTitle>
           {unreadCount > 0 && (
-            <Badge variant="destructive" className="ml-2 bg-red-600 text-white">
+            <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-[10px] uppercase tracking-widest font-bold">
               {unreadCount} New
             </Badge>
           )}
-        </CardTitle>
-        <CardDescription>Important updates from Daniele.</CardDescription>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {announcements.map((announcement, index) => {
-          const isNew = !announcement.is_read;
-          return (
-            <div key={announcement.id} className="border-b last:border-b-0 pb-3 last:pb-0">
-              <h3 className="font-semibold text-foreground text-lg flex items-center">
-                {isNew && (
-                  <Badge variant="destructive" className="mr-2 bg-accent text-accent-foreground">NEW</Badge>
-                )}
-                {announcement.title}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-1">{format(new Date(announcement.created_at), "PPP")}</p>
-              <p className="text-sm text-muted-foreground">{announcement.content}</p>
-              {announcement.link_url && (
-                <Button variant="link" className="p-0 h-auto mt-2 text-primary hover:underline" asChild>
-                  <a href={announcement.link_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="mr-1 h-4 w-4" /> View Details
-                  </a>
-                </Button>
-              )}
-            </div>
-          );
-        })}
+      <CardContent className="p-0">
+        <div className="divide-y divide-border/50">
+          {announcements.map((announcement) => {
+            const isNew = !announcement.is_read;
+            return (
+              <div key={announcement.id} className={cn(
+                "p-6 transition-colors hover:bg-muted/30",
+                isNew && "bg-primary/5 dark:bg-primary/10"
+              )}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      {isNew && <div className="w-2 h-2 rounded-full bg-primary" />}
+                      <h3 className="font-bold text-lg leading-tight">{announcement.title}</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                      {format(new Date(announcement.created_at), "MMMM do, yyyy")}
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {announcement.content}
+                    </p>
+                    {announcement.link_url && (
+                      <Button variant="link" className="p-0 h-auto mt-2 text-primary font-bold group" asChild>
+                        <a href={announcement.link_url} target="_blank" rel="noopener noreferrer">
+                          View Details <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );

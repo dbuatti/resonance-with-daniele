@@ -16,95 +16,93 @@
     --primary: 220 70% 25%; /* Deep Blue */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 220 30% 85%; /* Soft Blue-Gray */
-    --secondary-foreground: 220 10% 20%; /* Dark Blue-Gray */
+    --secondary: 220 30% 96%; /* Very Soft Blue-Gray */
+    --secondary-foreground: 220 10% 20%;
 
-    --muted: 220 20% 95%; /* Very Light Blue-Gray */
-    --muted-foreground: 220 10% 40%; /* Medium Blue-Gray */
+    --muted: 220 20% 97%; /* Very Light Blue-Gray */
+    --muted-foreground: 220 10% 45%; /* Medium Blue-Gray */
 
-    --accent: 54 85% 62%; /* Vibrant Yellow (f0e14c) */
-    --accent-foreground: 220 10% 20%; /* Dark Blue-Gray */
+    --accent: 54 85% 62%; /* Vibrant Yellow */
+    --accent-foreground: 220 10% 20%;
 
-    --destructive: 0 84.2% 60.2%; /* Keep default red */
-    --destructive-foreground: 210 40% 98%; /* Keep default white */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 220 20% 90%; /* Light Blue-Gray for borders */
-    --input: 220 20% 90%;
-    --ring: 220 70% 25%; /* Primary deep blue for focus rings */
+    --border: 220 20% 92%;
+    --input: 220 20% 92%;
+    --ring: 220 70% 25%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 220 70% 25%; /* Deep Blue */
-    --sidebar-foreground: 0 0% 100%; /* White */
-
-    --sidebar-primary: 0 0% 100%; /* White */
-    --sidebar-primary-foreground: 220 70% 25%; /* Deep Blue */
-
-    --sidebar-accent: 54 85% 62%; /* Vibrant Yellow */
-    --sidebar-accent-foreground: 220 10% 20%; /* Dark Blue-Gray */
-
+    --sidebar-background: 220 70% 25%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 220 70% 25%;
+    --sidebar-accent: 54 85% 62%;
+    --sidebar-accent-foreground: 220 10% 20%;
     --sidebar-border: 220 20% 90%;
     --sidebar-ring: 220 70% 25%;
   }
 
   .dark {
-    --background: 220 10% 15%; /* Very dark blue-gray */
-    --foreground: 0 0% 100%; /* White */
+    --background: 220 15% 10%; /* Deeper dark blue */
+    --foreground: 0 0% 98%;
 
-    --card: 220 10% 20%; /* Slightly lighter dark blue-gray for cards */
-    --card-foreground: 0 0% 100%; /* White */
+    --card: 220 15% 14%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 220 10% 20%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 220 15% 14%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 220 70% 40%; /* More saturated medium blue for primary backgrounds */
-    --primary-foreground: 0 0% 100%; /* White for text on primary backgrounds */
+    --primary: 220 70% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 10% 35%; /* Lighter secondary for dark mode */
-    --secondary-foreground: 0 0% 100%; /* White */
+    --secondary: 220 15% 20%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 10% 25%; /* Darker muted for dark mode */
-    --muted-foreground: 220 10% 70%; /* Lighter muted foreground */
+    --muted: 220 15% 18%;
+    --muted-foreground: 220 10% 65%;
 
-    --accent: 54 85% 70%; /* Brighter Vibrant Yellow */
-    --accent-foreground: 0 0% 100%; /* Changed to White for better contrast */
+    --accent: 54 85% 65%;
+    --accent-foreground: 220 15% 10%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 10% 40%; /* Slightly lighter border for better visibility */
-    --input: 220 10% 40%; /* Slightly lighter input border/background */
-    --ring: 220 70% 40%; /* Matches new primary for focus rings */
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 220 70% 45%;
 
-    --sidebar-background: 220 10% 15%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 220 70% 40%; /* Matches new primary */
-    --sidebar-primary-foreground: 220 10% 15%;
-    --sidebar-accent: 54 85% 70%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 10% 40%; /* Matches new border */
-    --sidebar-ring: 220 70% 40%; /* Matches new primary */
+    --sidebar-background: 220 15% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 220 70% 45%;
+    --sidebar-primary-foreground: 220 15% 10%;
+    --sidebar-accent: 54 85% 65%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 220 15% 22%;
+    --sidebar-ring: 220 70% 45%;
   }
 }
 
 @layer base {
-  html {
-    height: 100%;
-    /* Removed @apply bg-background; */
-  }
-  body {
-    height: 100%;
-    background-color: hsl(var(--background));
-    @apply bg-background text-foreground font-sans;
-    /* Removed min-height: 100vh; */
-    /* Removed fixed background pseudo-element to fix iOS white box issue */
-  }
-
   * {
     @apply border-border;
   }
-
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-lora;
+    @apply font-lora tracking-tight;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-md border border-border/50 shadow-sm;
+  }
+  
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
   }
 }
