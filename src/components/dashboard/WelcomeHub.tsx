@@ -137,7 +137,7 @@ const WelcomeHub: React.FC = () => {
           <img src="/images/daniele-buatti-headshot.jpeg" alt="Daniele Buatti" className="w-40 h-40 rounded-full object-cover shadow-md mx-auto mb-6" />
           <CardTitle className="text-4xl md:text-5xl font-extrabold text-center text-foreground mb-4 font-lora">Welcome, {firstName} to the Resonance with Daniele Hub!</CardTitle>
           <p className="text-center text-lg text-muted-foreground mb-6">I believe in the transformative power of singing — not just as performance, but as connection, expression, and joy.</p>
-        </header>
+        </CardHeader>
         <CardContent className="text-lg text-muted-foreground space-y-6">
           <CoreHubLinks />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
