@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import BackButton from "@/components/ui/BackButton";
+import { cn } from "@/lib/utils";
 
 interface IssueReport {
   id: string;
