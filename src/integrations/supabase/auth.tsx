@@ -5,8 +5,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { showSuccess, showError } from '@/utils/toast'; // Import toast functions
-import { ResourceFolder } from '@/types/Resource'; // Import ResourceFolder for profile type
+import { showSuccess, showError } from '@/utils/toast';
 
 export interface Profile {
   id: string;
@@ -26,7 +25,7 @@ export interface Profile {
   inclusivity_importance: string | null;
   suggestions: string | null;
   email: string | null;
-  voice_type: string[] | null; // Added voice_type
+  voice_type: string[] | null;
 }
 
 interface CustomUser extends User {
@@ -37,219 +36,112 @@ interface SessionContextType {
   session: Session | null;
   user: CustomUser | null;
   profile: Profile | null;
-  loading: boolean; // Overall loading for the session context
-  profileLoading: boolean; // Loading specifically for the profile data
-  isLoggingOut: boolean; // Added isLoggingOut
-  isAdminView: boolean; // New state: true if viewing as admin, false if viewing as regular user
-  isActualAdmin: boolean; // New: True if the user is truly an admin, regardless of isAdminView toggle
-  isProfileCompleted: boolean; // NEW
-  isSurveyCompleted: boolean; // NEW
-  incompleteTasksCount: number; // NEW
-  toggleAdminView: () => void; // New function to toggle admin view
-  logout: () => Promise<void>; // Added logout function to context
+  loading: boolean;
+  profileLoading: boolean;
+  isLoggingOut: boolean;
+  isAdminView: boolean;
+  isActualAdmin: boolean;
+  isProfileCompleted: boolean;
+  isSurveyCompleted: boolean;
+  incompleteTasksCount: number;
+  toggleAdminView: () => void;
+  logout: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionContextProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [session, setSession] = useState<Session | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true); // For initial session fetch
-  const [isLoggingOut, setIsLoggingOut] = useState(false); // State for logout loading
-  const [isAdminView, setIsAdminView] = useState(true); // New state: Default to admin view if user is admin
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  // Function to determine admin status
   const determineAdminStatus = useCallback((userEmail: string | undefined, profileAdminStatus: boolean | undefined): boolean => {
     return profileAdminStatus ?? (userEmail === 'daniele.buatti@gmail.com' || userEmail === 'resonancewithdaniele@gmail.com');
   }, []);
 
-  // Centralized logout function
   const logout = useCallback(async () => {
     setIsLoggingOut(true);
-    console.log("[SessionContext] Initiating logout. Clearing client cache and session state.");
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        if (error.name === 'AuthSessionMissingError') {
-          console.log("[SessionContext] AuthSessionMissingError returned, treating as successful logout.");
-          showSuccess("Logged out successfully!");
-        } else {
-          console.error("[SessionContext] Error during logout:", error);
-          showError("Failed to log out: " + error.message);
-        }
+      if (error && error.name !== 'AuthSessionMissingError') {
+        showError("Failed to log out: " + error.message);
       } else {
         showSuccess("Logged out successfully!");
-        console.log("[SessionContext] User logged out.");
       }
     } catch (error: any) {
-      console.error("[SessionContext] Unexpected exception during logout:", error);
-      showError("An unexpected error occurred during logout: " + error.message);
+      showError("An unexpected error occurred during logout.");
     } finally {
-      // Ensure client-side state is fully reset regardless of server response
-      setSession(null); // Explicitly clear session state
-      queryClient.clear(); // Clear all cached queries
-      console.log("[SessionContext] All React Query caches cleared and session state reset.");
-      navigate('/login'); // Redirect to login page
+      setSession(null);
+      queryClient.clear();
+      navigate('/login');
       setIsLoggingOut(false);
-      setIsAdminView(true); // Reset admin view state on logout
+      setIsAdminView(true);
     }
   }, [queryClient, navigate]);
 
-  // Toggle function for admin view
   const toggleAdminView = useCallback(() => {
     setIsAdminView(prev => !prev);
-    // Invalidate all queries that depend on admin status to force refetching data based on the new view
     queryClient.invalidateQueries({ queryKey: ['resources'] });
     queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
-    queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
     showSuccess(`Switched to ${isAdminView ? 'User' : 'Admin'} View.`);
   }, [isAdminView, queryClient]);
 
-  // Effect to handle Supabase auth state changes and initial session fetch
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      console.log("[SessionContext] Auth state changed:", _event, currentSession ? 'session present' : 'no session');
       setSession(currentSession);
       setInitialLoading(false);
-      // Invalidate profile query to refetch with new session
       queryClient.invalidateQueries({ queryKey: ['profile', currentSession?.user?.id] });
-
-      // If signed out, clear all queries related to user data
-      if (_event === 'SIGNED_OUT') {
-        queryClient.clear(); // Clear all cached queries
-        console.log("[SessionContext] All React Query caches cleared due to SIGNED_OUT event.");
-      }
+      if (_event === 'SIGNED_OUT') queryClient.clear();
     });
 
-    // Fetch initial session on component mount
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log("[SessionContext] Initial getSession:", currentSession ? 'session present' : 'no session');
       setSession(currentSession);
       setInitialLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [queryClient]); // Add queryClient to dependencies
+  }, [queryClient]);
 
-  // Use react-query to fetch and cache the user profile
-  const { data: profile, isLoading: profileLoading } = useQuery<
-    Profile | null, // TQueryFnData
-    Error,          // TError
-    Profile | null, // TData
-    ['profile', string | null | undefined] // TQueryKey
-  >({
+  const { data: profile, isLoading: profileLoading } = useQuery<Profile | null, Error, Profile | null, ['profile', string | null | undefined]>({
     queryKey: ['profile', session?.user?.id],
     queryFn: async () => {
-      if (!session?.user?.id) {
-        console.log("[SessionContext] No user ID, skipping profile fetch.");
-        return null;
-      }
-      console.log(`[SessionContext] Fetching full profile data for user ID: ${session.user.id}`);
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means "no rows found"
-        console.error("[SessionContext] Error fetching profile data:", profileError);
-        throw profileError; // Re-throw to be caught by react-query's error handling
-      } else if (profileData) {
-        console.log("[SessionContext] Full profile data fetched:", profileData);
-        // Add email to profile for convenience
-        return { ...profileData, email: session.user.email } as Profile;
-      } else {
-        console.log("[SessionContext] No profile found for user. Returning minimal profile with admin status.");
-        // If no profile exists, return a minimal one for context with admin status
-        return {
-          id: session.user.id,
-          first_name: null,
-          last_name: null,
-          avatar_url: null,
-          is_admin: determineAdminStatus(session.user.email, undefined), // Determine admin status even if no profile
-          updated_at: new Date().toISOString(), // Provide a default or current timestamp
-          how_heard: null, motivation: null, attended_session: null, singing_experience: null,
-          session_frequency: null, preferred_time: null, music_genres: null, choir_goals: null,
-          inclusivity_importance: null, suggestions: null,
-          email: session.user.email,
-          voice_type: null, // Default for new column
-        };
-      }
+      if (!session?.user?.id) return null;
+      const { data: profileData, error: profileError } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      if (profileError && profileError.code !== 'PGRST116') throw profileError;
+      return profileData ? { ...profileData, email: session.user.email } as Profile : {
+        id: session.user.id, first_name: null, last_name: null, avatar_url: null, is_admin: determineAdminStatus(session.user.email, undefined),
+        updated_at: new Date().toISOString(), how_heard: null, motivation: null, attended_session: null, singing_experience: null,
+        session_frequency: null, preferred_time: null, music_genres: null, choir_goals: null, inclusivity_importance: null, suggestions: null,
+        email: session.user.email, voice_type: null,
+      };
     },
-    enabled: !!session?.user?.id, // Only run query if user ID is available
-    staleTime: 5 * 60 * 1000, // Data is considered fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes (renamed from cacheTime in v5)
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    enabled: !!session?.user?.id,
   });
 
-  // Derived actual admin status
   const actualIsAdmin = determineAdminStatus(session?.user?.email, profile?.is_admin);
-  
-  // Derived user object with actual admin status
-  const user: CustomUser | null = session?.user ? {
-    ...session.user,
-    is_admin: actualIsAdmin, 
-  } : null;
-
-  // Derived states for completion status (NEW LOGIC)
-  const isProfileCompleted = profile ? !!(profile.first_name && profile.last_name) : false;
-
-  const isSurveyCompleted = profile ? (
-    profile.how_heard !== null ||
-    (profile.motivation !== null && profile.motivation.length > 0) ||
-    profile.attended_session !== null ||
-    profile.singing_experience !== null ||
-    profile.session_frequency !== null ||
-    profile.preferred_time !== null ||
-    (profile.music_genres !== null && profile.music_genres.length > 0) ||
-    profile.choir_goals !== null ||
-    profile.inclusivity_importance !== null ||
-    profile.suggestions !== null
-  ) : false;
-
+  const user: CustomUser | null = session?.user ? { ...session.user, is_admin: actualIsAdmin } : null;
+  const isProfileCompleted = !!(profile?.first_name && profile?.last_name);
+  const isSurveyCompleted = !!(profile?.how_heard || profile?.singing_experience);
   const incompleteTasksCount = (isProfileCompleted ? 0 : 1) + (isSurveyCompleted ? 0 : 1);
 
-  // Handle redirects for unauthenticated users trying to access protected routes
   useEffect(() => {
-    if (!initialLoading && !isLoggingOut) { // Only redirect if not initially loading and not in the middle of logging out
+    if (!initialLoading && !isLoggingOut) {
       const publicPaths = ['/', '/events', '/resources', '/current-event', '/login', '/learn-more', '/song-suggestions'];
-      
-      // Check if the user is trying to access an admin route
-      const isAdminRoute = location.pathname.startsWith('/admin');
-
-      if (!user && !publicPaths.includes(location.pathname)) {
-        console.log(`[SessionContext] Redirecting from ${location.pathname} to /login due to unauthenticated access.`);
-        navigate('/login');
-      } else if (isAdminRoute && user && !user.is_admin) {
-        // If a non-admin user tries to access /admin, redirect to home
-        console.log(`[SessionContext] Redirecting non-admin user from ${location.pathname} to /.`);
-        navigate('/');
-      }
+      if (!user && !publicPaths.includes(location.pathname)) navigate('/login');
+      else if (location.pathname.startsWith('/admin') && user && !user.is_admin) navigate('/');
     }
   }, [user, initialLoading, isLoggingOut, location.pathname, navigate]);
 
-  const contextValue: SessionContextType = { // Explicitly type contextValue
-    session,
-    // The user object's is_admin property reflects the current view state for UI/data logic
-    user: user ? { ...user, is_admin: user.is_admin && isAdminView } : null, 
-    profile,
-    loading: initialLoading || profileLoading, // Overall loading is true if initial session or profile is loading
-    profileLoading,
-    isLoggingOut, // Provide the state
-    isAdminView, // Provide the state
-    isActualAdmin: actualIsAdmin, // Provide the actual admin status
-    isProfileCompleted, // NEW
-    isSurveyCompleted, // NEW
-    incompleteTasksCount, // NEW
-    toggleAdminView, // Provide the toggle function
-    logout, // Provide the centralized logout function
-  };
-  console.log("[SessionContext] Rendering SessionContextProvider with overall loading:", contextValue.loading, "profileLoading:", profileLoading, "user:", user ? user.id : 'null', "is_admin (actual):", actualIsAdmin, "isAdminView (context):", contextValue.user?.is_admin, "profile:", profile ? 'present' : 'null');
-
   return (
-    <SessionContext.Provider value={contextValue}>
+    <SessionContext.Provider value={{
+      session, user: user ? { ...user, is_admin: user.is_admin && isAdminView } : null, profile,
+      loading: initialLoading || profileLoading, profileLoading, isLoggingOut, isAdminView, isActualAdmin: actualIsAdmin,
+      isProfileCompleted, isSurveyCompleted, incompleteTasksCount, toggleAdminView, logout
+    }}>
       {children}
     </SessionContext.Provider>
   );
@@ -257,8 +149,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
 export const useSession = () => {
   const context = useContext(SessionContext);
-  if (context === undefined) {
-    throw new Error('useSession must be used within a SessionContextProvider');
-  }
+  if (context === undefined) throw new Error('useSession must be used within a SessionContextProvider');
   return context;
 };
