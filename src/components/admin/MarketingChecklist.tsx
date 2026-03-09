@@ -14,16 +14,16 @@ interface Task {
 }
 
 const tasks: Task[] = [
-  { id: "email-past", label: "Send direct email to 21 past attendees", category: "Wednesday" },
-  { id: "insta-feed-sale", label: "Post Flash Sale to Instagram Feed (Boost it!)", category: "Wednesday" },
-  { id: "fb-groups-initial", label: "Post in Melbourne Musicians & Armadale groups", category: "Wednesday" },
-  { id: "insta-story-chords", label: "Story: Play 'Being Alive' chords & explain vibe", category: "Thursday" },
-  { id: "helper-outreach", label: "Direct message 3 potential 'Helpers'", category: "Thursday" },
-  { id: "fb-groups-final", label: "Final call post in community groups", category: "Friday" },
-  { id: "insta-story-countdown", label: "Story: '3 hours left' urgency post", category: "Friday" },
+  { id: "personal-10", label: "Message 10 specific people who 'need' to be there", category: "Wednesday" },
+  { id: "email-november", label: "Email the 'November Crew' with a personal note", category: "Wednesday" },
+  { id: "insta-story-why", label: "Story: 30s video on why you chose these 2 songs", category: "Wednesday" },
+  { id: "sangha-outreach", label: "Reach out to your Sangha community", category: "Thursday" },
+  { id: "insta-story-chords", label: "Story: Play 'Being Alive' chords & explain the vibe", category: "Thursday" },
+  { id: "helper-outreach", label: "Direct message 3 potential 'Helpers' personally", category: "Thursday" },
+  { id: "fb-groups-invite", label: "Post a warm invitation in community groups", category: "Friday" },
+  { id: "insta-story-final", label: "Story: Final personal invitation (no hype, just heart)", category: "Friday" },
   { id: "print-lyrics", label: "Print extra lyric sheets/scores", category: "Day Of" },
-  { id: "setup-camera", label: "Set up tripod for 'Being Alive' finale video", category: "Day Of" },
-  { id: "collect-testimonials", label: "Ask 3 people for a 15-second video review", category: "Day Of" },
+  { id: "inhabit-room", label: "Focus on inhabiting the room (not capturing it)", category: "Day Of" },
 ];
 
 const MarketingChecklist: React.FC = () => {
