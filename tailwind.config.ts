@@ -66,37 +66,35 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom colors for the hero section gradient with dark variants
         'hero-gradient-start': {
-          DEFAULT: 'hsl(220 30% 98%)', // Very light blue
-          dark: 'hsl(220 15% 25%)',   // Slightly lighter dark blue-gray for dark mode
+          DEFAULT: 'hsl(220 30% 98%)',
+          dark: 'hsl(220 15% 25%)',
         },
         'hero-gradient-end': {
-          DEFAULT: 'hsl(54 30% 98%)',   // Very light yellow
-          dark: 'hsl(54 15% 25%)',     // Slightly lighter yellow-gray for dark mode
+          DEFAULT: 'hsl(54 30% 98%)',
+          dark: 'hsl(54 15% 25%)',
         },
         'hero-description-foreground': {
-          DEFAULT: 'hsl(220 10% 40%)', // Muted foreground for description
-          dark: 'hsl(220 10% 70%)',    // Lighter muted foreground for dark mode
+          DEFAULT: 'hsl(220 10% 40%)',
+          dark: 'hsl(220 10% 70%)',
         },
-        // New Pastel Colors for Resources
         'pastel-pdf': {
-          DEFAULT: 'hsl(0 80% 95%)', // Very light red/pink
+          DEFAULT: 'hsl(0 80% 95%)',
           dark: 'hsl(0 40% 20%)',
         },
         'pastel-audio': {
-          DEFAULT: 'hsl(120 60% 95%)', // Very light green
+          DEFAULT: 'hsl(120 60% 95%)',
           dark: 'hsl(120 20% 20%)',
         },
         'pastel-link': {
-          DEFAULT: 'hsl(240 80% 95%)', // Very light blue
+          DEFAULT: 'hsl(240 80% 95%)',
           dark: 'hsl(240 40% 20%)',
         },
-        'pastel-youtube': { // New: Light Purple
+        'pastel-youtube': {
           DEFAULT: 'hsl(270 80% 95%)',
           dark: 'hsl(270 40% 20%)',
         },
-        'pastel-lyrics': { // New: Light Orange
+        'pastel-lyrics': {
           DEFAULT: 'hsl(30 80% 95%)',
           dark: 'hsl(30 40% 20%)',
         },
@@ -108,30 +106,32 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
-        "pulse-slow": { // New keyframe for slow pulse
+        "pulse-slow": {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
         },
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "pulse-slow": "pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite", // New animation
+        "pulse-slow": "pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "fade-in-up": "fade-in-up 0.5s ease-out forwards",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },

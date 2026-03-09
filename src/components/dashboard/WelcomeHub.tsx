@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, FileText, User as UserIcon, Folder, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
+import { CalendarDays, Music, FileText, User as UserIcon, Folder, CheckCircle2, ArrowRight, Sparkles, Mic2, Heart } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -117,9 +117,9 @@ const WelcomeHub: React.FC = () => {
   if (isLoading) {
     return (
       <div className="py-4 md:py-8 space-y-8">
-        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-3xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
         </div>
       </div>
     );
@@ -135,103 +135,119 @@ const WelcomeHub: React.FC = () => {
   };
 
   return (
-    <div className="py-4 md:py-8 space-y-10">
-      {/* Hero Welcome Section */}
-      <section className="relative overflow-hidden rounded-3xl bg-primary text-primary-foreground p-8 md:p-12 shadow-2xl">
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-          <div className="flex-shrink-0">
+    <div className="py-4 md:py-8 space-y-12 animate-fade-in-up">
+      {/* Hero Welcome Section - More Premium Design */}
+      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground p-8 md:p-16 shadow-2xl border-4 border-white/10">
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+          <div className="flex-shrink-0 relative group">
+            <div className="absolute -inset-1 bg-accent rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
             <img 
               src={profile?.avatar_url || "/images/daniele-buatti-headshot.jpeg"} 
               alt="Daniele Buatti" 
-              className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-primary-foreground/20 shadow-xl" 
+              className="relative w-32 h-32 md:w-44 md:h-44 rounded-full object-cover border-4 border-white/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-105" 
             />
+            <div className="absolute -bottom-2 -right-2 bg-accent text-accent-foreground p-2 rounded-full shadow-lg animate-float">
+              <Mic2 className="h-5 w-5" />
+            </div>
           </div>
-          <div className="text-center md:text-left space-y-4">
-            <div className="space-y-1">
-              <h1 className="text-4xl md:text-5xl font-extrabold font-lora leading-tight">
-                {getGreeting()}, {firstName}!
+          <div className="text-center md:text-left space-y-6">
+            <div className="space-y-2">
+              <h1 className="text-4xl md:text-6xl font-black font-lora leading-tight tracking-tight">
+                {getGreeting()}, <span className="text-accent">{firstName}</span>!
               </h1>
               {memberSince && (
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 flex items-center justify-center md:justify-start gap-2">
-                  <Sparkles className="h-3 w-3" /> Member since {memberSince}
-                </p>
+                <div className="flex items-center justify-center md:justify-start gap-3">
+                  <Badge className="bg-white/20 hover:bg-white/30 text-white border-none px-3 py-1 text-[10px] uppercase tracking-widest font-bold">
+                    <Sparkles className="h-3 w-3 mr-2 text-accent" /> Member since {memberSince}
+                  </Badge>
+                </div>
               )}
             </div>
-            <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl">
-              Ready to find your resonance today? Explore your resources, check upcoming events, and stay connected with our community.
+            <p className="text-lg md:text-2xl text-primary-foreground/90 max-w-2xl font-medium leading-relaxed">
+              Your voice is your instrument. Ready to find your resonance today?
             </p>
           </div>
         </div>
-        {/* Decorative background element */}
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[80px] pointer-events-none" />
       </section>
 
-      {/* Core Navigation Links */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold font-lora px-2">Explore the Hub</h2>
+      {/* Core Navigation Links - More Visual Impact */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 px-2">
+          <div className="h-8 w-1.5 bg-primary rounded-full" />
+          <h2 className="text-3xl font-black font-lora tracking-tight">Explore the Hub</h2>
+        </div>
         <CoreHubLinks />
       </section>
 
       {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left Column: Announcements & Events */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-10">
           <LatestAnnouncementsCard />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Next Event Card */}
-            <Card className="shadow-lg border-none bg-secondary/50 dark:bg-secondary/20 overflow-hidden group">
-              <CardHeader className="pb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Next Event Card - Enhanced */}
+            <Card className="shadow-xl border-none bg-secondary/40 dark:bg-secondary/10 overflow-hidden group hover:shadow-2xl transition-all duration-300 rounded-3xl">
+              <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="bg-background/50">Next Event</Badge>
-                  <CalendarDays className="h-5 w-5 text-primary" />
+                  <Badge variant="outline" className="bg-background/80 border-primary/20 text-primary font-bold">Next Event</Badge>
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                    <CalendarDays className="h-6 w-6" />
+                  </div>
                 </div>
-                <CardTitle className="text-2xl font-lora mt-4">
+                <CardTitle className="text-3xl font-black font-lora mt-6 leading-tight">
                   {upcomingEvent ? upcomingEvent.title : "No Upcoming Events"}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {upcomingEvent ? (
                   <>
-                    <div className="space-y-1">
-                      <p className="text-lg font-bold text-primary">
+                    <div className="space-y-2">
+                      <p className="text-xl font-black text-primary">
                         {format(new Date(upcomingEvent.date), "EEEE, MMM do")}
                       </p>
                       {upcomingEvent.location && (
-                        <p className="text-sm text-muted-foreground">{upcomingEvent.location}</p>
+                        <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/40" /> {upcomingEvent.location}
+                        </p>
                       )}
                     </div>
-                    <Button className="w-full group-hover:translate-x-1 transition-transform" asChild>
+                    <Button className="w-full h-12 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 group-hover:translate-x-1 transition-transform" asChild>
                       <Link to={upcomingEvent.humanitix_link || "/current-event"}>
-                        {hasRsvpd ? "View Details" : "RSVP Now"} <ArrowRight className="ml-2 h-4 w-4" />
+                        {hasRsvpd ? "View Details" : "RSVP Now"} <ArrowRight className="ml-2 h-5 w-5" />
                       </Link>
                     </Button>
                   </>
                 ) : (
-                  <p className="text-muted-foreground">Check back soon for new dates!</p>
+                  <p className="text-muted-foreground font-medium">Check back soon for new dates!</p>
                 )}
               </CardContent>
             </Card>
 
-            {/* Nominated Song Card */}
+            {/* Nominated Song Card - Enhanced */}
             {nominatedFolder && (
-              <Card className="shadow-lg border-none bg-accent/10 dark:bg-accent/5 overflow-hidden group">
-                <CardHeader className="pb-2">
+              <Card className="shadow-xl border-none bg-accent/10 dark:bg-accent/5 overflow-hidden group hover:shadow-2xl transition-all duration-300 rounded-3xl border-t-4 border-accent">
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="bg-background/50 border-accent text-accent-foreground">Current Focus</Badge>
-                    <Music className="h-5 w-5 text-accent" />
+                    <Badge variant="outline" className="bg-background/80 border-accent/30 text-accent-foreground font-bold">Current Focus</Badge>
+                    <div className="p-2 bg-accent/20 rounded-xl text-accent-foreground">
+                      <Music className="h-6 w-6" />
+                    </div>
                   </div>
-                  <CardTitle className="text-2xl font-lora mt-4">
+                  <CardTitle className="text-3xl font-black font-lora mt-6 leading-tight">
                     {nominatedFolder.name}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Practice materials for our current song are ready for you.
+                <CardContent className="space-y-6">
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                    Practice materials for our current song are ready for you. Let's perfect those harmonies!
                   </p>
-                  <Button variant="outline" className="w-full border-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground group-hover:translate-x-1 transition-transform" asChild>
+                  <Button variant="outline" className="w-full h-12 text-lg font-bold border-accent/50 text-accent-foreground hover:bg-accent hover:text-accent-foreground rounded-2xl group-hover:translate-x-1 transition-transform" asChild>
                     <Link to={`/resources?folderId=${nominatedFolder.id}`}>
-                      Practice Now <ArrowRight className="ml-2 h-4 w-4" />
+                      Practice Now <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
                 </CardContent>
@@ -241,19 +257,22 @@ const WelcomeHub: React.FC = () => {
         </div>
 
         {/* Right Column: Checklist & Quick Actions */}
-        <div className="lg:col-span-4 space-y-8">
+        <div className="lg:col-span-4 space-y-10">
           <SetupChecklistCard />
           <QuickActions />
           
-          {/* Recent Resources Sidebar */}
-          <Card className="shadow-lg border-none">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-lora flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" /> Recent Resources
+          {/* Recent Resources Sidebar - Enhanced */}
+          <Card className="shadow-xl border-none rounded-3xl overflow-hidden">
+            <CardHeader className="pb-4 bg-muted/30">
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                Recent Resources
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border/50">
                 {recentResources && recentResources.length > 0 ? (
                   recentResources.map((resource) => (
                     <a 
@@ -261,19 +280,21 @@ const WelcomeHub: React.FC = () => {
                       href={resource.url || "#"} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-4 p-5 hover:bg-muted/50 transition-all group"
                     >
-                      <div className="flex-shrink-0">{renderResourceBadge(resource)}</div>
-                      <span className="text-sm font-medium line-clamp-1">{resource.title}</span>
+                      <div className="flex-shrink-0 transform transition-transform group-hover:scale-110">{renderResourceBadge(resource)}</div>
+                      <span className="text-sm font-bold line-clamp-1 group-hover:text-primary transition-colors">{resource.title}</span>
                     </a>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-sm text-muted-foreground">No recent resources.</div>
+                  <div className="p-8 text-center text-sm text-muted-foreground font-medium italic">No recent resources.</div>
                 )}
               </div>
-              <div className="p-4 border-t border-border">
-                <Button variant="link" className="w-full text-primary p-0 h-auto" asChild>
-                  <Link to="/resources">View all resources</Link>
+              <div className="p-5 bg-muted/10">
+                <Button variant="link" className="w-full text-primary font-bold p-0 h-auto group" asChild>
+                  <Link to="/resources">
+                    View all resources <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -281,16 +302,21 @@ const WelcomeHub: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Quote/Link */}
-      <footer className="text-center pt-8 border-t border-border/50">
-        <p className="text-muted-foreground italic">
-          "Singing is the shortest distance between two people."
-        </p>
-        <div className="mt-4 flex justify-center items-center gap-4">
-          <span className="text-sm text-muted-foreground">Learn more at</span>
-          <Button variant="link" className="p-0 h-auto text-primary font-bold" asChild>
-            <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer">DanieleBuatti.com</a>
-          </Button>
+      {/* Footer Quote/Link - More Elegant */}
+      <footer className="text-center pt-12 border-t border-border/50 pb-8">
+        <div className="flex flex-col items-center gap-6">
+          <div className="p-3 bg-primary/5 rounded-full">
+            <Heart className="h-6 w-6 text-primary animate-pulse" />
+          </div>
+          <p className="text-2xl font-lora italic font-medium text-muted-foreground max-w-2xl leading-relaxed">
+            "Singing is the shortest distance between two people."
+          </p>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">Learn more at</span>
+            <Button variant="outline" className="rounded-full font-black border-primary/20 text-primary hover:bg-primary hover:text-white transition-all" asChild>
+              <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer">DanieleBuatti.com</a>
+            </Button>
+          </div>
         </div>
       </footer>
     </div>

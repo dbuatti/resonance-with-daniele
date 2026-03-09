@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2, MoreVertical, Copy, Info, Youtube, Trash2 } from "lucide-react";
+import { FileText, Headphones, Link as LinkIcon, ExternalLink, FileSearch, Download, File, ArrowRight, Mic2, MoreVertical, Copy, Info, Youtube, Trash2, Play } from "lucide-react";
 import { Resource } from "@/types/Resource";
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
@@ -138,10 +138,10 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
   return (
     <Card className={cn(
-      "group flex flex-col overflow-hidden transition-all duration-300 border-none shadow-md hover:shadow-xl bg-card",
+      "group flex flex-col overflow-hidden transition-all duration-500 border-none shadow-lg hover:shadow-2xl bg-card rounded-[2rem]",
       !isPublished && isAdmin && "ring-2 ring-yellow-500/50"
     )}>
-      {/* Media Preview Area */}
+      {/* Media Preview Area - Enhanced with better styling */}
       {useMediaBackdrop && (
         <div className="relative aspect-video bg-muted overflow-hidden">
           {fileDetails.isPdf || isLyrics ? (
@@ -149,64 +149,66 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               <iframe
                 src={resource.url!}
                 title={resource.title}
-                className="w-full h-full border-none pointer-events-none scale-110 origin-top"
+                className="w-full h-full border-none pointer-events-none scale-110 origin-top transition-transform duration-700 group-hover/preview:scale-125"
                 style={{ marginTop: '-20px' }}
               />
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                <Button size="sm" className="shadow-lg">
-                  <FileSearch className="h-4 w-4 mr-2" /> Preview
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[4px]">
+                <Button size="lg" className="shadow-2xl rounded-2xl font-black transform scale-90 group-hover/preview:scale-100 transition-transform">
+                  <FileSearch className="h-5 w-5 mr-2" /> Preview
                 </Button>
               </div>
             </div>
           ) : fileDetails.isAudio ? (
-            <div className="h-full flex items-center justify-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+            <div className="h-full flex items-center justify-center p-6 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/20 dark:to-teal-950/20">
               <AudioPlayerCard src={resource.url!} title={resource.title} onDownload={handlePrimaryAction} />
             </div>
           ) : isYoutube && youtubeEmbedUrl ? (
-            <iframe
-              className="w-full h-full"
-              src={youtubeEmbedUrl}
-              title={resource.title}
-              allowFullScreen
-            />
+            <div className="relative w-full h-full">
+              <iframe
+                className="w-full h-full"
+                src={youtubeEmbedUrl}
+                title={resource.title}
+                allowFullScreen
+              />
+            </div>
           ) : null}
         </div>
       )}
 
-      {/* Content Area */}
-      <CardContent className="p-5 flex-grow flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1 flex-1 min-w-0">
-            <div className="flex flex-wrap gap-2 mb-2">
-              <Badge variant="outline" className={cn("text-[10px] uppercase tracking-widest font-bold", pillStyle.bg, pillStyle.text, pillStyle.border)}>
+      {/* Content Area - Enhanced Visual Hierarchy */}
+      <CardContent className="p-6 flex-grow flex flex-col gap-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-3 flex-1 min-w-0">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className={cn("text-[10px] uppercase tracking-[0.2em] font-black px-2.5 py-0.5 rounded-full border-2", pillStyle.bg, pillStyle.text, pillStyle.border)}>
                 {resourcePillText}
               </Badge>
               {resource.voice_part && (
-                <Badge variant="outline" className={cn("text-[10px] uppercase tracking-widest font-bold border", voicePartColors[resource.voice_part] || voicePartColors.Other)}>
+                <Badge variant="outline" className={cn("text-[10px] uppercase tracking-[0.2em] font-black px-2.5 py-0.5 rounded-full border-2", voicePartColors[resource.voice_part] || voicePartColors.Other)}>
                   {resource.voice_part}
                 </Badge>
               )}
               {isAdmin && !isPublished && (
-                <Badge variant="destructive" className="text-[10px] uppercase tracking-widest font-bold">Draft</Badge>
+                <Badge variant="destructive" className="text-[10px] uppercase tracking-[0.2em] font-black px-2.5 py-0.5 rounded-full">Draft</Badge>
               )}
             </div>
-            <CardTitle className="text-lg font-bold font-lora leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+            <CardTitle className="text-xl font-black font-lora leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-300">
               {resource.title}
             </CardTitle>
             {resource.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              <p className="text-sm font-medium text-muted-foreground line-clamp-2 leading-relaxed">
                 {resource.description}
               </p>
             )}
           </div>
 
-          {/* Actions Menu */}
-          <div className="flex flex-col gap-1">
+          {/* Actions Menu - Cleaner Look */}
+          <div className="flex flex-col gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={handleShare}>
-                    <Copy className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all" onClick={handleShare}>
+                    <Copy className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Copy Link</TooltipContent>
@@ -215,39 +217,39 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                  <MoreVertical className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                  <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handleShare}>
-                  <Copy className="mr-2 h-4 w-4" /> Copy Link
+              <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-none">
+                <DropdownMenuItem onClick={handleShare} className="rounded-xl p-3 font-bold">
+                  <Copy className="mr-3 h-4 w-4" /> Copy Link
                 </DropdownMenuItem>
                 
                 {isAdmin && (
                   <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onEdit(resource)}>
-                      <Info className="mr-2 h-4 w-4" /> Edit Details
+                    <DropdownMenuSeparator className="my-2" />
+                    <DropdownMenuItem onClick={() => onEdit(resource)} className="rounded-xl p-3 font-bold">
+                      <Info className="mr-3 h-4 w-4" /> Edit Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onMove(resource)}>
-                      <ArrowRight className="mr-2 h-4 w-4" /> Move to Folder
+                    <DropdownMenuItem onClick={() => onMove(resource)} className="rounded-xl p-3 font-bold">
+                      <ArrowRight className="mr-3 h-4 w-4" /> Move to Folder
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator className="my-2" />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="rounded-xl p-3 font-bold text-destructive focus:bg-destructive/10 focus:text-destructive">
+                          <Trash2 className="mr-3 h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="rounded-[2rem]">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Resource?</AlertDialogTitle>
-                          <AlertDialogDescription>This will permanently remove "{resource.title}".</AlertDialogDescription>
+                          <AlertDialogTitle className="text-2xl font-black font-lora">Delete Resource?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-lg font-medium">This will permanently remove "{resource.title}".</AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onDelete(resource)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                        <AlertDialogFooter className="gap-3">
+                          <AlertDialogCancel className="rounded-2xl font-bold">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(resource)} className="bg-destructive hover:bg-destructive/90 rounded-2xl font-bold">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -258,16 +260,16 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           </div>
         </div>
 
-        {/* Primary Action Button (for non-audio resources) */}
+        {/* Primary Action Button - More Prominent */}
         {!fileDetails.isAudio && (
           <Button 
             onClick={handlePrimaryAction} 
-            className="w-full mt-auto font-bold group/btn"
+            className="w-full h-14 mt-auto font-black text-lg rounded-2xl shadow-lg shadow-primary/10 group/btn transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
             variant={isYoutube ? "secondary" : "default"}
           >
-            {isYoutube ? <Youtube className="h-4 w-4 mr-2" /> : isLink ? <ExternalLink className="h-4 w-4 mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+            {isYoutube ? <Play className="h-5 w-5 mr-3 fill-current" /> : isLink ? <ExternalLink className="h-5 w-5 mr-3" /> : <Download className="h-5 w-5 mr-3" />}
             {getPrimaryActionText()}
-            <ArrowRight className="ml-2 h-4 w-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
+            <ArrowRight className="ml-3 h-5 w-5 opacity-0 -translate-x-3 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-300" />
           </Button>
         )}
       </CardContent>
