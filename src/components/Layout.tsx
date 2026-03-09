@@ -73,7 +73,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-primary text-primary-foreground p-4 shadow-lg">
+      <header className="bg-primary text-primary-foreground p-4 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora text-primary-foreground">
             Resonance with Daniele
@@ -101,9 +101,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
       <main className="flex-grow bg-background">
-        <div className="container mx-auto max-w-6xl px-4">
-          {children}
-        </div>
+        {/* Container removed from here to allow full-width backgrounds in landing sections */}
+        {children}
       </main>
       <FooterSection />
       <BackToTopButton />

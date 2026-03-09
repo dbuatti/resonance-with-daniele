@@ -12,20 +12,14 @@ import CallToActionSection from "@/components/landing/CallToActionSection";
 import InterestFormSection from "@/components/landing/InterestFormSection";
 import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index: React.FC = () => {
   const { user, loading } = useSession();
-  console.log("[Index Page] User:", user ? user.id : 'null', "Loading:", loading);
 
-  // Only show skeleton if there's no user data AND it's currently loading for the first time
-  // If 'user' is present, it means we have at least stale data, so render the content.
-  const showSkeleton = loading && !user;
-
-  if (showSkeleton) {
-    console.log("[Index Page] Showing skeleton: loading is true and no user data.");
+  if (loading && !user) {
     return (
-      <div className="py-24 md:py-40 text-center"> {/* Keep vertical padding for skeleton */}
+      <div className="container mx-auto px-4 py-24 md:py-40 text-center">
         <Skeleton className="h-16 w-3/4 mx-auto mb-4" />
         <Skeleton className="h-8 w-1/2 mx-auto" />
         <div className="flex justify-center gap-4 mt-8">
@@ -37,15 +31,13 @@ const Index: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="flex flex-col w-full">
       {user ? (
-        <>
-          {console.log("[Index Page] User is logged in, rendering WelcomeHub.")}
+        <div className="container mx-auto px-4">
           <WelcomeHub />
-        </>
+        </div>
       ) : (
         <>
-          {console.log("[Index Page] User is NOT logged in, rendering landing sections.")}
           <HeroSection />
           <InterestFormSection />
           <VideoSection />
@@ -57,7 +49,7 @@ const Index: React.FC = () => {
           <CallToActionSection />
         </>
       )}
-    </>
+    </div>
   );
 };
 

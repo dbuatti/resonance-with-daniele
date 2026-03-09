@@ -6,27 +6,27 @@ import { Link } from "react-router-dom";
 
 const HeroSection: React.FC = () => {
   return (
-    <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end dark:from-hero-gradient-start-dark dark:to-hero-gradient-end-dark py-24 md:py-40 text-center overflow-hidden rounded-xl shadow-lg">
-      <div className="relative z-10">
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 font-lora text-foreground">
-          Sing. Connect. Shine. <br className="hidden sm:inline" /> Melbourne’s Pop-Up Choir.
+    <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end dark:from-hero-gradient-start-dark dark:to-hero-gradient-end-dark py-24 md:py-48 text-center overflow-hidden border-b border-border/50">
+      <div className="container mx-auto px-4 relative z-10">
+        <h1 className="text-5xl md:text-8xl font-extrabold tracking-tight mb-6 font-lora text-foreground leading-[1.1]">
+          Sing. Connect. <span className="text-primary">Shine.</span>
         </h1>
-        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-foreground">
-          From Musical Theatre to Jazz and Pop—join a joyful, no-pressure space to find your voice and create an incredible sound together.
+        <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-muted-foreground leading-relaxed">
+          Join Melbourne’s most joyful pop-up choir. From Musical Theatre to Jazz and Pop—find your voice in a space built for pure connection.
         </p>
-        <div className="flex justify-center gap-4">
-          <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border border-muted-foreground/30" asChild>
-            <Link to="/login">Log In / Access Resources</Link>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl shadow-xl shadow-primary/20" asChild>
+            <Link to="/login">Access Member Resources</Link>
           </Button>
-          <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border border-muted-foreground/30" asChild>
-            <Link to="/learn-more">Learn More</Link>
+          <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-xl bg-background/50 backdrop-blur-sm" asChild>
+            <Link to="/learn-more">Learn More About the Choir</Link>
           </Button>
         </div>
       </div>
-      {/* Subtle background decorative element */}
-      <div className="absolute inset-0 opacity-10">
-        {/* You could add a subtle pattern or SVG here */}
-      </div>
+      
+      {/* Decorative elements to fill space */}
+      <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 right-0 -translate-x-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
     </section>
   );
 };
