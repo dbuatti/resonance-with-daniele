@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Ticket, TrendingUp, ClipboardPaste, Sparkles, Info } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -50,7 +50,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
         .eq("event_id", eventId)
         .order("recorded_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -222,37 +222,42 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sales?.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell className="text-xs">{format(new Date(s.recorded_at), "MMM d, h:mm a")}</TableCell>
-                    <TableCell className="text-center font-bold">{s.tickets_sold}</TableCell>
-                    <TableCell className="text-right font-bold text-green-600">${Number(s.revenue).toFixed(2)}</TableCell>
-                    <TableCell>
-                      {s.breakdown && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <Info className="h-4 w-4 text-muted-foreground" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="w-64 p-3">
-                              <div className="space-y-2">
-                                <p className="text-xs font-bold uppercase tracking-widest border-b pb-1">Ticket Breakdown</p>
-                                {s.breakdown.map((item: any, i: number) => (
-                                  <div key={i} className="flex justify-between text-[11px]">
-                                    <span>{item.type}</span>
-                                    <span className="font-mono">{item.sold} sold (${item.earnings.toFixed(2)})</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {sales?.map((s) => {
+                  const date = new Date(s.recorded_at);
+                  return (
+                    <TableRow key={s.id}>
+                      <TableCell className="text-xs">
+                        {isValid(date) ? format(date, "MMM d, h:mm a") : "N/A"}
+                      </TableCell>
+                      <TableCell className="text-center font-bold">{s.tickets_sold}</TableCell>
+                      <TableCell className="text-right font-bold text-green-600">${Number(s.revenue).toFixed(2)}</TableCell>
+                      <TableCell>
+                        {s.breakdown && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <Info className="h-4 w-4 text-muted-foreground" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="w-64 p-3">
+                                <div className="space-y-2">
+                                  <p className="text-xs font-bold uppercase tracking-widest border-b pb-1">Ticket Breakdown</p>
+                                  {s.breakdown.map((item: any, i: number) => (
+                                    <div key={i} className="flex justify-between text-[11px]">
+                                      <span>{item.type}</span>
+                                      <span className="font-mono">{item.sold} sold (${item.earnings.toFixed(2)})</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>

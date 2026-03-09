@@ -21,7 +21,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
         .select("amount")
         .eq("event_id", eventId);
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -35,7 +35,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
         .order("recorded_at", { ascending: false })
         .limit(1);
       if (error) throw error;
-      return data?.[0];
+      return data?.[0] || null;
     },
   });
 

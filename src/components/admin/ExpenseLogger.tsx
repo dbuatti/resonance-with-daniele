@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Plus, Trash2, DollarSign } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 
 const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -43,7 +43,7 @@ const ExpenseLogger: React.FC<ExpenseLoggerProps> = ({ eventId }) => {
         .eq("event_id", eventId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -122,17 +122,22 @@ const ExpenseLogger: React.FC<ExpenseLoggerProps> = ({ eventId }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {expenses?.map((e) => (
-                <TableRow key={e.id}>
-                  <TableCell className="text-xs">{format(new Date(e.created_at), "MMM d")}</TableCell>
-                  <TableCell className="font-medium">{e.description}</TableCell>
-                  <TableCell><span className="text-xs bg-muted px-2 py-1 rounded-full">{e.category}</span></TableCell>
-                  <TableCell className="text-right font-bold">${Number(e.amount).toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(e.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {expenses?.map((e) => {
+                const date = new Date(e.created_at);
+                return (
+                  <TableRow key={e.id}>
+                    <TableCell className="text-xs">
+                      {isValid(date) ? format(date, "MMM d") : "N/A"}
+                    </TableCell>
+                    <TableCell className="font-medium">{e.description}</TableCell>
+                    <TableCell><span className="text-xs bg-muted px-2 py-1 rounded-full">{e.category}</span></TableCell>
+                    <TableCell className="text-right font-bold">${Number(e.amount).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(e.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

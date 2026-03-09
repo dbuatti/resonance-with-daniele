@@ -46,7 +46,7 @@ const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
         .eq("event_id", eventId)
         .order("end_date", { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
