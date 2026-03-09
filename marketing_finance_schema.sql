@@ -34,7 +34,12 @@ ALTER TABLE event_expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_ticket_sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marketing_promos ENABLE ROW LEVEL SECURITY;
 
--- Admin-only policies (Replace with your actual admin emails if different)
+-- Drop existing policies to avoid "already exists" errors
+DROP POLICY IF EXISTS "Admins can manage expenses" ON event_expenses;
+DROP POLICY IF EXISTS "Admins can manage ticket sales" ON event_ticket_sales;
+DROP POLICY IF EXISTS "Admins can manage promos" ON marketing_promos;
+
+-- Re-create Admin-only policies
 CREATE POLICY "Admins can manage expenses" ON event_expenses
   FOR ALL USING (auth.jwt() ->> 'email' IN ('daniele.buatti@gmail.com', 'resonancewithdaniele@gmail.com'));
 
