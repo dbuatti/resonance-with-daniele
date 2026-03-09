@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import MarketingChecklist from "@/components/admin/MarketingChecklist";
 import { Textarea } from "@/components/ui/textarea";
+import OutreachTracker from "@/components/admin/OutreachTracker";
 
 const AdminMarketingPlanPage: React.FC = () => {
   const [brainDump, setBrainDump] = useState("");
@@ -105,18 +106,21 @@ I'd love to see you there.
         {/* FOCUS MODE: The "One Thing" */}
         <section className="mb-12">
           <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden">
-            <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8">
-              <div className="bg-primary text-primary-foreground p-6 rounded-2xl shadow-xl">
-                <Target className="h-12 w-12" />
+            <CardContent className="p-8 flex flex-col lg:flex-row items-start gap-12">
+              <div className="lg:w-1/3 space-y-6">
+                <div className="bg-primary text-primary-foreground p-6 rounded-2xl shadow-xl inline-block">
+                  <Target className="h-12 w-12" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Current Focus</h2>
+                  <p className="text-3xl font-black font-lora">Message the 10 people who "need" to be there.</p>
+                  <p className="text-muted-foreground">Don't worry about the rest of the list yet. Just do this one thing.</p>
+                </div>
               </div>
-              <div className="flex-1 text-center md:text-left space-y-2">
-                <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Current Focus</h2>
-                <p className="text-3xl font-black font-lora">Message the 10 people who "need" to be there.</p>
-                <p className="text-muted-foreground">Don't worry about the rest of the list yet. Just do this one thing.</p>
+              
+              <div className="flex-1 w-full">
+                <OutreachTracker />
               </div>
-              <Button size="lg" className="h-16 px-8 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 group">
-                Done! <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Button>
             </CardContent>
           </Card>
         </section>
@@ -125,7 +129,7 @@ I'd love to see you there.
           {/* Left Column: Content & Strategy */}
           <div className="lg:col-span-7 space-y-12">
             
-            {/* Relational Outreach */}
+            {/* Relational Outreach Nodes */}
             <section className="space-y-6">
               <h2 className="text-2xl font-black font-lora flex items-center gap-2">
                 <UserPlus className="h-6 w-6 text-primary" /> 1. Human Connections
@@ -137,13 +141,7 @@ I'd love to see you there.
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-xs text-muted-foreground">Identify 10 specific people. Message them personally. No templates.</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[...Array(10)].map((_, i) => (
-                        <div key={i} className="w-8 h-8 rounded-xl border-2 border-primary/10 flex items-center justify-center text-xs font-black text-primary/30 hover:border-primary/40 hover:text-primary transition-colors cursor-pointer">
-                          {i + 1}
-                        </div>
-                      ))}
-                    </div>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Status: Tracked in Focus Mode ↑</p>
                   </CardContent>
                 </Card>
                 <Card className="border-none shadow-lg bg-card border-l-4 border-accent">
@@ -152,9 +150,12 @@ I'd love to see you there.
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {["Neha & Brad", "The Sangha", "November Crew"].map((node) => (
-                      <div key={node} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                        <div className="w-2 h-2 rounded-full bg-accent" />
-                        <span className="text-xs font-bold">{node}</span>
+                      <div key={node} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-accent" />
+                          <span className="text-xs font-bold">{node}</span>
+                        </div>
+                        <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     ))}
                   </CardContent>
