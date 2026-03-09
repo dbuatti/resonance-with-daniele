@@ -42,7 +42,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   });
 
   const { data: sales, isLoading } = useQuery({
-    queryKey: ["ticketSales", eventId],
+    queryKey: ["eventTicketSales", eventId], // Updated key
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_ticket_sales")
@@ -111,7 +111,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
       showSuccess("Sales snapshot recorded!");
       form.reset();
       setCurrentBreakdown(null);
-      queryClient.invalidateQueries({ queryKey: ["ticketSales", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["eventTicketSales", eventId] });
     }
   };
 
