@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertCircle, Mail, BellRing, Users, BarChart3, Settings, TrendingUp } from "lucide-react";
+import { AlertCircle, Mail, BellRing, Users, BarChart3, Settings, TrendingUp, Lightbulb } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -65,6 +65,13 @@ const AdminZone: React.FC = () => {
       label: "View Dashboard"
     },
     {
+      title: "March 14 Plan",
+      description: "View the specific marketing strategy and captions for this Saturday.",
+      icon: <Lightbulb className="h-6 w-6 text-primary" />,
+      link: "/admin/marketing-plan",
+      label: "View Strategy"
+    },
+    {
       title: "Survey Insights",
       description: "Analyze aggregated data and feedback from member surveys.",
       icon: <BarChart3 className="h-6 w-6 text-primary" />,
@@ -93,7 +100,7 @@ const AdminZone: React.FC = () => {
 
       <AdminDashboardOverview />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {adminTools.map((tool, i) => (
           <Card key={i} className="shadow-lg rounded-2xl border-none bg-card hover:shadow-xl transition-all duration-300 group">
             <CardHeader>

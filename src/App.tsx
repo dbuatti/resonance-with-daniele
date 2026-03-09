@@ -13,7 +13,8 @@ import AdminSurveyData from "./pages/AdminSurveyData";
 import AdminInterestSubmissions from "./pages/AdminInterestSubmissions";
 import AdminAnnouncementsPage from "./pages/AdminAnnouncementsPage";
 import AdminIssueReportsPage from "./pages/AdminIssueReportsPage";
-import AdminMarketingDashboard from "./pages/AdminMarketingDashboard"; // Import new page
+import AdminMarketingDashboard from "./pages/AdminMarketingDashboard";
+import AdminMarketingPlanPage from "./pages/AdminMarketingPlanPage"; // Import new page
 import CurrentEventPage from "./pages/CurrentEventPage";
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
@@ -54,7 +55,8 @@ const App = () => (
               <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} />
               <Route path="/admin/announcements" element={<Layout><AdminAnnouncementsPage /></Layout>} />
               <Route path="/admin/issue-reports" element={<Layout><AdminIssueReportsPage /></Layout>} />
-              <Route path="/admin/marketing" element={<Layout><AdminMarketingDashboard /></Layout>} /> {/* New Route */}
+              <Route path="/admin/marketing" element={<Layout><AdminMarketingDashboard /></Layout>} />
+              <Route path="/admin/marketing-plan" element={<Layout><AdminMarketingPlanPage /></Layout>} /> {/* New Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SessionContextProvider>
