@@ -11,12 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Ticket, TrendingUp, ClipboardPaste, Sparkles } from "lucide-react";
+import { Loader2, Ticket, TrendingUp, ClipboardPaste, Sparkles, Info } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { format } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 const ticketSchema = z.object({
   tickets_sold: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a number"),
@@ -33,6 +34,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
   const [isPasteDialogOpen, setIsPasteDialogOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
+  const [currentBreakdown, setCurrentBreakdown] = useState<any[] | null>(null);
   
   const form = useForm<TicketFormData>({
     resolver: zodResolver(ticketSchema),
@@ -53,23 +55,46 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   });
 
   const handleSmartPaste = () => {
-    // Regex to find "Tickets sold" followed by a number
+    // 1. Extract Totals
     const soldMatch = pasteText.match(/Tickets sold\s*(\d+)/i);
-    // Regex to find "Total earnings" or "Your earnings" followed by a dollar amount
     const revenueMatch = pasteText.match(/(?:Total earnings|Your earnings:)\s*\$([\d,.]+)/i);
+
+    // 2. Extract Breakdown
+    const breakdown: any[] = [];
+    const lines = pasteText.split('\n');
+    let inBreakdownSection = false;
+
+    for (const line of lines) {
+      if (line.includes("Earnings by ticket type")) {
+        inBreakdownSection = true;
+        continue;
+      }
+      if (inBreakdownSection && line.includes('$')) {
+        // Match: Type Name [Tab/Space] $Amount [Tab/Space] Sold/Total
+        const match = line.match(/^(.+?)\s+\$([\d,.]+)\s+(\d+)\/\d+/);
+        if (match) {
+          breakdown.push({
+            type: match[1].trim(),
+            earnings: parseFloat(match[2].replace(/,/g, '')),
+            sold: parseInt(match[3])
+          });
+        }
+      }
+    }
 
     if (soldMatch && revenueMatch) {
       const sold = soldMatch[1];
-      const revenue = revenueMatch[1].replace(/,/g, ''); // Remove commas for parsing
+      const revenue = revenueMatch[1].replace(/,/g, '');
       
       form.setValue("tickets_sold", sold);
       form.setValue("revenue", revenue);
+      setCurrentBreakdown(breakdown.length > 0 ? breakdown : null);
       
-      showSuccess(`Extracted ${sold} tickets and $${revenue} revenue!`);
+      showSuccess(`Extracted ${sold} tickets and ${breakdown.length} ticket types!`);
       setIsPasteDialogOpen(false);
       setPasteText("");
     } else {
-      showError("Could not find ticket or revenue data in the pasted text. Please check the format.");
+      showError("Could not find ticket or revenue data. Please check the format.");
     }
   };
 
@@ -78,12 +103,14 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
       event_id: eventId,
       tickets_sold: parseInt(data.tickets_sold),
       revenue: parseFloat(data.revenue),
+      breakdown: currentBreakdown // Save the parsed breakdown
     });
 
     if (error) showError("Failed to log sales.");
     else {
       showSuccess("Sales snapshot recorded!");
       form.reset();
+      setCurrentBreakdown(null);
       queryClient.invalidateQueries({ queryKey: ["ticketSales", eventId] });
     }
   };
@@ -111,7 +138,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
                 <DialogHeader>
                   <DialogTitle>Paste from Humanitix</DialogTitle>
                   <CardDescription>
-                    Copy the dashboard summary from Humanitix and paste it here. We'll extract the numbers for you.
+                    Copy the dashboard summary from Humanitix and paste it here. We'll extract the totals and the ticket type breakdown.
                   </CardDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -142,6 +169,19 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
               <FormField control={form.control} name="revenue" render={({ field }) => (
                 <FormItem><FormLabel>Total Revenue ($)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
+              
+              {currentBreakdown && (
+                <div className="p-3 bg-primary/5 rounded-lg border border-primary/10 space-y-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Breakdown Preview</p>
+                  {currentBreakdown.map((item, i) => (
+                    <div key={i} className="flex justify-between text-xs">
+                      <span className="font-medium">{item.type}</span>
+                      <span className="text-muted-foreground">{item.sold} sold (${item.earnings.toFixed(2)})</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : "Log Snapshot"}
               </Button>
@@ -178,6 +218,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
                   <TableHead>Date</TableHead>
                   <TableHead className="text-center">Tickets</TableHead>
                   <TableHead className="text-right">Revenue</TableHead>
+                  <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -186,6 +227,30 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
                     <TableCell className="text-xs">{format(new Date(s.recorded_at), "MMM d, h:mm a")}</TableCell>
                     <TableCell className="text-center font-bold">{s.tickets_sold}</TableCell>
                     <TableCell className="text-right font-bold text-green-600">${Number(s.revenue).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {s.breakdown && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <Info className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="w-64 p-3">
+                              <div className="space-y-2">
+                                <p className="text-xs font-bold uppercase tracking-widest border-b pb-1">Ticket Breakdown</p>
+                                {s.breakdown.map((item: any, i: number) => (
+                                  <div key={i} className="flex justify-between text-[11px]">
+                                    <span>{item.type}</span>
+                                    <span className="font-mono">{item.sold} sold (${item.earnings.toFixed(2)})</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
