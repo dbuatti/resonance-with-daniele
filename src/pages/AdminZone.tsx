@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
+import AdminGrowthMission from "@/components/admin/AdminGrowthMission";
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
@@ -97,6 +98,8 @@ const AdminZone: React.FC = () => {
           Welcome back, Daniele. Here you can oversee all aspects of the Resonance community.
         </p>
       </header>
+
+      <AdminGrowthMission />
 
       <AdminDashboardOverview />
 
