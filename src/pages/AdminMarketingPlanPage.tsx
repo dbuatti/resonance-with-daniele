@@ -14,12 +14,16 @@ import {
   Copy, 
   CheckCircle2,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Camera,
+  Video,
+  Users
 } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import MarketingChecklist from "@/components/admin/MarketingChecklist";
 
 const AdminMarketingPlanPage: React.FC = () => {
   const copyToClipboard = (text: string, label: string) => {
@@ -62,7 +66,7 @@ Let's make some noise together!
 
   return (
     <div className="space-y-8 py-8 md:py-12">
-      <div className="max-w-5xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         <BackButton className="mb-6" to="/admin" />
         
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
@@ -76,158 +80,139 @@ Let's make some noise together!
           </div>
         </header>
 
-        {/* 1. The Hook */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="bg-primary text-primary-foreground border-none shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Target className="h-5 w-5" /> The Hook
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="font-bold text-xl">"Power vs. Peace"</p>
-              <p className="text-sm opacity-80">Contrast the high-energy Sondheim ending with the ethereal Whitacre harmonies. Sell the emotional journey.</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column: Strategy & Content */}
+          <div className="lg:col-span-7 space-y-8">
+            {/* 1. The Hook */}
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="bg-primary text-primary-foreground border-none shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Target className="h-5 w-5" /> The Hook
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="font-bold text-xl">"Power vs. Peace"</p>
+                  <p className="text-sm opacity-80">Contrast the high-energy Sondheim ending with the ethereal Whitacre harmonies. Sell the emotional journey.</p>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-accent text-accent-foreground border-none shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Zap className="h-5 w-5" /> The Offer
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="font-bold text-xl">Code: SING20</p>
-              <p className="text-sm opacity-80">20% off General Admission. Creates a "Why now?" moment for people on the fence.</p>
-            </CardContent>
-          </Card>
+              <Card className="bg-accent text-accent-foreground border-none shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Zap className="h-5 w-5" /> The Offer
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="font-bold text-xl">Code: SING20</p>
+                  <p className="text-sm opacity-80">20% off General Admission. Creates a "Why now?" moment for people on the fence.</p>
+                </CardContent>
+              </Card>
+            </section>
 
-          <Card className="bg-card border-2 border-primary/10 shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg text-primary">
-                <TrendingUp className="h-5 w-5" /> The Target
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="font-bold text-xl text-foreground">Local & Niche</p>
-              <p className="text-sm text-muted-foreground">Target Armadale (10km) + Musical Theatre fans + Past attendees.</p>
-            </CardContent>
-          </Card>
-        </section>
+            {/* 2. Content Templates */}
+            <section className="space-y-6">
+              <h2 className="text-2xl font-bold font-lora flex items-center gap-2">
+                <Copy className="h-6 w-6 text-primary" /> Copy-Paste Templates
+              </h2>
+              
+              <Card className="border-none shadow-lg bg-muted/30">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                      <Instagram className="h-4 w-4" /> Instagram Caption
+                    </CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(flashSaleCaption, "Instagram Caption")}>
+                      <Copy className="h-3 w-3 mr-1" /> Copy
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <pre className="text-xs whitespace-pre-wrap font-sans text-muted-foreground bg-background p-4 rounded-lg border">
+                    {flashSaleCaption}
+                  </pre>
+                </CardContent>
+              </Card>
 
-        {/* 2. The Content Calendar */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold font-lora flex items-center gap-2">
-            <Calendar className="h-6 w-6 text-primary" /> 72-Hour Execution Roadmap
-          </h2>
-          
-          <div className="space-y-4">
-            {/* Wednesday */}
-            <Card className="border-l-4 border-l-blue-500">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg">Wednesday: The Launch</CardTitle>
-                  <Badge variant="outline">High Priority</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase flex items-center gap-1"><Mail className="h-3 w-3" /> Direct Email</span>
-                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(emailTemplate, "Email Template")}><Copy className="h-3 w-3 mr-1" /> Copy</Button>
+              <Card className="border-none shadow-lg bg-muted/30">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                      <Mail className="h-4 w-4" /> Email Template
+                    </CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(emailTemplate, "Email Template")}>
+                      <Copy className="h-3 w-3 mr-1" /> Copy
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <pre className="text-xs whitespace-pre-wrap font-sans text-muted-foreground bg-background p-4 rounded-lg border">
+                    {emailTemplate}
+                  </pre>
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* 3. Content for the NEXT one (Day of Strategy) */}
+            <section className="space-y-6">
+              <h2 className="text-2xl font-bold font-lora flex items-center gap-2">
+                <Camera className="h-6 w-6 text-primary" /> Content for the NEXT Choir
+              </h2>
+              <Card className="border-none shadow-lg bg-gradient-to-br from-primary/5 to-accent/5">
+                <CardContent className="p-6 space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    The best marketing for the next event happens <strong>during</strong> this one. Don't forget to capture:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-primary/10 p-2 rounded-lg"><Video className="h-4 w-4 text-primary" /></div>
+                      <div>
+                        <p className="text-sm font-bold">The "Wall of Sound"</p>
+                        <p className="text-xs text-muted-foreground">Record the final 30 seconds of 'Being Alive' from the back of the room.</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground italic">Send to the 21 past attendees. Personal, warm, and includes the discount.</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase flex items-center gap-1"><Instagram className="h-3 w-3" /> Main Feed Post</span>
-                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(flashSaleCaption, "Instagram Caption")}><Copy className="h-3 w-3 mr-1" /> Copy</Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground italic">Use the church photo. Boost this post ($15/day) targeting Armadale + Musical Theatre.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Thursday */}
-            <Card className="border-l-4 border-l-purple-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Thursday: The Deep Dive</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="bg-purple-100 p-2 rounded-full"><Instagram className="h-5 w-5 text-purple-600" /></div>
-                  <div className="space-y-1">
-                    <p className="font-bold">Instagram Stories: "Why these songs?"</p>
-                    <p className="text-sm text-muted-foreground">Video of you at the keys. Play the "Being Alive" chords. Explain that "Sleep" was written to be sung in a space exactly like Armadale Baptist. Use a Link Sticker: "Claim 20% Off".</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Friday */}
-            <Card className="border-l-4 border-l-red-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Friday: The Final Call</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-red-100 p-2 rounded-full"><MessageSquare className="h-5 w-5 text-red-600" /></div>
-                    <div className="space-y-1">
-                      <p className="font-bold">Facebook Community Groups</p>
-                      <p className="text-sm text-muted-foreground">Post in "Melbourne Musicians" & "Armadale Community". "Last few spots for tomorrow morning! No auditions, just Sondheim and good vibes."</p>
+                    <div className="flex items-start gap-3">
+                      <div className="bg-primary/10 p-2 rounded-lg"><Users className="h-4 w-4 text-primary" /></div>
+                      <div>
+                        <p className="text-sm font-bold">The "Post-Sing" Glow</p>
+                        <p className="text-xs text-muted-foreground">Quick video of people laughing/chatting during the break.</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="bg-red-100 p-2 rounded-full"><Clock className="h-5 w-5 text-red-600" /></div>
-                    <div className="space-y-1">
-                      <p className="font-bold">Story: "Sale Ends at 1pm"</p>
-                      <p className="text-sm text-muted-foreground">Urgency post. "Final 3 hours to use code SING20. The circle is looking great—can't wait to hear these harmonies tomorrow!"</p>
-                    </div>
+                </CardContent>
+              </Card>
+            </section>
+          </div>
+
+          {/* Right Column: Interactive Checklist */}
+          <div className="lg:col-span-5">
+            <div className="sticky top-8 space-y-8">
+              <MarketingChecklist />
+              
+              <Card className="border-none shadow-lg bg-muted/50">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" /> Paid Ad Strategy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <div className="space-y-2">
+                    <p className="font-bold">Targeting:</p>
+                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                      <li>Armadale + 10km radius</li>
+                      <li>Interests: Musical Theatre, Sondheim</li>
+                      <li>Budget: $20/day (Wed-Fri)</li>
+                    </ul>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <Separator />
+                  <p className="text-xs italic text-muted-foreground">
+                    "Social Proof" is key. A boosted post makes the event look established even with low initial sales.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-
-        {/* 3. Paid Ad Strategy */}
-        <Card className="mt-12 border-none shadow-2xl bg-gradient-to-br from-background to-muted">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-6 w-6 text-primary" /> Paid Ad Strategy (The "Boost")
-            </CardTitle>
-            <CardDescription>Spend $45–$60 total to reach ~5,000 local people.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h4 className="font-bold uppercase text-xs tracking-widest text-muted-foreground">Targeting</h4>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-green-500" /> <strong>Location:</strong> Armadale + 10km radius</li>
-                  <li className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-green-500" /> <strong>Interests:</strong> Musical Theatre, Choral Music, Sondheim</li>
-                  <li className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-green-500" /> <strong>Age:</strong> 25 – 65</li>
-                </ul>
-              </div>
-              <div className="space-y-4">
-                <h4 className="font-bold uppercase text-xs tracking-widest text-muted-foreground">Budget</h4>
-                <div className="p-4 bg-background rounded-xl border shadow-sm">
-                  <p className="text-2xl font-bold text-primary">$20 / day</p>
-                  <p className="text-sm text-muted-foreground">Run for 3 days (Wed-Fri)</p>
-                </div>
-              </div>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <h4 className="font-bold text-sm">Why Boost?</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Because you only have 6 tickets sold, the "Social Proof" of a boosted post makes the event look established. It ensures that even if people don't follow you, they see the "Pop-Up" opportunity in their neighborhood.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
