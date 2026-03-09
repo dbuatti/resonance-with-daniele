@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,10 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Ticket, TrendingUp } from "lucide-react";
+import { Loader2, Ticket, TrendingUp, ClipboardPaste, Sparkles } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { format } from "date-fns";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 
 const ticketSchema = z.object({
   tickets_sold: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, "Must be a number"),
@@ -29,6 +31,9 @@ interface TicketSalesLoggerProps {
 
 const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
+  const [isPasteDialogOpen, setIsPasteDialogOpen] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  
   const form = useForm<TicketFormData>({
     resolver: zodResolver(ticketSchema),
     defaultValues: { tickets_sold: "", revenue: "" },
@@ -47,6 +52,27 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
     },
   });
 
+  const handleSmartPaste = () => {
+    // Regex to find "Tickets sold" followed by a number
+    const soldMatch = pasteText.match(/Tickets sold\s*(\d+)/i);
+    // Regex to find "Total earnings" or "Your earnings" followed by a dollar amount
+    const revenueMatch = pasteText.match(/(?:Total earnings|Your earnings:)\s*\$([\d,.]+)/i);
+
+    if (soldMatch && revenueMatch) {
+      const sold = soldMatch[1];
+      const revenue = revenueMatch[1].replace(/,/g, ''); // Remove commas for parsing
+      
+      form.setValue("tickets_sold", sold);
+      form.setValue("revenue", revenue);
+      
+      showSuccess(`Extracted ${sold} tickets and $${revenue} revenue!`);
+      setIsPasteDialogOpen(false);
+      setPasteText("");
+    } else {
+      showError("Could not find ticket or revenue data in the pasted text. Please check the format.");
+    }
+  };
+
   const onSubmit = async (data: TicketFormData) => {
     const { error } = await supabase.from("event_ticket_sales").insert({
       event_id: eventId,
@@ -56,7 +82,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
 
     if (error) showError("Failed to log sales.");
     else {
-      showSuccess("Sales updated!");
+      showSuccess("Sales snapshot recorded!");
       form.reset();
       queryClient.invalidateQueries({ queryKey: ["ticketSales", eventId] });
     }
@@ -70,9 +96,41 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <Card className="lg:col-span-1 shadow-lg border-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" /> Update Sales
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" /> Update Sales
+            </CardTitle>
+            
+            <Dialog open={isPasteDialogOpen} onOpenChange={setIsPasteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 gap-1 text-xs font-bold border-primary/30 text-primary hover:bg-primary/5">
+                  <Sparkles className="h-3 w-3" /> Smart Paste
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Paste from Humanitix</DialogTitle>
+                  <CardDescription>
+                    Copy the dashboard summary from Humanitix and paste it here. We'll extract the numbers for you.
+                  </CardDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <Textarea 
+                    placeholder="Paste Humanitix text here..." 
+                    className="min-h-[200px] font-mono text-xs"
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value)}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setIsPasteDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleSmartPaste} disabled={!pasteText.trim()}>
+                    <ClipboardPaste className="mr-2 h-4 w-4" /> Extract Data
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
           <CardDescription>Log current Humanitix numbers</CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,7 +159,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
             <div className="flex justify-between items-end">
               <div className="text-4xl font-bold">{latestSale?.tickets_sold || 0} <span className="text-lg text-muted-foreground font-normal">/ {targetTickets}</span></div>
               <div className="text-right">
-                <p className="text-xs font-bold text-muted-foreground uppercase">Revenue</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase">Net Revenue</p>
                 <p className="text-2xl font-bold text-green-600">${Number(latestSale?.revenue || 0).toFixed(2)}</p>
               </div>
             </div>
