@@ -108,10 +108,10 @@ const Events: React.FC = () => {
   const showSkeleton = isLoading && !events;
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12 space-y-10">
-      <BackButton className="mb-6" />
+    <div className="container mx-auto px-4 py-4 md:py-8 space-y-8">
+      <BackButton className="mb-4" />
       
-      <header className="text-center space-y-4 mb-12">
+      <header className="text-center space-y-2 mb-8">
         <h1 className="text-4xl md:text-5xl font-extrabold font-lora tracking-tight">
           Upcoming Events
         </h1>
@@ -127,7 +127,7 @@ const Events: React.FC = () => {
         </Alert>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 max-w-4xl mx-auto mb-12">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 max-w-4xl mx-auto mb-8">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input

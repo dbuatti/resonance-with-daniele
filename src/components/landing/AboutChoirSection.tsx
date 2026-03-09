@@ -5,7 +5,7 @@ import { Users, Heart, Sparkles, Music } from "lucide-react";
 
 const AboutChoirSection: React.FC = () => {
   return (
-    <section className="py-24 md:py-32 bg-background overflow-hidden">
+    <section className="py-16 md:py-20 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="flex flex-col lg:flex-row items-center gap-16">
           <div className="lg:w-1/2 space-y-8">

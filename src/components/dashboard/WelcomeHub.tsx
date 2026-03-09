@@ -116,7 +116,7 @@ const WelcomeHub: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="py-8 md:py-12 space-y-8">
+      <div className="py-4 md:py-8 space-y-8">
         <Skeleton className="h-64 w-full rounded-2xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
@@ -135,7 +135,7 @@ const WelcomeHub: React.FC = () => {
   };
 
   return (
-    <div className="py-8 md:py-12 space-y-10">
+    <div className="py-4 md:py-8 space-y-10">
       {/* Hero Welcome Section */}
       <section className="relative overflow-hidden rounded-3xl bg-primary text-primary-foreground p-8 md:p-12 shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">

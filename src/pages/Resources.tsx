@@ -223,10 +223,10 @@ const Resources: React.FC = () => {
     );
   };
 
-  if (loadingSession) return <div className="p-8"><Skeleton className="h-10 w-full" /></div>;
+  if (loadingSession) return <div className="p-4"><Skeleton className="h-10 w-full" /></div>;
 
   return (
-    <div className="space-y-8 py-8">
+    <div className="space-y-6 py-4">
       <header className="text-center space-y-2">
         <h1 className="text-4xl font-bold font-lora">Member Resources</h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">Access sheet music, audio tracks, and important links.</p>
