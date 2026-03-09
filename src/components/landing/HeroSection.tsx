@@ -3,28 +3,43 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { ArrowRight, Music } from "lucide-react";
 
 const HeroSection: React.FC = () => {
   return (
     <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end dark:from-hero-gradient-start-dark dark:to-hero-gradient-end-dark py-24 md:py-48 text-center overflow-hidden border-b border-border/50">
       <div className="container mx-auto px-4 relative z-10">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-8 animate-fade-in">
+          <Music className="h-4 w-4" />
+          <span>Melbourne's Premier Pop-Up Choir</span>
+        </div>
+        
         <h1 className="text-5xl md:text-8xl font-extrabold tracking-tight mb-6 font-lora text-foreground leading-[1.1]">
-          Sing. Connect. <span className="text-primary">Shine.</span>
+          Find Your Voice. <br />
+          <span className="text-primary">Find Your People.</span>
         </h1>
+        
         <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-muted-foreground leading-relaxed">
-          Join Melbourne’s most joyful pop-up choir. From Musical Theatre to Jazz and Pop—find your voice in a space built for pure connection.
+          Experience the transformative power of group singing. From Broadway hits to soulful jazz—no auditions, no pressure, just pure connection.
         </p>
+        
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl shadow-xl shadow-primary/20" asChild>
-            <Link to="/login">Access Member Resources</Link>
+          <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl shadow-xl shadow-primary/20 group" asChild>
+            <Link to="/events">
+              Book Your Spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Link>
           </Button>
           <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-xl bg-background/50 backdrop-blur-sm" asChild>
-            <Link to="/learn-more">Learn More About the Choir</Link>
+            <Link to="/learn-more">How It Works</Link>
           </Button>
+        </div>
+
+        <div className="mt-12 flex items-center justify-center gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+          <p className="text-sm font-bold uppercase tracking-widest">As seen in Melbourne's vibrant arts scene</p>
         </div>
       </div>
       
-      {/* Decorative elements to fill space */}
+      {/* Decorative elements */}
       <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/4 right-0 -translate-x-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
     </section>

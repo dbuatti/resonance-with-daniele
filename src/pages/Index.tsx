@@ -10,6 +10,7 @@ import ResourcesBenefitsSection from "@/components/landing/ResourcesBenefitsSect
 import MeetDanieleSection from "@/components/landing/MeetDanieleSection";
 import CallToActionSection from "@/components/landing/CallToActionSection";
 import InterestFormSection from "@/components/landing/InterestFormSection";
+import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,6 +45,7 @@ const Index: React.FC = () => {
           <AboutChoirSection />
           <HowItWorksSection />
           <FeaturedSection />
+          <TestimonialsSection />
           <ResourcesBenefitsSection />
           <MeetDanieleSection />
           <CallToActionSection />
