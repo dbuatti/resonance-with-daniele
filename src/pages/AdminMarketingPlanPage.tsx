@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -11,27 +11,37 @@ import {
   Target, 
   Copy, 
   Clock,
-  TrendingUp,
-  Camera,
-  Video,
   Users,
   Mic2,
   Leaf,
   MessageSquare,
-  CheckCircle2,
-  Calendar,
   Zap,
   UserPlus,
-  MapPin
+  MapPin,
+  Brain,
+  ArrowRight,
+  Sparkles
 } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import MarketingChecklist from "@/components/admin/MarketingChecklist";
-import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 
 const AdminMarketingPlanPage: React.FC = () => {
+  const [brainDump, setBrainDump] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("march14_brain_dump");
+    if (saved) setBrainDump(saved);
+  }, []);
+
+  const handleBrainDumpChange = (val: string) => {
+    setBrainDump(val);
+    localStorage.setItem("march14_brain_dump", val);
+  };
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     showSuccess(`${label} copied to clipboard!`);
@@ -67,176 +77,162 @@ I'd love to see you there.
 
 — Daniele`;
 
-  const communityGroupLocal = `Hi neighbors! 🌿
-
-I’m Daniele, and I run a pop-up choir called Resonance right here in Armadale. 
-
-We’re gathering this Saturday morning (10am) at the Armadale Baptist Church to sing two incredible songs: Sondheim’s "Being Alive" and Eric Whitacre’s "Sleep."
-
-It’s not a traditional choir — there are no auditions and no ongoing commitment. It’s just a space for anyone who loves to sing to come together and create a really powerful sound for a few hours. Whether you haven't sung since primary school or you sing every day, you’re so welcome.
-
-If you’re looking for a bit of connection and a joyful start to your weekend, I’d love to see you there.
-
-Details and tickets here: https://events.humanitix.com/resonance-melbourne-march-2026`;
-
   return (
-    <div className="space-y-8 py-8 md:py-12">
+    <div className="space-y-8 py-8 md:py-12 bg-background/50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4">
         <BackButton className="mb-6" to="/admin" />
         
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        {/* ADHD Header: Big, Clear, Visual */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Badge className="bg-primary text-primary-foreground">March 14 Sprint</Badge>
-              <Badge variant="outline" className="border-primary text-primary">Relational Strategy</Badge>
+              <Badge className="bg-primary text-primary-foreground px-3 py-1 rounded-full">🚀 March 14 Sprint</Badge>
+              <Badge variant="outline" className="border-primary text-primary px-3 py-1 rounded-full">🤝 Relational Focus</Badge>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold font-lora">Event Command Center</h1>
-            <p className="text-lg text-muted-foreground">Project managing the transition from "Selling" to "Holding Space."</p>
+            <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tight">Event Command Center</h1>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
-              <Clock className="h-4 w-4" /> 72 Hours to Downbeat
+          <div className="bg-card p-4 rounded-2xl shadow-sm border flex items-center gap-4">
+            <div className="bg-primary/10 p-3 rounded-xl">
+              <Clock className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Saturday, March 14 | 10:00 AM</p>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Countdown</p>
+              <p className="text-xl font-black text-primary">72 Hours to Downbeat</p>
+            </div>
           </div>
         </header>
 
-        {/* 1. The 72-Hour Sprint Timeline */}
+        {/* FOCUS MODE: The "One Thing" */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold font-lora mb-6 flex items-center gap-2">
-            <Zap className="h-6 w-6 text-primary" /> The 72-Hour Sprint
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[
-              { day: "Wednesday", focus: "Personal Outreach", icon: <Users className="h-4 w-4" />, desc: "Message the 10 people who 'need' to be there." },
-              { day: "Thursday", focus: "Community Nodes", icon: <MessageSquare className="h-4 w-4" />, desc: "Reach out to Sangha, Neha, and Brad." },
-              { day: "Friday", focus: "Final Invitation", icon: <Instagram className="h-4 w-4" />, desc: "One authentic story. No hype, just heart." },
-              { day: "Saturday", focus: "Presence", icon: <Leaf className="h-4 w-4" />, desc: "Inhabit the room. Forget the marketing." },
-            ].map((step, i) => (
-              <Card key={i} className="border-none shadow-md bg-muted/30 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-20 group-hover:opacity-100 transition-opacity" />
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{step.day}</span>
-                    <div className="p-1.5 bg-primary/10 rounded-lg text-primary">{step.icon}</div>
-                  </div>
-                  <p className="font-bold text-sm">{step.focus}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden">
+            <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8">
+              <div className="bg-primary text-primary-foreground p-6 rounded-2xl shadow-xl">
+                <Target className="h-12 w-12" />
+              </div>
+              <div className="flex-1 text-center md:text-left space-y-2">
+                <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Current Focus</h2>
+                <p className="text-3xl font-black font-lora">Message the 10 people who "need" to be there.</p>
+                <p className="text-muted-foreground">Don't worry about the rest of the list yet. Just do this one thing.</p>
+              </div>
+              <Button size="lg" className="h-16 px-8 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 group">
+                Done! <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </CardContent>
+          </Card>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Strategy & Content */}
+          {/* Left Column: Content & Strategy */}
           <div className="lg:col-span-7 space-y-12">
             
-            {/* 2. Relational Outreach Tracker */}
+            {/* Relational Outreach */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold font-lora flex items-center gap-2">
-                <UserPlus className="h-6 w-6 text-primary" /> Relational Outreach
+              <h2 className="text-2xl font-black font-lora flex items-center gap-2">
+                <UserPlus className="h-6 w-6 text-primary" /> 1. Human Connections
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="border-none shadow-lg bg-primary/5 border-l-4 border-primary">
+                <Card className="border-none shadow-lg bg-card border-l-4 border-primary">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest">The 10 People Rule</CardTitle>
+                    <CardTitle className="text-sm font-black uppercase tracking-widest">The 10 People Rule</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-xs text-muted-foreground space-y-2">
-                    <p>Identify 10 specific people who would benefit from this room. Message them personally.</p>
-                    <div className="flex flex-wrap gap-1 pt-2">
+                  <CardContent className="space-y-4">
+                    <p className="text-xs text-muted-foreground">Identify 10 specific people. Message them personally. No templates.</p>
+                    <div className="flex flex-wrap gap-2">
                       {[...Array(10)].map((_, i) => (
-                        <div key={i} className="w-6 h-6 rounded-full border-2 border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary/40">
+                        <div key={i} className="w-8 h-8 rounded-xl border-2 border-primary/10 flex items-center justify-center text-xs font-black text-primary/30 hover:border-primary/40 hover:text-primary transition-colors cursor-pointer">
                           {i + 1}
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-none shadow-lg bg-accent/5 border-l-4 border-accent">
+                <Card className="border-none shadow-lg bg-card border-l-4 border-accent">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest">Community Nodes</CardTitle>
+                    <CardTitle className="text-sm font-black uppercase tracking-widest">Community Nodes</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-xs text-muted-foreground space-y-2">
-                    <ul className="space-y-1">
-                      <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> Neha & Brad</li>
-                      <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> The Sangha</li>
-                      <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> November Crew</li>
-                    </ul>
+                  <CardContent className="space-y-2">
+                    {["Neha & Brad", "The Sangha", "November Crew"].map((node) => (
+                      <div key={node} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="w-2 h-2 rounded-full bg-accent" />
+                        <span className="text-xs font-bold">{node}</span>
+                      </div>
+                    ))}
                   </CardContent>
                 </Card>
               </div>
             </section>
 
-            {/* 3. Content Templates */}
+            {/* Templates */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold font-lora flex items-center gap-2">
-                <Mic2 className="h-6 w-6 text-primary" /> Authentic Voice Templates
+              <h2 className="text-2xl font-black font-lora flex items-center gap-2">
+                <Mic2 className="h-6 w-6 text-primary" /> 2. Copy & Paste
               </h2>
               
-              <Card className="border-none shadow-lg bg-muted/30">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                      <Instagram className="h-4 w-4" /> Instagram Caption (Minimalist)
-                    </CardTitle>
-                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(authenticCaption, "Instagram Caption")}>
-                      <Copy className="h-3 w-3 mr-1" /> Copy
+              <div className="space-y-4">
+                <Card className="border-none shadow-lg bg-card overflow-hidden">
+                  <div className="bg-muted/50 px-6 py-3 flex justify-between items-center border-b">
+                    <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <Instagram className="h-3 w-3" /> Instagram Caption
+                    </span>
+                    <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(authenticCaption, "Instagram Caption")}>
+                      <Copy className="h-3 w-3 mr-1" /> COPY
                     </Button>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <pre className="text-xs whitespace-pre-wrap font-sans text-muted-foreground bg-background p-4 rounded-lg border italic">
-                    {authenticCaption}
-                  </pre>
-                </CardContent>
-              </Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {authenticCaption}
+                    </p>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-none shadow-lg bg-muted/30">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                      <Mail className="h-4 w-4" /> Email to Past Attendees
-                    </CardTitle>
-                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(authenticEmail, "Email Template")}>
-                      <Copy className="h-3 w-3 mr-1" /> Copy
+                <Card className="border-none shadow-lg bg-card overflow-hidden">
+                  <div className="bg-muted/50 px-6 py-3 flex justify-between items-center border-b">
+                    <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <Mail className="h-3 w-3" /> Email Template
+                    </span>
+                    <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(authenticEmail, "Email Template")}>
+                      <Copy className="h-3 w-3 mr-1" /> COPY
                     </Button>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <pre className="text-xs whitespace-pre-wrap font-sans text-muted-foreground bg-background p-4 rounded-lg border italic">
-                    {authenticEmail}
-                  </pre>
-                </CardContent>
-              </Card>
+                  <CardContent className="p-6">
+                    <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {authenticEmail}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </section>
 
-            {/* 4. Operational Prep: Inhabiting the Room */}
+            {/* Inhabiting the Room */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold font-lora flex items-center gap-2">
-                <MapPin className="h-6 w-6 text-primary" /> Inhabiting the Room
+              <h2 className="text-2xl font-black font-lora flex items-center gap-2">
+                <MapPin className="h-6 w-6 text-primary" /> 3. The Room
               </h2>
-              <Card className="border-none shadow-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-                <CardContent className="p-8 space-y-6">
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-70">The Goal</p>
-                    <p className="text-2xl font-lora italic">"Forget the marketing. Focus on the circle."</p>
+              <Card className="border-none shadow-xl bg-primary text-primary-foreground rounded-3xl overflow-hidden">
+                <CardContent className="p-10 space-y-8">
+                  <div className="space-y-2 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-60">The Mantra</p>
+                    <p className="text-3xl font-lora italic font-bold">"Forget the marketing. Focus on the circle."</p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                    <div className="space-y-2">
-                      <p className="font-bold text-sm">Physical Setup</p>
-                      <ul className="text-xs space-y-1 opacity-80">
-                        <li>• Chairs in a tight, warm circle</li>
-                        <li>• Printed scores (not just digital)</li>
-                        <li>• Water and tea station ready</li>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                    <div className="space-y-4">
+                      <p className="font-black text-xs uppercase tracking-widest opacity-80 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4" /> Physical
+                      </p>
+                      <ul className="text-sm space-y-3 font-medium">
+                        <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> Chairs in a tight circle</li>
+                        <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> Printed scores ready</li>
+                        <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> Tea station set up</li>
                       </ul>
                     </div>
-                    <div className="space-y-2">
-                      <p className="font-bold text-sm">Emotional Setup</p>
-                      <ul className="text-xs space-y-1 opacity-80">
-                        <li>• 10 mins of silence before doors open</li>
-                        <li>• Greet every single person by name</li>
-                        <li>• Lead from the body, not the head</li>
+                    <div className="space-y-4">
+                      <p className="font-black text-xs uppercase tracking-widest opacity-80 flex items-center gap-2">
+                        <Heart className="h-4 w-4" /> Emotional
+                      </p>
+                      <ul className="text-sm space-y-3 font-medium">
+                        <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> 10 mins of silence first</li>
+                        <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> Greet everyone by name</li>
+                        <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-accent" /> Lead from the body</li>
                       </ul>
                     </div>
                   </div>
@@ -245,32 +241,27 @@ Details and tickets here: https://events.humanitix.com/resonance-melbourne-march
             </section>
           </div>
 
-          {/* Right Column: Interactive Checklist & Goals */}
+          {/* Right Column: Interactive Tools */}
           <div className="lg:col-span-5">
             <div className="sticky top-8 space-y-8">
               
-              {/* Meaningful Goals */}
-              <Card className="border-none shadow-lg bg-accent/10">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Target className="h-5 w-5 text-accent" /> Meaningful Goals
+              {/* BRAIN DUMP: ADHD Essential */}
+              <Card className="border-none shadow-xl bg-yellow-50 dark:bg-yellow-950/20 border-l-8 border-yellow-400">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+                    <Brain className="h-5 w-5" /> Brain Dump
                   </CardTitle>
-                  <CardDescription>Beyond just ticket numbers.</CardDescription>
+                  <CardDescription className="text-yellow-600/70 dark:text-yellow-400/60">
+                    Offload distracting thoughts here so you can stay focused.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {[
-                    { label: "10 New Faces in the room", progress: 40 },
-                    { label: "5 Deep Conversations during break", progress: 0 },
-                    { label: "1 Moment of Total Silence after 'Sleep'", progress: 0 },
-                  ].map((goal, i) => (
-                    <div key={i} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span>{goal.label}</span>
-                        <span>{goal.progress}%</span>
-                      </div>
-                      <Progress value={goal.progress} className="h-1.5 bg-accent/20" />
-                    </div>
-                  ))}
+                <CardContent>
+                  <Textarea 
+                    placeholder="Random ideas, things to remember later, distractions..." 
+                    className="min-h-[150px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400"
+                    value={brainDump}
+                    onChange={(e) => handleBrainDumpChange(e.target.value)}
+                  />
                 </CardContent>
               </Card>
 
@@ -278,12 +269,12 @@ Details and tickets here: https://events.humanitix.com/resonance-melbourne-march
               
               <Card className="border-none shadow-lg bg-muted/50">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Leaf className="h-5 w-5 text-primary" /> The "Why" Reminder
+                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                    <Leaf className="h-4 w-4 text-primary" /> The "Why"
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-sm italic text-muted-foreground leading-relaxed">
-                  "Being Alive isn't just a song — it's a North Star. It's about the demand to feel something real. Sleep is the opposite — it's about the peace of finally letting go. We need both."
+                <CardContent className="text-sm italic text-muted-foreground leading-relaxed">
+                  "Being Alive is a North Star. It's the demand to feel something real. Sleep is the peace of letting go. We need both."
                 </CardContent>
               </Card>
             </div>
