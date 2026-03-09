@@ -48,6 +48,7 @@ const ResourcesBenefitsSection: React.FC = () => {
           ))}
         </div>
 
+        {/* Testimonial Highlight */}
         <div className="max-w-2xl mx-auto text-center">
           <Card className="p-8 shadow-lg rounded-xl bg-card border-l-4 border-primary">
             <CardContent className="text-lg italic text-muted-foreground">

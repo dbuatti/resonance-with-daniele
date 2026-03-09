@@ -23,7 +23,9 @@ const HeroSection: React.FC = () => {
           </Button>
         </div>
       </div>
+      {/* Subtle background decorative element */}
       <div className="absolute inset-0 opacity-10">
+        {/* You could add a subtle pattern or SVG here */}
       </div>
     </section>
   );
