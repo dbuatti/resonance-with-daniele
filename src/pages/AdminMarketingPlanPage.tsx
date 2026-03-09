@@ -16,7 +16,8 @@ import {
   Video,
   Users,
   Mic2,
-  Leaf
+  Leaf,
+  MessageSquare
 } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -59,6 +60,31 @@ Grab your spot here: https://events.humanitix.com/resonance-melbourne-march-2026
 I'd love to see you there.
 
 — Daniele`;
+
+  const communityGroupLocal = `Hi neighbors! 🌿
+
+I’m Daniele, and I run a pop-up choir called Resonance right here in Armadale. 
+
+We’re gathering this Saturday morning (10am) at the Armadale Baptist Church to sing two incredible songs: Sondheim’s "Being Alive" and Eric Whitacre’s "Sleep."
+
+It’s not a traditional choir — there are no auditions and no ongoing commitment. It’s just a space for anyone who loves to sing to come together and create a really powerful sound for a few hours. Whether you haven't sung since primary school or you sing every day, you’re so welcome.
+
+If you’re looking for a bit of connection and a joyful start to your weekend, I’d love to see you there.
+
+Details and tickets here: https://events.humanitix.com/resonance-melbourne-march-2026`;
+
+  const communityGroupArts = `Calling all Melbourne singers and music lovers 🎶
+
+This Saturday, I’m hosting a pop-up choir session that I think is going to be pretty special. We’re tackling the emotional powerhouse "Being Alive" from Company, paired with the ethereal stillness of Eric Whitacre’s "Sleep."
+
+It’s a "no-pressure, high-resonance" environment. We learn the harmonies on the spot and just focus on the feeling of the room.
+
+Saturday, March 14 | 10am – 1pm
+Armadale Baptist Church
+
+I’d love to have some fresh voices in the mix. Come find your resonance with us.
+
+Link for info: https://events.humanitix.com/resonance-melbourne-march-2026`;
 
   return (
     <div className="space-y-8 py-8 md:py-12">
@@ -149,7 +175,50 @@ I'd love to see you there.
               </Card>
             </section>
 
-            {/* 3. The "Why" Section */}
+            {/* 3. Community Group Templates */}
+            <section className="space-y-6">
+              <h2 className="text-2xl font-bold font-lora flex items-center gap-2">
+                <MessageSquare className="h-6 w-6 text-primary" /> Community Group Invitations
+              </h2>
+              
+              <Card className="border-none shadow-lg bg-muted/30">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                      <Users className="h-4 w-4" /> For Local Groups (Armadale/Malvern)
+                    </CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(communityGroupLocal, "Local Group Post")}>
+                      <Copy className="h-3 w-3 mr-1" /> Copy
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <pre className="text-xs whitespace-pre-wrap font-sans text-muted-foreground bg-background p-4 rounded-lg border italic">
+                    {communityGroupLocal}
+                  </pre>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-lg bg-muted/30">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                      <Music className="h-4 w-4" /> For Arts & Singing Groups
+                    </CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(communityGroupArts, "Arts Group Post")}>
+                      <Copy className="h-3 w-3 mr-1" /> Copy
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <pre className="text-xs whitespace-pre-wrap font-sans text-muted-foreground bg-background p-4 rounded-lg border italic">
+                    {communityGroupArts}
+                  </pre>
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* 4. The "Why" Section */}
             <section className="space-y-6">
               <h2 className="text-2xl font-bold font-lora flex items-center gap-2">
                 <Leaf className="h-6 w-6 text-primary" /> The "Why" Behind the Songs
