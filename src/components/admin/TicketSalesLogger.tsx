@@ -23,7 +23,11 @@ const ticketSchema = z.object({
 
 type TicketFormData = z.infer<typeof ticketSchema>;
 
-const TicketSalesLogger: React.FC = () => {
+interface TicketSalesLoggerProps {
+  eventId: string;
+}
+
+const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
   const form = useForm<TicketFormData>({
     resolver: zodResolver(ticketSchema),
@@ -31,9 +35,13 @@ const TicketSalesLogger: React.FC = () => {
   });
 
   const { data: sales, isLoading } = useQuery({
-    queryKey: ["ticketSales"],
+    queryKey: ["ticketSales", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("event_ticket_sales").select("*").order("recorded_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("event_ticket_sales")
+        .select("*")
+        .eq("event_id", eventId)
+        .order("recorded_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -41,6 +49,7 @@ const TicketSalesLogger: React.FC = () => {
 
   const onSubmit = async (data: TicketFormData) => {
     const { error } = await supabase.from("event_ticket_sales").insert({
+      event_id: eventId,
       tickets_sold: parseInt(data.tickets_sold),
       revenue: parseFloat(data.revenue),
     });
@@ -49,7 +58,7 @@ const TicketSalesLogger: React.FC = () => {
     else {
       showSuccess("Sales updated!");
       form.reset();
-      queryClient.invalidateQueries({ queryKey: ["ticketSales"] });
+      queryClient.invalidateQueries({ queryKey: ["ticketSales", eventId] });
     }
   };
 

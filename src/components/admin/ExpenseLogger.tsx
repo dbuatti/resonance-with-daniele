@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,7 +23,11 @@ const expenseSchema = z.object({
 
 type ExpenseFormData = z.infer<typeof expenseSchema>;
 
-const ExpenseLogger: React.FC = () => {
+interface ExpenseLoggerProps {
+  eventId: string;
+}
+
+const ExpenseLogger: React.FC<ExpenseLoggerProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
   const form = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
@@ -31,9 +35,13 @@ const ExpenseLogger: React.FC = () => {
   });
 
   const { data: expenses, isLoading } = useQuery({
-    queryKey: ["eventExpenses"],
+    queryKey: ["eventExpenses", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("event_expenses").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("event_expenses")
+        .select("*")
+        .eq("event_id", eventId)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -41,6 +49,7 @@ const ExpenseLogger: React.FC = () => {
 
   const onSubmit = async (data: ExpenseFormData) => {
     const { error } = await supabase.from("event_expenses").insert({
+      event_id: eventId,
       description: data.description,
       amount: parseFloat(data.amount),
       category: data.category,
@@ -50,7 +59,7 @@ const ExpenseLogger: React.FC = () => {
     else {
       showSuccess("Expense logged!");
       form.reset();
-      queryClient.invalidateQueries({ queryKey: ["eventExpenses"] });
+      queryClient.invalidateQueries({ queryKey: ["eventExpenses", eventId] });
     }
   };
 
@@ -59,7 +68,7 @@ const ExpenseLogger: React.FC = () => {
     if (error) showError("Failed to delete.");
     else {
       showSuccess("Expense deleted.");
-      queryClient.invalidateQueries({ queryKey: ["eventExpenses"] });
+      queryClient.invalidateQueries({ queryKey: ["eventExpenses", eventId] });
     }
   };
 

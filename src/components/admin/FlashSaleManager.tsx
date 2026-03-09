@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Zap, Clock, CheckCircle2 } from "lucide-react";
+import { Loader2, Zap, Clock } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { format, isAfter, isBefore } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,11 @@ const promoSchema = z.object({
 
 type PromoFormData = z.infer<typeof promoSchema>;
 
-const FlashSaleManager: React.FC = () => {
+interface FlashSaleManagerProps {
+  eventId: string;
+}
+
+const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
   const form = useForm<PromoFormData>({
     resolver: zodResolver(promoSchema),
@@ -34,9 +38,13 @@ const FlashSaleManager: React.FC = () => {
   });
 
   const { data: promos, isLoading } = useQuery({
-    queryKey: ["marketingPromos"],
+    queryKey: ["marketingPromos", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("marketing_promos").select("*").order("end_date", { ascending: false });
+      const { data, error } = await supabase
+        .from("marketing_promos")
+        .select("*")
+        .eq("event_id", eventId)
+        .order("end_date", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -44,6 +52,7 @@ const FlashSaleManager: React.FC = () => {
 
   const onSubmit = async (data: PromoFormData) => {
     const { error } = await supabase.from("marketing_promos").upsert({
+      event_id: eventId,
       code: data.code,
       discount_percent: parseInt(data.discount_percent),
       start_date: new Date(data.start_date).toISOString(),
@@ -54,7 +63,7 @@ const FlashSaleManager: React.FC = () => {
     if (error) showError("Failed to save promo.");
     else {
       showSuccess("Promotion saved!");
-      queryClient.invalidateQueries({ queryKey: ["marketingPromos"] });
+      queryClient.invalidateQueries({ queryKey: ["marketingPromos", eventId] });
     }
   };
 

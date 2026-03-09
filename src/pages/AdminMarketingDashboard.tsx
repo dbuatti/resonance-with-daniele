@@ -1,22 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, DollarSign, Ticket, Zap, ArrowLeft } from "lucide-react";
+import { TrendingUp, DollarSign, Ticket, Zap, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BackButton from "@/components/ui/BackButton";
 import ExpenseLogger from "@/components/admin/ExpenseLogger";
 import TicketSalesLogger from "@/components/admin/TicketSalesLogger";
 import FlashSaleManager from "@/components/admin/FlashSaleManager";
 import MarketingOverview from "@/components/admin/MarketingOverview";
+import { format } from "date-fns";
 
 const AdminMarketingDashboard: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  if (loading) return <div className="p-8 text-center">Loading dashboard...</div>;
+  // Fetch all events to populate the selector
+  const { data: events, isLoading: loadingEvents } = useQuery({
+    queryKey: ["allEventsForMarketing"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, title, date")
+        .order("date", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Set the most recent event as default
+  useEffect(() => {
+    if (events && events.length > 0 && !selectedEventId) {
+      setSelectedEventId(events[0].id);
+    }
+  }, [events, selectedEventId]);
+
+  if (loading || loadingEvents) return <div className="p-8 text-center">Loading dashboard...</div>;
   if (!user?.is_admin) {
     navigate("/");
     return null;
@@ -27,39 +52,64 @@ const AdminMarketingDashboard: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4">
         <BackButton className="mb-6" to="/admin" />
         
-        <header className="text-center space-y-4 mb-12">
-          <h1 className="text-4xl font-bold font-lora">Marketing & Finance Hub</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Track your event's financial health and manage the "Resonance Flash Sale" momentum.
-          </p>
-        </header>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          <header className="space-y-2">
+            <h1 className="text-4xl font-bold font-lora">Marketing & Finance Hub</h1>
+            <p className="text-lg text-muted-foreground">
+              Track financial health and manage promotions for your events.
+            </p>
+          </header>
 
-        <Tabs defaultValue="overview" className="space-y-8">
-          <div className="flex justify-center">
-            <TabsList className="grid w-full max-w-2xl grid-cols-4 rounded-xl">
-              <TabsTrigger value="overview" className="rounded-lg">Overview</TabsTrigger>
-              <TabsTrigger value="tickets" className="rounded-lg">Tickets</TabsTrigger>
-              <TabsTrigger value="expenses" className="rounded-lg">Expenses</TabsTrigger>
-              <TabsTrigger value="promos" className="rounded-lg">Promos</TabsTrigger>
-            </TabsList>
+          <div className="w-full md:w-72 space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Select Event</label>
+            <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
+              <SelectTrigger className="h-12 rounded-xl shadow-sm">
+                <SelectValue placeholder="Choose an event..." />
+              </SelectTrigger>
+              <SelectContent>
+                {events?.map((event) => (
+                  <SelectItem key={event.id} value={event.id}>
+                    {event.title} ({format(new Date(event.date), "MMM d, yyyy")})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+        </div>
 
-          <TabsContent value="overview">
-            <MarketingOverview />
-          </TabsContent>
+        {!selectedEventId ? (
+          <Card className="p-12 text-center border-dashed border-2">
+            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+            <p className="text-muted-foreground">Please select an event to view its marketing data.</p>
+          </Card>
+        ) : (
+          <Tabs defaultValue="overview" className="space-y-8">
+            <div className="flex justify-center">
+              <TabsList className="grid w-full max-w-2xl grid-cols-4 rounded-xl">
+                <TabsTrigger value="overview" className="rounded-lg">Overview</TabsTrigger>
+                <TabsTrigger value="tickets" className="rounded-lg">Tickets</TabsTrigger>
+                <TabsTrigger value="expenses" className="rounded-lg">Expenses</TabsTrigger>
+                <TabsTrigger value="promos" className="rounded-lg">Promos</TabsTrigger>
+              </TabsList>
+            </div>
 
-          <TabsContent value="tickets">
-            <TicketSalesLogger />
-          </TabsContent>
+            <TabsContent value="overview">
+              <MarketingOverview eventId={selectedEventId} />
+            </TabsContent>
 
-          <TabsContent value="expenses">
-            <ExpenseLogger />
-          </TabsContent>
+            <TabsContent value="tickets">
+              <TicketSalesLogger eventId={selectedEventId} />
+            </TabsContent>
 
-          <TabsContent value="promos">
-            <FlashSaleManager />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="expenses">
+              <ExpenseLogger eventId={selectedEventId} />
+            </TabsContent>
+
+            <TabsContent value="promos">
+              <FlashSaleManager eventId={selectedEventId} />
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

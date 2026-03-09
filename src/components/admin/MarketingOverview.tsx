@@ -8,20 +8,32 @@ import { DollarSign, Ticket, TrendingUp, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-const MarketingOverview: React.FC = () => {
+interface MarketingOverviewProps {
+  eventId: string;
+}
+
+const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
   const { data: expenses, isLoading: loadingExpenses } = useQuery({
-    queryKey: ["eventExpenses"],
+    queryKey: ["eventExpenses", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("event_expenses").select("amount");
+      const { data, error } = await supabase
+        .from("event_expenses")
+        .select("amount")
+        .eq("event_id", eventId);
       if (error) throw error;
       return data;
     },
   });
 
   const { data: sales, isLoading: loadingSales } = useQuery({
-    queryKey: ["ticketSales"],
+    queryKey: ["ticketSales", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("event_ticket_sales").select("*").order("recorded_at", { ascending: false }).limit(1);
+      const { data, error } = await supabase
+        .from("event_ticket_sales")
+        .select("*")
+        .eq("event_id", eventId)
+        .order("recorded_at", { ascending: false })
+        .limit(1);
       if (error) throw error;
       return data?.[0];
     },
