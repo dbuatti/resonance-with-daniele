@@ -4,12 +4,11 @@ import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertCircle, Mail, BellRing, Users, BarChart3, Settings, TrendingUp, Lightbulb } from "lucide-react";
+import { AlertCircle, Mail, BellRing, Users, BarChart3, Settings, TrendingUp, Lightbulb, Rocket } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
-import GrowthMissionsHub from "@/components/admin/GrowthMissionsHub";
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
@@ -51,6 +50,14 @@ const AdminZone: React.FC = () => {
   }
 
   const adminTools = [
+    {
+      title: "Growth Strategy",
+      description: "High-impact missions to scale Resonance over the next year.",
+      icon: <Rocket className="h-6 w-6 text-primary" />,
+      link: "/admin/growth",
+      label: "View Missions",
+      highlight: true
+    },
     {
       title: "Member Management",
       description: "View all member profiles, manage roles, and edit details.",
@@ -99,13 +106,14 @@ const AdminZone: React.FC = () => {
         </p>
       </header>
 
-      <GrowthMissionsHub />
-
       <AdminDashboardOverview />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {adminTools.map((tool, i) => (
-          <Card key={i} className="shadow-lg rounded-2xl border-none bg-card hover:shadow-xl transition-all duration-300 group">
+          <Card key={i} className={cn(
+            "shadow-lg rounded-2xl border-none bg-card hover:shadow-xl transition-all duration-300 group",
+            tool.highlight && "ring-2 ring-primary ring-offset-4"
+          )}>
             <CardHeader>
               <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 {tool.icon}
@@ -116,7 +124,7 @@ const AdminZone: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild className="w-full font-bold" variant="secondary">
+              <Button asChild className="w-full font-bold" variant={tool.highlight ? "default" : "secondary"}>
                 <Link to={tool.link}>{tool.label}</Link>
               </Button>
             </CardContent>
