@@ -1,24 +1,25 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail } from "lucide-react";
+import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail, Search, Filter, X, Copy } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import MemberEditDialog from "@/components/admin/MemberEditDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import BackButton from "@/components/ui/BackButton";
+import { Input } from "@/components/ui/input";
 
 interface Profile {
   id: string;
@@ -48,6 +49,8 @@ const AdminMembers: React.FC = () => {
   const [isDeletingUser, setIsDeletingUser] = useState<string | null>(null);
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Profile | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -73,6 +76,17 @@ const AdminMembers: React.FC = () => {
     enabled: !loadingSession && !!user?.is_admin,
     staleTime: 5 * 60 * 1000,
   });
+
+  const filteredProfiles = useMemo(() => {
+    if (!profiles) return [];
+    return profiles.filter(profile => {
+      const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.toLowerCase();
+      const email = (profile.email || '').toLowerCase();
+      const matchesSearch = fullName.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
+      const matchesRole = roleFilter === "all" || (roleFilter === "admin" ? profile.is_admin : !profile.is_admin);
+      return matchesSearch && matchesRole;
+    });
+  }, [profiles, searchTerm, roleFilter]);
 
   const handleAdminStatusChange = async (profileId: string, newStatus: boolean) => {
     if (!user || !user.is_admin) return;
@@ -113,6 +127,13 @@ const AdminMembers: React.FC = () => {
     }
   };
 
+  const handleCopyEmail = (email: string | null) => {
+    if (email) {
+      navigator.clipboard.writeText(email);
+      showSuccess("Email copied to clipboard!");
+    }
+  };
+
   const hasSurveyResponses = (profile: Profile) => {
     return !!(profile.how_heard || profile.singing_experience || (profile.voice_type && profile.voice_type.length > 0));
   };
@@ -140,16 +161,46 @@ const AdminMembers: React.FC = () => {
           </p>
         </header>
 
+        <div className="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between">
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 rounded-xl"
+            />
+            {searchTerm && (
+              <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => setSearchTerm("")}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
+            <Select value={roleFilter} onValueChange={(val: any) => setRoleFilter(val)}>
+              <SelectTrigger className="w-full md:w-[150px] rounded-xl">
+                <SelectValue placeholder="Filter by Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admins Only</SelectItem>
+                <SelectItem value="user">Users Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <Card className="w-full shadow-xl border-none overflow-hidden rounded-2xl">
           <CardHeader className="bg-muted/30 border-b border-border/50">
             <CardTitle className="text-2xl font-bold font-lora">All Members</CardTitle>
-            <CardDescription>Total registered members: {profiles?.length || 0}</CardDescription>
+            <CardDescription>Showing {filteredProfiles.length} of {profiles?.length || 0} members</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            {profiles && profiles.length === 0 ? (
+            {filteredProfiles.length === 0 ? (
               <div className="text-center text-muted-foreground py-20">
                 <UserIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <p className="text-xl font-semibold">No members found.</p>
+                <p className="text-xl font-semibold">No members found matching your criteria.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -163,7 +214,7 @@ const AdminMembers: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {profiles?.map((profile) => {
+                    {filteredProfiles.map((profile) => {
                       const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
                       const displayName = fullName || profile.email?.split('@')[0] || "New Member";
                       
@@ -179,9 +230,19 @@ const AdminMembers: React.FC = () => {
                               </Avatar>
                               <div className="flex flex-col">
                                 <span className="font-bold text-foreground leading-tight">{displayName}</span>
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Mail className="h-3 w-3" /> {profile.email}
-                                </span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground truncate max-w-[150px]">{profile.email}</span>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground hover:text-primary" onClick={() => handleCopyEmail(profile.email)}>
+                                          <Copy className="h-3 w-3" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Copy Email</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
                               </div>
                             </div>
                           </TableCell>

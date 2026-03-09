@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, FileText, User as UserIcon, Folder, CheckCircle2, ArrowRight } from "lucide-react";
+import { CalendarDays, Music, FileText, User as UserIcon, Folder, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,6 +112,7 @@ const WelcomeHub: React.FC = () => {
   };
 
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
+  const memberSince = user?.created_at ? format(new Date(user.created_at), "MMMM yyyy") : null;
 
   if (isLoading) {
     return (
@@ -146,9 +147,16 @@ const WelcomeHub: React.FC = () => {
             />
           </div>
           <div className="text-center md:text-left space-y-4">
-            <h1 className="text-4xl md:text-5xl font-extrabold font-lora leading-tight">
-              {getGreeting()}, {firstName}!
-            </h1>
+            <div className="space-y-1">
+              <h1 className="text-4xl md:text-5xl font-extrabold font-lora leading-tight">
+                {getGreeting()}, {firstName}!
+              </h1>
+              {memberSince && (
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 flex items-center justify-center md:justify-start gap-2">
+                  <Sparkles className="h-3 w-3" /> Member since {memberSince}
+                </p>
+              )}
+            </div>
             <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl">
               Ready to find your resonance today? Explore your resources, check upcoming events, and stay connected with our community.
             </p>

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle, MapPin, Clock, ArrowRight, Share2, Sparkles } from "lucide-react";
+import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle, MapPin, Clock, ArrowRight, Share2, Sparkles, Calendar as CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -18,6 +18,7 @@ import EventDialog from "@/components/events/EventDialog";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import BackButton from "@/components/ui/BackButton";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Event {
   id: string;
@@ -82,6 +83,28 @@ const Events: React.FC = () => {
     const shareUrl = event.humanitix_link || window.location.href;
     navigator.clipboard.writeText(shareUrl);
     showSuccess(`Link for "${event.title}" copied to clipboard!`);
+  };
+
+  const generateCalendarLink = (event: Event, type: 'google' | 'outlook' | 'apple') => {
+    const title = encodeURIComponent(event.title);
+    const description = encodeURIComponent(event.description || "Resonance with Daniele Choir Event");
+    const location = encodeURIComponent(event.location || "Melbourne, VIC");
+    const dateStr = event.date.replace(/-/g, '');
+    const startTime = `${dateStr}T190000Z`; // Default to 7 PM
+    const endTime = `${dateStr}T210000Z`;   // Default to 9 PM
+
+    switch (type) {
+      case 'google':
+        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startTime}/${endTime}&details=${description}&location=${location}`;
+      case 'outlook':
+        return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${event.date}T19:00:00&enddt=${event.date}T21:00:00&body=${description}&location=${location}`;
+      case 'apple':
+        // For Apple/iCal, we'd ideally generate a .ics file, but a simple link to a generic generator or just opening the local calendar app is often used.
+        // Here we'll just use a generic mailto or similar if needed, but for simplicity, we'll stick to web-based ones or a placeholder.
+        return `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:${startTime}%0ADTEND:${endTime}%0ASUMMARY:${title}%0ADESCRIPTION:${description}%0ALOCATION:${location}%0AEND:VEVENT%0AEND:VCALENDAR`;
+      default:
+        return "#";
+    }
   };
 
   const showSkeleton = isLoading && !events;
@@ -172,9 +195,29 @@ const Events: React.FC = () => {
                         <CardTitle className="text-2xl font-bold font-lora leading-tight group-hover:text-primary transition-colors">
                           {event.title}
                         </CardTitle>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleShare(event)}>
-                          <Share2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                                <CalendarIcon className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <a href={generateCalendarLink(event, 'google')} target="_blank" rel="noopener noreferrer">Google Calendar</a>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <a href={generateCalendarLink(event, 'outlook')} target="_blank" rel="noopener noreferrer">Outlook.com</a>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <a href={generateCalendarLink(event, 'apple')} download={`${event.title}.ics`}>Apple / iCal</a>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleShare(event)}>
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       {event.location && (
                         <div className="flex items-center gap-2 text-muted-foreground">
