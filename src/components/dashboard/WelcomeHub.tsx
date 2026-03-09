@@ -25,6 +25,7 @@ interface Event {
   location?: string;
   description?: string;
   humanitix_link?: string;
+  ai_chat_link?: string;
 }
 
 const resourcePillStyles: { [key: string]: { text: string, border: string } } = {

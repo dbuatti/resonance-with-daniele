@@ -5,14 +5,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarDays, Loader2 } from "lucide-react";
+import { CalendarDays, Loader2, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
@@ -24,6 +24,7 @@ const eventSchema = z.object({
   location: z.string().optional(),
   description: z.string().optional(),
   humanitix_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  ai_chat_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -36,6 +37,7 @@ interface Event {
   location?: string;
   description?: string;
   humanitix_link?: string;
+  ai_chat_link?: string;
 }
 
 interface EventDialogProps {
@@ -55,6 +57,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       location: "",
       description: "",
       humanitix_link: "https://events.humanitix.com/resonance-choir",
+      ai_chat_link: "",
     },
   });
 
@@ -66,6 +69,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         location: editingEvent.location || "",
         description: editingEvent.description || "",
         humanitix_link: editingEvent.humanitix_link || "",
+        ai_chat_link: editingEvent.ai_chat_link || "",
       });
     } else {
       form.reset({
@@ -74,6 +78,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         location: "",
         description: "",
         humanitix_link: "https://events.humanitix.com/resonance-choir",
+        ai_chat_link: "",
       });
     }
   }, [editingEvent, form, isOpen]);
@@ -87,6 +92,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         location: data.location || null,
         description: data.description || null,
         humanitix_link: data.humanitix_link || null,
+        ai_chat_link: data.ai_chat_link || null,
       };
 
       let error;
@@ -114,7 +120,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-lora">{editingEvent ? "Edit Event" : "Add New Event"}</DialogTitle>
         </DialogHeader>
@@ -206,6 +212,25 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
                   <FormControl>
                     <Input placeholder="https://events.humanitix.com/..." {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="ai_chat_link"
+              render={({ field }) => (
+                <FormItem className="bg-primary/5 p-4 rounded-lg border border-primary/20">
+                  <FormLabel className="flex items-center gap-2 text-primary">
+                    <Sparkles className="h-4 w-4" /> Admin AI Chat Link (Private)
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://gemini.google.com/..." {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    This link is only visible to administrators.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

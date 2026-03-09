@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle, MapPin, Clock, ArrowRight, Share2 } from "lucide-react";
+import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle, MapPin, Clock, ArrowRight, Share2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -27,6 +27,7 @@ interface Event {
   location?: string;
   description?: string;
   humanitix_link?: string;
+  ai_chat_link?: string;
 }
 
 const Events: React.FC = () => {
@@ -198,6 +199,15 @@ const Events: React.FC = () => {
                         </Button>
                       ) : (
                         <Button variant="outline" className="w-full" disabled>Details Coming Soon</Button>
+                      )}
+
+                      {/* Admin Only AI Chat Link */}
+                      {user?.is_admin && event.ai_chat_link && (
+                        <Button asChild variant="secondary" className="w-full font-bold bg-primary/10 text-primary hover:bg-primary/20 border-primary/20" size="lg">
+                          <a href={event.ai_chat_link} target="_blank" rel="noopener noreferrer">
+                            <Sparkles className="mr-2 h-4 w-4" /> Admin AI Chat
+                          </a>
+                        </Button>
                       )}
 
                       {user?.is_admin && (
