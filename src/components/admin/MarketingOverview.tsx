@@ -18,39 +18,37 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_expenses")
-        .select("amount")
+        .select("*")
         .eq("event_id", eventId);
       if (error) throw error;
       return data || [];
     },
   });
 
-  const { data: sales, isLoading: loadingSales } = useQuery({
-    queryKey: ["ticketSales", eventId],
+  const { data: orders, isLoading: loadingOrders } = useQuery({
+    queryKey: ["eventOrders", eventId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("event_ticket_sales")
+        .from("event_orders")
         .select("*")
-        .eq("event_id", eventId)
-        .order("recorded_at", { ascending: false })
-        .limit(1);
+        .eq("event_id", eventId);
       if (error) throw error;
-      return data?.[0] || null;
+      return data || [];
     },
   });
 
   const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
-  const totalRevenue = Number(sales?.revenue || 0);
-  const netProfit = totalRevenue - totalExpenses;
-  const ticketsSold = sales?.tickets_sold || 0;
+  const totalEarnings = orders?.reduce((sum, o) => sum + Number(o.your_earnings || 0), 0) || 0;
+  const totalTickets = orders?.reduce((sum, o) => sum + (o.valid_tickets || 0), 0) || 0;
+  const netProfit = totalEarnings - totalExpenses;
 
-  if (loadingExpenses || loadingSales) return <Skeleton className="h-64 w-full" />;
+  if (loadingExpenses || loadingOrders) return <Skeleton className="h-64 w-full" />;
 
   const metrics = [
-    { title: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, icon: <DollarSign className="h-5 w-5" />, color: "text-green-600" },
+    { title: "Total Earnings", value: `$${totalEarnings.toFixed(2)}`, icon: <DollarSign className="h-5 w-5" />, color: "text-green-600" },
     { title: "Total Expenses", value: `$${totalExpenses.toFixed(2)}`, icon: <TrendingUp className="h-5 w-5" />, color: "text-red-600" },
     { title: "Net Profit/Loss", value: `$${netProfit.toFixed(2)}`, icon: <Zap className="h-5 w-5" />, color: netProfit >= 0 ? "text-primary" : "text-destructive" },
-    { title: "Tickets Sold", value: ticketsSold, icon: <Ticket className="h-5 w-5" />, color: "text-blue-600" },
+    { title: "Tickets Sold", value: totalTickets, icon: <Ticket className="h-5 w-5" />, color: "text-blue-600" },
   ];
 
   return (
