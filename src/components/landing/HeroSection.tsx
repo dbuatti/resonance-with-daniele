@@ -7,12 +7,12 @@ import { Link } from "react-router-dom";
 const HeroSection: React.FC = () => {
   return (
     <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end dark:from-hero-gradient-start-dark dark:to-hero-gradient-end-dark py-24 md:py-40 text-center overflow-hidden rounded-xl shadow-lg">
-      <div className="relative z-10"> {/* Removed px-4 for consistent padding */}
+      <div className="relative z-10">
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 font-lora text-foreground">
-          Sing. Connect. Shine. <br className="hidden sm:inline" /> Join Melbourne’s Pop-Up Choir with Daniele.
+          Sing. Connect. Shine. <br className="hidden sm:inline" /> Melbourne’s Pop-Up Choir.
         </h1>
         <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-foreground">
-          A joyful, welcoming space I've created for anyone who loves to sing — no experience needed.
+          From Musical Theatre to Jazz and Pop—join a joyful, no-pressure space to find your voice and create an incredible sound together.
         </p>
         <div className="flex justify-center gap-4">
           <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border border-muted-foreground/30" asChild>
@@ -23,9 +23,7 @@ const HeroSection: React.FC = () => {
           </Button>
         </div>
       </div>
-      {/* Optional: Add background visuals here */}
       <div className="absolute inset-0 opacity-10">
-        {/* Placeholder for background image or pattern */}
       </div>
     </section>
   );

@@ -7,16 +7,15 @@ import { Users, Heart, Sparkles } from "lucide-react";
 const AboutChoirSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
-      <div className="max-w-6xl mx-auto"> {/* Added max-w-6xl mx-auto for centering */}
+      <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora">About My Choir</h2>
 
         <div className="max-w-3xl mx-auto text-lg text-muted-foreground space-y-6 mb-12">
           <p>
-            Led by me, Daniele Buatti, a musical director and vocal coach with years of experience in musical theatre and performance, my choir is all about connecting through music. I celebrate all voices, all backgrounds, and all identities.
+            Led by me, Daniele Buatti, my choir is all about the magic that happens when voices join together. Whether you're a total beginner or a seasoned singer looking for a no-pressure way to enjoy complex harmonies, there's a place for you here.
           </p>
         </div>
 
-        {/* Image of Daniele conducting */}
         <img
           src="/images/daniele-conduct.jpeg"
           alt="Daniele Buatti conducting the choir"
@@ -46,10 +45,10 @@ const AboutChoirSection: React.FC = () => {
             </CardHeader>
             <CardContent className="text-muted-foreground">
               <ul className="list-none space-y-2">
-                <li>Improve your singing skills</li>
+                <li>Improve your vocal skills</li>
                 <li>Connect with like-minded people</li>
                 <li>Enjoy fun, stress-free rehearsals</li>
-                <li>Perform in concerts or pop-up events</li>
+                <li>Experience that "incredible sound"</li>
               </ul>
             </CardContent>
           </Card>
@@ -60,7 +59,7 @@ const AboutChoirSection: React.FC = () => {
               <CardTitle className="text-xl font-semibold font-lora">My Philosophy</CardTitle>
             </CardHeader>
             <CardContent className="text-muted-foreground">
-              I believe singing is for everyone. My focus is on creating a supportive environment where every voice can find its resonance and every member feels valued.
+              I believe singing is for everyone. My focus is on creating a supportive environment where every voice—from Soprano to Bass—can find its resonance.
             </CardContent>
           </Card>
         </div>
