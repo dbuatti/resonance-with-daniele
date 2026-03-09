@@ -9,7 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
-import AdminGrowthMission from "@/components/admin/AdminGrowthMission";
+import GrowthMissionsHub from "@/components/admin/GrowthMissionsHub";
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
@@ -99,7 +99,7 @@ const AdminZone: React.FC = () => {
         </p>
       </header>
 
-      <AdminGrowthMission />
+      <GrowthMissionsHub />
 
       <AdminDashboardOverview />
 
