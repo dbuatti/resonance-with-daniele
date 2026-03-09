@@ -7,41 +7,99 @@ import {
   Heart, 
   Instagram, 
   Mail, 
-  Music, 
+  Mic2, 
   Target, 
   Copy, 
   Clock,
-  Users,
-  Mic2,
-  Leaf,
-  MessageSquare,
-  Zap,
   UserPlus,
   MapPin,
   Brain,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Leaf,
+  Loader2,
+  ExternalLink
 } from "lucide-react";
-import { showSuccess } from "@/utils/toast";
+import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import MarketingChecklist from "@/components/admin/MarketingChecklist";
 import { Textarea } from "@/components/ui/textarea";
 import OutreachTracker from "@/components/admin/OutreachTracker";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "@/integrations/supabase/auth";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const AdminMarketingPlanPage: React.FC = () => {
-  const [brainDump, setBrainDump] = useState("");
+  const { user } = useSession();
+  const queryClient = useQueryClient();
+  const [timeLeft, setTimeLeft] = useState("");
 
+  // 1. Dynamic Countdown Logic
   useEffect(() => {
-    const saved = localStorage.getItem("march14_brain_dump");
-    if (saved) setBrainDump(saved);
+    const targetDate = new Date("2026-03-14T10:00:00").getTime();
+    
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+      
+      if (distance < 0) {
+        setTimeLeft("Event Started!");
+        clearInterval(timer);
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      
+      setTimeLeft(`${days}d ${hours}h ${minutes}m`);
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
 
-  const handleBrainDumpChange = (val: string) => {
-    setBrainDump(val);
-    localStorage.setItem("march14_brain_dump", val);
-  };
+  // 2. Brain Dump Persistence
+  const { data: noteData, isLoading: loadingNote } = useQuery({
+    queryKey: ["adminBrainDump"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_notes")
+        .select("content")
+        .eq("note_key", "march14_brain_dump")
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.content || "";
+    },
+    enabled: !!user,
+  });
+
+  const [localBrainDump, setLocalBrainDump] = useState("");
+  const debouncedBrainDump = useDebounce(localBrainDump, 1000);
+
+  useEffect(() => {
+    if (noteData !== undefined) setLocalBrainDump(noteData);
+  }, [noteData]);
+
+  const saveNoteMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const { error } = await supabase
+        .from("admin_notes")
+        .upsert({ 
+          admin_id: user?.id, 
+          note_key: "march14_brain_dump", 
+          content 
+        }, { onConflict: 'note_key' });
+      if (error) throw error;
+    }
+  });
+
+  useEffect(() => {
+    if (debouncedBrainDump !== noteData) {
+      saveNoteMutation.mutate(debouncedBrainDump);
+    }
+  }, [debouncedBrainDump]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -78,12 +136,17 @@ I'd love to see you there.
 
 — Daniele`;
 
+  const handleOpenMail = () => {
+    const subject = encodeURIComponent("Let's sing \"Being Alive\" this Saturday! 🎶");
+    const body = encodeURIComponent(authenticEmail.split('\n\n').slice(1).join('\n\n'));
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
   return (
     <div className="space-y-8 py-8 md:py-12 bg-background/50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4">
         <BackButton className="mb-6" to="/admin" />
         
-        {/* ADHD Header: Big, Clear, Visual */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -98,12 +161,11 @@ I'd love to see you there.
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Countdown</p>
-              <p className="text-xl font-black text-primary">72 Hours to Downbeat</p>
+              <p className="text-xl font-black text-primary">{timeLeft}</p>
             </div>
           </div>
         </header>
 
-        {/* FOCUS MODE: The "One Thing" */}
         <section className="mb-12">
           <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden">
             <CardContent className="p-8 flex flex-col lg:flex-row items-start gap-12">
@@ -126,10 +188,7 @@ I'd love to see you there.
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Content & Strategy */}
           <div className="lg:col-span-7 space-y-12">
-            
-            {/* Relational Outreach Nodes */}
             <section className="space-y-6">
               <h2 className="text-2xl font-black font-lora flex items-center gap-2">
                 <UserPlus className="h-6 w-6 text-primary" /> 1. Human Connections
@@ -163,7 +222,6 @@ I'd love to see you there.
               </div>
             </section>
 
-            {/* Templates */}
             <section className="space-y-6">
               <h2 className="text-2xl font-black font-lora flex items-center gap-2">
                 <Mic2 className="h-6 w-6 text-primary" /> 2. Copy & Paste
@@ -175,9 +233,11 @@ I'd love to see you there.
                     <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                       <Instagram className="h-3 w-3" /> Instagram Caption
                     </span>
-                    <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(authenticCaption, "Instagram Caption")}>
-                      <Copy className="h-3 w-3 mr-1" /> COPY
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(authenticCaption, "Instagram Caption")}>
+                        <Copy className="h-3 w-3 mr-1" /> COPY
+                      </Button>
+                    </div>
                   </div>
                   <CardContent className="p-6">
                     <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
@@ -191,9 +251,14 @@ I'd love to see you there.
                     <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                       <Mail className="h-3 w-3" /> Email Template
                     </span>
-                    <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(authenticEmail, "Email Template")}>
-                      <Copy className="h-3 w-3 mr-1" /> COPY
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(authenticEmail, "Email Template")}>
+                        <Copy className="h-3 w-3 mr-1" /> COPY
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black text-primary" onClick={handleOpenMail}>
+                        <ExternalLink className="h-3 w-3 mr-1" /> OPEN MAIL
+                      </Button>
+                    </div>
                   </div>
                   <CardContent className="p-6">
                     <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
@@ -204,7 +269,6 @@ I'd love to see you there.
               </div>
             </section>
 
-            {/* Inhabiting the Room */}
             <section className="space-y-6">
               <h2 className="text-2xl font-black font-lora flex items-center gap-2">
                 <MapPin className="h-6 w-6 text-primary" /> 3. The Room
@@ -242,27 +306,25 @@ I'd love to see you there.
             </section>
           </div>
 
-          {/* Right Column: Interactive Tools */}
           <div className="lg:col-span-5">
             <div className="sticky top-8 space-y-8">
-              
-              {/* BRAIN DUMP: ADHD Essential */}
               <Card className="border-none shadow-xl bg-yellow-50 dark:bg-yellow-950/20 border-l-8 border-yellow-400">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
                     <Brain className="h-5 w-5" /> Brain Dump
                   </CardTitle>
                   <CardDescription className="text-yellow-600/70 dark:text-yellow-400/60">
-                    Offload distracting thoughts here so you can stay focused.
+                    Offload distracting thoughts here. Auto-saves to Supabase.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Textarea 
                     placeholder="Random ideas, things to remember later, distractions..." 
                     className="min-h-[150px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400"
-                    value={brainDump}
-                    onChange={(e) => handleBrainDumpChange(e.target.value)}
+                    value={localBrainDump}
+                    onChange={(e) => setLocalBrainDump(e.target.value)}
                   />
+                  {saveNoteMutation.isPending && <p className="text-[10px] text-yellow-600 mt-2 animate-pulse">Saving...</p>}
                 </CardContent>
               </Card>
 
