@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Music } from "lucide-react";
+import { ArrowRight, Music, MapPin } from "lucide-react";
 
 const HeroSection: React.FC = () => {
   return (
@@ -19,9 +19,14 @@ const HeroSection: React.FC = () => {
           <span className="text-primary">Find Your People.</span>
         </h1>
         
-        <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-muted-foreground leading-relaxed">
-          Experience the transformative power of group singing. From Broadway hits to soulful jazz—no auditions, no pressure, just pure connection.
+        <p className="text-xl md:text-2xl mb-6 max-w-3xl mx-auto text-muted-foreground leading-relaxed">
+          Experience the transformative power of group singing in **Armadale & Melbourne**. From Broadway hits to soulful jazz—no auditions, no pressure.
         </p>
+
+        <div className="flex items-center justify-center gap-2 text-primary font-bold mb-10">
+          <MapPin className="h-5 w-5" />
+          <span>Based in Armadale, VIC 3143</span>
+        </div>
         
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl shadow-xl shadow-primary/20 group" asChild>

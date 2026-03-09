@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Users, Heart, Sparkles, Music } from "lucide-react";
+import { Users, Heart, Sparkles, Music, MapPin } from "lucide-react";
 
 const AboutChoirSection: React.FC = () => {
   return (
@@ -17,17 +17,17 @@ const AboutChoirSection: React.FC = () => {
             </div>
             
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Led by Daniele Buatti, this choir is about the magic that happens when voices join together. Whether you're a total beginner or a seasoned singer, there's a place for you here.
+              Led by Daniele Buatti, our choir meets regularly in **Armadale, Melbourne**. It's about the magic that happens when voices join together. Whether you're a total beginner or a seasoned singer, there's a place for you here.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
               <div className="flex gap-4">
                 <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                  <Heart className="w-6 h-6" />
+                  <MapPin className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-1">Joyful Experience</h4>
-                  <p className="text-sm text-muted-foreground">Singing should feel good. We focus on the fun.</p>
+                  <h4 className="font-bold text-lg mb-1">Local Community</h4>
+                  <p className="text-sm text-muted-foreground">Conveniently located for singers in Armadale, Malvern, and Toorak.</p>
                 </div>
               </div>
               <div className="flex gap-4">
@@ -35,7 +35,7 @@ const AboutChoirSection: React.FC = () => {
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-1">Real Community</h4>
+                  <h4 className="font-bold text-lg mb-1">Real Connection</h4>
                   <p className="text-sm text-muted-foreground">Connect with people who love music as much as you.</p>
                 </div>
               </div>
@@ -64,7 +64,7 @@ const AboutChoirSection: React.FC = () => {
             <div className="absolute -inset-4 bg-primary/5 rounded-3xl -rotate-2" />
             <img
               src="/images/daniele-conduct.jpeg"
-              alt="Daniele Buatti conducting the choir"
+              alt="Daniele Buatti conducting the choir in Melbourne"
               className="relative w-full rounded-2xl shadow-2xl object-cover aspect-[4/3]"
             />
             <div className="absolute -bottom-6 -left-6 bg-accent p-6 rounded-2xl shadow-xl hidden md:block">
