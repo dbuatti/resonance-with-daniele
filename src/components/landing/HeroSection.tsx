@@ -20,7 +20,7 @@ const HeroSection: React.FC = () => {
         </h1>
         
         <p className="text-xl md:text-2xl mb-6 max-w-3xl mx-auto text-muted-foreground leading-relaxed">
-          Experience the transformative power of group singing in **Armadale & Melbourne**. From Broadway hits to soulful jazz—no auditions, no pressure.
+          Experience the transformative power of group singing in <span className="text-foreground font-bold">Armadale & Melbourne</span>. From Broadway hits to soulful jazz—no auditions, no pressure.
         </p>
 
         <div className="flex items-center justify-center gap-2 text-primary font-bold mb-10">

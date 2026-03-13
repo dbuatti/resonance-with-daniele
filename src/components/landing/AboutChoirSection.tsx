@@ -17,7 +17,7 @@ const AboutChoirSection: React.FC = () => {
             </div>
             
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Led by Daniele Buatti, our choir meets regularly in **Armadale, Melbourne**. It's about the magic that happens when voices join together. Whether you're a total beginner or a seasoned singer, there's a place for you here.
+              Led by Daniele Buatti, our choir meets regularly in <span className="text-foreground font-bold">Armadale, Melbourne</span>. It's about the magic that happens when voices join together. Whether you're a total beginner or a seasoned singer, there's a place for you here.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
