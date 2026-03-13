@@ -80,6 +80,7 @@ const Resources: React.FC = () => {
     enabled: !loadingSession,
   });
 
+  // Query for the "Browse All" tab (filtered by folder)
   const fetchResources = async (folderId: string | null, currentSearchTerm: string): Promise<Resource[]> => {
     let query = supabase.from("resources").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     if (currentSearchTerm) {
@@ -97,6 +98,19 @@ const Resources: React.FC = () => {
   const { data: resources, isLoading: loadingResources } = useQuery<Resource[], Error, Resource[], ['resources', string | null, string]>({
     queryKey: ['resources', currentFolderId, debouncedSearchTerm],
     queryFn: ({ queryKey }) => fetchResources(queryKey[1], queryKey[2]),
+    enabled: !loadingSession,
+  });
+
+  // NEW: Query for the "PDF Library" tab (all resources across all folders)
+  const { data: allResourcesForLibrary, isLoading: loadingAllResources } = useQuery<Resource[], Error, Resource[], ['allResourcesForLibrary']>({
+    queryKey: ['allResourcesForLibrary'],
+    queryFn: async () => {
+      let query = supabase.from("resources").select("*").order("created_at", { ascending: false });
+      if (!isAdmin) query = query.eq("is_published", true);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !loadingSession,
   });
 
@@ -154,11 +168,12 @@ const Resources: React.FC = () => {
       const { error: dbError } = await supabase.from("resources").insert({
         id: resourceId, user_id: user.id, title: file.name, description: `Uploaded via drag and drop on ${format(new Date(), "PPP")}`,
         url: publicUrlData.publicUrl, type: 'file', is_published: true, folder_id: folderId, original_filename: file.name, sort_order: 0,
-        file_size: file.size, // Save file size
+        file_size: file.size,
       });
       if (dbError) throw dbError;
       showSuccess(`File "${file.name}" uploaded successfully!`);
       queryClient.invalidateQueries({ queryKey: ['resources'] });
+      queryClient.invalidateQueries({ queryKey: ['allResourcesForLibrary'] });
     } catch (error: any) {
       showError(error.message || "Upload failed.");
     } finally {
@@ -305,11 +320,17 @@ const Resources: React.FC = () => {
                 <h2 className="text-2xl font-bold font-lora">PDF Document Library</h2>
                 <p className="text-sm text-muted-foreground">Showing all PDF resources across all folders.</p>
               </div>
-              <PdfListView 
-                resources={resources || []} 
-                folders={allFolders || []} 
-                onDownload={handleDownload} 
-              />
+              {loadingAllResources ? (
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+                </div>
+              ) : (
+                <PdfListView 
+                  resources={allResourcesForLibrary || []} 
+                  folders={allFolders || []} 
+                  onDownload={handleDownload} 
+                />
+              )}
             </div>
           </TabsContent>
         </Tabs>
