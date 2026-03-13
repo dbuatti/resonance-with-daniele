@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, UploadCloud } from "lucide-react";
+import { Loader2, Trash2, UploadCloud, LayoutGrid, ListFilter } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ResourceCard from "@/components/ResourceCard";
@@ -25,6 +25,8 @@ import SortableResourceList from "@/components/SortableResourceList";
 import { useDebounce } from "@/hooks/use-debounce";
 import ResourceBreadcrumbs from "@/components/resources/ResourceBreadcrumbs";
 import ResourceControls from "@/components/resources/ResourceControls";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PdfListView from "@/components/resources/PdfListView";
 
 type FilterType = 'all' | 'pdf' | 'audio' | 'link' | 'youtube' | 'lyrics';
 type SortBy = 'title' | 'created_at' | 'sort_order';
@@ -128,6 +130,17 @@ const Resources: React.FC = () => {
     setSortOrder('asc');
   };
 
+  const handleDownload = (resource: Resource) => {
+    if (!resource.url) return;
+    const link = document.createElement('a');
+    link.href = resource.url;
+    link.download = resource.original_filename || resource.title; 
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showSuccess(`Downloading ${resource.title}...`);
+  };
+
   const handleFileUploadToFolder = useCallback(async (file: File, folderId: string | null) => {
     if (!isAdmin || !user) return;
     setIsUploadingFileToFolder(folderId || 'root');
@@ -141,6 +154,7 @@ const Resources: React.FC = () => {
       const { error: dbError } = await supabase.from("resources").insert({
         id: resourceId, user_id: user.id, title: file.name, description: `Uploaded via drag and drop on ${format(new Date(), "PPP")}`,
         url: publicUrlData.publicUrl, type: 'file', is_published: true, folder_id: folderId, original_filename: file.name, sort_order: 0,
+        file_size: file.size, // Save file size
       });
       if (dbError) throw dbError;
       showSuccess(`File "${file.name}" uploaded successfully!`);
@@ -233,43 +247,72 @@ const Resources: React.FC = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4">
-        <ResourceBreadcrumbs breadcrumbs={breadcrumbs} onNavigate={handleNavigate} />
-        <ResourceControls 
-          searchInput={searchInput} setSearchInput={setSearchInput} loadingResources={loadingResources}
-          isAdmin={isAdmin} onAddFolder={() => setIsFolderDialogOpen(true)} onAddResource={() => setIsResourceDialogOpen(true)}
-          filterType={filterType} setFilterType={setFilterType} filterVoicePart={filterVoicePart} setFilterVoicePart={setFilterVoicePart}
-          sortBy={sortBy} setSortBy={setSortBy} sortOrder={sortOrder} setSortOrder={setSortOrder} voiceParts={voiceParts}
-          onResetFilters={handleResetFilters}
-        />
+        <Tabs defaultValue="browse" className="space-y-8">
+          <div className="flex justify-center">
+            <TabsList className="grid w-full max-w-md grid-cols-2 rounded-xl h-12 p-1 bg-muted/50">
+              <TabsTrigger value="browse" className="rounded-lg font-bold flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4" /> Browse All
+              </TabsTrigger>
+              <TabsTrigger value="pdfs" className="rounded-lg font-bold flex items-center gap-2">
+                <ListFilter className="h-4 w-4" /> PDF Library
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        <div {...getMainRootProps()} className={cn("space-y-8 p-4 rounded-xl relative", isMainDragActive && isAdmin && "border-4 border-dashed border-primary/50 bg-primary/5")}>
-          {isMainDragActive && isAdmin && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl pointer-events-none">
-              <div className="text-center p-12 border-4 border-dashed border-primary rounded-xl bg-card/90 shadow-2xl">
-                <UploadCloud className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
-                <p className="text-2xl font-bold text-primary font-lora">Drop file here to upload</p>
+          <TabsContent value="browse" className="space-y-6">
+            <ResourceBreadcrumbs breadcrumbs={breadcrumbs} onNavigate={handleNavigate} />
+            <ResourceControls 
+              searchInput={searchInput} setSearchInput={setSearchInput} loadingResources={loadingResources}
+              isAdmin={isAdmin} onAddFolder={() => setIsFolderDialogOpen(true)} onAddResource={() => setIsResourceDialogOpen(true)}
+              filterType={filterType} setFilterType={setFilterType} filterVoicePart={filterVoicePart} setFilterVoicePart={setFilterVoicePart}
+              sortBy={sortBy} setSortBy={setSortBy} sortOrder={sortOrder} setSortOrder={setSortOrder} voiceParts={voiceParts}
+              onResetFilters={handleResetFilters}
+            />
+
+            <div {...getMainRootProps()} className={cn("space-y-8 p-4 rounded-xl relative", isMainDragActive && isAdmin && "border-4 border-dashed border-primary/50 bg-primary/5")}>
+              {isMainDragActive && isAdmin && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl pointer-events-none">
+                  <div className="text-center p-12 border-4 border-dashed border-primary rounded-xl bg-card/90 shadow-2xl">
+                    <UploadCloud className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
+                    <p className="text-2xl font-bold text-primary font-lora">Drop file here to upload</p>
+                  </div>
+                </div>
+              )}
+
+              {currentSubFolders.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {currentSubFolders.map(f => (
+                    <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={setEditingFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={() => {}} />
+                  ))}
+                </div>
+              )}
+
+              {currentSubFolders.length > 0 && Object.values(categorizedResources).some(a => a.length > 0) && <Separator />}
+
+              <div className="space-y-10">
+                {renderResourceSection("Sheet Music (PDF)", categorizedResources.pdf)}
+                {renderResourceSection("Lyrics (PDF/Text)", categorizedResources.lyrics)}
+                {renderResourceSection("Audio Resources", categorizedResources.audio)}
+                {renderResourceSection("YouTube Clips", categorizedResources.youtube)}
+                {renderResourceSection("External Links", categorizedResources.links)}
               </div>
             </div>
-          )}
+          </TabsContent>
 
-          {currentSubFolders.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentSubFolders.map(f => (
-                <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={setEditingFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={() => {}} />
-              ))}
+          <TabsContent value="pdfs" className="space-y-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold font-lora">PDF Document Library</h2>
+                <p className="text-sm text-muted-foreground">Showing all PDF resources across all folders.</p>
+              </div>
+              <PdfListView 
+                resources={resources || []} 
+                folders={allFolders || []} 
+                onDownload={handleDownload} 
+              />
             </div>
-          )}
-
-          {currentSubFolders.length > 0 && Object.values(categorizedResources).some(a => a.length > 0) && <Separator />}
-
-          <div className="space-y-10">
-            {renderResourceSection("Sheet Music (PDF)", categorizedResources.pdf)}
-            {renderResourceSection("Lyrics (PDF/Text)", categorizedResources.lyrics)}
-            {renderResourceSection("Audio Resources", categorizedResources.audio)}
-            {renderResourceSection("YouTube Clips", categorizedResources.youtube)}
-            {renderResourceSection("External Links", categorizedResources.links)}
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <ResourceDialog isOpen={isResourceDialogOpen} onClose={() => setIsResourceDialogOpen(false)} editingResource={editingResource} currentFolderId={currentFolderId} />

@@ -10,6 +10,7 @@ export interface Resource {
   voice_part: string | null; // New: Voice part (e.g., 'Soprano 1', 'Alto')
   original_filename: string | null; // New: Original filename before server renaming
   sort_order: number | null; // New: Custom sort order for drag-and-drop
+  file_size: number | null; // New: Size in bytes
 }
 
 export interface ResourceFolder {
