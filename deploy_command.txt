@@ -1,0 +1,5 @@
+To deploy the auto-kit-sync function, run this command in your terminal:
+
+supabase functions deploy auto-kit-sync --project-ref YOUR_PROJECT_REF
+
+(Replace YOUR_PROJECT_REF with your actual Supabase project ID)
