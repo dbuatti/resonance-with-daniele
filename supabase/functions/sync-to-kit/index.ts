@@ -41,14 +41,17 @@ serve(async (req) => {
     console.log(`[Sync] Attempting v4 sync with token: ${kitToken.substring(0, 8)}...`);
 
     const kitRequest = async (endpoint: string, options: any = {}) => {
-      const url = `${KIT_API_BASE}${endpoint}`;
+      const url = new URL(`${KIT_API_BASE}${endpoint}`);
+      // For Kit v4, the token is often passed as 'api_key' in the query string
+      url.searchParams.set("api_key", kitToken);
       
-      const res = await fetch(url, {
+      const res = await fetch(url.toString(), {
         ...options,
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${kitToken}`,
+          // Some v4 endpoints also accept/require the Bearer header, 
+          // but we'll try the query param first as it's a common fix for 'invalid token' errors.
           ...options.headers,
         },
       })
