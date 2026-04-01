@@ -2,8 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Switching to v3 as it is the most stable for Secret Key authentication
-const KIT_API_BASE = "https://api.convertkit.com/v3";
+// Using v4 which is required for tokens starting with 'kit_'
+const KIT_API_BASE = "https://api.convertkit.com/v4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,7 +21,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Auth Check
+    // 1. Auth Check (Supabase)
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) throw new Error("Missing Authorization header");
     const token = authHeader.replace('Bearer ', '');
@@ -31,37 +31,26 @@ serve(async (req) => {
     const { data: profile } = await supabaseClient.from('profiles').select('is_admin').eq('id', user.id).single()
     if (!profile?.is_admin) throw new Error("Forbidden: Admin access required");
 
-    // 2. Get Kit Secret
-    const kitSecret = Deno.env.get('KIT_API_SECRET')?.trim();
-    if (!kitSecret) {
-      console.error("[Sync] KIT_API_SECRET is missing from environment.");
+    // 2. Get Kit Token
+    const kitToken = Deno.env.get('KIT_API_SECRET')?.trim();
+    if (!kitToken) {
+      console.error("[Sync] KIT_API_SECRET (v4 Token) is missing from environment.");
       throw new Error("KIT_API_SECRET not found.");
     }
 
-    console.log(`[Sync] Attempting v3 sync with key: ${kitSecret.substring(0, 8)}...`);
+    console.log(`[Sync] Attempting v4 sync with token: ${kitToken.substring(0, 8)}...`);
 
     const kitRequest = async (endpoint: string, options: any = {}) => {
-      const url = new URL(`${KIT_API_BASE}${endpoint}`);
+      const url = `${KIT_API_BASE}${endpoint}`;
       
-      // For GET requests, api_secret goes in query params
-      if (!options.method || options.method === 'GET') {
-        url.searchParams.set("api_secret", kitSecret);
-      }
-
-      // For POST/PUT, v3 often expects api_secret in the JSON body
-      let body = options.body ? JSON.parse(options.body) : {};
-      if (options.method === 'POST' || options.method === 'PUT') {
-        body.api_secret = kitSecret;
-      }
-
-      const res = await fetch(url.toString(), {
+      const res = await fetch(url, {
         ...options,
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${kitToken}`,
           ...options.headers,
         },
-        body: (options.method === 'POST' || options.method === 'PUT') ? JSON.stringify(body) : undefined,
       })
       
       const resText = await res.text();
@@ -69,7 +58,7 @@ serve(async (req) => {
         console.error(`[Sync] Kit API Error (${endpoint}):`, res.status, resText);
         throw new Error(`Kit API Error: ${res.status} - ${resText}`);
       }
-      return JSON.parse(resText);
+      return resText ? JSON.parse(resText) : {};
     }
 
     // 3. Get or Create 'choir' Tag
@@ -96,15 +85,13 @@ serve(async (req) => {
       if (!member.email) continue;
       
       try {
-        // v3 endpoint for tagging a subscriber: /tags/<tag_id>/subscribe
-        await kitRequest(`/tags/${choirTag.id}/subscribe`, {
+        // v4 endpoint for adding a subscriber to a tag
+        await kitRequest(`/tags/${choirTag.id}/subscribers`, {
           method: "POST",
           body: JSON.stringify({
             email: member.email,
             first_name: member.first_name || "",
-            fields: {
-              last_name: member.last_name || ""
-            }
+            last_name: member.last_name || ""
           })
         });
         successCount++;
