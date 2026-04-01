@@ -20,13 +20,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Supabase Auth Check
+    // Supabase Auth Check
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) throw new Error("Missing Authorization header")
 
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
-
     if (userError || !user) throw new Error("Unauthorized")
 
     const { data: profile } = await supabaseClient
@@ -52,7 +51,11 @@ serve(async (req) => {
 
       if (options.body) headers["Content-Type"] = "application/json"
 
-      const res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } })
+      const res = await fetch(url, {
+        ...options,
+        headers: { ...headers, ...options.headers }
+      })
+
       const resText = await res.text()
 
       if (!res.ok) {
@@ -68,19 +71,19 @@ serve(async (req) => {
     const account = await kitRequest("/account")
     console.log(`[Sync] Account verified! ID: ${account.id || 'N/A'}`)
 
-    // Get 'choir' tag
+    // Get or create 'choir' tag
     console.log("[Sync] Fetching tags...")
     const tagsData = await kitRequest("/tags")
     let choirTag = tagsData.tags?.find((t: any) => t.name.toLowerCase() === "choir")
 
     if (!choirTag) {
       console.log("[Sync] Creating 'choir' tag...")
-      const newTag = await kitRequest("/tags", {
+      const newTagData = await kitRequest("/tags", {
         method: "POST",
         body: JSON.stringify({ name: "choir" })
       })
-      choirTag = newTag.tag
-      console.log(`[Sync] Created tag ID: ${choirTag.id}`)
+      choirTag = newTagData.tag
+      console.log(`[Sync] Created 'choir' tag with ID: ${choirTag.id}`)
     } else {
       console.log(`[Sync] Using existing 'choir' tag ID: ${choirTag.id}`)
     }
@@ -91,7 +94,7 @@ serve(async (req) => {
       .from('profiles')
       .select('email, first_name, last_name')
 
-    if (membersError) throw membersError
+    if (membersError) throw new Error(`Failed to fetch members: ${membersError.message}`)
 
     let successCount = 0
     let failCount = 0
@@ -103,8 +106,8 @@ serve(async (req) => {
       if (!email) continue
 
       try {
-        // Primary method: Tag by email address (best for your case)
-        await kitRequest(`/tags/${choirTag.id}/subscribers`, {
+        // Step 1: Create/Update subscriber (upsert)
+        await kitRequest("/subscribers", {
           method: "POST",
           body: JSON.stringify({
             email_address: email,
@@ -113,51 +116,35 @@ serve(async (req) => {
           })
         })
 
+        // Step 2: Add the 'choir' tag
+        await kitRequest(`/tags/${choirTag.id}/subscribers`, {
+          method: "POST",
+          body: JSON.stringify({
+            email_address: email
+          })
+        })
+
         successCount++
-        console.log(`[Sync] ✓ Tagged: ${email}`)
+        console.log(`[Sync] ✓ Success: ${email}`)
       } catch (e: any) {
-        // If 404, try creating subscriber first (fallback)
-        if (e.message.includes("404") || e.message.includes("Not Found")) {
-          try {
-            // Create subscriber (this will also allow tagging)
-            await kitRequest("/subscribers", {
-              method: "POST",
-              body: JSON.stringify({
-                email_address: email,
-                first_name: (member.first_name || "").trim(),
-                last_name: (member.last_name || "").trim()
-              })
-            })
-
-            // Then tag them
-            await kitRequest(`/tags/${choirTag.id}/subscribers`, {
-              method: "POST",
-              body: JSON.stringify({ email_address: email })
-            })
-
-            successCount++
-            console.log(`[Sync] ✓ Created + tagged new subscriber: ${email}`)
-          } catch (createError: any) {
-            console.error(`[Sync] Failed to create/tag ${email}:`, createError.message)
-            failCount++
-          }
-        } else {
-          console.error(`[Sync] Failed to sync ${email}:`, e.message)
-          failCount++
-        }
+        console.error(`[Sync] Failed for ${email}:`, e.message)
+        failCount++
       }
     }
 
-    console.log(`[Sync] Finished → Success: ${successCount}, Failed: ${failCount}`)
+    console.log(`[Sync] Completed → Success: ${successCount}, Failed: ${failCount}`)
 
     return new Response(
       JSON.stringify({
         success: true,
         synced: successCount,
         failed: failCount,
-        message: `Successfully processed ${successCount} members with 'choir' tag.`
+        message: `Successfully synced ${successCount} members with the 'choir' tag.`
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+        status: 200 
+      }
     )
 
   } catch (error: any) {
