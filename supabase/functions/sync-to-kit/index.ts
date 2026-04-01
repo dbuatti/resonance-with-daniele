@@ -73,8 +73,9 @@ serve(async (req) => {
         if (res.status === 401) {
           throw new Error("Kit Authentication Failed: Invalid Personal Access Token.")
         }
+        // For 422 we throw a clean message but continue in the loop
         if (res.status === 422) {
-          throw new Error(`Kit Validation Error: ${resText}`)
+          throw new Error(`Validation Error: ${resText}`)
         }
 
         throw new Error(`Kit API Error: ${res.status} - ${resText}`)
@@ -126,32 +127,31 @@ serve(async (req) => {
     console.log(`[Sync] Starting sync for ${members?.length || 0} members...`)
 
     for (const member of members || []) {
-      if (!member.email?.trim()) {
+      const email = member.email?.trim()
+      if (!email) {
         skippedCount++
         continue
       }
 
       try {
-        // FIXED: Using the correct payload format for tagging
+        // FIXED: Use "email_address" (required by Kit v4)
         await kitRequest(`/tags/${choirTag.id}/subscribers`, {
           method: "POST",
           body: JSON.stringify({
-            email: member.email.trim(),
+            email_address: email,                    // ← This was the main issue
             first_name: (member.first_name || "").trim(),
             last_name: (member.last_name || "").trim()
           })
         })
         successCount++
-        console.log(`[Sync] ✓ Tagged: ${member.email}`)
+        console.log(`[Sync] ✓ Successfully tagged: ${email}`)
       } catch (e: any) {
-        // If it's a duplicate / already tagged, Kit sometimes returns 422 or other errors
-        // We treat most errors as "already exists" for this use case
-        console.error(`[Sync] Failed to sync ${member.email}:`, e.message)
+        console.error(`[Sync] Failed to sync ${email}:`, e.message)
         failCount++
       }
     }
 
-    console.log(`[Sync] Sync completed → Success: ${successCount}, Failed/Skipped: ${failCount + skippedCount}`)
+    console.log(`[Sync] Sync completed → Success: ${successCount}, Failed: ${failCount}, Skipped: ${skippedCount}`)
 
     return new Response(
       JSON.stringify({ 
@@ -159,7 +159,7 @@ serve(async (req) => {
         synced: successCount, 
         failed: failCount,
         skipped: skippedCount,
-        message: `Processed ${successCount} members. ${failCount} failed. Duplicates are normal and will just get the tag added.`
+        message: `Processed ${successCount} members. Duplicates are normal — Kit will just add the 'choir' tag.`
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
