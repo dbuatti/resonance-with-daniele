@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Music, MapPin } from "lucide-react";
+import { ArrowRight, Music, MapPin, LogIn } from "lucide-react";
 
 const HeroSection: React.FC = () => {
   return (
@@ -28,15 +28,25 @@ const HeroSection: React.FC = () => {
           <span>Based in Armadale, VIC 3143</span>
         </div>
         
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl shadow-xl shadow-primary/20 group" asChild>
-            <Link to="/events">
-              Book Your Spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Button>
-          <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-xl bg-background/50 backdrop-blur-sm" asChild>
-            <Link to="/learn-more">How It Works</Link>
-          </Button>
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-md mx-auto">
+            <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl shadow-xl shadow-primary/20 group flex-1" asChild>
+              <Link to="/events">
+                Book Your Spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-xl bg-background/50 backdrop-blur-sm flex-1" asChild>
+              <Link to="/learn-more">How It Works</Link>
+            </Button>
+          </div>
+          
+          <Link 
+            to="/login" 
+            className="text-primary font-bold hover:underline flex items-center gap-2 transition-all hover:gap-3"
+          >
+            <LogIn className="h-5 w-5" />
+            Already a member? Log in here
+          </Link>
         </div>
 
         <div className="mt-12 flex items-center justify-center gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">

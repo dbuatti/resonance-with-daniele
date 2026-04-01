@@ -3,7 +3,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Info, FileText, CalendarDays, Music, Shield } from "lucide-react";
+import { Home, Info, FileText, CalendarDays, Music, Shield, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -37,12 +37,24 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ user, unreadAnnouncementCount }
       </Button>
 
       {!user && (
-        <Button variant="ghost" asChild className={getNavLinkClass("/learn-more")}>
-          <Link to="/learn-more">
-            <Info className="h-4 w-4" />
-            <span>Learn More</span>
-          </Link>
-        </Button>
+        <>
+          <Button variant="ghost" asChild className={getNavLinkClass("/learn-more")}>
+            <Link to="/learn-more">
+              <Info className="h-4 w-4" />
+              <span>Learn More</span>
+            </Link>
+          </Button>
+          <Button 
+            variant="outline" 
+            asChild 
+            className="ml-2 bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-none font-bold"
+          >
+            <Link to="/login">
+              <LogIn className="h-4 w-4 mr-2" />
+              Member Login
+            </Link>
+          </Button>
+        </>
       )}
 
       {user && (

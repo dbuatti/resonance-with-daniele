@@ -15,44 +15,37 @@ import {
   User as UserIcon,
   LogOut,
   Loader2,
-  Settings, // Added for profile link
+  Settings,
+  LogIn,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/integrations/supabase/auth";
-import { Badge } from "@/components/ui/badge"; // Import Badge
+import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Query function to fetch unread announcement count (simulated)
 const fetchUnreadAnnouncementCount = async (): Promise<number> => {
-  // NOTE: This is a placeholder query. In a real app, this would query a user_announcement_read_status table.
-  // For now, we check if any announcement was created in the last 24 hours.
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  
   const { count, error } = await supabase
     .from("announcements")
     .select("id", { count: "exact", head: true })
     .gte("created_at", oneDayAgo);
 
-  if (error) {
-    console.error("Error fetching unread announcement count:", error);
-    return 0;
-  }
+  if (error) return 0;
   return count || 0;
 };
 
 const MobileNav: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user, profile, loading, isLoggingOut, logout, incompleteTasksCount } = useSession(); // Access session context
+  const { user, profile, loading, isLoggingOut, logout, incompleteTasksCount } = useSession();
 
-  // Fetch unread announcement count
   const { data: unreadAnnouncementCount } = useQuery<number, Error, number, ['unreadAnnouncementCount']>({
     queryKey: ['unreadAnnouncementCount'],
     queryFn: fetchUnreadAnnouncementCount,
     enabled: !!user,
-    refetchInterval: 60 * 1000, // Check every minute
+    refetchInterval: 60 * 1000,
   });
 
   const getNavLinkClass = (path: string) =>
@@ -61,13 +54,12 @@ const MobileNav: React.FC = () => {
       location.pathname === path ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-primary/5"
     );
 
-  // Prioritize profile data for display name and avatar
   const displayName = profile?.first_name || user?.email?.split('@')[0] || "Guest";
   const avatarUrl = profile?.avatar_url;
 
   const handleLogoutClick = async () => {
-    await logout(); // Call the centralized logout function
-    setIsOpen(false); // Close the mobile nav after logout
+    await logout();
+    setIsOpen(false);
   };
 
   return (
@@ -94,13 +86,29 @@ const MobileNav: React.FC = () => {
               )}
             </div>
           </Link>
-          {!user && ( // Only show "Learn More" if user is not logged in
-            <Link to="/learn-more" className={getNavLinkClass("/learn-more")} onClick={() => setIsOpen(false)}>
-              <Info className="h-5 w-5" />
-              <span>Learn More</span>
-            </Link>
+          
+          {!user && (
+            <>
+              <Link to="/learn-more" className={getNavLinkClass("/learn-more")} onClick={() => setIsOpen(false)}>
+                <Info className="h-5 w-5" />
+                <span>Learn More</span>
+              </Link>
+              <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
+                <CalendarDays className="h-5 w-5" />
+                <span>Events</span>
+              </Link>
+              <div className="mt-4 px-4">
+                <Button asChild className="w-full h-12 font-bold text-lg rounded-xl shadow-lg" onClick={() => setIsOpen(false)}>
+                  <Link to="/login">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Member Login
+                  </Link>
+                </Button>
+              </div>
+            </>
           )}
-          {!loading && user ? (
+
+          {user && (
             <>
               <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>
                 <FileText className="h-5 w-5" />
@@ -137,7 +145,7 @@ const MobileNav: React.FC = () => {
                     </Badge>
                   )}
                 </div>
-                <span>My Profile</span>
+                <span className="ml-3">My Profile</span>
               </Link>
               <Button
                 variant="ghost"
@@ -150,16 +158,6 @@ const MobileNav: React.FC = () => {
               >
                 {isLoggingOut ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogOut className="mr-2 h-5 w-5" />}
                 <span>Logout</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              <Link to="/events" className={getNavLinkClass("/events")} onClick={() => setIsOpen(false)}>
-                <CalendarDays className="h-5 w-5" />
-                <span>Events</span>
-              </Link>
-              <Button asChild className="mt-auto w-full">
-                <Link to="/login" onClick={() => setIsOpen(false)}><span>Log In / Access Resources</span></Link>
               </Button>
             </>
           )}
