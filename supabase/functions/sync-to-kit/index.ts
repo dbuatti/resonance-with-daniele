@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Using v4 which is required for tokens starting with 'kit_'
+// Kit v4 is the correct API for 'kit_' prefixed Personal Access Tokens
 const KIT_API_BASE = "https://api.convertkit.com/v4";
 
 const corsHeaders = {
@@ -34,24 +34,27 @@ serve(async (req) => {
     // 2. Get Kit Token
     const kitToken = Deno.env.get('KIT_API_SECRET')?.trim();
     if (!kitToken) {
-      console.error("[Sync] KIT_API_SECRET (v4 Token) is missing from environment.");
-      throw new Error("KIT_API_SECRET not found.");
+      throw new Error("KIT_API_SECRET not found in environment variables.");
     }
 
-    console.log(`[Sync] Attempting v4 sync with token: ${kitToken.substring(0, 8)}...`);
+    console.log(`[Sync] Verifying Kit v4 token (starts with: ${kitToken.substring(0, 8)}...)`);
 
     const kitRequest = async (endpoint: string, options: any = {}) => {
-      const url = new URL(`${KIT_API_BASE}${endpoint}`);
-      // For Kit v4, the token is often passed as 'api_key' in the query string
-      url.searchParams.set("api_key", kitToken);
+      const url = `${KIT_API_BASE}${endpoint}`;
       
-      const res = await fetch(url.toString(), {
+      const headers = {
+        "Accept": "application/json",
+        "Authorization": `Bearer ${kitToken}`,
+      };
+
+      if (options.body) {
+        headers["Content-Type"] = "application/json";
+      }
+      
+      const res = await fetch(url, {
         ...options,
         headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          // Some v4 endpoints also accept/require the Bearer header, 
-          // but we'll try the query param first as it's a common fix for 'invalid token' errors.
+          ...headers,
           ...options.headers,
         },
       })
@@ -59,12 +62,26 @@ serve(async (req) => {
       const resText = await res.text();
       if (!res.ok) {
         console.error(`[Sync] Kit API Error (${endpoint}):`, res.status, resText);
+        // Provide a more helpful error if it's a 401
+        if (res.status === 401) {
+          throw new Error(`Kit Authentication Failed: Please ensure your Personal Access Token has 'read' and 'write' scopes enabled in your Kit settings.`);
+        }
         throw new Error(`Kit API Error: ${res.status} - ${resText}`);
       }
       return resText ? JSON.parse(resText) : {};
     }
 
-    // 3. Get or Create 'choir' Tag
+    // 3. Verify Account Access
+    console.log("[Sync] Verifying account access...");
+    try {
+      await kitRequest("/account");
+      console.log("[Sync] Account verified successfully.");
+    } catch (e) {
+      console.error("[Sync] Failed to verify account access:", e.message);
+      throw e;
+    }
+
+    // 4. Get or Create 'choir' Tag
     console.log("[Sync] Fetching tags...");
     const tagsData = await kitRequest("/tags")
     let choirTag = tagsData.tags?.find((t: any) => t.name.toLowerCase() === "choir")
@@ -78,7 +95,7 @@ serve(async (req) => {
       choirTag = newTagData.tag
     }
 
-    // 4. Fetch and Sync Members
+    // 5. Fetch and Sync Members
     const { data: members } = await supabaseClient.from('profiles').select('email, first_name, last_name')
     
     let successCount = 0;
@@ -88,7 +105,6 @@ serve(async (req) => {
       if (!member.email) continue;
       
       try {
-        // v4 endpoint for adding a subscriber to a tag
         await kitRequest(`/tags/${choirTag.id}/subscribers`, {
           method: "POST",
           body: JSON.stringify({
