@@ -2,8 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Kit v4 is the correct API for 'kit_' prefixed Personal Access Tokens
-const KIT_API_BASE = "https://api.convertkit.com/v4";
+const KIT_API_BASE = "https://api.kit.com/v4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,36 +20,44 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Auth Check (Supabase)
+    // 1. Supabase Auth Check
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) throw new Error("Missing Authorization header");
-    const token = authHeader.replace('Bearer ', '');
+    if (!authHeader) throw new Error("Missing Authorization header")
+
+    const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
-    if (userError || !user) throw new Error("Unauthorized");
 
-    const { data: profile } = await supabaseClient.from('profiles').select('is_admin').eq('id', user.id).single()
-    if (!profile?.is_admin) throw new Error("Forbidden: Admin access required");
+    if (userError || !user) throw new Error("Unauthorized")
 
-    // 2. Get Kit Token
-    const kitToken = Deno.env.get('KIT_API_SECRET')?.trim();
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.is_admin) throw new Error("Forbidden: Admin access required")
+
+    // 2. Get Kit Personal Access Token
+    const kitToken = Deno.env.get('KIT_API_SECRET')?.trim()
     if (!kitToken) {
-      throw new Error("KIT_API_SECRET not found in environment variables.");
+      throw new Error("KIT_API_SECRET not found in environment variables.")
     }
 
-    console.log(`[Sync] Verifying Kit v4 token (starts with: ${kitToken.substring(0, 8)}...)`);
+    console.log(`[Sync] Verifying Kit v4 token (starts with: ${kitToken.substring(0, 8)}...)`)
 
+    // Correct Kit Request Helper for Personal Access Tokens
     const kitRequest = async (endpoint: string, options: any = {}) => {
-      const url = `${KIT_API_BASE}${endpoint}`;
-      
-      const headers = {
+      const url = `${KIT_API_BASE}${endpoint}`
+
+      const headers: any = {
         "Accept": "application/json",
-        "Authorization": `Bearer ${kitToken}`,
-      };
+        "X-Kit-Api-Key": kitToken,     // ← This is the correct header
+      }
 
       if (options.body) {
-        headers["Content-Type"] = "application/json";
+        headers["Content-Type"] = "application/json"
       }
-      
+
       const res = await fetch(url, {
         ...options,
         headers: {
@@ -58,52 +65,70 @@ serve(async (req) => {
           ...options.headers,
         },
       })
-      
-      const resText = await res.text();
+
+      const resText = await res.text()
+
       if (!res.ok) {
-        console.error(`[Sync] Kit API Error (${endpoint}):`, res.status, resText);
-        // Provide a more helpful error if it's a 401
+        console.error(`[Sync] Kit API Error (${endpoint}):`, res.status, resText)
+
         if (res.status === 401) {
-          throw new Error(`Kit Authentication Failed: Please ensure your Personal Access Token has 'read' and 'write' scopes enabled in your Kit settings.`);
+          throw new Error(
+            `Kit Authentication Failed: The access token is invalid.\n` +
+            `Make sure:\n` +
+            `1. You are using a valid Personal Access Token (starts with kit_)\n` +
+            `2. The token is copied exactly (no extra spaces)\n` +
+            `3. The token has not been revoked in Kit settings`
+          )
         }
-        throw new Error(`Kit API Error: ${res.status} - ${resText}`);
+
+        throw new Error(`Kit API Error: ${res.status} - ${resText}`)
       }
-      return resText ? JSON.parse(resText) : {};
+
+      return resText ? JSON.parse(resText) : {}
     }
 
     // 3. Verify Account Access
-    console.log("[Sync] Verifying account access...");
+    console.log("[Sync] Verifying account access...")
     try {
-      await kitRequest("/account");
-      console.log("[Sync] Account verified successfully.");
-    } catch (e) {
-      console.error("[Sync] Failed to verify account access:", e.message);
-      throw e;
+      const account = await kitRequest("/account")
+      console.log(`[Sync] Account verified successfully! Account ID: ${account.id || 'N/A'}`)
+    } catch (e: any) {
+      console.error("[Sync] Failed to verify account access:", e.message)
+      throw e
     }
 
     // 4. Get or Create 'choir' Tag
-    console.log("[Sync] Fetching tags...");
+    console.log("[Sync] Fetching tags...")
     const tagsData = await kitRequest("/tags")
+
     let choirTag = tagsData.tags?.find((t: any) => t.name.toLowerCase() === "choir")
-    
+
     if (!choirTag) {
-      console.log("[Sync] 'choir' tag not found. Creating it...");
+      console.log("[Sync] 'choir' tag not found. Creating it...")
       const newTagData = await kitRequest("/tags", {
         method: "POST",
         body: JSON.stringify({ name: "choir" }),
       })
       choirTag = newTagData.tag
+      console.log(`[Sync] Created new 'choir' tag with ID: ${choirTag.id}`)
+    } else {
+      console.log(`[Sync] Found existing 'choir' tag with ID: ${choirTag.id}`)
     }
 
-    // 5. Fetch and Sync Members
-    const { data: members } = await supabaseClient.from('profiles').select('email, first_name, last_name')
-    
-    let successCount = 0;
-    let failCount = 0;
+    // 5. Fetch members and sync to Kit
+    console.log("[Sync] Fetching members from Supabase...")
+    const { data: members, error: membersError } = await supabaseClient
+      .from('profiles')
+      .select('email, first_name, last_name')
 
-    for (const member of members) {
-      if (!member.email) continue;
-      
+    if (membersError) throw membersError
+
+    let successCount = 0
+    let failCount = 0
+
+    for (const member of members || []) {
+      if (!member.email) continue
+
       try {
         await kitRequest(`/tags/${choirTag.id}/subscribers`, {
           method: "POST",
@@ -112,23 +137,41 @@ serve(async (req) => {
             first_name: member.first_name || "",
             last_name: member.last_name || ""
           })
-        });
-        successCount++;
-      } catch (e) {
-        console.error(`[Sync] Failed to sync ${member.email}:`, e.message);
-        failCount++;
+        })
+        successCount++
+      } catch (e: any) {
+        console.error(`[Sync] Failed to sync ${member.email}:`, e.message)
+        failCount++
       }
     }
 
+    console.log(`[Sync] Sync completed - Success: ${successCount}, Failed: ${failCount}`)
+
     return new Response(
-      JSON.stringify({ success: true, synced: successCount, failed: failCount }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      JSON.stringify({ 
+        success: true, 
+        synced: successCount, 
+        failed: failCount,
+        message: `Synced ${successCount} members to 'choir' tag.`
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+        status: 200 
+      }
     )
 
   } catch (error: any) {
+    console.error("[Sync] Fatal error:", error.message)
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+        status: 400 
+      }
     )
   }
 })
