@@ -35,19 +35,21 @@ serve(async (req) => {
     const kitSecret = Deno.env.get('KIT_API_SECRET')?.trim();
     if (!kitSecret) {
       console.error("[Sync] KIT_API_SECRET is missing from environment.");
-      throw new Error("KIT_API_SECRET not found. If testing locally, add it to supabase/functions/.env");
+      throw new Error("KIT_API_SECRET not found.");
     }
 
     console.log(`[Sync] Attempting sync with key: ${kitSecret.substring(0, 8)}...`);
 
     const kitRequest = async (endpoint: string, options: any = {}) => {
-      const url = `${KIT_API_BASE}${endpoint}`;
-      const res = await fetch(url, {
+      // Kit API v4 prefers api_secret as a query parameter for Secret Key auth
+      const url = new URL(`${KIT_API_BASE}${endpoint}`);
+      url.searchParams.set("api_secret", kitSecret);
+
+      const res = await fetch(url.toString(), {
         ...options,
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${kitSecret}`,
           ...options.headers,
         },
       })
@@ -55,9 +57,6 @@ serve(async (req) => {
       const resText = await res.text();
       if (!res.ok) {
         console.error(`[Sync] Kit API Error (${endpoint}):`, res.status, resText);
-        if (res.status === 401) {
-          throw new Error("Kit API Key rejected (401). This usually means your account is restricted. Check the 'disabled features' warning in your Kit settings.");
-        }
         throw new Error(`Kit API Error: ${res.status} - ${resText}`);
       }
       return JSON.parse(resText);
@@ -87,12 +86,14 @@ serve(async (req) => {
       if (!member.email) continue;
       
       try {
-        const res = await fetch(`${KIT_API_BASE}/tags/${choirTag.id}/subscribers`, {
+        const url = new URL(`${KIT_API_BASE}/tags/${choirTag.id}/subscribers`);
+        url.searchParams.set("api_secret", kitSecret);
+
+        const res = await fetch(url.toString(), {
           method: "POST",
           headers: {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${kitSecret}`,
           },
           body: JSON.stringify({
             email: member.email,
@@ -102,7 +103,11 @@ serve(async (req) => {
         });
 
         if (res.ok) successCount++;
-        else failCount++;
+        else {
+          const errText = await res.text();
+          console.error(`[Sync] Failed to sync ${member.email}:`, errText);
+          failCount++;
+        }
       } catch (e) {
         failCount++;
       }
