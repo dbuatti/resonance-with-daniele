@@ -2,8 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Using the original domain as it is often more stable during the rebrand
-const KIT_API_BASE = "https://api.convertkit.com/v4";
+// Switching to v3 as it is the most stable for Secret Key authentication
+const KIT_API_BASE = "https://api.convertkit.com/v3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,12 +38,21 @@ serve(async (req) => {
       throw new Error("KIT_API_SECRET not found.");
     }
 
-    console.log(`[Sync] Attempting sync with key: ${kitSecret.substring(0, 8)}...`);
+    console.log(`[Sync] Attempting v3 sync with key: ${kitSecret.substring(0, 8)}...`);
 
     const kitRequest = async (endpoint: string, options: any = {}) => {
-      // Kit API v4 prefers api_secret as a query parameter for Secret Key auth
       const url = new URL(`${KIT_API_BASE}${endpoint}`);
-      url.searchParams.set("api_secret", kitSecret);
+      
+      // For GET requests, api_secret goes in query params
+      if (!options.method || options.method === 'GET') {
+        url.searchParams.set("api_secret", kitSecret);
+      }
+
+      // For POST/PUT, v3 often expects api_secret in the JSON body
+      let body = options.body ? JSON.parse(options.body) : {};
+      if (options.method === 'POST' || options.method === 'PUT') {
+        body.api_secret = kitSecret;
+      }
 
       const res = await fetch(url.toString(), {
         ...options,
@@ -52,6 +61,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
           ...options.headers,
         },
+        body: (options.method === 'POST' || options.method === 'PUT') ? JSON.stringify(body) : undefined,
       })
       
       const resText = await res.text();
@@ -86,29 +96,20 @@ serve(async (req) => {
       if (!member.email) continue;
       
       try {
-        const url = new URL(`${KIT_API_BASE}/tags/${choirTag.id}/subscribers`);
-        url.searchParams.set("api_secret", kitSecret);
-
-        const res = await fetch(url.toString(), {
+        // v3 endpoint for tagging a subscriber: /tags/<tag_id>/subscribe
+        await kitRequest(`/tags/${choirTag.id}/subscribe`, {
           method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             email: member.email,
             first_name: member.first_name || "",
-            last_name: member.last_name || ""
+            fields: {
+              last_name: member.last_name || ""
+            }
           })
         });
-
-        if (res.ok) successCount++;
-        else {
-          const errText = await res.text();
-          console.error(`[Sync] Failed to sync ${member.email}:`, errText);
-          failCount++;
-        }
+        successCount++;
       } catch (e) {
+        console.error(`[Sync] Failed to sync ${member.email}:`, e.message);
         failCount++;
       }
     }
