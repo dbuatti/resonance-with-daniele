@@ -64,11 +64,13 @@ serve(async (req) => {
     const { data: members } = await supabaseClient.from('profiles').select('email, first_name, last_name')
     const { data: interests } = await supabaseClient.from('interest_submissions').select('email, first_name, last_name')
 
+    console.log(`[Manual Sync] Found ${members?.length || 0} Members and ${interests?.length || 0} Expressions of Interest.`);
+
     // 3. Combine and de-duplicate by email
     const allPeople = [...(members || []), ...(interests || [])]
     const uniquePeople = Array.from(new Map(allPeople.filter(p => p.email).map(p => [p.email.toLowerCase(), p])).values())
 
-    console.log(`[Manual Sync] Found ${uniquePeople.length} unique emails to sync.`);
+    console.log(`[Manual Sync] Total unique emails to process: ${uniquePeople.length}`);
 
     let successCount = 0
     for (const person of uniquePeople) {
