@@ -37,11 +37,8 @@ serve(async (req) => {
 
     if (!profile?.is_admin) throw new Error("Forbidden: Admin access required")
 
-    // 2. Get Kit Token
     const kitToken = Deno.env.get('KIT_API_SECRET')?.trim()
-    if (!kitToken) {
-      throw new Error("KIT_API_SECRET not found in environment variables.")
-    }
+    if (!kitToken) throw new Error("KIT_API_SECRET not found in environment variables.")
 
     console.log(`[Sync] Verifying Kit v4 token (starts with: ${kitToken.substring(0, 8)}...)`)
 
@@ -53,132 +50,121 @@ serve(async (req) => {
         "X-Kit-Api-Key": kitToken,
       }
 
-      if (options.body) {
-        headers["Content-Type"] = "application/json"
-      }
+      if (options.body) headers["Content-Type"] = "application/json"
 
-      const res = await fetch(url, {
-        ...options,
-        headers: {
-          ...headers,
-          ...options.headers,
-        },
-      })
-
+      const res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } })
       const resText = await res.text()
 
       if (!res.ok) {
         console.error(`[Sync] Kit API Error (${endpoint}):`, res.status, resText)
-
-        if (res.status === 401) {
-          throw new Error("Kit Authentication Failed: Invalid Personal Access Token.")
-        }
-        // For 422 we throw a clean message but continue in the loop
-        if (res.status === 422) {
-          throw new Error(`Validation Error: ${resText}`)
-        }
-
-        throw new Error(`Kit API Error: ${res.status} - ${resText}`)
+        throw new Error(`Kit Error ${res.status}: ${resText}`)
       }
 
       return resText ? JSON.parse(resText) : {}
     }
 
-    // 3. Verify Account
+    // Verify account
     console.log("[Sync] Verifying account access...")
-    try {
-      const account = await kitRequest("/account")
-      console.log(`[Sync] Account verified successfully! Account ID: ${account.id || 'N/A'}`)
-    } catch (e: any) {
-      console.error("[Sync] Failed to verify account access:", e.message)
-      throw e
-    }
+    const account = await kitRequest("/account")
+    console.log(`[Sync] Account verified! ID: ${account.id || 'N/A'}`)
 
-    // 4. Get or Create 'choir' Tag
+    // Get 'choir' tag
     console.log("[Sync] Fetching tags...")
     const tagsData = await kitRequest("/tags")
-
     let choirTag = tagsData.tags?.find((t: any) => t.name.toLowerCase() === "choir")
 
     if (!choirTag) {
-      console.log("[Sync] 'choir' tag not found. Creating it...")
-      const newTagData = await kitRequest("/tags", {
+      console.log("[Sync] Creating 'choir' tag...")
+      const newTag = await kitRequest("/tags", {
         method: "POST",
-        body: JSON.stringify({ name: "choir" }),
+        body: JSON.stringify({ name: "choir" })
       })
-      choirTag = newTagData.tag
-      console.log(`[Sync] Created new 'choir' tag with ID: ${choirTag.id}`)
+      choirTag = newTag.tag
+      console.log(`[Sync] Created tag ID: ${choirTag.id}`)
     } else {
-      console.log(`[Sync] Found existing 'choir' tag with ID: ${choirTag.id}`)
+      console.log(`[Sync] Using existing 'choir' tag ID: ${choirTag.id}`)
     }
 
-    // 5. Fetch members from Supabase
+    // Fetch members
     console.log("[Sync] Fetching members from Supabase...")
     const { data: members, error: membersError } = await supabaseClient
       .from('profiles')
       .select('email, first_name, last_name')
 
-    if (membersError) throw new Error(`Failed to fetch members: ${membersError.message}`)
+    if (membersError) throw membersError
 
     let successCount = 0
     let failCount = 0
-    let skippedCount = 0
 
     console.log(`[Sync] Starting sync for ${members?.length || 0} members...`)
 
     for (const member of members || []) {
       const email = member.email?.trim()
-      if (!email) {
-        skippedCount++
-        continue
-      }
+      if (!email) continue
 
       try {
-        // FIXED: Use "email_address" (required by Kit v4)
+        // Primary method: Tag by email address (best for your case)
         await kitRequest(`/tags/${choirTag.id}/subscribers`, {
           method: "POST",
           body: JSON.stringify({
-            email_address: email,                    // ← This was the main issue
+            email_address: email,
             first_name: (member.first_name || "").trim(),
             last_name: (member.last_name || "").trim()
           })
         })
+
         successCount++
-        console.log(`[Sync] ✓ Successfully tagged: ${email}`)
+        console.log(`[Sync] ✓ Tagged: ${email}`)
       } catch (e: any) {
-        console.error(`[Sync] Failed to sync ${email}:`, e.message)
-        failCount++
+        // If 404, try creating subscriber first (fallback)
+        if (e.message.includes("404") || e.message.includes("Not Found")) {
+          try {
+            // Create subscriber (this will also allow tagging)
+            await kitRequest("/subscribers", {
+              method: "POST",
+              body: JSON.stringify({
+                email_address: email,
+                first_name: (member.first_name || "").trim(),
+                last_name: (member.last_name || "").trim()
+              })
+            })
+
+            // Then tag them
+            await kitRequest(`/tags/${choirTag.id}/subscribers`, {
+              method: "POST",
+              body: JSON.stringify({ email_address: email })
+            })
+
+            successCount++
+            console.log(`[Sync] ✓ Created + tagged new subscriber: ${email}`)
+          } catch (createError: any) {
+            console.error(`[Sync] Failed to create/tag ${email}:`, createError.message)
+            failCount++
+          }
+        } else {
+          console.error(`[Sync] Failed to sync ${email}:`, e.message)
+          failCount++
+        }
       }
     }
 
-    console.log(`[Sync] Sync completed → Success: ${successCount}, Failed: ${failCount}, Skipped: ${skippedCount}`)
+    console.log(`[Sync] Finished → Success: ${successCount}, Failed: ${failCount}`)
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        synced: successCount, 
+      JSON.stringify({
+        success: true,
+        synced: successCount,
         failed: failCount,
-        skipped: skippedCount,
-        message: `Processed ${successCount} members. Duplicates are normal — Kit will just add the 'choir' tag.`
+        message: `Successfully processed ${successCount} members with 'choir' tag.`
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-        status: 200 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 
   } catch (error: any) {
     console.error("[Sync] Fatal error:", error.message)
-    
     return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: error.message 
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-        status: 400 
-      }
+      JSON.stringify({ success: false, error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
 })
