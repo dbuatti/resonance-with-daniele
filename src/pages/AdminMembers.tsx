@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail, Search, Filter, X, Copy } from "lucide-react";
+import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail, Search, Filter, X, Copy, RefreshCw, Send } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,6 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import BackButton from "@/components/ui/BackButton";
 import { Input } from "@/components/ui/input";
+import { syncMembersToKit } from "@/utils/kit";
+import { Separator } from "@/components/ui/separator"; // Added missing import
 
 interface Profile {
   id: string;
@@ -47,6 +49,8 @@ const AdminMembers: React.FC = () => {
   const navigate = useNavigate();
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
   const [isDeletingUser, setIsDeletingUser] = useState<string | null>(null);
+  const [isSyncingToKit, setIsSyncingToKit] = useState(false);
+  const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Profile | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,6 +131,25 @@ const AdminMembers: React.FC = () => {
     }
   };
 
+  const handleSyncToKit = async () => {
+    if (!profiles || profiles.length === 0) return;
+    
+    setIsSyncingToKit(true);
+    setSyncProgress({ current: 0, total: profiles.length });
+    
+    try {
+      await syncMembersToKit(profiles, (current, total) => {
+        setSyncProgress({ current, total });
+      });
+      showSuccess("Successfully synced all members to Kit.com!");
+    } catch (error: any) {
+      console.error("Sync error:", error);
+      showError(`Failed to sync with Kit: ${error.message}`);
+    } finally {
+      setIsSyncingToKit(false);
+    }
+  };
+
   const handleCopyEmail = (email: string | null) => {
     if (email) {
       navigator.clipboard.writeText(email);
@@ -176,7 +199,26 @@ const AdminMembers: React.FC = () => {
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <Button 
+              variant="outline" 
+              onClick={handleSyncToKit} 
+              disabled={isSyncingToKit || !profiles?.length}
+              className="rounded-xl font-bold border-primary/20 text-primary hover:bg-primary/5"
+            >
+              {isSyncingToKit ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Syncing ({syncProgress.current}/{syncProgress.total})
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Sync to Kit.com
+                </>
+              )}
+            </Button>
+            <Separator orientation="vertical" className="h-8 hidden md:block" />
             <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
             <Select value={roleFilter} onValueChange={(val: any) => setRoleFilter(val)}>
               <SelectTrigger className="w-full md:w-[150px] rounded-xl">
