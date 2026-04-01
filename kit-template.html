@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resonance with Daniele</title>
+  <style type="text/css">
+    /* Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Lora:ital,wght@0,700;1,400&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-width: 100%;
+      background-color: #f8f9fa;
+      font-family: 'Inter', Helvetica, Arial, sans-serif;
+      color: #2d3748;
+    }
+
+    .wrapper {
+      width: 100%;
+      table-layout: fixed;
+      background-color: #f8f9fa;
+      padding-bottom: 40px;
+    }
+
+    .main {
+      background-color: #ffffff;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 600px;
+      border-spacing: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Header */
+    .header {
+      background-color: #13294b; /* Deep Blue */
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-family: 'Lora', serif;
+      color: #ffffff;
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.5px;
+    }
+
+    /* Content Area */
+    .content {
+      padding: 40px 30px;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    .content h2, .content h3 {
+      font-family: 'Lora', serif;
+      color: #13294b;
+    }
+
+    /* Kit.com Content Variable */
+    .message-content {
+      margin-bottom: 30px;
+    }
+
+    /* Footer */
+    .footer {
+      background-color: #f1f3f5;
+      padding: 30px;
+      text-align: center;
+      font-size: 12px;
+      color: #718096;
+    }
+
+    .footer a {
+      color: #13294b;
+      text-decoration: underline;
+    }
+
+    .social-links {
+      margin-bottom: 20px;
+    }
+
+    .social-links a {
+      display: inline-block;
+      margin: 0 10px;
+      text-decoration: none;
+      font-weight: bold;
+      color: #13294b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 10px;
+    }
+
+    .accent-bar {
+      height: 4px;
+      background-color: #f5d142; /* Vibrant Yellow */
+      width: 100%;
+    }
+
+    /* Responsive */
+    @media screen and (max-width: 600px) {
+      .content {
+        padding: 30px 20px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <center class="wrapper">
+    <table class="main" width="100%">
+      <!-- Accent Top -->
+      <tr>
+        <td><div class="accent-bar"></div></td>
+      </tr>
+      
+      <!-- Header -->
+      <tr>
+        <td class="header">
+          <h1>Resonance with Daniele</h1>
+        </td>
+      </tr>
+
+      <!-- Body Content -->
+      <tr>
+        <td class="content">
+          <div class="message-content">
+            {{ message_content }}
+          </div>
+        </td>
+      </tr>
+
+      <!-- Footer -->
+      <tr>
+        <td class="footer">
+          <div class="social-links">
+            <a href="https://www.instagram.com/daniele.buatti/">Instagram</a>
+            <a href="https://www.facebook.com/danielebuatti">Facebook</a>
+            <a href="https://danielebuatti.com">Website</a>
+          </div>
+          
+          <p style="margin-bottom: 10px;">
+            {{ address }}
+          </p>
+          
+          <p>
+            Sent with resonance. <br/>
+            <a href="{{ unsubscribe_url }}">Unsubscribe</a> | <a href="{{ subscriber_preferences_url }}">Update Preferences</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </center>
+</body>
+</html>
