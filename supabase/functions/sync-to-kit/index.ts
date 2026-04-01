@@ -32,9 +32,9 @@ serve(async (req) => {
 
     // 2. Get Kit Secret
     const kitSecret = Deno.env.get('KIT_API_SECRET')
-    if (!kitSecret) throw new Error("KIT_API_SECRET not found in environment");
+    if (!kitSecret) throw new Error("KIT_API_SECRET not found in environment. Please set it in Supabase secrets.");
 
-    console.log(`[Sync] Using token starting with: ${kitSecret.substring(0, 4)}...`);
+    console.log(`[Sync] Starting sync using V4 key: ${kitSecret.substring(0, 8)}...`);
 
     const kitRequest = async (endpoint: string, options: any = {}) => {
       const res = await fetch(`${KIT_API_BASE}${endpoint}`, {
@@ -54,7 +54,7 @@ serve(async (req) => {
         if (res.status === 401) {
           throw new Error("Kit API Key is invalid or account access is disabled. Check the warning at the top of your Kit settings page.");
         }
-        throw new Error(`Kit API Error: ${res.status}`);
+        throw new Error(`Kit API Error: ${res.status} - ${errBody}`);
       }
       return res.json()
     }
@@ -65,7 +65,7 @@ serve(async (req) => {
     let choirTag = tagsData.tags?.find((t: any) => t.name.toLowerCase() === "choir")
     
     if (!choirTag) {
-      console.log("[Sync] Creating 'choir' tag...");
+      console.log("[Sync] 'choir' tag not found. Creating it...");
       const newTagData = await kitRequest("/tags", {
         method: "POST",
         body: JSON.stringify({ name: "choir" }),
@@ -75,6 +75,7 @@ serve(async (req) => {
 
     // 4. Fetch and Sync Members
     const { data: members } = await supabaseClient.from('profiles').select('email, first_name, last_name')
+    console.log(`[Sync] Found ${members?.length || 0} members to sync.`);
     
     let successCount = 0;
     let failCount = 0;
@@ -83,7 +84,7 @@ serve(async (req) => {
       if (!member.email) continue;
       
       try {
-        // Kit V4 Subscriber Schema
+        // Kit V4 Subscriber Schema: POST /tags/:id/subscribers
         const res = await fetch(`${KIT_API_BASE}/tags/${choirTag.id}/subscribers`, {
           method: "POST",
           headers: {
@@ -98,13 +99,15 @@ serve(async (req) => {
           })
         });
 
-        if (res.ok) successCount++;
-        else {
+        if (res.ok) {
+          successCount++;
+        } else {
           const err = await res.text();
           console.warn(`[Sync] Failed for ${member.email}:`, err);
           failCount++;
         }
       } catch (e) {
+        console.error(`[Sync] Network error for ${member.email}:`, e.message);
         failCount++;
       }
     }
