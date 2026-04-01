@@ -66,7 +66,9 @@ serve(async (req) => {
 
     // 3. Combine and de-duplicate by email
     const allPeople = [...(members || []), ...(interests || [])]
-    const uniquePeople = Array.from(new Map(allPeople.map(p => [p.email?.toLowerCase(), p])).values())
+    const uniquePeople = Array.from(new Map(allPeople.filter(p => p.email).map(p => [p.email.toLowerCase(), p])).values())
+
+    console.log(`[Manual Sync] Found ${uniquePeople.length} unique emails to sync.`);
 
     let successCount = 0
     for (const person of uniquePeople) {
@@ -97,6 +99,7 @@ serve(async (req) => {
     )
 
   } catch (error: any) {
+    console.error("[Manual Sync] Error:", error.message)
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
