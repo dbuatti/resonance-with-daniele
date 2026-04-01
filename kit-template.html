@@ -6,13 +6,13 @@
   <title>Resonance with Daniele</title>
   <style type="text/css">
     /* Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,700;1,400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Lora:ital,wght@0,700;1,400&display=swap');
 
     body {
       margin: 0;
       padding: 0;
       min-width: 100%;
-      background-color: #f0f2f5;
+      background-color: #fdfcfb; /* Soft cream background */
       font-family: 'Inter', Helvetica, Arial, sans-serif;
       color: #1a202c;
     }
@@ -20,7 +20,7 @@
     .wrapper {
       width: 100%;
       table-layout: fixed;
-      background-color: #f0f2f5;
+      background-color: #fdfcfb;
       padding: 40px 0;
     }
 
@@ -30,35 +30,36 @@
       width: 100%;
       max-width: 600px;
       border-spacing: 0;
-      border-radius: 40px; /* Matching your web app's rounded style */
+      border-radius: 40px;
       overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.03);
     }
 
-    /* Header */
+    /* Ethereal Header mimicking the banner */
     .header {
-      background-color: #13294b; /* Deep Blue */
-      padding: 50px 40px;
+      background: linear-gradient(135deg, #13294b 0%, #4a5568 50%, #d53f8c 100%);
+      padding: 60px 40px;
       text-align: center;
     }
 
     .header h1 {
       font-family: 'Lora', serif;
-      color: #ffffff;
+      color: #fefcbf; /* Creamy yellow text */
       margin: 0;
-      font-size: 32px;
-      letter-spacing: -1px;
+      font-size: 42px;
+      letter-spacing: -0.5px;
       font-weight: 700;
     }
 
     .tagline {
-      color: #f5d142; /* Vibrant Yellow */
-      font-size: 12px;
+      color: #ffffff;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 3px;
-      font-weight: 700;
-      margin-top: 10px;
+      letter-spacing: 2px;
+      font-weight: 800;
+      margin-top: 12px;
       display: block;
+      opacity: 0.9;
     }
 
     /* Content Area */
@@ -75,7 +76,6 @@
       margin-bottom: 20px;
     }
 
-    /* Kit.com Content Variable */
     .message-content {
       margin-bottom: 40px;
     }
@@ -90,12 +90,8 @@
     }
 
     .footer-divider {
-      border-top: 1px solid #edf2f7;
+      border-top: 1px solid #f7fafc;
       margin-bottom: 30px;
-    }
-
-    .social-links {
-      margin-bottom: 25px;
     }
 
     .social-links a {
@@ -109,21 +105,16 @@
       letter-spacing: 1px;
     }
 
-    .accent-bar {
-      height: 8px;
-      background-color: #f5d142; /* Vibrant Yellow */
-      width: 100%;
-    }
-
     .button {
       display: inline-block;
-      padding: 14px 30px;
+      padding: 16px 32px;
       background-color: #13294b;
       color: #ffffff !important;
       text-decoration: none;
-      border-radius: 12px;
+      border-radius: 16px;
       font-weight: 700;
       margin: 20px 0;
+      box-shadow: 0 10px 20px rgba(19, 41, 75, 0.15);
     }
 
     /* Responsive */
@@ -131,23 +122,19 @@
       .wrapper { padding: 20px 10px !important; }
       .main { border-radius: 30px !important; }
       .content { padding: 40px 25px !important; }
-      .header { padding: 40px 20px !important; }
+      .header { padding: 50px 20px !important; }
+      .header h1 { font-size: 36px !important; }
     }
   </style>
 </head>
 <body>
   <center class="wrapper">
     <table class="main" width="100%" cellpadding="0" cellspacing="0">
-      <!-- Accent Top -->
-      <tr>
-        <td><div class="accent-bar"></div></td>
-      </tr>
-      
       <!-- Header -->
       <tr>
         <td class="header">
           <h1>Resonance</h1>
-          <span class="tagline">Find Your Voice. Find Your People.</span>
+          <span class="tagline">MELBOURNE'S MONTHLY POP UP CHOIR</span>
         </td>
       </tr>
 
@@ -159,7 +146,7 @@
             
             {{ message_content }}
             
-            <p style="margin-top: 30px; font-family: 'Lora', serif; font-style: italic; color: #13294b;">
+            <p style="margin-top: 40px; font-family: 'Lora', serif; font-style: italic; color: #13294b; font-size: 18px;">
               Sent with resonance,<br/>
               <strong>Daniele Buatti</strong>
             </p>
@@ -171,7 +158,7 @@
       <tr>
         <td class="footer">
           <div class="footer-divider"></div>
-          <div class="social-links">
+          <div class="social-links" style="margin-bottom: 25px;">
             <a href="https://www.instagram.com/daniele.buatti/">Instagram</a>
             <a href="https://danielebuatti.com">Website</a>
             <a href="https://resonance-with-daniele.vercel.app">Member Hub</a>
@@ -181,7 +168,7 @@
             {{ address }}
           </p>
           
-          <p style="font-size: 11px; opacity: 0.7;">
+          <p style="font-size: 11px; opacity: 0.6;">
             You're receiving this because you're part of the Resonance community. <br/>
             <a href="{{ unsubscribe_url }}" style="color: #13294b;">Unsubscribe</a> | <a href="{{ subscriber_preferences_url }}" style="color: #13294b;">Update Preferences</a>
           </p>
