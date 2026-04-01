@@ -2,7 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const KIT_API_BASE = "https://api.kit.com/v4";
+// Using the original domain as it is often more stable during the rebrand
+const KIT_API_BASE = "https://api.convertkit.com/v4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,13 +32,17 @@ serve(async (req) => {
     if (!profile?.is_admin) throw new Error("Forbidden: Admin access required");
 
     // 2. Get Kit Secret
-    const kitSecret = Deno.env.get('KIT_API_SECRET')
-    if (!kitSecret) throw new Error("KIT_API_SECRET not found in environment. Please set it in Supabase secrets.");
+    const kitSecret = Deno.env.get('KIT_API_SECRET')?.trim();
+    if (!kitSecret) {
+      console.error("[Sync] KIT_API_SECRET is missing from environment.");
+      throw new Error("KIT_API_SECRET not found. If testing locally, add it to supabase/functions/.env");
+    }
 
-    console.log(`[Sync] Starting sync using V4 key: ${kitSecret.substring(0, 8)}...`);
+    console.log(`[Sync] Attempting sync with key: ${kitSecret.substring(0, 8)}...`);
 
     const kitRequest = async (endpoint: string, options: any = {}) => {
-      const res = await fetch(`${KIT_API_BASE}${endpoint}`, {
+      const url = `${KIT_API_BASE}${endpoint}`;
+      const res = await fetch(url, {
         ...options,
         headers: {
           "Accept": "application/json",
@@ -47,16 +52,15 @@ serve(async (req) => {
         },
       })
       
+      const resText = await res.text();
       if (!res.ok) {
-        const errBody = await res.text();
-        console.error(`[Sync] Kit API Error (${endpoint}):`, res.status, errBody);
-        
+        console.error(`[Sync] Kit API Error (${endpoint}):`, res.status, resText);
         if (res.status === 401) {
-          throw new Error("Kit API Key is invalid or account access is disabled. Check the warning at the top of your Kit settings page.");
+          throw new Error("Kit API Key rejected (401). This usually means your account is restricted. Check the 'disabled features' warning in your Kit settings.");
         }
-        throw new Error(`Kit API Error: ${res.status} - ${errBody}`);
+        throw new Error(`Kit API Error: ${res.status} - ${resText}`);
       }
-      return res.json()
+      return JSON.parse(resText);
     }
 
     // 3. Get or Create 'choir' Tag
@@ -75,7 +79,6 @@ serve(async (req) => {
 
     // 4. Fetch and Sync Members
     const { data: members } = await supabaseClient.from('profiles').select('email, first_name, last_name')
-    console.log(`[Sync] Found ${members?.length || 0} members to sync.`);
     
     let successCount = 0;
     let failCount = 0;
@@ -84,7 +87,6 @@ serve(async (req) => {
       if (!member.email) continue;
       
       try {
-        // Kit V4 Subscriber Schema: POST /tags/:id/subscribers
         const res = await fetch(`${KIT_API_BASE}/tags/${choirTag.id}/subscribers`, {
           method: "POST",
           headers: {
@@ -99,15 +101,9 @@ serve(async (req) => {
           })
         });
 
-        if (res.ok) {
-          successCount++;
-        } else {
-          const err = await res.text();
-          console.warn(`[Sync] Failed for ${member.email}:`, err);
-          failCount++;
-        }
+        if (res.ok) successCount++;
+        else failCount++;
       } catch (e) {
-        console.error(`[Sync] Network error for ${member.email}:`, e.message);
         failCount++;
       }
     }
@@ -118,7 +114,6 @@ serve(async (req) => {
     )
 
   } catch (error: any) {
-    console.error("[Sync] Fatal:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
