@@ -18,14 +18,14 @@ interface Task {
 }
 
 const tasks: Task[] = [
-  { id: "personal-10", label: "Message 10 specific people personally", category: "Wednesday", energy: "high" },
-  { id: "email-november", label: "Email the 'November Crew'", category: "Wednesday", energy: "low" },
-  { id: "insta-story-why", label: "Story: 30s video on why these songs", category: "Wednesday", energy: "high" },
-  { id: "sangha-outreach", label: "Reach out to Sangha community", category: "Thursday", energy: "high" },
-  { id: "insta-story-chords", label: "Story: Play chords from the repertoire", category: "Thursday", energy: "low" },
-  { id: "helper-outreach", label: "DM 3 potential 'Helpers' personally", category: "Thursday", energy: "high" },
-  { id: "fb-groups-invite", label: "Post in community groups", category: "Friday", energy: "low" },
-  { id: "insta-story-final", label: "Story: Final personal invitation", category: "Friday", energy: "high" },
+  { id: "personal-10", label: "Message 10 specific people personally", category: "3 Days Before", energy: "high" },
+  { id: "email-regulars", label: "Email the regular member list", category: "3 Days Before", energy: "low" },
+  { id: "insta-story-why", label: "Story: 30s video on why these songs", category: "3 Days Before", energy: "high" },
+  { id: "community-outreach", label: "Reach out to local community nodes", category: "2 Days Before", energy: "high" },
+  { id: "insta-story-chords", label: "Story: Play chords from the repertoire", category: "2 Days Before", energy: "low" },
+  { id: "helper-outreach", label: "DM 3 potential 'Helpers' personally", category: "2 Days Before", energy: "high" },
+  { id: "fb-groups-invite", label: "Post in community groups", category: "1 Day Before", energy: "low" },
+  { id: "insta-story-final", label: "Story: Final personal invitation", category: "1 Day Before", energy: "high" },
   { id: "print-lyrics", label: "Print extra lyric sheets/scores", category: "Day Of", energy: "low" },
   { id: "inhabit-room", label: "Focus on inhabiting the room", category: "Day Of", energy: "high" },
 ];
@@ -73,6 +73,8 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId }) => {
   const completedCount = completedTaskIds?.length || 0;
   const progress = (completedCount / tasks.length) * 100;
 
+  const categories = ["3 Days Before", "2 Days Before", "1 Day Before", "Day Of"];
+
   return (
     <Card className="shadow-xl border-none overflow-hidden">
       <CardHeader className="bg-primary text-primary-foreground pb-6">
@@ -88,7 +90,7 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId }) => {
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border">
-          {["Wednesday", "Thursday", "Friday", "Day Of"].map((category) => (
+          {categories.map((category) => (
             <div key={category} className="p-6">
               <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">
                 {category}

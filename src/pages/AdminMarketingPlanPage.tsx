@@ -33,7 +33,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
+import { format, subDays, startOfDay, addHours } from "date-fns";
 
 const AdminMarketingPlanPage: React.FC = () => {
   const { user } = useSession();
@@ -92,8 +92,8 @@ const AdminMarketingPlanPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [selectedEvent]);
 
-  // 3. Brain Dump Persistence (Scoped to Event)
-  const { data: noteData, isLoading: loadingNote } = useQuery({
+  // 3. Brain Dump Persistence
+  const { data: noteData } = useQuery({
     queryKey: ["adminBrainDump", selectedEventId],
     queryFn: async () => {
       if (!selectedEventId) return "";
@@ -141,21 +141,28 @@ const AdminMarketingPlanPage: React.FC = () => {
     showSuccess(`${label} copied to clipboard!`);
   };
 
-  // Dynamic Templates
-  const eventDateFormatted = selectedEvent ? format(new Date(selectedEvent.date), "EEEE, MMMM do") : "";
+  // --- DYNAMIC CALCULATIONS ---
+  const eventDate = selectedEvent ? new Date(selectedEvent.date) : new Date();
+  const eventDateFormatted = selectedEvent ? format(eventDate, "EEEE, MMMM do") : "";
+  const eventDayName = selectedEvent ? format(eventDate, "EEEE") : "Saturday";
   const eventLocation = selectedEvent?.location || "Armadale Baptist Church";
   const eventLink = selectedEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
+  
+  // Promo expires the day before the event at 1:00 PM
+  const promoExpiryDate = subDays(eventDate, 1);
+  const promoExpiryFormatted = format(promoExpiryDate, "EEEE 'at' 1:00 PM");
 
+  // --- DYNAMIC TEMPLATES ---
   const authenticCaption = `We're back for ${selectedEvent?.title || "our next session"}. 
   
 📍 ${eventLocation}
 ⏰ ${eventDateFormatted}, 10am
 
-If you've been meaning to come, this is the one. Use SING20 for 20% off until Friday.
+If you've been meaning to come, this is the one. Use SING20 for 20% off until ${format(promoExpiryDate, "EEEE")}.
 
 Link in bio. Come sing with us. 🌿`;
 
-  const authenticEmail = `Subject: Let's sing together this Saturday! 🎶
+  const authenticEmail = `Subject: Let's sing together this ${eventDayName}! 🎶
 
 Hi there,
 
@@ -164,7 +171,7 @@ I’d love to see you back in the circle for ${selectedEvent?.title || "our next
 I’m opening up a 20% discount for my past singers to help get the room full of familiar voices.
 
 Use code SING20 at checkout.
-(Valid until Friday 1:00 PM)
+(Valid until ${promoExpiryFormatted})
 
 Grab your spot here: ${eventLink}
 
