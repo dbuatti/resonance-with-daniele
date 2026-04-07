@@ -23,7 +23,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
-import LegacyFeedbackImporter from "@/components/admin/LegacyFeedbackImporter";
 import { 
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, 
   CartesianGrid, BarChart as ReBarChart, Bar, Cell, PieChart, Pie, Legend 
@@ -44,39 +43,48 @@ const AdminEventFeedback: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [aiInsights, setAiInsights] = useState<any>(null);
 
-  // Fetch all events to build the month list
-  const { data: events, isLoading: loadingEvents } = useQuery({
-    queryKey: ["allEventsForFeedbackAdmin"],
+  // Fetch all feedback to derive months and show global stats
+  const { data: allFeedback, isLoading: loadingAllFeedback } = useQuery({
+    queryKey: ["allEventFeedbackForMonths"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("events").select("id, title, date, main_song").order("date", { ascending: false });
+      const { data, error } = await supabase
+        .from("event_feedback")
+        .select(`created_at, events (date)`);
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
-  // Generate unique months from events
+  // Generate unique months from feedback data
   const uniqueMonths = useMemo(() => {
-    if (!events) return [];
+    if (!allFeedback) return [];
     const months = new Set<string>();
-    events.forEach(e => {
-      months.add(format(parseISO(e.date), "yyyy-MM"));
+    allFeedback.forEach((f: any) => {
+      // Use event date if available, otherwise fallback to feedback submission date
+      const eventDate = Array.isArray(f.events) ? f.events[0]?.date : f.events?.date;
+      const dateStr = eventDate || f.created_at;
+      if (dateStr) {
+        months.add(format(parseISO(dateStr), "yyyy-MM"));
+      }
     });
     return Array.from(months).sort().reverse();
-  }, [events]);
+  }, [allFeedback]);
 
   const { data: feedback, isLoading: loadingFeedback } = useQuery({
     queryKey: ["eventFeedbackData", selectedFilter],
     queryFn: async () => {
       let query = supabase
         .from("event_feedback")
-        .select(`*, profiles (first_name, last_name, email), events!inner (title, date)`)
+        .select(`*, profiles (first_name, last_name, email), events (title, date)`)
         .order("created_at", { ascending: false });
 
       if (selectedFilter.startsWith("month:")) {
         const monthStr = selectedFilter.split(":")[1]; // "2024-03"
         const startDate = `${monthStr}-01`;
         const endDate = format(endOfMonth(parseISO(startDate)), "yyyy-MM-dd");
-        query = query.gte("events.date", startDate).lte("events.date", endDate);
+        
+        // Filter by event date if it exists, otherwise by feedback creation date
+        query = query.or(`and(events.date.gte.${startDate},events.date.lte.${endDate}),and(created_at.gte.${startDate},created_at.lte.${endDate})`);
       }
 
       const { data, error } = await query;
@@ -91,7 +99,7 @@ const AdminEventFeedback: React.FC = () => {
       const { data, error } = await supabase
         .from("event_ai_summaries")
         .select("content")
-        .eq("event_id", selectedFilter) // We use the filter string as the key
+        .eq("event_id", selectedFilter)
         .maybeSingle();
       if (error) return null;
       return data?.content || null;
@@ -105,8 +113,6 @@ const AdminEventFeedback: React.FC = () => {
 
   const analyzeMutation = useMutation({
     mutationFn: async () => {
-      // For now, the edge function expects an eventId. 
-      // If it's a month filter, we pass the filter string and the function can be updated to handle it.
       const { data, error } = await supabase.functions.invoke('analyze-feedback', {
         body: { eventId: selectedFilter }
       });
@@ -146,7 +152,7 @@ const AdminEventFeedback: React.FC = () => {
     let returningCount = 0;
     let newCount = 0;
 
-    feedback.forEach(f => {
+    feedback.forEach((f: any) => {
       if (f.overall_feeling) feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
       if (f.recommend_score) npsDistribution[f.recommend_score] = (npsDistribution[f.recommend_score] || 0) + 1;
       if (f.venue_feedback) venueFeelings[f.venue_feedback] = (venueFeelings[f.venue_feedback] || 0) + 1;
@@ -159,7 +165,7 @@ const AdminEventFeedback: React.FC = () => {
       
       (f.best_times_ongoing as string[] || []).forEach(time => ongoingTimes[time] = (ongoingTimes[time] || 0) + 1);
 
-      const eventDate = f.events?.date || f.created_at;
+      const eventDate = (Array.isArray(f.events) ? f.events[0]?.date : f.events?.date) || f.created_at;
       const monthKey = format(startOfMonth(parseISO(eventDate)), "MMM yyyy");
       if (!trendMap[monthKey]) trendMap[monthKey] = { sum: 0, count: 0 };
       trendMap[monthKey].sum += (f.recommend_score || 0);
@@ -192,7 +198,7 @@ const AdminEventFeedback: React.FC = () => {
     };
   }, [feedback]);
 
-  if (loading || loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>;
+  if (loading || loadingAllFeedback) return <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>;
   if (!user?.is_admin) { navigate("/"); return null; }
 
   return (
