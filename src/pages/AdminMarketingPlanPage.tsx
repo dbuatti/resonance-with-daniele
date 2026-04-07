@@ -205,7 +205,7 @@ const AdminMarketingPlanPage: React.FC = () => {
   const eventLink = selectedEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
   const focusSong = nominatedFolder?.name || "some incredible new harmonies";
   const promoExpiryDate = subDays(eventDate, 1);
-  const promoExpiryFormatted = format(promoExpiryDate, "EEEE 'at' 1:00 PM");
+  const promoExpiryFormatted = format(promoExpiryDate, "EEEE 'at' 1:00 PM (MM/dd/yyyy)");
 
   // --- AI PROMPT GENERATOR ---
   const aiPrompt = `I am Daniele Buatti, a vocal coach and choir director. I'm running a pop-up choir session called "${selectedEvent?.title}" on ${eventDateFormatted} at ${eventLocation}. 
