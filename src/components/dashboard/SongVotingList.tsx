@@ -28,7 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface SongSuggestion {
@@ -206,26 +206,26 @@ const SongVotingList: React.FC = () => {
   }
 
   return (
-    <Card className="shadow-lg rounded-2xl border-none overflow-hidden">
-      <CardHeader className="bg-muted/30 pb-6">
+    <Card className="soft-shadow rounded-[2.5rem] border-none overflow-hidden animate-fade-in-up">
+      <CardHeader className="bg-muted/30 pb-8">
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold font-lora flex items-center gap-2">
-              <Music className="h-6 w-6 text-primary" /> Song Suggestions
+            <CardTitle className="text-3xl font-black font-lora flex items-center gap-3">
+              <Music className="h-8 w-8 text-primary" /> Song Suggestions
             </CardTitle>
-            <CardDescription>Vote for the songs you'd love to learn next!</CardDescription>
+            <CardDescription className="text-base font-medium">Vote for the songs you'd love to learn next!</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-6 space-y-6">
+      <CardContent className="p-8 space-y-8">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Search songs or artists..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 rounded-xl"
+              className="pl-12 h-12 rounded-xl font-medium"
             />
             {searchTerm && (
               <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => setSearchTerm("")}>
@@ -234,17 +234,17 @@ const SongVotingList: React.FC = () => {
             )}
           </div>
           <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
-            <SelectTrigger className="w-full sm:w-[180px] rounded-xl">
+            <SelectTrigger className="w-full sm:w-[200px] h-12 rounded-xl font-bold">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="votes_desc">Most Popular</SelectItem>
-              <SelectItem value="newest">Recently Added</SelectItem>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="votes_desc" className="font-bold">Most Popular</SelectItem>
+              <SelectItem value="newest" className="font-bold">Recently Added</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {filteredAndSortedSuggestions.length > 0 ? filteredAndSortedSuggestions.map((song, index) => {
             const isTopVoted = sortOrder === "votes_desc" && index === 0 && song.total_votes > 0;
             const isSuggestedByCurrentUser = user && song.user_id === user.id;
@@ -253,9 +253,9 @@ const SongVotingList: React.FC = () => {
 
             return (
               <div key={song.id} className={cn(
-                "group flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300",
-                isTopVoted ? "bg-primary/5 border-primary/20 ring-1 ring-primary/10" : "bg-card hover:bg-muted/30",
-                isSuggestedByCurrentUser && "border-l-4 border-l-accent"
+                "group flex items-center gap-6 p-6 rounded-[2rem] border-2 transition-all duration-500",
+                isTopVoted ? "bg-primary/5 border-primary/20 shadow-lg" : "bg-card border-transparent hover:bg-muted/30 hover:border-primary/10",
+                isSuggestedByCurrentUser && "border-l-8 border-l-accent"
               )}>
                 {/* Vote Button */}
                 <div className="flex-shrink-0">
@@ -264,42 +264,45 @@ const SongVotingList: React.FC = () => {
                     onClick={() => handleVote(song.id)}
                     disabled={!user}
                     className={cn(
-                      "h-16 w-16 rounded-xl flex flex-col items-center justify-center gap-1 transition-all",
-                      votedByCurrentUser ? "shadow-lg shadow-primary/20" : "hover:border-primary hover:bg-primary/5"
+                      "h-20 w-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-300",
+                      votedByCurrentUser ? "shadow-xl shadow-primary/20 scale-105" : "hover:border-primary hover:bg-primary/5"
                     )}
                   >
-                    <ThumbsUp className={cn("h-5 w-5", votedByCurrentUser ? "fill-current" : "text-primary")} />
-                    <span className="text-xs font-bold">{song.total_votes}</span>
+                    <ThumbsUp className={cn("h-6 w-6", votedByCurrentUser ? "fill-current" : "text-primary")} />
+                    <span className="text-sm font-black">{song.total_votes}</span>
                   </Button>
                 </div>
 
                 {/* Song Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-bold font-lora leading-tight truncate">{song.title}</h3>
-                    {isTopVoted && <Trophy className="h-4 w-4 text-accent fill-current" />}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-2xl font-black font-lora leading-tight truncate">{song.title}</h3>
+                    {isTopVoted && <Trophy className="h-5 w-5 text-accent fill-current animate-float" />}
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground truncate mb-2">by {song.artist}</p>
+                  <p className="text-lg font-bold text-muted-foreground truncate">by {song.artist}</p>
                   
-                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground uppercase tracking-wider font-bold">
-                    <div className="flex items-center gap-1.5">
-                      <Avatar className="h-4 w-4">
+                  <div className="flex items-center gap-4 pt-2">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-full">
+                      <Avatar className="h-5 w-5">
                         <AvatarImage src={song.profiles?.avatar_url || ""} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-[8px]"><UserIcon className="h-2 w-2" /></AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary text-[8px] font-black"><UserIcon className="h-3 w-3" /></AvatarFallback>
                       </Avatar>
-                      <span>{suggestedByName}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{suggestedByName}</span>
                     </div>
                     {song.reason && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1 cursor-help hover:text-foreground transition-colors">
-                            <MessageSquare className="h-3 w-3" /> Reason
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs p-3">
-                          <p className="text-xs italic leading-relaxed">"{song.reason}"</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1.5 cursor-help text-primary hover:opacity-80 transition-opacity">
+                              <MessageSquare className="h-4 w-4" />
+                              <span className="text-[10px] font-black uppercase tracking-widest">Reason</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs p-4 rounded-2xl shadow-2xl border-none bg-card">
+                            <p className="text-sm italic font-medium leading-relaxed text-foreground">"{song.reason}"</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                 </div>
@@ -308,29 +311,29 @@ const SongVotingList: React.FC = () => {
                 {(user?.is_admin || isSuggestedByCurrentUser) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground opacity-0 group-hover:opacity-100 transition-all">
+                        <MoreVertical className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setEditingSong(song); setIsEditSongDialogOpen(true); }}>
-                        <EditIcon className="mr-2 h-4 w-4" /> Edit
+                    <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 shadow-2xl border-none">
+                      <DropdownMenuItem onClick={() => { setEditingSong(song); setIsEditSongDialogOpen(true); }} className="rounded-xl p-3 font-bold">
+                        <EditIcon className="mr-3 h-4 w-4" /> Edit
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
+                      <DropdownMenuSeparator className="my-2" />
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="rounded-xl p-3 font-bold text-destructive focus:bg-destructive/10 focus:text-destructive">
+                            <Trash2 className="mr-3 h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="rounded-[2rem]">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Suggestion?</AlertDialogTitle>
-                            <AlertDialogDescription>This will remove "{song.title}" from the list.</AlertDialogDescription>
+                            <AlertDialogTitle className="text-2xl font-black font-lora">Delete Suggestion?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-lg font-medium">This will remove "{song.title}" from the community list.</AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)} className="bg-destructive">Delete</AlertDialogAction>
+                          <AlertDialogFooter className="gap-3">
+                            <AlertDialogCancel className="rounded-2xl font-bold">Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteSongSuggestion(song.id)} className="bg-destructive hover:bg-destructive/90 rounded-2xl font-bold">Delete</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -340,9 +343,9 @@ const SongVotingList: React.FC = () => {
               </div>
             );
           }) : (
-            <div className="text-center py-12 bg-muted/20 rounded-2xl border-2 border-dashed border-muted-foreground/10">
-              <Music className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-20" />
-              <p className="text-muted-foreground font-medium">No songs found matching your search.</p>
+            <div className="text-center py-20 bg-muted/20 rounded-[2.5rem] border-4 border-dashed border-muted-foreground/10">
+              <Music className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" />
+              <p className="text-xl font-bold text-muted-foreground font-lora">No songs found matching your search.</p>
             </div>
           )}
         </div>
@@ -350,23 +353,23 @@ const SongVotingList: React.FC = () => {
 
       {editingSong && (
         <Dialog open={isEditSongDialogOpen} onOpenChange={setIsEditSongDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] rounded-[2rem]">
             <DialogHeader>
-              <DialogTitle className="font-lora">Edit Suggestion</DialogTitle>
+              <DialogTitle className="text-2xl font-black font-lora">Edit Suggestion</DialogTitle>
             </DialogHeader>
             <Form {...editForm}>
-              <form onSubmit={editForm.handleSubmit(handleEditSongSubmit)} className="space-y-4 py-4">
+              <form onSubmit={editForm.handleSubmit(handleEditSongSubmit)} className="space-y-6 py-4">
                 <FormField control={editForm.control} name="title" render={({ field }) => (
-                  <FormItem><FormLabel>Song Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Song Title</FormLabel><FormControl><Input {...field} className="h-12 rounded-xl font-bold" /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={editForm.control} name="artist" render={({ field }) => (
-                  <FormItem><FormLabel>Artist</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Artist</FormLabel><FormControl><Input {...field} className="h-12 rounded-xl font-bold" /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={editForm.control} name="reason" render={({ field }) => (
-                  <FormItem><FormLabel>Why this song?</FormLabel><FormControl><Textarea {...field} className="min-h-[100px]" /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Why this song?</FormLabel><FormControl><Textarea {...field} className="min-h-[120px] rounded-xl font-medium" /></FormControl><FormMessage /></FormItem>
                 )} />
                 <DialogFooter>
-                  <Button type="submit" disabled={editForm.formState.isSubmitting}>Save Changes</Button>
+                  <Button type="submit" className="w-full h-12 font-black rounded-xl" disabled={editForm.formState.isSubmitting}>Save Changes</Button>
                 </DialogFooter>
               </form>
             </Form>
