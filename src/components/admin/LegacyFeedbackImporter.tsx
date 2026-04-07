@@ -35,29 +35,33 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
   const parseLegacyDate = (dateStr: string): Date | null => {
     if (!dateStr) return null;
     
-    // 1. Try standard JS parsing
-    const standardDate = new Date(dateStr);
-    if (isValid(standardDate)) return standardDate;
+    // Clean the string (remove extra spaces or quotes)
+    const cleanStr = dateStr.trim().replace(/^"|"$/g, "");
 
-    // 2. Try common Google Forms formats
+    // 1. Try the specific Google Sheets format: DD/MM/YYYY HH:mm:ss
+    // We try both 24h and 12h formats just in case
     const formats = [
       "dd/MM/yyyy HH:mm:ss",
-      "MM/dd/yyyy HH:mm:ss",
-      "yyyy/MM/dd HH:mm:ss",
+      "d/M/yyyy HH:mm:ss",
       "dd/MM/yyyy h:mm:ss a",
-      "MM/dd/yyyy h:mm:ss a",
-      "d/M/yyyy H:mm:ss",
-      "M/d/yyyy H:mm:ss",
+      "d/M/yyyy h:mm:ss a",
+      "dd/MM/yyyy",
+      "d/M/yyyy"
     ];
 
     for (const fmt of formats) {
       try {
-        const parsed = parse(dateStr.split(' GMT')[0], fmt, new Date());
+        const parsed = parse(cleanStr, fmt, new Date());
         if (isValid(parsed)) return parsed;
       } catch (e) {
         continue;
       }
     }
+
+    // 2. Fallback to standard JS parsing if the above fails
+    const standardDate = new Date(cleanStr);
+    if (isValid(standardDate)) return standardDate;
+
     return null;
   };
 
@@ -68,11 +72,13 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
     const possibleEvents = allEvents
       .filter(e => {
         const eventDate = new Date(e.date);
+        // We compare the start of the day to ensure feedback submitted 
+        // on the day of the event matches correctly
         return startOfDay(eventDate) <= startOfDay(timestamp);
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Return the most recent one, or fallback to the currently selected event
+    // Return the most recent one found, or fallback to the currently selected event
     return possibleEvents[0]?.id || eventId;
   };
 
@@ -90,6 +96,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
         if (lines.length < 2) throw new Error("CSV file is empty");
 
         const parseCSVLine = (line: string) => {
+          // Robust CSV splitting that handles commas inside quotes
           const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
           return values.map(val => val?.replace(/^"|"$/g, "").trim() || "");
         };
@@ -116,7 +123,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
         };
 
         if (h.timestamp === -1) {
-          throw new Error("Could not find a 'Timestamp' column in your CSV. Please check the file.");
+          throw new Error("Could not find a 'Timestamp' column. Please ensure your CSV has headers.");
         }
 
         const feedbackToInsert = lines.slice(1)
@@ -149,10 +156,16 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
             };
           });
 
+        // Final safety check: if we couldn't parse ANY dates, something is wrong with the file
+        const validDatesCount = feedbackToInsert.filter(f => f.created_at !== new Date().toISOString()).length;
+        if (validDatesCount === 0 && feedbackToInsert.length > 0) {
+          throw new Error("Could not read the dates in your file. Please check the 'Timestamp' column format.");
+        }
+
         const { error } = await supabase.from("event_feedback").insert(feedbackToInsert);
         if (error) throw error;
 
-        showSuccess(`Successfully imported ${feedbackToInsert.length} responses!`);
+        showSuccess(`Successfully imported ${feedbackToInsert.length} responses and matched them to events!`);
         queryClient.invalidateQueries({ queryKey: ["eventFeedbackData"] });
         setIsOpen(false);
       } catch (err: any) {
@@ -187,7 +200,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
           <div className="bg-primary/5 p-4 rounded-2xl flex items-start gap-3 border border-primary/10">
             <Info className="h-5 w-5 text-primary mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              This will match responses to events based on the <strong>Timestamp</strong> column. If a date can't be read, it will use the currently selected event.
+              This will match responses to events based on the <strong>Timestamp</strong> column (DD/MM/YYYY). 
             </p>
           </div>
           <div
