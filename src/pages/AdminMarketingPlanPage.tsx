@@ -137,9 +137,8 @@ I'd love to see you there.
 
 — Daniele`;
 
-  const communityPost = `Headline: Any local singers (or shower-singers) in Armadale?
-
-Hi everyone! I’m Daniele, a local music director. I’m hosting a pop-up choir session at Armadale Baptist Church on Saturday, April 18.
+  const communityPostHeadline = "Any local singers (or shower-singers) in Armadale? 🎶";
+  const communityPostBody = `Hi everyone! I’m Daniele, a local music director. I’m hosting a pop-up choir session at Armadale Baptist Church on Saturday, April 18.
 
 It’s a low-pressure morning. There are no auditions and no experience is needed. We just get together to learn some great harmonies (usually a mix of Broadway and Jazz) and meet some new people in the neighborhood.
 
@@ -151,6 +150,8 @@ The Details:
 🎟️ Link: https://events.humanitix.com/resonance-melbourne-s-pop-up-choir-april-2026
 
 Hope to see some local faces there!`;
+
+  const fullCommunityPost = `${communityPostHeadline}\n\n${communityPostBody}`;
 
   const handleOpenMail = () => {
     const subject = encodeURIComponent("Let's sing \"Being Alive\" this Saturday! 🎶");
@@ -250,14 +251,15 @@ Hope to see some local faces there!`;
                       <Users className="h-3 w-3" /> Community Post (FB Groups)
                     </span>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(communityPost, "Community Post")}>
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(fullCommunityPost, "Community Post")}>
                         <Copy className="h-3 w-3 mr-1" /> COPY
                       </Button>
                     </div>
                   </div>
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 space-y-4">
+                    <h2 className="text-xl font-bold font-lora text-foreground">{communityPostHeadline}</h2>
                     <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                      {communityPost}
+                      {communityPostBody}
                     </p>
                   </CardContent>
                 </Card>
