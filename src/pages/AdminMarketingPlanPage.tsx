@@ -27,7 +27,11 @@ import {
   Globe,
   Zap,
   DollarSign,
-  AlertTriangle
+  AlertTriangle,
+  Activity,
+  Bot,
+  CheckCircle2,
+  ShieldAlert
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -42,6 +46,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, subDays, differenceInDays, startOfDay } from "date-fns";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 const AdminMarketingPlanPage: React.FC = () => {
   const { user } = useSession();
@@ -80,14 +85,13 @@ const AdminMarketingPlanPage: React.FC = () => {
     queryFn: async () => {
       if (!selectedEventId) return null;
       
-      // Fetch Orders
       const { data: orders, error: orderError } = await supabase
         .from("event_orders")
-        .select("valid_tickets, your_earnings")
-        .eq("event_id", selectedEventId);
+        .select("valid_tickets, your_earnings, first_name, last_name, order_date")
+        .eq("event_id", selectedEventId)
+        .order("order_date", { ascending: false });
       if (orderError) throw orderError;
 
-      // Fetch Expenses
       const { data: expenses, error: expenseError } = await supabase
         .from("event_expenses")
         .select("amount")
@@ -98,7 +102,7 @@ const AdminMarketingPlanPage: React.FC = () => {
       const totalEarnings = orders?.reduce((sum, o) => sum + Number(o.your_earnings || 0), 0) || 0;
       const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
       
-      return { totalTickets, totalEarnings, totalExpenses };
+      return { totalTickets, totalEarnings, totalExpenses, recentOrders: orders?.slice(0, 5) || [] };
     },
     enabled: !!selectedEventId,
   });
@@ -135,6 +139,18 @@ const AdminMarketingPlanPage: React.FC = () => {
     return { title: "Keep Momentum", task: "Check your outreach list and follow up on replies.", icon: <Users /> };
   }, [daysUntil]);
 
+  // 5. Event Health Status Logic
+  const eventHealth = useMemo(() => {
+    if (!stats || daysUntil === null) return { label: "Unknown", color: "text-muted-foreground", icon: <Activity /> };
+    const target = 125;
+    const progress = (stats.totalTickets / target) * 100;
+    
+    if (progress >= 80) return { label: "Near Capacity", color: "text-green-500", icon: <CheckCircle2 /> };
+    if (daysUntil <= 3 && progress < 40) return { label: "Critical Push Needed", color: "text-destructive", icon: <ShieldAlert /> };
+    if (daysUntil <= 7 && progress < 60) return { label: "Needs Attention", color: "text-yellow-500", icon: <AlertTriangle /> };
+    return { label: "On Track", color: "text-primary", icon: <TrendingUp /> };
+  }, [stats, daysUntil]);
+
   useEffect(() => {
     if (!selectedEvent?.date) return;
     const targetDate = new Date(`${selectedEvent.date}T10:00:00`).getTime();
@@ -150,7 +166,7 @@ const AdminMarketingPlanPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [selectedEvent]);
 
-  // 5. Brain Dump Persistence
+  // 6. Brain Dump Persistence
   const { data: noteData } = useQuery({
     queryKey: ["adminBrainDump", selectedEventId],
     queryFn: async () => {
@@ -191,6 +207,20 @@ const AdminMarketingPlanPage: React.FC = () => {
   const promoExpiryDate = subDays(eventDate, 1);
   const promoExpiryFormatted = format(promoExpiryDate, "EEEE 'at' 1:00 PM");
 
+  // --- AI PROMPT GENERATOR ---
+  const aiPrompt = `I am Daniele Buatti, a vocal coach and choir director. I'm running a pop-up choir session called "${selectedEvent?.title}" on ${eventDateFormatted} at ${eventLocation}. 
+
+We are focusing on the song "${focusSong}". 
+Current status: We have ${stats?.totalTickets} tickets sold out of a 125 target. 
+Days remaining: ${daysUntil}.
+
+Please generate 3 variations of a warm, expressive, and human-centric Instagram caption. 
+Variation 1: Focus on the joy of the specific song "${focusSong}".
+Variation 2: Focus on the community and meeting new people in Armadale.
+Variation 3: A "Final Call" urgency post mentioning the SING20 discount code.
+
+Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" language. Use emojis sparingly.`;
+
   // --- DYNAMIC TEMPLATES ---
   const authenticCaption = `We're back for ${selectedEvent?.title || "our next session"}. \n\nWe'll be diving into "${focusSong}" — the harmonies are sounding beautiful already.\n\n📍 ${eventLocation}\n⏰ ${eventDateFormatted}, 10am\n\nIf you've been meaning to come, this is the one. Use SING20 for 20% off until ${format(promoExpiryDate, "EEEE")}.\n\nLink in bio. Come sing with us. 🌿`;
   const authenticEmail = `Subject: Let's sing together this ${eventDayName}! 🎶\n\nHi there,\n\nI’d love to see you back in the circle for ${selectedEvent?.title || "our next session"} this ${eventDateFormatted} (10am–1pm) at ${eventLocation}.\n\nWe're going to be working on "${focusSong}", and I can't wait to hear how it sounds with a full room.\n\nI’m opening up a 20% discount for my past singers to help get the room full of familiar voices.\n\nUse code SING20 at checkout.\n(Valid until ${promoExpiryFormatted})\n\nGrab your spot here: ${eventLink}\n\nI'd love to see you there.\n\n— Daniele`;
@@ -217,7 +247,9 @@ const AdminMarketingPlanPage: React.FC = () => {
           <div className="space-y-6 flex-1">
             <div className="flex items-center gap-2">
               <Badge className="bg-primary text-primary-foreground px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px]">War Room</Badge>
-              <Badge variant="outline" className="border-primary text-primary px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px]">Live Intel</Badge>
+              <div className={cn("flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border-2 font-black uppercase tracking-widest text-[10px]", eventHealth.color)}>
+                {eventHealth.icon} {eventHealth.label}
+              </div>
             </div>
             <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Command Center</h1>
             
@@ -359,6 +391,27 @@ const AdminMarketingPlanPage: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-7 space-y-12">
+                {/* AI Strategy Assistant */}
+                <section className="space-y-6">
+                  <h2 className="text-3xl font-black font-lora flex items-center gap-3">
+                    <Bot className="h-8 w-8 text-primary" /> AI Strategy Assistant
+                  </h2>
+                  <Card className="border-none shadow-xl bg-gradient-to-br from-primary/5 to-accent/5 rounded-[2rem] overflow-hidden">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg font-bold">Generate Fresh Marketing Copy</CardTitle>
+                      <CardDescription>Copy this prompt and paste it into Claude or Gemini for custom variations.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-background/80 p-6 rounded-2xl border-2 border-primary/10 text-sm font-medium text-muted-foreground italic leading-relaxed">
+                        "{aiPrompt.substring(0, 200)}..."
+                      </div>
+                      <Button className="w-full h-12 font-black rounded-xl" onClick={() => copyToClipboard(aiPrompt, "AI Prompt")}>
+                        <Copy className="h-4 w-4 mr-2" /> Copy Full AI Prompt
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </section>
+
                 <section className="space-y-6">
                   <h2 className="text-3xl font-black font-lora flex items-center gap-3">
                     <Mic2 className="h-8 w-8 text-primary" /> Marketing Assets
@@ -417,6 +470,37 @@ const AdminMarketingPlanPage: React.FC = () => {
 
               <div className="lg:col-span-5">
                 <div className="sticky top-24 space-y-10">
+                  {/* Live Intelligence Feed */}
+                  <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden">
+                    <CardHeader className="bg-muted/30 pb-4">
+                      <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-primary" /> Live Intelligence
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="divide-y divide-border">
+                        {stats?.recentOrders.length === 0 ? (
+                          <div className="p-8 text-center text-sm text-muted-foreground italic">No recent activity.</div>
+                        ) : (
+                          stats?.recentOrders.map((order: any, i: number) => (
+                            <div key={i} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <div className="bg-primary/10 p-2 rounded-lg">
+                                  <UserPlus className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-bold">{order.first_name} {order.last_name}</p>
+                                  <p className="text-[10px] text-muted-foreground uppercase font-black">{format(new Date(order.order_date), "MMM d, h:mm a")}</p>
+                                </div>
+                              </div>
+                              <Badge variant="outline" className="font-black text-[10px]">{order.valid_tickets} TIX</Badge>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   <Card className="border-none shadow-2xl bg-yellow-50 dark:bg-yellow-950/20 border-l-[12px] border-yellow-400 rounded-[2.5rem]">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-xl font-black flex items-center gap-3 text-yellow-800 dark:text-yellow-400">
