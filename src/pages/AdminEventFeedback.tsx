@@ -15,7 +15,7 @@ import {
   Music, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, 
   PieChart as PieChartIcon, BarChart3, MapPin, LineChart as LineChartIcon, 
   UserPlus, EyeOff, ListMusic, Heart, Quote, BarChart, CalendarCheck,
-  Calendar, Info, MessageSquare, ExternalLink
+  Calendar, Info, MessageSquare, ExternalLink, SearchCode
 } from "lucide-react";
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
@@ -48,7 +48,6 @@ const AdminEventFeedback: React.FC = () => {
   const [selectedResponse, setSelectedResponse] = useState<any>(null);
 
   // Fetch ALL feedback once to handle filtering and month derivation locally
-  // This is much more reliable for "Legacy" data than complex PostgREST OR queries
   const { data: allFeedback, isLoading: loadingFeedback } = useQuery({
     queryKey: ["allEventFeedbackData"],
     queryFn: async () => {
@@ -532,7 +531,7 @@ const AdminEventFeedback: React.FC = () => {
               
               <div className="p-8 space-y-10">
                 {/* Identity Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Member</p>
                     <p className="text-lg font-bold flex items-center gap-2">
@@ -542,6 +541,12 @@ const AdminEventFeedback: React.FC = () => {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">First Time?</p>
                     <p className="text-lg font-bold">{selectedResponse.is_first_time ? "Yes, first session!" : "No, returning member."}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">How they heard</p>
+                    <p className="text-lg font-bold flex items-center gap-2">
+                      <SearchCode className="h-4 w-4 text-primary" /> {selectedResponse.how_heard || "N/A"}
+                    </p>
                   </div>
                 </div>
 
@@ -615,6 +620,17 @@ const AdminEventFeedback: React.FC = () => {
                     <div className="space-y-2">
                       <p className="text-sm font-black">Future Repertoire Ideas</p>
                       <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.future_repertoire || selectedResponse.future_ideas || "None."}"</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Interest in Next Month</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(selectedResponse.interest_next_month as string[] || []).map((date: string, i: number) => (
+                          <Badge key={i} variant="outline" className="text-[10px] font-bold border-primary/20">{date}</Badge>
+                        ))}
+                        {(!selectedResponse.interest_next_month || selectedResponse.interest_next_month.length === 0) && (
+                          <p className="text-sm text-muted-foreground italic">No dates selected.</p>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-black">Regular Attendance Interest</p>
