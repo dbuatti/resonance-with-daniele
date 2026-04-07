@@ -14,10 +14,9 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
     try {
       const response = await fetch(url, options);
       
-      // If it's a 503 (Service Unavailable) or 429 (Rate Limit), retry
       if (response.status === 503 || response.status === 429) {
         console.log(`[analyze-feedback] Gemini API returned ${response.status}. Retry attempt ${i + 1}...`);
-        const waitTime = Math.pow(2, i) * 1000; // 1s, 2s, 4s
+        const waitTime = Math.pow(2, i) * 1000;
         await new Promise(resolve => setTimeout(resolve, waitTime));
         continue;
       }
@@ -66,7 +65,7 @@ serve(async (req) => {
       improvements: f.improvements,
       venue: f.venue_feedback,
       repertoire: f.repertoire_feedback,
-      future: f.future_ideas,
+      future: f.future_ideas, // This contains the repertoire suggestions
       score: f.recommend_score
     }))
 
@@ -82,7 +81,7 @@ serve(async (req) => {
       - "sentiment_score": (0-100)
       - "top_highlights": [3 strings]
       - "critical_friction": [2 strings]
-      - "repertoire_demand": "string"
+      - "repertoire_analysis": "A concise summary of specific songs, artists, or musical styles requested by members in the 'future' field."
       - "strategic_advice": "2-sentence note to the director focusing on retention and marketing based on the data"
     `
 

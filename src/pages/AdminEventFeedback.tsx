@@ -251,6 +251,15 @@ const AdminEventFeedback: React.FC = () => {
               <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><AlertTriangle className="h-5 w-5 text-destructive" /> Critical Friction</CardTitle>
               <ul className="space-y-4">{aiInsights.critical_friction.map((f: string, i: number) => (<li key={i} className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl text-sm font-bold">{f}</li>))}</ul>
             </Card>
+            
+            {/* New AI Repertoire Analysis Card */}
+            <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-8 bg-card border-t-4 border-primary">
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-4"><Music className="h-5 w-5 text-primary" /> AI Repertoire Analysis</CardTitle>
+              <p className="text-lg font-medium leading-relaxed text-muted-foreground italic">
+                {aiInsights.repertoire_analysis || "No specific repertoire patterns identified yet."}
+              </p>
+            </Card>
+
             <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-10 bg-accent text-accent-foreground">
               <CardTitle className="text-2xl font-black font-lora flex items-center gap-3 mb-4"><Zap className="h-6 w-6" /> Strategic Advice for Daniele</CardTitle>
               <p className="text-xl font-medium leading-relaxed italic">"{aiInsights.strategic_advice}"</p>
