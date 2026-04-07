@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, FileText, User as UserIcon, Folder, CheckCircle2, ArrowRight, Sparkles, Mic2, Heart, MessageSquareQuote } from "lucide-react";
+import { CalendarDays, Music, FileText, User as UserIcon, Folder, CheckCircle2, ArrowRight, Sparkles, Mic2, Heart, MessageSquareQuote, MapPin } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -150,10 +150,10 @@ const WelcomeHub: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="py-8 space-y-8">
-        <Skeleton className="h-64 w-full rounded-[2.5rem]" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+      <div className="py-6 space-y-6">
+        <Skeleton className="h-48 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
         </div>
       </div>
     );
@@ -165,66 +165,59 @@ const WelcomeHub: React.FC = () => {
     let text = pillType.charAt(0).toUpperCase() + pillType.slice(1);
     if (pillType === 'pdf') text = 'Sheet Music';
     if (pillType === 'audio') text = 'Audio';
-    return <Badge variant="outline" className={cn("text-[10px] uppercase tracking-wider font-bold bg-card border", style.text, style.border)}>{text}</Badge>;
+    return <Badge variant="outline" className={cn("text-[9px] uppercase tracking-wider font-bold bg-card border", style.text, style.border)}>{text}</Badge>;
   };
 
   return (
-    <div className="py-8 space-y-12 animate-fade-in-up">
+    <div className="py-6 space-y-8 animate-fade-in-up">
       {/* Hero Welcome Section */}
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground p-8 md:p-16 soft-shadow border-4 border-white/10">
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground p-6 md:p-10 soft-shadow border-2 border-white/10">
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
           <div className="flex-shrink-0 relative group">
-            <div className="absolute -inset-1 bg-accent rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
             <img 
               src={profile?.avatar_url || "/images/daniele-buatti-headshot.jpeg"} 
               alt="Daniele Buatti" 
-              className="relative w-32 h-32 md:w-44 md:h-44 rounded-full object-cover border-4 border-white/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-105" 
+              className="relative w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-2 border-white/20 shadow-xl transform transition-transform duration-500 group-hover:scale-105" 
             />
-            <div className="absolute -bottom-2 -right-2 bg-accent text-accent-foreground p-2.5 rounded-full shadow-lg animate-float">
-              <Mic2 className="h-5 w-5" />
+            <div className="absolute -bottom-1 -right-1 bg-accent text-accent-foreground p-1.5 rounded-full shadow-lg">
+              <Mic2 className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-center md:text-left space-y-6">
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-6xl font-black font-lora leading-tight tracking-tight">
+          <div className="text-center md:text-left space-y-3">
+            <div className="space-y-1">
+              <h1 className="text-3xl md:text-4xl font-black font-lora leading-tight tracking-tight">
                 {getGreeting()}, <span className="text-accent">{firstName}</span>!
               </h1>
               {memberSince && (
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <Badge className="bg-white/20 hover:bg-white/30 text-white border-none px-3 py-1 text-[10px] uppercase tracking-widest font-bold transition-colors">
-                    <Sparkles className="h-3 w-3 mr-2 text-accent" /> Member since {memberSince}
-                  </Badge>
-                </div>
+                <Badge className="bg-white/10 text-white border-none px-2 py-0.5 text-[9px] uppercase tracking-widest font-bold">
+                  Member since {memberSince}
+                </Badge>
               )}
             </div>
-            <p className="text-lg md:text-2xl text-primary-foreground/90 max-w-2xl font-medium leading-relaxed">
+            <p className="text-base md:text-lg text-primary-foreground/90 max-w-xl font-medium leading-relaxed">
               Your voice is your instrument. Ready to find your resonance today?
             </p>
           </div>
         </div>
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[80px] pointer-events-none" />
       </section>
 
       {/* Feedback Prompt */}
       {recentPastEvent && !hasReviewed && (
         <section className="animate-fade-in-up">
-          <Card className="bg-accent text-accent-foreground border-none shadow-xl rounded-[2.5rem] overflow-hidden relative hover-lift">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-            <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8 relative z-10">
-              <div className="bg-white/20 p-5 rounded-2xl shadow-inner">
-                <MessageSquareQuote className="h-10 w-10" />
+          <Card className="bg-accent text-accent-foreground border-none shadow-md rounded-2xl overflow-hidden relative hover-lift">
+            <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6 relative z-10">
+              <div className="bg-white/20 p-3 rounded-xl shadow-inner">
+                <MessageSquareQuote className="h-6 w-6" />
               </div>
-              <div className="flex-1 text-center md:text-left space-y-1">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-70">How was the session?</h3>
-                <p className="text-2xl font-black font-lora leading-tight">
+              <div className="flex-1 text-center md:text-left">
+                <p className="text-lg font-black font-lora leading-tight">
                   I'd love your feedback on "{recentPastEvent.title}"
                 </p>
-                <p className="text-sm font-medium opacity-80">It only takes 2 minutes and helps me make the next one even better.</p>
+                <p className="text-xs font-medium opacity-80">It only takes 2 minutes to help me improve.</p>
               </div>
-              <Button size="lg" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90 font-black rounded-2xl h-14 px-8 shadow-2xl group" asChild>
+              <Button size="sm" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90 font-black rounded-xl h-10 px-6 shadow-lg group" asChild>
                 <Link to={`/feedback?eventId=${recentPastEvent.id}`}>
-                  Give Feedback <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
+                  Give Feedback <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </CardContent>
@@ -233,77 +226,73 @@ const WelcomeHub: React.FC = () => {
       )}
 
       {/* Core Navigation Links */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 px-2">
-          <div className="h-8 w-1.5 bg-primary rounded-full" />
-          <h2 className="text-3xl font-black font-lora tracking-tight">Explore the Hub</h2>
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <div className="h-6 w-1 bg-primary rounded-full" />
+          <h2 className="text-xl font-black font-lora tracking-tight">Explore the Hub</h2>
         </div>
         <CoreHubLinks />
       </section>
 
       {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-8 space-y-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 space-y-6">
           <LatestAnnouncementsCard />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="soft-shadow border-none bg-secondary/40 dark:bg-secondary/10 overflow-hidden group hover-lift rounded-3xl">
-              <CardHeader className="pb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="soft-shadow border-none bg-secondary/40 dark:bg-secondary/10 overflow-hidden group hover-lift rounded-2xl">
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="bg-background/80 border-primary/20 text-primary font-bold">Next Event</Badge>
-                  <div className="p-2 bg-primary/10 rounded-xl text-primary">
-                    <CalendarDays className="h-6 w-6" />
-                  </div>
+                  <Badge variant="outline" className="bg-background/80 border-primary/20 text-primary text-[10px] font-bold">Next Event</Badge>
+                  <CalendarDays className="h-5 w-5 text-primary opacity-50" />
                 </div>
-                <CardTitle className="text-3xl font-black font-lora mt-6 leading-tight">
+                <CardTitle className="text-xl font-black font-lora mt-4 leading-tight">
                   {upcomingEvent ? upcomingEvent.title : "No Upcoming Events"}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 {upcomingEvent ? (
                   <>
-                    <div className="space-y-2">
-                      <p className="text-xl font-black text-primary">
+                    <div className="space-y-1">
+                      <p className="text-lg font-black text-primary">
                         {format(new Date(upcomingEvent.date), "EEEE, MMM do")}
                       </p>
                       {upcomingEvent.location && (
-                        <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary/40" /> {upcomingEvent.location}
+                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <MapPin className="h-3 w-3" /> {upcomingEvent.location}
                         </p>
                       )}
                     </div>
-                    <Button className="w-full h-12 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 group-hover:translate-x-1 transition-transform" asChild>
+                    <Button size="sm" className="w-full h-10 font-bold rounded-xl shadow-md group-hover:translate-x-0.5 transition-transform" asChild>
                       <Link to={upcomingEvent.humanitix_link || "/current-event"}>
-                        {hasRsvpd ? "View Details" : "RSVP Now"} <ArrowRight className="ml-2 h-5 w-5" />
+                        {hasRsvpd ? "View Details" : "RSVP Now"} <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
                   </>
                 ) : (
-                  <p className="text-muted-foreground font-medium">Check back soon for new dates!</p>
+                  <p className="text-xs text-muted-foreground font-medium">Check back soon for new dates!</p>
                 )}
               </CardContent>
             </Card>
 
             {nominatedFolder && (
-              <Card className="soft-shadow border-none bg-accent/10 dark:bg-accent/5 overflow-hidden group hover-lift rounded-3xl border-t-4 border-accent">
-                <CardHeader className="pb-4">
+              <Card className="soft-shadow border-none bg-accent/10 dark:bg-accent/5 overflow-hidden group hover-lift rounded-2xl border-t-2 border-accent">
+                <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="bg-background/80 border-accent/30 text-accent-foreground font-bold">Current Focus</Badge>
-                    <div className="p-2 bg-accent/20 rounded-xl text-accent-foreground">
-                      <Music className="h-6 w-6" />
-                    </div>
+                    <Badge variant="outline" className="bg-background/80 border-accent/30 text-accent-foreground text-[10px] font-bold">Current Focus</Badge>
+                    <Music className="h-5 w-5 text-accent opacity-50" />
                   </div>
-                  <CardTitle className="text-3xl font-black font-lora mt-6 leading-tight">
+                  <CardTitle className="text-xl font-black font-lora mt-4 leading-tight">
                     {nominatedFolder.name}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                    Practice materials for our current song are ready for you. Let's perfect those harmonies!
+                <CardContent className="space-y-4">
+                  <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                    Practice materials for our current song are ready for you.
                   </p>
-                  <Button variant="outline" className="w-full h-12 text-lg font-bold border-accent/50 text-accent-foreground hover:bg-accent hover:text-accent-foreground rounded-2xl group-hover:translate-x-1 transition-transform" asChild>
+                  <Button size="sm" variant="outline" className="w-full h-10 font-bold border-accent/50 text-accent-foreground hover:bg-accent hover:text-accent-foreground rounded-xl group-hover:translate-x-0.5 transition-transform" asChild>
                     <Link to={`/resources?folderId=${nominatedFolder.id}`}>
-                      Practice Now <ArrowRight className="ml-2 h-5 w-5" />
+                      Practice Now <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 </CardContent>
@@ -312,16 +301,14 @@ const WelcomeHub: React.FC = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-4 space-y-10">
+        <div className="lg:col-span-4 space-y-6">
           <SetupChecklistCard />
           <QuickActions />
           
-          <Card className="soft-shadow border-none rounded-3xl overflow-hidden">
-            <CardHeader className="pb-4 bg-muted/30">
-              <CardTitle className="text-xl font-black font-lora flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
+          <Card className="soft-shadow border-none rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2 bg-muted/30">
+              <CardTitle className="text-lg font-black font-lora flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
                 Recent Resources
               </CardTitle>
             </CardHeader>
@@ -334,20 +321,20 @@ const WelcomeHub: React.FC = () => {
                       href={resource.url || "#"} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center gap-4 p-5 hover:bg-muted/50 transition-all group"
+                      className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-all group"
                     >
-                      <div className="flex-shrink-0 transform transition-transform group-hover:scale-110">{renderResourceBadge(resource)}</div>
-                      <span className="text-sm font-bold line-clamp-1 group-hover:text-primary transition-colors">{resource.title}</span>
+                      <div className="flex-shrink-0">{renderResourceBadge(resource)}</div>
+                      <span className="text-xs font-bold line-clamp-1 group-hover:text-primary transition-colors">{resource.title}</span>
                     </a>
                   ))
                 ) : (
-                  <div className="p-8 text-center text-sm text-muted-foreground font-medium italic">No recent resources.</div>
+                  <div className="p-6 text-center text-xs text-muted-foreground font-medium italic">No recent resources.</div>
                 )}
               </div>
-              <div className="p-5 bg-muted/10">
-                <Button variant="link" className="w-full text-primary font-bold p-0 h-auto group" asChild>
+              <div className="p-4 bg-muted/10">
+                <Button variant="link" size="sm" className="w-full text-primary font-bold p-0 h-auto group" asChild>
                   <Link to="/resources">
-                    View all resources <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    View all resources <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
               </div>
@@ -356,20 +343,15 @@ const WelcomeHub: React.FC = () => {
         </div>
       </div>
 
-      <footer className="text-center pt-12 border-t border-border/50 pb-8">
-        <div className="flex flex-col items-center gap-6">
-          <div className="p-3 bg-primary/5 rounded-full">
-            <Heart className="h-6 w-6 text-primary animate-pulse" />
-          </div>
-          <p className="text-2xl font-lora italic font-medium text-muted-foreground max-w-2xl leading-relaxed">
+      <footer className="text-center pt-8 border-t border-border/50 pb-6">
+        <div className="flex flex-col items-center gap-4">
+          <Heart className="h-5 w-5 text-primary opacity-40" />
+          <p className="text-lg font-lora italic font-medium text-muted-foreground max-w-xl leading-relaxed">
             "Singing is the shortest distance between two people."
           </p>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">Learn more at</span>
-            <Button variant="outline" className="rounded-full font-black border-primary/20 text-primary hover:bg-primary hover:text-white transition-all" asChild>
-              <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer">DanieleBuatti.com</a>
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" className="rounded-full font-black border-primary/20 text-primary hover:bg-primary hover:text-white transition-all" asChild>
+            <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer">DanieleBuatti.com</a>
+          </Button>
         </div>
       </footer>
     </div>
