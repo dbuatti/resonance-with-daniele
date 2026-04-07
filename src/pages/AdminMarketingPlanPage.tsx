@@ -144,7 +144,6 @@ It’s a low-pressure morning. There are no auditions and no experience is neede
 
 If you’ve been looking for a creative way to spend a Saturday morning or just want to feel the energy of singing in a group again, we’d love to have you join the circle.
 
-The details:
 📍 Where: Armadale Baptist Church, 88 Kooyong Rd
 ⏰ When: Saturday 18 April, 10am to 1pm
 🎟️ Link: https://events.humanitix.com/resonance-melbourne-s-pop-up-choir-april-2026
