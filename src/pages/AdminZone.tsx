@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
+import AiMarketingToolsCard from "@/components/admin/AiMarketingToolsCard";
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
@@ -130,6 +131,9 @@ const AdminZone: React.FC = () => {
             </CardContent>
           </Card>
         ))}
+        
+        {/* Dedicated AI Tools Card */}
+        <AiMarketingToolsCard />
       </div>
     </div>
   );
