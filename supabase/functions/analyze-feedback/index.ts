@@ -61,8 +61,9 @@ serve(async (req) => {
       - "strategic_advice": "2-sentence note to the director focusing on retention and marketing based on the data"
     `
 
-    console.log("[analyze-feedback] Calling Gemini API...");
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+    console.log("[analyze-feedback] Calling Gemini 2.5 Flash API...");
+    // Updated to use gemini-2.5-flash
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
