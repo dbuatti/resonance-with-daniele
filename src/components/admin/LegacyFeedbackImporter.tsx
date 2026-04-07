@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
+import { parse, isValid } from "date-fns";
 
 interface LegacyFeedbackImporterProps {
   eventId: string;
@@ -17,6 +18,32 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
   const [isOpen, setIsOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const queryClient = useQueryClient();
+
+  // Helper to handle tricky Google Forms date strings
+  const parseLegacyDate = (dateStr: string): string => {
+    if (!dateStr) return new Date().toISOString();
+
+    // 1. Try standard JS parsing
+    const standardDate = new Date(dateStr);
+    if (isValid(standardDate)) return standardDate.toISOString();
+
+    // 2. Try common Google Forms formats (DD/MM/YYYY or YYYY/MM/DD)
+    const formats = [
+      "dd/MM/yyyy HH:mm:ss",
+      "yyyy/MM/dd HH:mm:ss",
+      "dd/MM/yyyy h:mm:ss a",
+      "M/d/yyyy H:mm:ss",
+    ];
+
+    for (const fmt of formats) {
+      const parsed = parse(dateStr.split(' GMT')[0], fmt, new Date());
+      if (isValid(parsed)) return parsed.toISOString();
+    }
+
+    // 3. Fallback to now if all else fails
+    console.warn(`[Importer] Could not parse date: "${dateStr}". Using current time.`);
+    return new Date().toISOString();
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -31,7 +58,6 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
         const lines = text.split(/\r?\n/);
         if (lines.length < 2) throw new Error("CSV file is empty");
 
-        // Helper to clean CSV values and handle quotes
         const parseCSVLine = (line: string) => {
           const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
           return values.map(val => val.replace(/^"|"$/g, "").trim());
@@ -39,7 +65,6 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
 
         const headers = parseCSVLine(lines[0]);
         
-        // Map Google Form headers to our DB fields
         const h = {
           timestamp: headers.findIndex(h => h.toLowerCase().includes("timestamp")),
           feeling: headers.findIndex(h => h.includes("How did the session feel")),
@@ -61,14 +86,12 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
           .filter(line => line.trim() !== "")
           .map(line => {
             const v = parseCSVLine(line);
-            
-            // Convert comma-separated strings to arrays for our DB
             const nextMonthArr = v[h.nextMonth] ? v[h.nextMonth].split(",").map(s => s.trim()) : [];
             const bestTimesArr = v[h.bestTimes] ? v[h.bestTimes].split(",").map(s => s.trim()) : [];
 
             return {
               event_id: eventId,
-              user_id: null, // Legacy data doesn't have user IDs
+              user_id: null,
               overall_feeling: v[h.feeling] || "Neutral",
               enjoyed_most: v[h.enjoyed] || "",
               improvements: v[h.improvements] || null,
@@ -82,7 +105,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
               recommend_score: parseInt(v[h.score]) || 10,
               how_heard: v[h.howHeard] || null,
               additional_comments: v[h.comments] || null,
-              created_at: v[h.timestamp] ? new Date(v[h.timestamp]).toISOString() : new Date().toISOString(),
+              created_at: parseLegacyDate(v[h.timestamp]),
             };
           });
 
