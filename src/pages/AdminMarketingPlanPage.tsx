@@ -20,7 +20,11 @@ import {
   Loader2,
   ExternalLink,
   Users,
-  Calendar
+  Calendar,
+  Ticket,
+  TrendingUp,
+  Music,
+  Globe
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -33,7 +37,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, subDays, startOfDay, addHours } from "date-fns";
+import { format, subDays } from "date-fns";
+import { Progress } from "@/components/ui/progress";
 
 const AdminMarketingPlanPage: React.FC = () => {
   const { user } = useSession();
@@ -66,7 +71,42 @@ const AdminMarketingPlanPage: React.FC = () => {
     [events, selectedEventId]
   );
 
-  // 2. Dynamic Countdown Logic
+  // 2. Fetch Live Stats for the selected event
+  const { data: stats, isLoading: loadingStats } = useQuery({
+    queryKey: ["eventMarketingStats", selectedEventId],
+    queryFn: async () => {
+      if (!selectedEventId) return null;
+      const { data: orders, error } = await supabase
+        .from("event_orders")
+        .select("valid_tickets, your_earnings")
+        .eq("event_id", selectedEventId);
+      
+      if (error) throw error;
+
+      const totalTickets = orders?.reduce((sum, o) => sum + (o.valid_tickets || 0), 0) || 0;
+      const totalEarnings = orders?.reduce((sum, o) => sum + Number(o.your_earnings || 0), 0) || 0;
+      
+      return { totalTickets, totalEarnings };
+    },
+    enabled: !!selectedEventId,
+  });
+
+  // 3. Fetch Current Focus (Nominated Folder)
+  const { data: nominatedFolder } = useQuery({
+    queryKey: ["nominatedFolderForMarketing"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("resource_folders")
+        .select("name")
+        .eq("is_nominated_for_dashboard", true)
+        .limit(1)
+        .single();
+      if (error && error.code !== 'PGRST116') return null;
+      return data;
+    },
+  });
+
+  // 4. Dynamic Countdown Logic
   useEffect(() => {
     if (!selectedEvent?.date) return;
 
@@ -92,7 +132,7 @@ const AdminMarketingPlanPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [selectedEvent]);
 
-  // 3. Brain Dump Persistence
+  // 5. Brain Dump Persistence
   const { data: noteData } = useQuery({
     queryKey: ["adminBrainDump", selectedEventId],
     queryFn: async () => {
@@ -147,14 +187,16 @@ const AdminMarketingPlanPage: React.FC = () => {
   const eventDayName = selectedEvent ? format(eventDate, "EEEE") : "Saturday";
   const eventLocation = selectedEvent?.location || "Armadale Baptist Church";
   const eventLink = selectedEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
+  const focusSong = nominatedFolder?.name || "some incredible new harmonies";
   
-  // Promo expires the day before the event at 1:00 PM
   const promoExpiryDate = subDays(eventDate, 1);
   const promoExpiryFormatted = format(promoExpiryDate, "EEEE 'at' 1:00 PM");
 
   // --- DYNAMIC TEMPLATES ---
   const authenticCaption = `We're back for ${selectedEvent?.title || "our next session"}. 
   
+We'll be diving into "${focusSong}" — the harmonies are sounding beautiful already.
+
 📍 ${eventLocation}
 ⏰ ${eventDateFormatted}, 10am
 
@@ -167,6 +209,8 @@ Link in bio. Come sing with us. 🌿`;
 Hi there,
 
 I’d love to see you back in the circle for ${selectedEvent?.title || "our next session"} this ${eventDateFormatted} (10am–1pm) at ${eventLocation}.
+
+We're going to be working on "${focusSong}", and I can't wait to hear how it sounds with a full room.
 
 I’m opening up a 20% discount for my past singers to help get the room full of familiar voices.
 
@@ -183,7 +227,7 @@ I'd love to see you there.
 
 Hi everyone! I’m Daniele, a local music director. I’m hosting a pop-up choir session at ${eventLocation} on ${eventDateFormatted}.
 
-It’s a low-pressure morning. There are no auditions and no experience is needed. We just get together to learn some great harmonies and meet some new people in the neighborhood.
+We're learning "${focusSong}" this month. It’s a low-pressure morning. There are no auditions and no experience is needed. We just get together to learn some great harmonies and meet some new people in the neighborhood.
 
 📍 Where: ${eventLocation}
 ⏰ When: ${eventDateFormatted}, 10am to 1pm
@@ -199,28 +243,31 @@ Hope to see some local faces there!`;
 
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
 
+  const targetTickets = 125;
+  const ticketProgress = stats ? (stats.totalTickets / targetTickets) * 100 : 0;
+
   return (
     <div className="space-y-8 py-8 md:py-12 bg-background/50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4">
         <BackButton className="mb-6" to="/admin" />
         
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          <div className="space-y-4">
+        <header className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-12">
+          <div className="space-y-6 flex-1">
             <div className="flex items-center gap-2">
               <Badge className="bg-primary text-primary-foreground px-3 py-1 rounded-full">🚀 Event Sprint</Badge>
               <Badge variant="outline" className="border-primary text-primary px-3 py-1 rounded-full">🤝 Relational Focus</Badge>
             </div>
-            <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tight">Event Command Center</h1>
+            <h1 className="text-4xl md:text-7xl font-black font-lora tracking-tight leading-none">Event Command Center</h1>
             
-            <div className="w-full md:w-80 space-y-2">
+            <div className="w-full md:w-96 space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select Active Event</label>
               <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-                <SelectTrigger className="h-12 rounded-xl shadow-sm bg-card">
+                <SelectTrigger className="h-14 rounded-2xl shadow-sm bg-card border-2 border-primary/10 text-lg font-bold">
                   <SelectValue placeholder="Choose an event..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl">
                   {events?.map((event) => (
-                    <SelectItem key={event.id} value={event.id}>
+                    <SelectItem key={event.id} value={event.id} className="py-3">
                       {event.title} ({format(new Date(event.date), "MMM d")})
                     </SelectItem>
                   ))}
@@ -229,37 +276,66 @@ Hope to see some local faces there!`;
             </div>
           </div>
 
-          {selectedEvent && (
-            <div className="bg-card p-4 rounded-2xl shadow-sm border flex items-center gap-4">
-              <div className="bg-primary/10 p-3 rounded-xl">
-                <Clock className="h-6 w-6 text-primary" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:w-auto">
+            <Card className="bg-card p-6 rounded-[2rem] shadow-xl border-none flex items-center gap-4 min-w-[200px]">
+              <div className="bg-primary/10 p-4 rounded-2xl">
+                <Clock className="h-8 w-8 text-primary" />
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Countdown</p>
-                <p className="text-xl font-black text-primary">{timeLeft}</p>
+                <p className="text-2xl font-black text-primary">{timeLeft}</p>
               </div>
-            </div>
-          )}
+            </Card>
+            
+            <Card className="bg-primary text-primary-foreground p-6 rounded-[2rem] shadow-xl border-none flex items-center gap-4 min-w-[200px]">
+              <div className="bg-white/20 p-4 rounded-2xl">
+                <Ticket className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Tickets Sold</p>
+                <p className="text-2xl font-black">{stats?.totalTickets || 0} / {targetTickets}</p>
+              </div>
+            </Card>
+          </div>
         </header>
 
         {!selectedEventId ? (
-          <Card className="p-12 text-center border-dashed border-2">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-            <p className="text-muted-foreground">Please select an event to view its marketing plan.</p>
+          <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]">
+            <Calendar className="h-20 w-20 text-muted-foreground mx-auto mb-6 opacity-10" />
+            <p className="text-2xl font-bold text-muted-foreground font-lora">Please select an event to begin your sprint.</p>
           </Card>
         ) : (
           <>
+            {/* Live Progress Bar */}
             <section className="mb-12">
-              <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden">
-                <CardContent className="p-8 flex flex-col lg:flex-row items-start gap-12">
+              <Card className="border-none bg-muted/30 p-8 rounded-[2.5rem] shadow-inner">
+                <div className="flex justify-between items-end mb-4">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" /> Sales Momentum
+                    </h3>
+                    <p className="text-muted-foreground text-sm">Target: {targetTickets} singers in the room.</p>
+                  </div>
+                  <p className="text-3xl font-black text-primary">{Math.round(ticketProgress)}%</p>
+                </div>
+                <Progress value={ticketProgress} className="h-4 bg-primary/10" />
+              </Card>
+            </section>
+
+            <section className="mb-12">
+              <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden rounded-[3rem]">
+                <CardContent className="p-10 flex flex-col lg:flex-row items-start gap-12">
                   <div className="lg:w-1/3 space-y-6">
-                    <div className="bg-primary text-primary-foreground p-6 rounded-2xl shadow-xl inline-block">
+                    <div className="bg-primary text-primary-foreground p-6 rounded-3xl shadow-xl inline-block">
                       <Target className="h-12 w-12" />
                     </div>
                     <div className="space-y-2">
                       <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Current Focus</h2>
-                      <p className="text-3xl font-black font-lora">Message the 10 people who "need" to be there.</p>
-                      <p className="text-muted-foreground">Scoped to: {selectedEvent?.title}</p>
+                      <p className="text-4xl font-black font-lora leading-tight">Message the 10 people who "need" to be there.</p>
+                      <div className="flex items-center gap-2 text-muted-foreground font-medium">
+                        <Music className="h-4 w-4 text-accent" />
+                        <span>Focus Song: <span className="text-foreground font-bold">"{focusSong}"</span></span>
+                      </div>
                     </div>
                   </div>
                   
@@ -270,34 +346,34 @@ Hope to see some local faces there!`;
               </Card>
             </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-7 space-y-12">
                 <section className="space-y-6">
-                  <h2 className="text-2xl font-black font-lora flex items-center gap-2">
-                    <UserPlus className="h-6 w-6 text-primary" /> 1. Human Connections
+                  <h2 className="text-3xl font-black font-lora flex items-center gap-3">
+                    <UserPlus className="h-8 w-8 text-primary" /> 1. Human Connections
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="border-none shadow-lg bg-card border-l-4 border-primary">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card className="border-none shadow-lg bg-card border-l-8 border-primary rounded-2xl">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-black uppercase tracking-widest">The 10 People Rule</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <p className="text-xs text-muted-foreground">Identify 10 specific people for this event. Message them personally.</p>
-                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Status: Tracked in Focus Mode ↑</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">Identify 10 specific people for this event. Message them personally. This is your highest ROI activity.</p>
+                        <Badge className="bg-primary/10 text-primary border-none font-bold">Tracked in Focus Mode ↑</Badge>
                       </CardContent>
                     </Card>
-                    <Card className="border-none shadow-lg bg-card border-l-4 border-accent">
+                    <Card className="border-none shadow-lg bg-card border-l-8 border-accent rounded-2xl">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-black uppercase tracking-widest">Community Nodes</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
                         {["Neha & Brad", "The Sangha", "Regular Members"].map((node) => (
-                          <div key={node} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-accent" />
-                              <span className="text-xs font-bold">{node}</span>
+                          <div key={node} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
+                            <div className="flex items-center gap-3">
+                              <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
+                              <span className="text-sm font-bold">{node}</span>
                             </div>
-                            <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
                           </div>
                         ))}
                       </CardContent>
@@ -306,59 +382,59 @@ Hope to see some local faces there!`;
                 </section>
 
                 <section className="space-y-6">
-                  <h2 className="text-2xl font-black font-lora flex items-center gap-2">
-                    <Mic2 className="h-6 w-6 text-primary" /> 2. Copy & Paste
+                  <h2 className="text-3xl font-black font-lora flex items-center gap-3">
+                    <Mic2 className="h-8 w-8 text-primary" /> 2. Copy & Paste
                   </h2>
                   
-                  <div className="space-y-4">
-                    <Card className="border-none shadow-lg bg-card overflow-hidden">
-                      <div className="bg-muted/50 px-6 py-3 flex justify-between items-center border-b">
+                  <div className="space-y-6">
+                    <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
+                      <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
                         <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                          <Users className="h-3 w-3" /> Community Post (FB Groups)
+                          <Users className="h-4 w-4" /> Community Post (FB Groups)
                         </span>
-                        <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(fullCommunityPost, "Community Post")}>
-                          <Copy className="h-3 w-3 mr-1" /> COPY
+                        <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(fullCommunityPost, "Community Post")}>
+                          <Copy className="h-4 w-4 mr-2" /> COPY
                         </Button>
                       </div>
-                      <CardContent className="p-6 space-y-4">
-                        <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      <CardContent className="p-8">
+                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
                           {fullCommunityPost}
                         </p>
                       </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-lg bg-card overflow-hidden">
-                      <div className="bg-muted/50 px-6 py-3 flex justify-between items-center border-b">
+                    <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
+                      <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
                         <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                          <Instagram className="h-3 w-3" /> Instagram Caption
+                          <Instagram className="h-4 w-4" /> Instagram Caption
                         </span>
-                        <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(authenticCaption, "Instagram Caption")}>
-                          <Copy className="h-3 w-3 mr-1" /> COPY
+                        <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(authenticCaption, "Instagram Caption")}>
+                          <Copy className="h-4 w-4 mr-2" /> COPY
                         </Button>
                       </div>
-                      <CardContent className="p-6">
-                        <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      <CardContent className="p-8">
+                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
                           {authenticCaption}
                         </p>
                       </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-lg bg-card overflow-hidden">
-                      <div className="bg-muted/50 px-6 py-3 flex justify-between items-center border-b">
+                    <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
+                      <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
                         <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                          <Mail className="h-3 w-3" /> Email Template
+                          <Mail className="h-4 w-4" /> Email Template
                         </span>
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(authenticEmail, "Email Template")}>
-                            <Copy className="h-3 w-3 mr-1" /> COPY
+                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(authenticEmail, "Email Template")}>
+                            <Copy className="h-4 w-4 mr-2" /> COPY
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black text-primary" onClick={handleOpenMail}>
-                            <ExternalLink className="h-3 w-3 mr-1" /> OPEN MAIL
+                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black text-primary hover:bg-primary/10" onClick={handleOpenMail}>
+                            <ExternalLink className="h-4 w-4 mr-2" /> OPEN MAIL
                           </Button>
                         </div>
                       </div>
-                      <CardContent className="p-6">
-                        <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      <CardContent className="p-8">
+                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
                           {authenticEmail}
                         </p>
                       </CardContent>
@@ -368,28 +444,50 @@ Hope to see some local faces there!`;
               </div>
 
               <div className="lg:col-span-5">
-                <div className="sticky top-24 space-y-8">
-                  <Card className="border-none shadow-xl bg-yellow-50 dark:bg-yellow-950/20 border-l-8 border-yellow-400">
+                <div className="sticky top-24 space-y-10">
+                  <Card className="border-none shadow-2xl bg-yellow-50 dark:bg-yellow-950/20 border-l-[12px] border-yellow-400 rounded-[2.5rem]">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
-                        <Brain className="h-5 w-5" /> Brain Dump
+                      <CardTitle className="text-xl font-black flex items-center gap-3 text-yellow-800 dark:text-yellow-400">
+                        <Brain className="h-6 w-6" /> Brain Dump
                       </CardTitle>
-                      <CardDescription className="text-yellow-600/70 dark:text-yellow-400/60">
+                      <CardDescription className="text-yellow-700/70 dark:text-yellow-400/60 font-medium">
                         Ideas for {selectedEvent?.title}. Auto-saves.
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <Textarea 
                         placeholder="Random ideas for this specific event..." 
-                        className="min-h-[150px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400"
+                        className="min-h-[200px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400 rounded-2xl text-base"
                         value={localBrainDump}
                         onChange={(e) => setLocalBrainDump(e.target.value)}
                       />
-                      {saveNoteMutation.isPending && <p className="text-[10px] text-yellow-600 mt-2 animate-pulse">Saving...</p>}
+                      {saveNoteMutation.isPending && <p className="text-[10px] text-yellow-600 mt-3 font-bold animate-pulse uppercase tracking-widest">Syncing to cloud...</p>}
                     </CardContent>
                   </Card>
 
                   <MarketingChecklist eventId={selectedEventId} />
+                  
+                  <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden">
+                    <CardHeader className="bg-muted/30">
+                      <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                        <Globe className="h-4 w-4" /> Quick Links
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 grid grid-cols-2 gap-3">
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild>
+                        <a href="https://humanitix.com" target="_blank" rel="noopener noreferrer">Humanitix</a>
+                      </Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild>
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
+                      </Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild>
+                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a>
+                      </Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild>
+                        <a href="https://kit.com" target="_blank" rel="noopener noreferrer">Kit (Email)</a>
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
