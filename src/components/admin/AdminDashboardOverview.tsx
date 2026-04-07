@@ -4,14 +4,13 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Users, CalendarDays, FileText, PlusCircle, Loader2, Mail, MessageSquare } from "lucide-react"; // Added MessageSquare icon
+import { Users, CalendarDays, FileText, PlusCircle, Loader2, Mail, MessageSquare, MessageSquareQuote } from "lucide-react"; // Added MessageSquareQuote
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showError } from "@/utils/toast";
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import { useQuery } from "@tanstack/react-query";
 
 const AdminDashboardOverview: React.FC = () => {
-  // Query function for fetching counts
   const fetchCounts = async () => {
     console.log("[AdminDashboardOverview] Fetching dashboard counts.");
     const { count: members, error: memberError } = await supabase
@@ -37,42 +36,28 @@ const AdminDashboardOverview: React.FC = () => {
     const { count: issueReports, error: issueReportError } = await supabase
       .from("issue_reports")
       .select("id", { count: "exact", head: true })
-      .eq("is_read", false); // Only count unread reports
+      .eq("is_read", false);
     if (issueReportError) throw issueReportError;
+
+    const { count: feedbackCount, error: feedbackError } = await supabase
+      .from("event_feedback")
+      .select("id", { count: "exact", head: true });
+    if (feedbackError) throw feedbackError;
 
     return {
       memberCount: members,
       eventCount: events,
       resourceCount: resources,
       interestSubmissionCount: submissions,
-      issueReportCount: issueReports, // Added issueReportCount
+      issueReportCount: issueReports,
+      feedbackCount: feedbackCount, // Added feedbackCount
     };
   };
 
-  // Use react-query for dashboard counts
-  const { data, isLoading, error } = useQuery<
-    {
-      memberCount: number | null;
-      eventCount: number | null;
-      resourceCount: number | null;
-      interestSubmissionCount: number | null;
-      issueReportCount: number | null; // Added issueReportCount to type
-    },
-    Error,
-    {
-      memberCount: number | null;
-      eventCount: number | null;
-      resourceCount: number | null;
-      interestSubmissionCount: number | null;
-      issueReportCount: number | null; // Added issueReportCount to type
-    },
-    ['adminDashboardCounts']
-  >({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['adminDashboardCounts'],
     queryFn: fetchCounts,
-    staleTime: 60 * 1000, // Counts are fresh for 1 minute
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000,
   });
 
   useEffect(() => {
@@ -85,7 +70,7 @@ const AdminDashboardOverview: React.FC = () => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(5)].map((_, i) => ( // Increased array size for new card
+        {[...Array(6)].map((_, i) => (
           <Card key={i} className="shadow-lg rounded-xl p-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-6 w-1/2" />
@@ -101,12 +86,13 @@ const AdminDashboardOverview: React.FC = () => {
     );
   }
 
-  const { memberCount, eventCount, resourceCount, interestSubmissionCount, issueReportCount } = data || {
+  const { memberCount, eventCount, resourceCount, interestSubmissionCount, issueReportCount, feedbackCount } = data || {
     memberCount: null,
     eventCount: null,
     resourceCount: null,
     interestSubmissionCount: null,
     issueReportCount: null,
+    feedbackCount: null,
   };
 
   return (
@@ -126,15 +112,26 @@ const AdminDashboardOverview: React.FC = () => {
 
       <Card className="shadow-lg rounded-xl p-6 text-center">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-xl font-lora">Event Feedback</CardTitle>
+          <MessageSquareQuote className="h-6 w-6 text-primary" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-5xl font-bold text-foreground mb-4">{feedbackCount !== null ? feedbackCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
+          <Button asChild className="w-full" variant="secondary">
+            <Link to="/admin/feedback">Analyze Feedback</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-lg rounded-xl p-6 text-center">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-lora">Total Events</CardTitle>
           <CalendarDays className="h-6 w-6 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{eventCount !== null ? eventCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/events">
-              <PlusCircle className="mr-2 h-4 w-4" /> Manage Events
-            </Link>
+            <Link to="/events">Manage Events</Link>
           </Button>
         </CardContent>
       </Card>
@@ -147,9 +144,7 @@ const AdminDashboardOverview: React.FC = () => {
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{resourceCount !== null ? resourceCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/resources">
-              <PlusCircle className="mr-2 h-4 w-4" /> Manage Resources
-            </Link>
+            <Link to="/resources">Manage Resources</Link>
           </Button>
         </CardContent>
       </Card>
@@ -162,14 +157,11 @@ const AdminDashboardOverview: React.FC = () => {
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{interestSubmissionCount !== null ? interestSubmissionCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/admin/interest-submissions">
-              View Submissions
-            </Link>
+            <Link to="/admin/interest-submissions">View Submissions</Link>
           </Button>
         </CardContent>
       </Card>
 
-      {/* New Card for Issue Reports */}
       <Card className="shadow-lg rounded-xl p-6 text-center">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-lora">Unread Issue Reports</CardTitle>
@@ -178,9 +170,7 @@ const AdminDashboardOverview: React.FC = () => {
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{issueReportCount !== null ? issueReportCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/admin/issue-reports">
-              View Reports
-            </Link>
+            <Link to="/admin/issue-reports">View Reports</Link>
           </Button>
         </CardContent>
       </Card>

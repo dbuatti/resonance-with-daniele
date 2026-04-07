@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart } from "lucide-react";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy } from "lucide-react"; // Added Copy
 import { format } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -99,6 +99,12 @@ const AdminEventFeedback: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     showSuccess("Exported to CSV!");
+  };
+
+  const copyQuote = (text: string, author: string) => {
+    const formatted = `"${text}" — ${author}, Resonance Participant`;
+    navigator.clipboard.writeText(formatted);
+    showSuccess("Quote copied for social media!");
   };
 
   if (loading || loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>;
@@ -196,14 +202,23 @@ const AdminEventFeedback: React.FC = () => {
                 <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
                   <Heart className="h-5 w-5 text-primary" /> What they loved
                 </CardTitle>
+                <CardDescription>Click the copy icon to grab a quote for social media.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[400px]">
                   <div className="p-6 space-y-6">
                     {feedback.map((f, i) => (
-                      <div key={i} className="space-y-2 border-b border-border/50 pb-6 last:border-0">
-                        <p className="text-sm italic font-medium leading-relaxed">"{f.enjoyed_most}"</p>
+                      <div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0">
+                        <p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p>
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name}</p>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => copyQuote(f.enjoyed_most || "", f.profiles?.first_name || "Member")}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
                   </div>
