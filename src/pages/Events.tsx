@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle, MapPin, Clock, ArrowRight, Share2, Sparkles, Calendar as CalendarIcon } from "lucide-react";
+import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle, MapPin, Clock, ArrowRight, Share2, Sparkles, Calendar as CalendarIcon, MessageSquareQuote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import EventDialog from "@/components/events/EventDialog";
+import FeedbackEmailModal from "@/components/admin/FeedbackEmailModal";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import BackButton from "@/components/ui/BackButton";
@@ -33,7 +34,9 @@ interface Event {
 
 const Events: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [selectedEventForFeedback, setSelectedEventForFeedback] = useState<Event | null>(null);
   const { user, loading: loadingUserSession } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
@@ -83,6 +86,11 @@ const Events: React.FC = () => {
     const shareUrl = event.humanitix_link || window.location.href;
     navigator.clipboard.writeText(shareUrl);
     showSuccess(`Link for "${event.title}" copied to clipboard!`);
+  };
+
+  const handleOpenFeedbackModal = (event: Event) => {
+    setSelectedEventForFeedback(event);
+    setIsFeedbackModalOpen(true);
   };
 
   const generateCalendarLink = (event: Event, type: 'google' | 'outlook' | 'apple') => {
@@ -240,6 +248,17 @@ const Events: React.FC = () => {
                       <Button variant="outline" className="w-full" disabled>Details Coming Soon</Button>
                     )}
 
+                    {user?.is_admin && isPast && (
+                      <Button 
+                        variant="secondary" 
+                        className="w-full font-bold bg-accent/10 text-accent-foreground hover:bg-accent/20 border-accent/20" 
+                        size="lg"
+                        onClick={() => handleOpenFeedbackModal(event)}
+                      >
+                        <MessageSquareQuote className="mr-2 h-4 w-4" /> Request Feedback
+                      </Button>
+                    )}
+
                     {user?.is_admin && event.ai_chat_link && (
                       <Button asChild variant="secondary" className="w-full font-bold bg-primary/10 text-primary hover:bg-primary/20 border-primary/20" size="lg">
                         <a href={event.ai_chat_link} target="_blank" rel="noopener noreferrer">
@@ -281,12 +300,23 @@ const Events: React.FC = () => {
       </div>
 
       {user?.is_admin && (
-        <EventDialog 
-          isOpen={isDialogOpen} 
-          onClose={() => setIsDialogOpen(false)} 
-          editingEvent={editingEvent} 
-          userId={user.id} 
-        />
+        <>
+          <EventDialog 
+            isOpen={isDialogOpen} 
+            onClose={() => setIsDialogOpen(false)} 
+            editingEvent={editingEvent} 
+            userId={user.id} 
+          />
+          {selectedEventForFeedback && (
+            <FeedbackEmailModal 
+              isOpen={isFeedbackModalOpen}
+              onClose={() => setIsFeedbackModalOpen(false)}
+              eventId={selectedEventForFeedback.id}
+              eventTitle={selectedEventForFeedback.title}
+              eventDate={format(new Date(selectedEventForFeedback.date), "EEEE, MMM do")}
+            />
+          )}
+        </>
       )}
     </div>
   );

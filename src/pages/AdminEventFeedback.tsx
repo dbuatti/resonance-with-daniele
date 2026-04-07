@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, PieChart, BarChart3, MapPin, LineChart as LineChartIcon, UserPlus } from "lucide-react";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, PieChart, BarChart3, MapPin, LineChart as LineChartIcon, UserPlus, EyeOff } from "lucide-react";
 import { format, parseISO, startOfMonth } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -283,7 +283,7 @@ const AdminEventFeedback: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
-              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p></div>))}</div></ScrollArea></CardContent>
+              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
             </Card>
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
@@ -300,7 +300,13 @@ const AdminEventFeedback: React.FC = () => {
                   <TableBody>
                     {feedback.map((f) => (
                       <TableRow key={f.id} className="hover:bg-muted/10 transition-colors">
-                        <TableCell className="pl-8 font-bold">{f.profiles ? `${f.profiles.first_name} ${f.profiles.last_name}` : "Legacy"}</TableCell>
+                        <TableCell className="pl-8 font-bold">
+                          {f.is_anonymous ? (
+                            <div className="flex items-center gap-2 text-muted-foreground"><EyeOff className="h-3 w-3" /> Anonymous</div>
+                          ) : (
+                            f.profiles ? `${f.profiles.first_name} ${f.profiles.last_name}` : "Legacy"
+                          )}
+                        </TableCell>
                         <TableCell><Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">{f.overall_feeling}</Badge></TableCell>
                         <TableCell className="text-xs max-w-[200px] truncate">{f.venue_feedback}</TableCell>
                         <TableCell className="text-xs max-w-[200px] truncate">{f.repertoire_feedback}</TableCell>

@@ -24,7 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CheckCircle2, MapPin, Music, Sparkles } from "lucide-react";
+import { Loader2, CheckCircle2, MapPin, Music, Sparkles, EyeOff } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSaturday, isSunday } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
@@ -49,6 +49,7 @@ const feedbackSchema = z.object({
   recommend_score: z.string().min(1, "Please provide a score"),
   how_heard: z.string().optional(),
   additional_comments: z.string().optional(),
+  is_anonymous: z.boolean().default(false),
 });
 
 type FeedbackFormData = z.infer<typeof feedbackSchema>;
@@ -94,15 +95,16 @@ const EventFeedback: React.FC = () => {
     defaultValues: {
       interest_next_month: [],
       best_times_ongoing: [],
+      is_anonymous: false,
     },
   });
 
   const onSubmit = async (data: FeedbackFormData) => {
-    if (!user || !eventId) return;
+    if (!eventId) return;
     try {
       const { error } = await supabase.from("event_feedback").insert({
         event_id: eventId,
-        user_id: user.id,
+        user_id: user?.id || null,
         overall_feeling: data.overall_feeling,
         overall_feeling_other: data.overall_feeling_other || null,
         venue_feedback: data.venue_feedback,
@@ -120,6 +122,7 @@ const EventFeedback: React.FC = () => {
         recommend_score: parseInt(data.recommend_score),
         how_heard: data.how_heard || null,
         additional_comments: data.additional_comments || null,
+        is_anonymous: data.is_anonymous,
       });
       if (error) throw error;
       showSuccess("Thank you for your feedback!");
@@ -259,31 +262,6 @@ const EventFeedback: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField
-                  control={form.control}
-                  name="future_repertoire"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-bold font-lora">What repertoire would you enjoy in future?</FormLabel>
-                      <FormControl><Input placeholder="Artist or song suggestions..." {...field} className="rounded-xl h-12" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="future_ideas"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-bold font-lora flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Ideas for repertoire going forward?</FormLabel>
-                      <FormControl><Input placeholder="Themes, genres, specific songs..." {...field} className="rounded-xl h-12" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <div className="space-y-6 p-6 bg-muted/30 rounded-3xl">
                 <h3 className="text-xl font-black font-lora">Planning Ahead</h3>
                 <FormField
@@ -321,6 +299,29 @@ const EventFeedback: React.FC = () => {
                       </div>
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="is_anonymous"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-2xl border-2 border-primary/10 p-6 bg-primary/5">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-lg font-bold flex items-center gap-2">
+                        <EyeOff className="h-4 w-4 text-primary" /> Submit Anonymously
+                      </FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        If checked, your name will not be visible to the director.
+                      </p>
+                    </div>
                   </FormItem>
                 )}
               />
