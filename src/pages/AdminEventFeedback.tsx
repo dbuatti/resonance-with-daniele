@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck } from "lucide-react";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap } from "lucide-react";
 import { format } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -69,21 +69,58 @@ const AdminEventFeedback: React.FC = () => {
     const timeSlots: Record<string, number> = {};
     const prices: Record<string, number> = {};
     const regularInterest: Record<string, number> = {};
+    const frequencies: Record<string, number> = {};
+    const marketingSources: Record<string, number> = {};
+    
+    const nextMonthDates: Record<string, number> = {};
+    const ongoingTimes: Record<string, number> = {};
+    const repertoire: string[] = [];
 
     feedback.forEach(f => {
       feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
       timeSlots[f.time_slot_rating] = (timeSlots[f.time_slot_rating] || 0) + 1;
       prices[f.price_point] = (prices[f.price_point] || 0) + 1;
       regularInterest[f.regular_attendance_interest] = (regularInterest[f.regular_attendance_interest] || 0) + 1;
+      frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
+      
+      if (f.how_heard) {
+        marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
+      }
+
+      if (f.future_repertoire) {
+        repertoire.push(f.future_repertoire);
+      }
+
+      const nextMonthArr = f.interest_next_month as string[] || [];
+      nextMonthArr.forEach(date => {
+        nextMonthDates[date] = (nextMonthDates[date] || 0) + 1;
+      });
+
+      const ongoingArr = f.best_times_ongoing as string[] || [];
+      ongoingArr.forEach(time => {
+        ongoingTimes[time] = (ongoingTimes[time] || 0) + 1;
+      });
     });
 
-    return { total, avgScore, feelings, timeSlots, prices, regularInterest };
+    return { 
+      total, 
+      avgScore, 
+      feelings, 
+      timeSlots, 
+      prices, 
+      regularInterest, 
+      frequencies, 
+      marketingSources,
+      nextMonthDates,
+      ongoingTimes,
+      repertoire
+    };
   }, [feedback]);
 
   const handleExport = () => {
     if (!feedback) return;
     const csv = [
-      ["Event", "Date", "Name", "Email", "Feeling", "Enjoyed Most", "Improvements", "Score", "Time Slot", "Price", "Regular Interest", "Comments"].join(","),
+      ["Event", "Date", "Name", "Email", "Feeling", "Enjoyed Most", "Improvements", "Score", "Time Slot", "Price", "Regular Interest", "Frequency", "How Heard", "Comments"].join(","),
       ...feedback.map(f => [
         `"${f.events?.title || 'Unknown'}"`,
         `"${f.events?.date || ''}"`,
@@ -96,6 +133,8 @@ const AdminEventFeedback: React.FC = () => {
         `"${f.time_slot_rating}"`,
         `"${f.price_point}"`,
         `"${f.regular_attendance_interest}"`,
+        `"${f.attendance_frequency}"`,
+        `"${f.how_heard || ''}"`,
         `"${f.additional_comments?.replace(/"/g, '""')}"`
       ].join(","))
     ].join("\n");
@@ -271,6 +310,129 @@ const AdminEventFeedback: React.FC = () => {
               </div>
             </Card>
           </div>
+
+          {/* Scheduling Intelligence */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="rounded-[2.5rem] shadow-xl border-none bg-card overflow-hidden">
+              <CardHeader className="bg-primary/5 pb-4">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+                  <CalendarCheck className="h-5 w-5 text-primary" /> Upcoming Interest
+                </CardTitle>
+                <CardDescription>Which specific dates are people free for the next session?</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {Object.entries(stats?.nextMonthDates || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([date, count]) => (
+                      <div key={date} className="space-y-1">
+                        <div className="flex justify-between text-sm font-bold">
+                          <span>{date}</span>
+                          <span className="text-primary">{count} votes</span>
+                        </div>
+                        <Progress value={(count / stats!.total) * 100} className="h-2" />
+                      </div>
+                    ))}
+                  {Object.keys(stats?.nextMonthDates || {}).length === 0 && (
+                    <p className="text-center text-muted-foreground italic py-8">No date preferences recorded.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[2.5rem] shadow-xl border-none bg-card overflow-hidden">
+              <CardHeader className="bg-primary/5 pb-4">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" /> Ongoing Availability
+                </CardTitle>
+                <CardDescription>What general times work best for the community long-term?</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {Object.entries(stats?.ongoingTimes || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([time, count]) => (
+                      <div key={time} className="space-y-1">
+                        <div className="flex justify-between text-sm font-bold">
+                          <span>{time}</span>
+                          <span className="text-primary">{count} people</span>
+                        </div>
+                        <Progress value={(count / stats!.total) * 100} className="h-2 bg-primary/10" />
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Repertoire & Growth */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Card className="lg:col-span-2 rounded-[2.5rem] shadow-xl border-none bg-card overflow-hidden">
+              <CardHeader className="bg-accent/10 pb-4">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+                  <Music className="h-5 w-5 text-accent-foreground" /> Repertoire Cloud
+                </CardTitle>
+                <CardDescription>What songs and artists do they want to sing next?</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="flex flex-wrap gap-3">
+                  {stats?.repertoire.map((item, i) => (
+                    <Badge key={i} variant="secondary" className="px-4 py-2 rounded-xl text-sm font-bold bg-muted hover:bg-primary/10 hover:text-primary transition-colors cursor-default">
+                      {item}
+                    </Badge>
+                  ))}
+                  {stats?.repertoire.length === 0 && (
+                    <p className="text-center text-muted-foreground italic w-full py-8">No repertoire suggestions yet.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[2.5rem] shadow-xl border-none bg-card overflow-hidden">
+              <CardHeader className="bg-muted/30 pb-4">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+                  <Search className="h-5 w-5 text-primary" /> Marketing Attribution
+                </CardTitle>
+                <CardDescription>How did they find Resonance?</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {Object.entries(stats?.marketingSources || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([source, count]) => (
+                      <div key={source} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span>{source}</span>
+                          <span className="text-muted-foreground">{count}</span>
+                        </div>
+                        <Progress value={(count / stats!.total) * 100} className="h-1.5" />
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Attendance Frequency */}
+          <Card className="rounded-[2.5rem] shadow-xl border-none bg-primary text-primary-foreground overflow-hidden">
+            <CardContent className="p-10 flex flex-col md:flex-row items-center gap-12">
+              <div className="md:w-1/3 space-y-4">
+                <div className="bg-white/20 p-4 rounded-2xl inline-block">
+                  <Zap className="h-8 w-8 text-accent" />
+                </div>
+                <h2 className="text-3xl font-black font-lora leading-tight">Commitment Levels</h2>
+                <p className="text-primary-foreground/80 font-medium">How often would your community attend if the timing was right?</p>
+              </div>
+              <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-6">
+                {Object.entries(stats?.frequencies || {}).map(([freq, count]) => (
+                  <div key={freq} className="bg-white/10 p-6 rounded-3xl text-center space-y-2 border border-white/10">
+                    <p className="text-4xl font-black tracking-tighter">{count}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70">{freq}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Qualitative Feedback */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
