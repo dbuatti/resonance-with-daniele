@@ -140,7 +140,7 @@ I'd love to see you there.
   const communityPostHeadline = "Any local singers (or shower-singers) in Armadale? 🎶";
   const communityPostBody = `Hi everyone! I’m Daniele, a local music director. I’m hosting a pop-up choir session at Armadale Baptist Church on Saturday, April 18.
 
-It’s a low-pressure morning. There are no auditions and no experience is needed. We just get together to learn some great harmonies (usually a mix of Broadway and Jazz) and meet some new people in the neighborhood.
+It’s a low-pressure morning. There are no auditions and no experience is needed. We just get together to learn some great harmonies (usually a mix of Music Theatre, Jazz, Pop etc.) and meet some new people in the neighborhood.
 
 If you’ve been looking for a creative way to spend a Saturday morning or just want to feel the energy of singing in a group again, we’d love to have you join the circle.
 
