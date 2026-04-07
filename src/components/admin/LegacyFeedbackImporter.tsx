@@ -35,18 +35,18 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
   const parseLegacyDate = (dateStr: string): Date | null => {
     if (!dateStr) return null;
     
-    // Clean the string (remove extra spaces or quotes)
     const cleanStr = dateStr.trim().replace(/^"|"$/g, "");
 
-    // 1. Try the specific Google Sheets format: DD/MM/YYYY HH:mm:ss
-    // We try both 24h and 12h formats just in case
+    // Try common Google Sheets / Forms formats
     const formats = [
       "dd/MM/yyyy HH:mm:ss",
       "d/M/yyyy HH:mm:ss",
       "dd/MM/yyyy h:mm:ss a",
       "d/M/yyyy h:mm:ss a",
       "dd/MM/yyyy",
-      "d/M/yyyy"
+      "d/M/yyyy",
+      "MM/dd/yyyy HH:mm:ss",
+      "M/d/yyyy HH:mm:ss",
     ];
 
     for (const fmt of formats) {
@@ -58,7 +58,6 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
       }
     }
 
-    // 2. Fallback to standard JS parsing if the above fails
     const standardDate = new Date(cleanStr);
     if (isValid(standardDate)) return standardDate;
 
@@ -72,10 +71,10 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
     const possibleEvents = allEvents
       .filter(e => {
         const eventDate = new Date(e.date);
-        // We compare the start of the day to ensure feedback submitted 
-        // on the day of the event matches correctly
+        // Feedback is usually submitted on or after the event day
         return startOfDay(eventDate) <= startOfDay(timestamp);
       })
+      // Sort DESCENDING to get the MOST RECENT event that happened before the feedback
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // Return the most recent one found, or fallback to the currently selected event
@@ -96,7 +95,6 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
         if (lines.length < 2) throw new Error("CSV file is empty");
 
         const parseCSVLine = (line: string) => {
-          // Robust CSV splitting that handles commas inside quotes
           const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
           return values.map(val => val?.replace(/^"|"$/g, "").trim() || "");
         };
@@ -156,16 +154,10 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
             };
           });
 
-        // Final safety check: if we couldn't parse ANY dates, something is wrong with the file
-        const validDatesCount = feedbackToInsert.filter(f => f.created_at !== new Date().toISOString()).length;
-        if (validDatesCount === 0 && feedbackToInsert.length > 0) {
-          throw new Error("Could not read the dates in your file. Please check the 'Timestamp' column format.");
-        }
-
         const { error } = await supabase.from("event_feedback").insert(feedbackToInsert);
         if (error) throw error;
 
-        showSuccess(`Successfully imported ${feedbackToInsert.length} responses and matched them to events!`);
+        showSuccess(`Successfully imported ${feedbackToInsert.length} responses!`);
         queryClient.invalidateQueries({ queryKey: ["eventFeedbackData"] });
         setIsOpen(false);
       } catch (err: any) {
@@ -200,7 +192,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
           <div className="bg-primary/5 p-4 rounded-2xl flex items-start gap-3 border border-primary/10">
             <Info className="h-5 w-5 text-primary mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              This will match responses to events based on the <strong>Timestamp</strong> column (DD/MM/YYYY). 
+              This will match responses to events based on the <strong>Timestamp</strong> column. 
             </p>
           </div>
           <div
