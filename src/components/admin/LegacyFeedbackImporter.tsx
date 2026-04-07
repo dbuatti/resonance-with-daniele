@@ -71,13 +71,10 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
     const possibleEvents = allEvents
       .filter(e => {
         const eventDate = new Date(e.date);
-        // Feedback is usually submitted on or after the event day
         return startOfDay(eventDate) <= startOfDay(timestamp);
       })
-      // Sort DESCENDING to get the MOST RECENT event that happened before the feedback
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Return the most recent one found, or fallback to the currently selected event
     return possibleEvents[0]?.id || eventId;
   };
 
@@ -91,12 +88,28 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
     reader.onload = async (e) => {
       try {
         const text = e.target?.result as string;
-        const lines = text.split(/\r?\n/);
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
         if (lines.length < 2) throw new Error("CSV file is empty");
 
+        // Robust CSV line parser that handles quotes and commas correctly
         const parseCSVLine = (line: string) => {
-          const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
-          return values.map(val => val?.replace(/^"|"$/g, "").trim() || "");
+          const result = [];
+          let curValue = "";
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              result.push(curValue.trim());
+              curValue = "";
+            } else {
+              curValue += char;
+            }
+          }
+          result.push(curValue.trim());
+          // Clean up quotes from the final values
+          return result.map(val => val.replace(/^"|"$/g, "").trim());
         };
 
         const headers = parseCSVLine(lines[0]);
@@ -124,40 +137,45 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
           throw new Error("Could not find a 'Timestamp' column. Please ensure your CSV has headers.");
         }
 
-        const feedbackToInsert = lines.slice(1)
-          .filter(line => line.trim() !== "")
-          .map(line => {
-            const v = parseCSVLine(line);
-            const timestampDate = parseLegacyDate(v[h.timestamp]);
-            const matchedEventId = findMatchingEventId(timestampDate);
-            
-            const nextMonthArr = v[h.nextMonth] ? v[h.nextMonth].split(",").map(s => s.trim()) : [];
-            const bestTimesArr = v[h.bestTimes] ? v[h.bestTimes].split(",").map(s => s.trim()) : [];
+        let validDatesFound = 0;
+        const feedbackToInsert = lines.slice(1).map(line => {
+          const v = parseCSVLine(line);
+          const timestampDate = parseLegacyDate(v[h.timestamp]);
+          if (timestampDate) validDatesFound++;
+          
+          const matchedEventId = findMatchingEventId(timestampDate);
+          
+          const nextMonthArr = v[h.nextMonth] ? v[h.nextMonth].split(",").map(s => s.trim()) : [];
+          const bestTimesArr = v[h.bestTimes] ? v[h.bestTimes].split(",").map(s => s.trim()) : [];
 
-            return {
-              event_id: matchedEventId,
-              user_id: null,
-              overall_feeling: v[h.feeling] || "Neutral",
-              enjoyed_most: v[h.enjoyed] || "",
-              improvements: v[h.improvements] || null,
-              time_slot_rating: v[h.timeSlot] || "Perfect",
-              future_repertoire: v[h.repertoire] || null,
-              price_point: v[h.price] || "Other",
-              interest_next_month: nextMonthArr,
-              best_times_ongoing: bestTimesArr,
-              regular_attendance_interest: v[h.regular] || "Maybe",
-              attendance_frequency: v[h.frequency] || "Occasionally",
-              recommend_score: parseInt(v[h.score]) || 10,
-              how_heard: v[h.howHeard] || null,
-              additional_comments: v[h.comments] || null,
-              created_at: timestampDate ? timestampDate.toISOString() : new Date().toISOString(),
-            };
-          });
+          return {
+            event_id: matchedEventId,
+            user_id: null,
+            overall_feeling: v[h.feeling] || "Neutral",
+            enjoyed_most: v[h.enjoyed] || "",
+            improvements: v[h.improvements] || null,
+            time_slot_rating: v[h.timeSlot] || "Perfect",
+            future_repertoire: v[h.repertoire] || null,
+            price_point: v[h.price] || "Other",
+            interest_next_month: nextMonthArr,
+            best_times_ongoing: bestTimesArr,
+            regular_attendance_interest: v[h.regular] || "Maybe",
+            attendance_frequency: v[h.frequency] || "Occasionally",
+            recommend_score: parseInt(v[h.score]) || 10,
+            how_heard: v[h.howHeard] || null,
+            additional_comments: v[h.comments] || null,
+            created_at: timestampDate ? timestampDate.toISOString() : new Date().toISOString(),
+          };
+        });
+
+        if (validDatesFound === 0) {
+          throw new Error("Could not read any dates from the 'Timestamp' column. Please check your CSV format.");
+        }
 
         const { error } = await supabase.from("event_feedback").insert(feedbackToInsert);
         if (error) throw error;
 
-        showSuccess(`Successfully imported ${feedbackToInsert.length} responses!`);
+        showSuccess(`Successfully imported ${feedbackToInsert.length} responses and matched them to events!`);
         queryClient.invalidateQueries({ queryKey: ["eventFeedbackData"] });
         setIsOpen(false);
       } catch (err: any) {
