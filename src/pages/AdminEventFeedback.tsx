@@ -9,12 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { 
   Loader2, Star, TrendingUp, Users, Globe, Clock, DollarSign, UserCheck, 
   Music, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, 
   PieChart as PieChartIcon, BarChart3, MapPin, LineChart as LineChartIcon, 
   UserPlus, EyeOff, ListMusic, Heart, Quote, BarChart, CalendarCheck,
-  Calendar
+  Calendar, Info, MessageSquare, ExternalLink
 } from "lucide-react";
 import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
@@ -23,6 +24,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
+import LegacyFeedbackImporter from "@/components/admin/LegacyFeedbackImporter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { 
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, 
   CartesianGrid, BarChart as ReBarChart, Bar, Cell, PieChart, Pie, Legend 
@@ -42,6 +45,7 @@ const AdminEventFeedback: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [aiInsights, setAiInsights] = useState<any>(null);
+  const [selectedResponse, setSelectedResponse] = useState<any>(null);
 
   // Fetch all feedback to derive months and show global stats
   const { data: allFeedback, isLoading: loadingAllFeedback } = useQuery({
@@ -60,7 +64,6 @@ const AdminEventFeedback: React.FC = () => {
     if (!allFeedback) return [];
     const months = new Set<string>();
     allFeedback.forEach((f: any) => {
-      // Use event date if available, otherwise fallback to feedback submission date
       const eventDate = Array.isArray(f.events) ? f.events[0]?.date : f.events?.date;
       const dateStr = eventDate || f.created_at;
       if (dateStr) {
@@ -79,11 +82,9 @@ const AdminEventFeedback: React.FC = () => {
         .order("created_at", { ascending: false });
 
       if (selectedFilter.startsWith("month:")) {
-        const monthStr = selectedFilter.split(":")[1]; // "2024-03"
+        const monthStr = selectedFilter.split(":")[1];
         const startDate = `${monthStr}-01`;
         const endDate = format(endOfMonth(parseISO(startDate)), "yyyy-MM-dd");
-        
-        // Filter by event date if it exists, otherwise by feedback creation date
         query = query.or(`and(events.date.gte.${startDate},events.date.lte.${endDate}),and(created_at.gte.${startDate},created_at.lte.${endDate})`);
       }
 
@@ -215,6 +216,7 @@ const AdminEventFeedback: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <LegacyFeedbackImporter eventId="all" />
           <div className="w-full md:w-72 space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Timeframe</label>
             <Select value={selectedFilter} onValueChange={(val) => { setSelectedFilter(val); setAiInsights(null); }}>
@@ -269,7 +271,6 @@ const AdminEventFeedback: React.FC = () => {
 
       {/* Advanced Visualizations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Sentiment Distribution */}
         <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
           <CardHeader className="px-0 pt-0">
             <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
@@ -300,7 +301,6 @@ const AdminEventFeedback: React.FC = () => {
           </div>
         </Card>
 
-        {/* NPS Distribution */}
         <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
           <CardHeader className="px-0 pt-0">
             <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
@@ -472,14 +472,17 @@ const AdminEventFeedback: React.FC = () => {
           </div>
 
           <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-            <CardHeader className="bg-muted/30"><CardTitle className="text-xl font-black font-lora">Detailed Responses</CardTitle></CardHeader>
+            <CardHeader className="bg-muted/30 flex flex-row items-center justify-between">
+              <CardTitle className="text-xl font-black font-lora">Detailed Responses</CardTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Click any row to view full details</p>
+            </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-muted/20"><TableRow><TableHead className="pl-8">Member</TableHead><TableHead>Feeling</TableHead><TableHead>Venue</TableHead><TableHead>Repertoire</TableHead><TableHead>Score</TableHead></TableRow></TableHeader>
+                  <TableHeader className="bg-muted/20"><TableRow><TableHead className="pl-8">Member</TableHead><TableHead>Feeling</TableHead><TableHead>Venue</TableHead><TableHead>Repertoire</TableHead><TableHead>Score</TableHead><TableHead className="text-right pr-8">Action</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {feedback.map((f) => (
-                      <TableRow key={f.id} className="hover:bg-muted/10 transition-colors">
+                      <TableRow key={f.id} className="hover:bg-muted/10 transition-colors cursor-pointer" onClick={() => setSelectedResponse(f)}>
                         <TableCell className="pl-8 font-bold">
                           {f.is_anonymous ? (
                             <div className="flex items-center gap-2 text-muted-foreground"><EyeOff className="h-3 w-3" /> Anonymous</div>
@@ -491,6 +494,9 @@ const AdminEventFeedback: React.FC = () => {
                         <TableCell className="text-xs max-w-[200px] truncate">{f.venue_feedback}</TableCell>
                         <TableCell className="text-xs max-w-[200px] truncate">{f.repertoire_feedback}</TableCell>
                         <TableCell><div className="flex items-center gap-1 font-black text-primary"><Star className="h-3 w-3 fill-current" /> {f.recommend_score}</div></TableCell>
+                        <TableCell className="text-right pr-8">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"><ExternalLink className="h-4 w-4" /></Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -500,6 +506,139 @@ const AdminEventFeedback: React.FC = () => {
           </Card>
         </div>
       )}
+
+      {/* Detailed Response Dialog */}
+      <Dialog open={!!selectedResponse} onOpenChange={(open) => !open && setSelectedResponse(null)}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-0 border-none shadow-2xl">
+          {selectedResponse && (
+            <>
+              <DialogHeader className="p-8 bg-primary text-primary-foreground">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <DialogTitle className="text-3xl font-black font-lora">Full Response Details</DialogTitle>
+                    <DialogDescription className="text-primary-foreground/70 font-medium">
+                      Submitted on {format(parseISO(selectedResponse.created_at), "PPPP 'at' p")}
+                    </DialogDescription>
+                  </div>
+                  <Badge className="bg-accent text-accent-foreground text-xl font-black px-4 py-2 rounded-2xl shadow-lg">
+                    {selectedResponse.recommend_score}/10
+                  </Badge>
+                </div>
+              </DialogHeader>
+              
+              <div className="p-8 space-y-10">
+                {/* Identity Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Member</p>
+                    <p className="text-lg font-bold flex items-center gap-2">
+                      {selectedResponse.is_anonymous ? <><EyeOff className="h-4 w-4 text-primary" /> Anonymous Member</> : (selectedResponse.profiles ? `${selectedResponse.profiles.first_name} ${selectedResponse.profiles.last_name}` : "Legacy Import")}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">First Time?</p>
+                    <p className="text-lg font-bold">{selectedResponse.is_first_time ? "Yes, first session!" : "No, returning member."}</p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* The Experience Section */}
+                <div className="space-y-6">
+                  <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" /> The Experience
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Overall Feeling</p>
+                      <Badge className={cn("px-4 py-1 rounded-xl font-black", SENTIMENT_COLORS[selectedResponse.overall_feeling] ? `bg-[${SENTIMENT_COLORS[selectedResponse.overall_feeling]}]` : "bg-primary")}>
+                        {selectedResponse.overall_feeling}
+                      </Badge>
+                      {selectedResponse.overall_feeling_other && (
+                        <p className="text-sm italic text-muted-foreground mt-2">"{selectedResponse.overall_feeling_other}"</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Enjoyed Most</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.enjoyed_most}"</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Improvements</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.improvements || "No suggestions provided."}"</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Additional Comments</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.additional_comments || "None."}"</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Logistics Section */}
+                <div className="space-y-6">
+                  <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+                    <MapPin className="h-4 w-4" /> Logistics & Repertoire
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Venue Feedback</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground">"{selectedResponse.venue_feedback}"</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Repertoire Feedback</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground">"{selectedResponse.repertoire_feedback}"</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Time Slot (10am-1pm)</p>
+                      <p className="text-sm font-bold text-primary">{selectedResponse.time_slot_rating}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Price Point ($35)</p>
+                      <p className="text-sm font-bold text-primary">{selectedResponse.price_point}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Future Planning Section */}
+                <div className="space-y-6">
+                  <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+                    <CalendarCheck className="h-4 w-4" /> Future Planning
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Future Repertoire Ideas</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.future_repertoire || selectedResponse.future_ideas || "None."}"</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Regular Attendance Interest</p>
+                      <p className="text-sm font-bold text-primary">{selectedResponse.regular_attendance_interest}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Preferred Frequency</p>
+                      <p className="text-sm font-bold text-primary">{selectedResponse.attendance_frequency}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-black">Best Times (Ongoing)</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(selectedResponse.best_times_ongoing as string[] || []).map((time: string, i: number) => (
+                          <Badge key={i} variant="secondary" className="text-[10px] font-bold">{time}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-8 bg-muted/30 flex justify-end">
+                <Button onClick={() => setSelectedResponse(null)} className="rounded-xl font-bold">Close Details</Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

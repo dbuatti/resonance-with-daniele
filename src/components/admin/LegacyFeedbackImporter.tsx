@@ -31,7 +31,6 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
   const parseLegacyDate = (dateStr: string): Date | null => {
     if (!dateStr) return null;
     const cleanStr = dateStr.trim().replace(/^"|"$/g, "");
-    // Common Google Forms / Excel date formats
     const formats = [
       "dd/MM/yyyy HH:mm:ss", 
       "d/M/yyyy HH:mm:ss", 
@@ -57,7 +56,6 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
 
   const findMatchingEventId = (timestamp: Date | null): string => {
     if (!timestamp || !allEvents || allEvents.length === 0) return eventId;
-    // Find the most recent event that happened before or on the day of the feedback
     const possibleEvents = allEvents
       .filter(e => startOfDay(new Date(e.date)) <= startOfDay(timestamp))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -75,7 +73,6 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
       try {
         const text = e.target?.result as string;
         
-        // Robust CSV Parser that handles newlines inside quotes
         const parseCSV = (csvText: string) => {
           const rows = [];
           let currentRow: string[] = [];
@@ -88,7 +85,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
             
             if (char === '"') {
               if (inQuotes && nextChar === '"') {
-                curValue += '"'; // Escaped quote
+                curValue += '"';
                 i++;
               } else {
                 inQuotes = !inQuotes;
@@ -103,7 +100,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
                 curValue = "";
                 currentRow = [];
               }
-              if (char === '\r' && nextChar === '\n') i++; // Skip \n in \r\n
+              if (char === '\r' && nextChar === '\n') i++;
             } else {
               curValue += char;
             }
@@ -129,6 +126,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
           feeling: findHeader(["how did the session feel"]),
           venue: findHeader(["think of the venue"]),
           repertoire: findHeader(["feel about the repertoire"]),
+          feelingOther: findHeader(["if 'other' was selected"]),
           enjoyed: findHeader(["what did you enjoy most"]),
           improvements: findHeader(["what could be improved"]),
           timeSlot: findHeader(["10am–1pm time slot"]),
@@ -147,14 +145,13 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
         const feedbackToInsert = allRows.slice(1)
           .map(v => {
             const timestampDate = parseLegacyDate(v[h.timestamp]);
-            
-            // Skip rows that don't have a valid timestamp (likely malformed or empty)
             if (!timestampDate) return null;
 
             return {
               event_id: findMatchingEventId(timestampDate),
               user_id: null,
               overall_feeling: v[h.feeling] || "Neutral",
+              overall_feeling_other: v[h.feelingOther] || null,
               venue_feedback: v[h.venue] || "",
               repertoire_feedback: v[h.repertoire] || "",
               enjoyed_most: v[h.enjoyed] || "",
@@ -173,7 +170,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
               created_at: timestampDate.toISOString(),
             };
           })
-          .filter(Boolean); // Remove null entries
+          .filter(Boolean);
 
         if (feedbackToInsert.length === 0) {
           throw new Error("No valid feedback entries found in the CSV.");
@@ -184,6 +181,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
 
         showSuccess(`Successfully imported ${feedbackToInsert.length} responses!`);
         queryClient.invalidateQueries({ queryKey: ["eventFeedbackData"] });
+        queryClient.invalidateQueries({ queryKey: ["allEventFeedbackForMonths"] });
         setIsOpen(false);
       } catch (err: any) { 
         console.error("Import error:", err);
