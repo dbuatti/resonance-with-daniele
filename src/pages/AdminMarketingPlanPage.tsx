@@ -48,12 +48,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format, subDays, differenceInDays, startOfDay } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import EmailMembersModal from "@/components/admin/EmailMembersModal";
 
 const AdminMarketingPlanPage: React.FC = () => {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState("");
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   // 1. Fetch all events
   const { data: events, isLoading: loadingEvents } = useQuery({
@@ -231,6 +233,12 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
     const subject = encodeURIComponent(`Let's sing together for ${selectedEvent?.title}! 🎶`);
     const body = encodeURIComponent(authenticEmail.split('\n\n').slice(1).join('\n\n'));
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
+  const handleTaskAction = (taskId: string) => {
+    if (taskId === "email-regulars") {
+      setIsEmailModalOpen(true);
+    }
   };
 
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
@@ -520,7 +528,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                     </CardContent>
                   </Card>
 
-                  <MarketingChecklist eventId={selectedEventId} />
+                  <MarketingChecklist eventId={selectedEventId} onActionClick={handleTaskAction} />
                   
                   <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden">
                     <CardHeader className="bg-muted/30">
@@ -529,9 +537,9 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 grid grid-cols-2 gap-3">
-                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://ads.google.com" target="_blank" rel="noopener noreferrer">Google Ads</a></Button>
-                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.stonnington.vic.gov.au/MyCity/Dashboard" target="_blank" rel="noopener noreferrer">Stonnington Hub</a></Button>
                       <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://humanitix.com" target="_blank" rel="noopener noreferrer">Humanitix</a></Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a></Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a></Button>
                       <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://kit.com" target="_blank" rel="noopener noreferrer">Kit (Email)</a></Button>
                     </CardContent>
                   </Card>
@@ -541,6 +549,14 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
           </>
         )}
       </div>
+
+      <EmailMembersModal 
+        isOpen={isEmailModalOpen} 
+        onClose={() => setIsEmailModalOpen(false)} 
+        eventTitle={selectedEvent?.title}
+        eventDate={eventDateFormatted}
+        eventLink={eventLink}
+      />
     </div>
   );
 };

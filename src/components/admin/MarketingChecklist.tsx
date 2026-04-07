@@ -4,22 +4,24 @@ import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, ListTodo, Zap, Coffee, Loader2 } from "lucide-react";
+import { CheckCircle2, Circle, ListTodo, Zap, Coffee, Loader2, Mail, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
+import { Button } from "@/components/ui/button";
 
 interface Task {
   id: string;
   label: string;
   category: string;
   energy: "high" | "low";
+  hasAction?: boolean;
 }
 
 const tasks: Task[] = [
   { id: "personal-10", label: "Message 10 specific people personally", category: "3 Days Before", energy: "high" },
-  { id: "email-regulars", label: "Email the regular member list", category: "3 Days Before", energy: "low" },
+  { id: "email-regulars", label: "Email the regular member list", category: "3 Days Before", energy: "low", hasAction: true },
   { id: "insta-story-why", label: "Story: 30s video on why these songs", category: "3 Days Before", energy: "high" },
   { id: "community-outreach", label: "Reach out to local community nodes", category: "2 Days Before", energy: "high" },
   { id: "insta-story-chords", label: "Story: Play chords from the repertoire", category: "2 Days Before", energy: "low" },
@@ -32,9 +34,10 @@ const tasks: Task[] = [
 
 interface MarketingChecklistProps {
   eventId: string;
+  onActionClick?: (taskId: string) => void;
 }
 
-const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId }) => {
+const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActionClick }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
 
@@ -104,12 +107,14 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId }) => {
                       <div
                         key={task.id}
                         className={cn(
-                          "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border border-transparent",
+                          "flex items-center justify-between p-3 rounded-xl transition-all border border-transparent group",
                           isDone ? "bg-muted/30 opacity-50" : "bg-background shadow-sm hover:border-primary/20"
                         )}
-                        onClick={() => toggleMutation.mutate(task.id)}
                       >
-                        <div className="flex items-start gap-3">
+                        <div 
+                          className="flex items-start gap-3 flex-1 cursor-pointer"
+                          onClick={() => toggleMutation.mutate(task.id)}
+                        >
                           <div className="mt-0.5">
                             {isDone ? (
                               <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -124,10 +129,26 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId }) => {
                             {task.label}
                           </span>
                         </div>
-                        <Badge variant="outline" className="ml-2 text-[10px] px-1.5 py-0 h-5 border-none bg-muted/50">
-                          {task.energy === "high" ? <Zap className="h-3 w-3 text-yellow-600 mr-1" /> : <Coffee className="h-3 w-3 text-blue-600 mr-1" />}
-                          {task.energy === "high" ? "High" : "Low"}
-                        </Badge>
+                        
+                        <div className="flex items-center gap-2">
+                          {task.hasAction && onActionClick && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-primary hover:bg-primary/10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onActionClick(task.id);
+                              }}
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-none bg-muted/50">
+                            {task.energy === "high" ? <Zap className="h-3 w-3 text-yellow-600 mr-1" /> : <Coffee className="h-3 w-3 text-blue-600 mr-1" />}
+                            {task.energy === "high" ? "High" : "Low"}
+                          </Badge>
+                        </div>
                       </div>
                     );
                   })}
