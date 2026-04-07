@@ -13,9 +13,10 @@ import {
   Loader2, Star, TrendingUp, Users, Globe, Clock, DollarSign, UserCheck, 
   Music, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, 
   PieChart as PieChartIcon, BarChart3, MapPin, LineChart as LineChartIcon, 
-  UserPlus, EyeOff, ListMusic, Heart, Quote, BarChart, CalendarCheck
+  UserPlus, EyeOff, ListMusic, Heart, Quote, BarChart, CalendarCheck,
+  Calendar
 } from "lucide-react";
-import { format, parseISO, startOfMonth } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,9 +41,10 @@ const AdminEventFeedback: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [selectedEventId, setSelectedEventId] = useState<string>("all");
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [aiInsights, setAiInsights] = useState<any>(null);
 
+  // Fetch all events to build the month list
   const { data: events, isLoading: loadingEvents } = useQuery({
     queryKey: ["allEventsForFeedbackAdmin"],
     queryFn: async () => {
@@ -52,16 +54,31 @@ const AdminEventFeedback: React.FC = () => {
     },
   });
 
-  const selectedEvent = useMemo(() => 
-    events?.find(e => e.id === selectedEventId), 
-    [events, selectedEventId]
-  );
+  // Generate unique months from events
+  const uniqueMonths = useMemo(() => {
+    if (!events) return [];
+    const months = new Set<string>();
+    events.forEach(e => {
+      months.add(format(parseISO(e.date), "yyyy-MM"));
+    });
+    return Array.from(months).sort().reverse();
+  }, [events]);
 
   const { data: feedback, isLoading: loadingFeedback } = useQuery({
-    queryKey: ["eventFeedbackData", selectedEventId],
+    queryKey: ["eventFeedbackData", selectedFilter],
     queryFn: async () => {
-      let query = supabase.from("event_feedback").select(`*, profiles (first_name, last_name, email), events (title, date)`).order("created_at", { ascending: false });
-      if (selectedEventId !== "all") query = query.eq("event_id", selectedEventId);
+      let query = supabase
+        .from("event_feedback")
+        .select(`*, profiles (first_name, last_name, email), events!inner (title, date)`)
+        .order("created_at", { ascending: false });
+
+      if (selectedFilter.startsWith("month:")) {
+        const monthStr = selectedFilter.split(":")[1]; // "2024-03"
+        const startDate = `${monthStr}-01`;
+        const endDate = format(endOfMonth(parseISO(startDate)), "yyyy-MM-dd");
+        query = query.gte("events.date", startDate).lte("events.date", endDate);
+      }
+
       const { data, error } = await query;
       if (error) throw error;
       return data;
@@ -69,17 +86,17 @@ const AdminEventFeedback: React.FC = () => {
   });
 
   const { data: savedAiSummary } = useQuery({
-    queryKey: ["savedAiSummary", selectedEventId],
+    queryKey: ["savedAiSummary", selectedFilter],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_ai_summaries")
         .select("content")
-        .eq("event_id", selectedEventId)
+        .eq("event_id", selectedFilter) // We use the filter string as the key
         .maybeSingle();
       if (error) return null;
       return data?.content || null;
     },
-    enabled: !!selectedEventId,
+    enabled: !!selectedFilter,
   });
 
   useMemo(() => {
@@ -88,14 +105,16 @@ const AdminEventFeedback: React.FC = () => {
 
   const analyzeMutation = useMutation({
     mutationFn: async () => {
+      // For now, the edge function expects an eventId. 
+      // If it's a month filter, we pass the filter string and the function can be updated to handle it.
       const { data, error } = await supabase.functions.invoke('analyze-feedback', {
-        body: { eventId: selectedEventId }
+        body: { eventId: selectedFilter }
       });
       if (error) throw error;
       
       await supabase.from("event_ai_summaries").upsert({
-        event_id: selectedEventId,
-        summary_type: selectedEventId === "all" ? "global" : "specific",
+        event_id: selectedFilter,
+        summary_type: selectedFilter === "all" ? "global" : "month",
         content: data,
         updated_at: new Date().toISOString()
       }, { onConflict: 'event_id,summary_type' });
@@ -105,7 +124,7 @@ const AdminEventFeedback: React.FC = () => {
     onSuccess: (data) => {
       setAiInsights(data);
       showSuccess("AI Analysis Complete!");
-      queryClient.invalidateQueries({ queryKey: ["savedAiSummary", selectedEventId] });
+      queryClient.invalidateQueries({ queryKey: ["savedAiSummary", selectedFilter] });
     },
     onError: (err: any) => showError(err.message)
   });
@@ -119,7 +138,6 @@ const AdminEventFeedback: React.FC = () => {
     const npsDistribution: Record<number, number> = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0};
     const venueFeelings: Record<string, number> = {};
     const repertoireFeelings: Record<string, number> = {};
-    const nextMonthInterest: Record<string, number> = {};
     const marketingSources: Record<string, number> = {};
     const frequencies: Record<string, number> = {};
     const ongoingTimes: Record<string, number> = {};
@@ -157,10 +175,6 @@ const AdminEventFeedback: React.FC = () => {
 
     const npsChartData = Object.entries(npsDistribution).map(([score, count]) => ({ score: `Score ${score}`, count }));
     const sentimentChartData = Object.entries(feelings).map(([name, value]) => ({ name, value }));
-    const nextMonthChartData = Object.entries(nextMonthInterest)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 6);
 
     const getMode = (obj: Record<string, number>) => {
       return Object.entries(obj).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
@@ -168,7 +182,7 @@ const AdminEventFeedback: React.FC = () => {
 
     return { 
       total, avgScore, feelings, marketingSources, repertoire, trendData, returningCount, newCount,
-      npsChartData, sentimentChartData, nextMonthChartData, venueFeelings, repertoireFeelings,
+      npsChartData, sentimentChartData, venueFeelings, repertoireFeelings,
       topPrice: getMode(Object.fromEntries(feedback.map(f => [f.price_point, 1]))),
       topTimeSlot: getMode(Object.fromEntries(feedback.map(f => [f.time_slot_rating, 1]))),
       topPreferredTime: getMode(ongoingTimes),
@@ -187,23 +201,32 @@ const AdminEventFeedback: React.FC = () => {
       
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div className="space-y-2">
-          <h1 className="text-5xl font-black font-lora tracking-tighter">{selectedEventId === "all" ? "Global Feedback" : "Event Feedback"}</h1>
-          <p className="text-xl text-muted-foreground">{selectedEventId === "all" ? "Aggregated insights from every session." : "Analyze how this specific session landed."}</p>
-          {selectedEvent?.main_song && (
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold mt-2">
-              <Music className="h-3 w-3 mr-1.5" /> Performed: {selectedEvent.main_song}
-            </Badge>
-          )}
+          <h1 className="text-5xl font-black font-lora tracking-tighter">
+            {selectedFilter === "all" ? "Global Feedback" : `Feedback: ${format(parseISO(`${selectedFilter.split(":")[1]}-01`), "MMMM yyyy")}`}
+          </h1>
+          <p className="text-xl text-muted-foreground">
+            {selectedFilter === "all" ? "Aggregated insights from every session." : "Analyze how sessions landed during this month."}
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-          {selectedEventId !== "all" && <LegacyFeedbackImporter eventId={selectedEventId} />}
           <div className="w-full md:w-72 space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select View</label>
-            <Select value={selectedEventId} onValueChange={(val) => { setSelectedEventId(val); setAiInsights(null); }}>
-              <SelectTrigger className="h-12 rounded-xl shadow-xl bg-card border-2 border-primary/10"><SelectValue placeholder="Choose an event..." /></SelectTrigger>
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Timeframe</label>
+            <Select value={selectedFilter} onValueChange={(val) => { setSelectedFilter(val); setAiInsights(null); }}>
+              <SelectTrigger className="h-12 rounded-xl shadow-xl bg-card border-2 border-primary/10">
+                <SelectValue placeholder="Choose a month..." />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="font-bold text-primary"><div className="flex items-center gap-2"><Globe className="h-4 w-4" /> All Events</div></SelectItem>
-                {events?.map((event) => (<SelectItem key={event.id} value={event.id} className="font-bold">{event.title} ({format(new Date(event.date), "MMM d")})</SelectItem>))}
+                <SelectItem value="all" className="font-bold text-primary">
+                  <div className="flex items-center gap-2"><Globe className="h-4 w-4" /> All Events</div>
+                </SelectItem>
+                {uniqueMonths.map((month) => (
+                  <SelectItem key={month} value={`month:${month}`} className="font-bold">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {format(parseISO(`${month}-01`), "MMMM yyyy")}
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -213,7 +236,7 @@ const AdminEventFeedback: React.FC = () => {
       {/* Top Level Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-primary text-primary-foreground rounded-[2rem] shadow-xl border-none p-8">
-          <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p><p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1)}</p></div><Star className="h-8 w-8 text-accent fill-current" /></div>
+          <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p><p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1) || "0.0"}</p></div><Star className="h-8 w-8 text-accent fill-current" /></div>
         </Card>
         
         <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card md:col-span-2">
@@ -234,7 +257,7 @@ const AdminEventFeedback: React.FC = () => {
         </Card>
 
         <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
-          <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p><p className="text-6xl font-black tracking-tighter">{stats?.total}</p></div><Users className="h-8 w-8 opacity-40" /></div>
+          <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p><p className="text-6xl font-black tracking-tighter">{stats?.total || 0}</p></div><Users className="h-8 w-8 opacity-40" /></div>
         </Card>
       </div>
 
@@ -246,13 +269,13 @@ const AdminEventFeedback: React.FC = () => {
             <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-primary" /> Overall Sentiment
             </CardTitle>
-            <CardDescription>How the session felt for everyone.</CardDescription>
+            <CardDescription>How the sessions felt for everyone.</CardDescription>
           </CardHeader>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={stats?.sentimentChartData}
+                  data={stats?.sentimentChartData || []}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -260,7 +283,7 @@ const AdminEventFeedback: React.FC = () => {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {stats?.sentimentChartData.map((entry, index) => (
+                  {(stats?.sentimentChartData || []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={SENTIMENT_COLORS[entry.name] || COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -281,7 +304,7 @@ const AdminEventFeedback: React.FC = () => {
           </CardHeader>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <ReBarChart data={stats?.npsChartData}>
+              <ReBarChart data={stats?.npsChartData || []}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                 <XAxis dataKey="score" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
                 <YAxis axisLine={false} tickLine={false} />
@@ -289,53 +312,6 @@ const AdminEventFeedback: React.FC = () => {
                 <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </ReBarChart>
             </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Next Month Date Popularity */}
-        <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-          <CardHeader className="px-0 pt-0">
-            <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-primary" /> Date Popularity
-            </CardTitle>
-            <CardDescription>Most requested dates for the next session.</CardDescription>
-          </CardHeader>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ReBarChart data={stats?.nextMonthChartData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={150} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                <RechartsTooltip />
-                <Bar dataKey="value" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
-              </ReBarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Venue vs Repertoire Comparison */}
-        <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-          <CardHeader className="px-0 pt-0">
-            <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" /> Logistics Performance
-            </CardTitle>
-            <CardDescription>Comparing Venue vs. Repertoire satisfaction.</CardDescription>
-          </CardHeader>
-          <div className="space-y-8 pt-4">
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Venue Satisfaction</p>
-                <p className="text-2xl font-black text-primary">{((stats?.venueFeelings["Loved It"] || 0) / (stats?.total || 1) * 100).toFixed(0)}% <span className="text-xs font-medium text-muted-foreground">Loved It</span></p>
-              </div>
-              <Progress value={((stats?.venueFeelings["Loved It"] || 0) / (stats?.total || 1) * 100)} className="h-3" />
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Repertoire Satisfaction</p>
-                <p className="text-2xl font-black text-primary">{((stats?.repertoireFeelings["Loved It"] || 0) / (stats?.total || 1) * 100).toFixed(0)}% <span className="text-xs font-medium text-muted-foreground">Loved It</span></p>
-              </div>
-              <Progress value={((stats?.repertoireFeelings["Loved It"] || 0) / (stats?.total || 1) * 100)} className="h-3" />
-            </div>
           </div>
         </Card>
       </div>
@@ -348,7 +324,9 @@ const AdminEventFeedback: React.FC = () => {
             <div className="bg-white/20 p-6 rounded-[2rem] shadow-inner"><Brain className="h-12 w-12 text-accent" /></div>
             <div className="flex-1 text-center md:text-left space-y-2">
               <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">AI Strategy Engine</h3>
-              <p className="text-3xl font-black font-lora leading-tight">{selectedEventId === "all" ? "Analyze the entire community's feedback history." : "Generate deep insights from this session's feedback."}</p>
+              <p className="text-3xl font-black font-lora leading-tight">
+                {selectedFilter === "all" ? "Analyze the entire community's feedback history." : "Generate deep insights from this month's feedback."}
+              </p>
             </div>
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => analyzeMutation.mutate()} disabled={analyzeMutation.isPending}>
               {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-5 w-5" /> {aiInsights ? "Refresh AI Analysis" : "Run AI Analysis"}</>}
@@ -437,19 +415,19 @@ const AdminEventFeedback: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><DollarSign className="h-3 w-3" /> Ideal Price Point</p><p className="text-2xl font-black text-primary">{stats?.topPrice}</p></div>
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><DollarSign className="h-3 w-3" /> Ideal Price Point</p><p className="text-2xl font-black text-primary">{stats?.topPrice || "N/A"}</p></div>
             <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Most Frequent Choice</Badge>
           </Card>
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Clock className="h-3 w-3" /> Time Slot Fit</p><p className="text-2xl font-black text-primary">{stats?.topTimeSlot}</p></div>
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Clock className="h-3 w-3" /> Time Slot Fit</p><p className="text-2xl font-black text-primary">{stats?.topTimeSlot || "N/A"}</p></div>
             <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Current 10am-1pm Slot</Badge>
           </Card>
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Returning Legends</p><p className="text-2xl font-black text-green-600">{stats?.returningCount}</p></div>
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Returning Legends</p><p className="text-2xl font-black text-green-600">{stats?.returningCount || 0}</p></div>
             <Progress value={(stats?.returningCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
           </Card>
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserPlus className="h-3 w-3" /> New Faces</p><p className="text-2xl font-black text-blue-600">{stats?.newCount}</p></div>
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserPlus className="h-3 w-3" /> New Faces</p><p className="text-2xl font-black text-blue-600">{stats?.newCount || 0}</p></div>
             <Progress value={(stats?.newCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
           </Card>
         </div>
@@ -458,7 +436,7 @@ const AdminEventFeedback: React.FC = () => {
       {loadingFeedback ? (
         <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>
       ) : !feedback || feedback.length === 0 ? (
-        <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]"><Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" /><p className="text-xl font-bold text-muted-foreground">No feedback found.</p></Card>
+        <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]"><Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" /><p className="text-xl font-bold text-muted-foreground">No feedback found for this timeframe.</p></Card>
       ) : (
         <div className="space-y-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
