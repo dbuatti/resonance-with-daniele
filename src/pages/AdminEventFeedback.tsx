@@ -15,7 +15,7 @@ import {
   Music, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, 
   PieChart as PieChartIcon, BarChart3, MapPin, LineChart as LineChartIcon, 
   UserPlus, EyeOff, ListMusic, Heart, Quote, BarChart, CalendarCheck,
-  Calendar, Info, MessageSquare, ExternalLink, SearchCode
+  Calendar, Info, MessageSquare, ExternalLink, SearchCode, Frown
 } from "lucide-react";
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
@@ -463,10 +463,14 @@ const AdminEventFeedback: React.FC = () => {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{filteredFeedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
+            </Card>
+            <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
+              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Frown className="h-5 w-5 text-primary" /> Constructive Feedback</CardTitle></CardHeader>
+              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{filteredFeedback.filter(f => f.improvements).map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.improvements}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
             </Card>
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
@@ -482,7 +486,7 @@ const AdminEventFeedback: React.FC = () => {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-muted/20"><TableRow><TableHead className="pl-8">Member</TableHead><TableHead>Feeling</TableHead><TableHead>Venue</TableHead><TableHead>Repertoire</TableHead><TableHead>Score</TableHead><TableHead className="text-right pr-8">Action</TableHead></TableRow></TableHeader>
+                  <TableHeader className="bg-muted/20"><TableRow><TableHead className="pl-8">Member</TableHead><TableHead>Feeling</TableHead><TableHead>Improvements</TableHead><TableHead>Venue</TableHead><TableHead>Repertoire</TableHead><TableHead>Score</TableHead><TableHead className="text-right pr-8">Action</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredFeedback.map((f) => (
                       <TableRow key={f.id} className="hover:bg-muted/10 transition-colors cursor-pointer" onClick={() => setSelectedResponse(f)}>
@@ -494,8 +498,9 @@ const AdminEventFeedback: React.FC = () => {
                           )}
                         </TableCell>
                         <TableCell><Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">{f.overall_feeling}</Badge></TableCell>
-                        <TableCell className="text-xs max-w-[200px] truncate">{f.venue_feedback}</TableCell>
-                        <TableCell className="text-xs max-w-[200px] truncate">{f.repertoire_feedback}</TableCell>
+                        <TableCell className="text-xs max-w-[200px] truncate italic">{f.improvements || "—"}</TableCell>
+                        <TableCell className="text-xs max-w-[150px] truncate">{f.venue_feedback}</TableCell>
+                        <TableCell className="text-xs max-w-[150px] truncate">{f.repertoire_feedback}</TableCell>
                         <TableCell><div className="flex items-center gap-1 font-black text-primary"><Star className="h-3 w-3 fill-current" /> {f.recommend_score}</div></TableCell>
                         <TableCell className="text-right pr-8">
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"><ExternalLink className="h-4 w-4" /></Button>
