@@ -128,7 +128,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
           repertoire: findHeader(["feel about the repertoire"]),
           feelingOther: findHeader(["if 'other' was selected"]),
           enjoyed: findHeader(["what did you enjoy most"]),
-          improvements: findHeader(["what could be improved"]),
+          improvements: findHeader(["what could be improved", "improved for next time"]), // Added more specific term
           timeSlot: findHeader(["10am–1pm time slot"]),
           futureRep: findHeader(["repertoire would you enjoy in future"]),
           price: findHeader(["price point feels right"]),
@@ -180,7 +180,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
         if (error) throw error;
 
         showSuccess(`Successfully imported ${feedbackToInsert.length} responses!`);
-        queryClient.invalidateQueries({ queryKey: ["eventFeedbackData"] });
+        queryClient.invalidateQueries({ queryKey: ["allEventFeedbackData"] });
         queryClient.invalidateQueries({ queryKey: ["allEventFeedbackForMonths"] });
         setIsOpen(false);
       } catch (err: any) { 
