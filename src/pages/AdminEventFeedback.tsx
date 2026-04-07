@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe } from "lucide-react";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck } from "lucide-react";
 import { format } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -22,7 +22,7 @@ import LegacyFeedbackImporter from "@/components/admin/LegacyFeedbackImporter";
 const AdminEventFeedback: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
-  const [selectedEventId, setSelectedEventId] = useState<string>("all"); // Default to 'all'
+  const [selectedEventId, setSelectedEventId] = useState<string>("all");
 
   const { data: events, isLoading: loadingEvents } = useQuery({
     queryKey: ["allEventsForFeedbackAdmin"],
@@ -66,17 +66,24 @@ const AdminEventFeedback: React.FC = () => {
     const avgScore = feedback.reduce((acc, f) => acc + (f.recommend_score || 0), 0) / total;
     
     const feelings: Record<string, number> = {};
+    const timeSlots: Record<string, number> = {};
+    const prices: Record<string, number> = {};
+    const regularInterest: Record<string, number> = {};
+
     feedback.forEach(f => {
       feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
+      timeSlots[f.time_slot_rating] = (timeSlots[f.time_slot_rating] || 0) + 1;
+      prices[f.price_point] = (prices[f.price_point] || 0) + 1;
+      regularInterest[f.regular_attendance_interest] = (regularInterest[f.regular_attendance_interest] || 0) + 1;
     });
 
-    return { total, avgScore, feelings };
+    return { total, avgScore, feelings, timeSlots, prices, regularInterest };
   }, [feedback]);
 
   const handleExport = () => {
     if (!feedback) return;
     const csv = [
-      ["Event", "Date", "Name", "Email", "Feeling", "Enjoyed Most", "Improvements", "Score", "Comments"].join(","),
+      ["Event", "Date", "Name", "Email", "Feeling", "Enjoyed Most", "Improvements", "Score", "Time Slot", "Price", "Regular Interest", "Comments"].join(","),
       ...feedback.map(f => [
         `"${f.events?.title || 'Unknown'}"`,
         `"${f.events?.date || ''}"`,
@@ -86,6 +93,9 @@ const AdminEventFeedback: React.FC = () => {
         `"${f.enjoyed_most?.replace(/"/g, '""')}"`,
         `"${f.improvements?.replace(/"/g, '""')}"`,
         f.recommend_score,
+        `"${f.time_slot_rating}"`,
+        `"${f.price_point}"`,
+        `"${f.regular_attendance_interest}"`,
         `"${f.additional_comments?.replace(/"/g, '""')}"`
       ].join(","))
     ].join("\n");
@@ -202,6 +212,63 @@ const AdminEventFeedback: React.FC = () => {
               <Button variant="ghost" className="mt-4 w-full bg-white/20 hover:bg-white/30 font-black rounded-xl" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-2" /> Export Full Dataset
               </Button>
+            </Card>
+          </div>
+
+          {/* Logistics Breakdowns */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="rounded-[2rem] shadow-lg border-none p-6 bg-card">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-blue-50 rounded-lg"><Clock className="h-5 w-5 text-blue-600" /></div>
+                <h3 className="font-black text-sm uppercase tracking-widest">Time Slot Rating</h3>
+              </div>
+              <div className="space-y-4">
+                {Object.entries(stats?.timeSlots || {}).map(([slot, count]) => (
+                  <div key={slot} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span>{slot}</span>
+                      <span className="text-muted-foreground">{count}</span>
+                    </div>
+                    <Progress value={(count / stats!.total) * 100} className="h-1 bg-blue-100" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="rounded-[2rem] shadow-lg border-none p-6 bg-card">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-green-50 rounded-lg"><DollarSign className="h-5 w-5 text-green-600" /></div>
+                <h3 className="font-black text-sm uppercase tracking-widest">Price Point Comfort</h3>
+              </div>
+              <div className="space-y-4">
+                {Object.entries(stats?.prices || {}).map(([price, count]) => (
+                  <div key={price} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span>{price}</span>
+                      <span className="text-muted-foreground">{count}</span>
+                    </div>
+                    <Progress value={(count / stats!.total) * 100} className="h-1 bg-green-100" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="rounded-[2rem] shadow-lg border-none p-6 bg-card">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-purple-50 rounded-lg"><UserCheck className="h-5 w-5 text-purple-600" /></div>
+                <h3 className="font-black text-sm uppercase tracking-widest">Regular Interest</h3>
+              </div>
+              <div className="space-y-4">
+                {Object.entries(stats?.regularInterest || {}).map(([interest, count]) => (
+                  <div key={interest} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span>{interest}</span>
+                      <span className="text-muted-foreground">{count}</span>
+                    </div>
+                    <Progress value={(count / stats!.total) * 100} className="h-1 bg-purple-100" />
+                  </div>
+                ))}
+              </div>
             </Card>
           </div>
 
