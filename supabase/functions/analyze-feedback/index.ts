@@ -55,7 +55,8 @@ serve(async (req) => {
       enjoyed: f.enjoyed_most,
       improvements: f.improvements,
       repertoire: f.repertoire_feedback,
-      future: f.future_ideas,
+      future_repertoire: f.future_repertoire, // Added this field
+      future_ideas: f.future_ideas,
       score: f.recommend_score
     }))
 

@@ -111,6 +111,9 @@ const AdminEventFeedback: React.FC = () => {
       if (f.price_point) prices[f.price_point] = (prices[f.price_point] || 0) + 1;
       if (f.attendance_frequency) frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
       if (f.how_heard) marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
+      
+      // Aggregate both future_repertoire and future_ideas
+      if (f.future_repertoire) repertoire.push(f.future_repertoire);
       if (f.future_ideas) repertoire.push(f.future_ideas);
       
       (f.best_times_ongoing as string[] || []).forEach(time => ongoingTimes[time] = (ongoingTimes[time] || 0) + 1);
@@ -178,7 +181,7 @@ const AdminEventFeedback: React.FC = () => {
           <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p><p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1)}</p></div><Star className="h-8 w-8 text-accent fill-current" /></div>
         </Card>
         
-        <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-card md:col-span-2">
+        <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card md:col-span-2">
           <div className="flex justify-between items-start mb-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LineChartIcon className="h-3 w-3" /> NPS Trend Over Time</p>
           </div>
@@ -195,7 +198,7 @@ const AdminEventFeedback: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
+        <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
           <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p><p className="text-6xl font-black tracking-tighter">{stats?.total}</p></div><Users className="h-8 w-8 opacity-40" /></div>
         </Card>
       </div>
