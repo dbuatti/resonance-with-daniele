@@ -99,24 +99,17 @@ const MemberEditDialog: React.FC<MemberEditDialogProps> = ({ isOpen, onOpenChang
         newAvatarUrl = publicUrlData?.publicUrl || null;
       }
 
-      await supabase.auth.admin.updateUserById(member.id, {
-        user_metadata: {
-          first_name: data.first_name || null,
-          last_name: data.last_name || null,
-          avatar_url: newAvatarUrl,
-        },
-      });
-
+      // Note: We only update the profiles table. Client-side code cannot use auth.admin functions.
       const { error: profileError } = await supabase
         .from("profiles")
-        .upsert({
-          id: member.id,
+        .update({
           first_name: data.first_name || null,
           last_name: data.last_name || null,
           avatar_url: newAvatarUrl,
           voice_type: data.voice_type && data.voice_type.length > 0 ? data.voice_type : null,
           updated_at: new Date().toISOString(),
-        });
+        })
+        .eq("id", member.id);
 
       if (profileError) throw profileError;
 

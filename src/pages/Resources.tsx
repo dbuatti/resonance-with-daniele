@@ -80,7 +80,6 @@ const Resources: React.FC = () => {
     enabled: !loadingSession,
   });
 
-  // Query for the "Browse All" tab (filtered by folder)
   const fetchResources = async (folderId: string | null, currentSearchTerm: string): Promise<Resource[]> => {
     let query = supabase.from("resources").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     if (currentSearchTerm) {
@@ -101,7 +100,6 @@ const Resources: React.FC = () => {
     enabled: !loadingSession,
   });
 
-  // NEW: Query for the "PDF Library" tab (all resources across all folders)
   const { data: allResourcesForLibrary, isLoading: loadingAllResources } = useQuery<Resource[], Error, Resource[], ['allResourcesForLibrary']>({
     queryKey: ['allResourcesForLibrary'],
     queryFn: async () => {
@@ -153,6 +151,34 @@ const Resources: React.FC = () => {
     link.click();
     document.body.removeChild(link);
     showSuccess(`Downloading ${resource.title}...`);
+  };
+
+  const handleToggleNomination = async (folder: ResourceFolder) => {
+    if (!isAdmin) return;
+    const isNowNominated = !folder.is_nominated_for_dashboard;
+
+    try {
+      // If we are nominating this folder, we should un-nominate all others first
+      if (isNowNominated) {
+        await supabase
+          .from("resource_folders")
+          .update({ is_nominated_for_dashboard: false })
+          .eq("is_nominated_for_dashboard", true);
+      }
+
+      const { error } = await supabase
+        .from("resource_folders")
+        .update({ is_nominated_for_dashboard: isNowNominated })
+        .eq("id", folder.id);
+
+      if (error) throw error;
+
+      showSuccess(isNowNominated ? `"${folder.name}" is now featured on the dashboard!` : `"${folder.name}" removed from dashboard.`);
+      queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] });
+      queryClient.invalidateQueries({ queryKey: ['nominatedFolder'] });
+    } catch (err: any) {
+      showError("Failed to update nomination status.");
+    }
   };
 
   const handleFileUploadToFolder = useCallback(async (file: File, folderId: string | null) => {
@@ -297,7 +323,7 @@ const Resources: React.FC = () => {
               {currentSubFolders.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {currentSubFolders.map(f => (
-                    <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={setEditingFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={() => {}} />
+                    <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={setEditingFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={handleToggleNomination} />
                   ))}
                 </div>
               )}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Resource, ResourceFolder } from "@/types/Resource"; // Import ResourceFolder
+import { Resource, ResourceFolder } from "@/types/Resource"; 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -32,7 +32,6 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ResourceUpload from './ResourceUpload';
 
-// Define the schema for the resource form
 const resourceSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
@@ -40,7 +39,7 @@ const resourceSchema = z.object({
   url: z.string().optional().nullable(),
   is_published: z.boolean().default(true),
   folder_id: z.string().optional().nullable(),
-  voice_part: z.string().optional().nullable(), // New field
+  voice_part: z.string().optional().nullable(),
 });
 
 type ResourceFormData = z.infer<typeof resourceSchema>;
@@ -49,7 +48,7 @@ interface ResourceDialogProps {
   isOpen: boolean;
   onClose: () => void;
   editingResource: Resource | null;
-  currentFolderId: string | null; // The folder ID where the user is currently located
+  currentFolderId: string | null;
 }
 
 const voiceParts = [
@@ -76,17 +75,16 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       url: null,
       is_published: true,
       folder_id: null,
-      voice_part: null, // Default value for new field
+      voice_part: null,
     },
   });
 
   const currentType = form.watch('type');
 
-  // Fetch all folders for the dropdown
   const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("*") // Select all fields to include is_nominated_for_dashboard
+      .select("*")
       .order("name", { ascending: true });
 
     if (error) {
@@ -108,7 +106,6 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
     staleTime: 5 * 60 * 1000,
   });
 
-  // Helper function to get the full path display for a folder
   const getFolderPathDisplay = (folderId: string | null) => {
     if (folderId === null) return "Home (Root)";
     const folder = allFolders?.find(f => f.id === folderId);
@@ -128,7 +125,6 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
     return path;
   };
 
-  // Effect to reset form and state when dialog opens/changes resource
   useEffect(() => {
     if (editingResource) {
       form.reset({
@@ -138,7 +134,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         url: editingResource.url || null,
         is_published: editingResource.is_published,
         folder_id: editingResource.folder_id || null,
-        voice_part: editingResource.voice_part || null, // Set voice_part for editing
+        voice_part: editingResource.voice_part || null,
       });
       setSelectedFile(null);
       setRemoveFileRequested(false);
@@ -150,7 +146,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         url: null,
         is_published: true,
         folder_id: currentFolderId || null,
-        voice_part: null, // Default value for new field
+        voice_part: null,
       });
       setSelectedFile(null);
       setRemoveFileRequested(false);
@@ -173,8 +169,6 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
     const fileExt = file.name.split(".").pop();
     const fileName = `${resourceId}/${Date.now()}.${fileExt}`;
     const filePath = fileName;
-
-    console.log(`[ResourceDialog] Uploading file to: resources/${filePath}`);
 
     const { error: uploadErr } = await supabase.storage
       .from("resources")
@@ -202,23 +196,15 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       const url = new URL(fileUrl);
       const pathInStorage = url.pathname.split('/resources/')[1];
       
-      if (!pathInStorage) {
-        console.warn("[ResourceDialog] Could not determine storage path from URL:", fileUrl);
-        return { error: null };
-      }
+      if (!pathInStorage) return { error: null };
 
-      console.log(`[ResourceDialog] Deleting file from storage: ${pathInStorage}`);
       const { error } = await supabase.storage
         .from("resources")
         .remove([pathInStorage]);
 
-      if (error) {
-        console.error("[ResourceDialog] Error removing file:", error);
-        return { error };
-      }
+      if (error) return { error };
       return { error: null };
     } catch (e: any) {
-      console.error("[ResourceDialog] Error parsing URL for deletion:", e);
       return { error: new Error("Failed to parse file URL for deletion.") };
     }
   };
@@ -229,7 +215,6 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       return;
     }
 
-    // Validation checks specific to resource type
     const isFileResource = data.type === 'file' || data.type === 'lyrics';
     const isUrlResource = data.type === 'url' || data.type === 'youtube';
 
@@ -245,12 +230,10 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
     setIsSaving(true);
     let finalUrl: string | null = editingResource?.url || null;
     let resourceId = editingResource?.id;
-    let uploadError: Error | null = null;
-    let deleteError: Error | null = null;
     let finalOriginalFilename: string | null = editingResource?.original_filename || null;
+    let finalFileSize: number | null = editingResource?.file_size || null;
 
     try {
-      // 1. Handle File Deletion (if requested or type changed from file/lyrics to url/youtube)
       const wasFile = editingResource?.type === 'file' || editingResource?.type === 'lyrics';
       const isNowUrl = data.type === 'url' || data.type === 'youtube';
 
@@ -260,40 +243,29 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
 
       if (shouldDeleteOldFile) {
         const { error } = await deleteFile(editingResource.url!);
-        if (error) {
-          deleteError = error;
-          throw new Error("Failed to delete old file.");
-        }
+        if (error) throw new Error("Failed to delete old file.");
         finalUrl = null;
-        finalOriginalFilename = null; // Clear original filename if file is deleted
+        finalOriginalFilename = null;
+        finalFileSize = null;
       }
 
-      // 2. Handle File Upload (if a new file is selected and type is file/lyrics)
       if (selectedFile && isFileResource) {
-        // If creating a new resource, we need an ID first. If editing, use existing ID.
-        if (!resourceId) {
-          resourceId = crypto.randomUUID();
-        }
-        
+        if (!resourceId) resourceId = crypto.randomUUID();
         const { url, error } = await uploadFile(selectedFile, resourceId);
-        if (error) {
-          uploadError = error;
-          throw new Error("Failed to upload new file.");
-        }
+        if (error) throw new Error("Failed to upload new file.");
         finalUrl = url;
-        finalOriginalFilename = selectedFile.name; // Store the original name
+        finalOriginalFilename = selectedFile.name;
+        finalFileSize = selectedFile.size;
       }
 
-      // 3. Determine final URL based on type
       if (isUrlResource) {
         finalUrl = data.url || null;
-        finalOriginalFilename = null; // Clear original filename if it's a link
+        finalOriginalFilename = null;
+        finalFileSize = null;
       } else if (isFileResource && !finalUrl) {
-        // If it's a file type but no file is uploaded/retained, throw error
         throw new Error("File resource type requires an uploaded file.");
       }
 
-      // 4. Upsert Resource Metadata
       const resourceData = {
         id: resourceId,
         user_id: user.id,
@@ -304,30 +276,22 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         is_published: data.is_published,
         folder_id: data.folder_id || null,
         voice_part: data.voice_part || null,
-        original_filename: finalOriginalFilename, // NEW: Include original filename
+        original_filename: finalOriginalFilename,
+        file_size: finalFileSize,
       };
 
       const { error: dbError } = await supabase
         .from("resources")
         .upsert(resourceData, { onConflict: "id" });
 
-      if (dbError) {
-        console.error("Error saving resource metadata:", dbError);
-        throw new Error("Failed to save resource details: " + dbError.message);
-      }
+      if (dbError) throw new Error("Failed to save resource details: " + dbError.message);
 
       showSuccess(`Resource "${data.title}" ${editingResource ? 'updated' : 'created'} successfully!`);
-      
-      // Invalidate queries for the current folder and the root
-      queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId] });
-      queryClient.invalidateQueries({ queryKey: ['resources', data.folder_id] });
-      queryClient.invalidateQueries({ queryKey: ['resources', null] });
-      queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
-
+      queryClient.invalidateQueries({ queryKey: ['resources'] });
+      queryClient.invalidateQueries({ queryKey: ['allResourcesForLibrary'] });
       onClose();
     } catch (error: any) {
-      console.error("Resource operation failed:", error);
-      showError(error.message || "An unexpected error occurred during resource operation.");
+      showError(error.message || "An unexpected error occurred.");
     } finally {
       setIsSaving(false);
     }
@@ -336,20 +300,17 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
   const title = editingResource ? "Edit Resource" : "Create New Resource";
   const submitButtonText = editingResource ? "Save Changes" : "Create Resource";
   const hasFileOrUrl = (editingResource?.url && !removeFileRequested) || selectedFile;
-  
-  // FIX: Define the variables needed for the disabled prop here
   const isFileResource = currentType === 'file' || currentType === 'lyrics';
-  const isUrlResource = currentType === 'url' || currentType === 'youtube';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col p-0 overflow-y-auto"> {/* DialogContent handles scrolling */}
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col p-0 overflow-y-auto">
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle className="font-lora">{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-            <div className="grid gap-6 p-6 flex-grow"> {/* This is the scrollable area */}
+            <div className="grid gap-6 p-6 flex-grow">
               <FormField
                 control={form.control}
                 name="title"
@@ -432,13 +393,9 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="null">
-                          General / Full Choir
-                        </SelectItem>
+                        <SelectItem value="null">General / Full Choir</SelectItem>
                         {voiceParts.map((part) => (
-                          <SelectItem key={part} value={part}>
-                            {part}
-                          </SelectItem>
+                          <SelectItem key={part} value={part}>{part}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -530,9 +487,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Publish Resource
-                      </FormLabel>
+                      <FormLabel>Publish Resource</FormLabel>
                       <p className="text-sm text-muted-foreground">
                         If checked, this resource will be visible to all logged-in members.
                       </p>
@@ -546,7 +501,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
               <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving || (isFileResource && !hasFileOrUrl && !isUrlResource)}>
+              <Button type="submit" disabled={isSaving || (isFileResource && !hasFileOrUrl)}>
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...

@@ -110,6 +110,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     if (isFile) {
       const link = document.createElement('a');
       link.href = resource.url;
+      // Use original filename if available, otherwise fallback to title
       link.download = resource.original_filename || resource.title; 
       document.body.appendChild(link);
       link.click();
@@ -141,7 +142,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
       "group flex flex-col overflow-hidden transition-all duration-500 border-none shadow-lg hover:shadow-2xl bg-card rounded-[2rem]",
       !isPublished && isAdmin && "ring-2 ring-yellow-500/50"
     )}>
-      {/* Media Preview Area - Enhanced with better styling */}
       {useMediaBackdrop && (
         <div className="relative aspect-video bg-muted overflow-hidden">
           {fileDetails.isPdf || isLyrics ? (
@@ -175,7 +175,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         </div>
       )}
 
-      {/* Content Area - Enhanced Visual Hierarchy */}
       <CardContent className="p-6 flex-grow flex flex-col gap-6">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-3 flex-1 min-w-0">
@@ -202,7 +201,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
             )}
           </div>
 
-          {/* Actions Menu - Cleaner Look */}
           <div className="flex flex-col gap-2">
             <TooltipProvider>
               <Tooltip>
@@ -260,7 +258,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           </div>
         </div>
 
-        {/* Primary Action Button - More Prominent */}
         {!fileDetails.isAudio && (
           <Button 
             onClick={handlePrimaryAction} 
