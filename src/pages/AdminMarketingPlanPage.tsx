@@ -116,8 +116,8 @@ const AdminMarketingPlanPage: React.FC = () => {
         .select("name")
         .eq("is_nominated_for_dashboard", true)
         .limit(1)
-        .single();
-      if (error && error.code !== 'PGRST116') return null;
+        .maybeSingle(); // Use maybeSingle to avoid 406/PGRST116 errors if none found
+      if (error) return null;
       return data;
     },
   });
@@ -211,7 +211,7 @@ const AdminMarketingPlanPage: React.FC = () => {
   const aiPrompt = `I am Daniele Buatti, a vocal coach and choir director. I'm running a pop-up choir session called "${selectedEvent?.title}" on ${eventDateFormatted} at ${eventLocation}. 
 
 We are focusing on the song "${focusSong}". 
-Current status: We have ${stats?.totalTickets} tickets sold out of a 125 target. 
+Current status: We have ${stats?.totalTickets || 0} tickets sold out of a 125 target. 
 Days remaining: ${daysUntil}.
 
 Please generate 3 variations of a warm, expressive, and human-centric Instagram caption. 
@@ -341,12 +341,12 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-green-600 flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" /> Revenue Intel
                   </h3>
-                  <p className="text-4xl font-black text-green-600">${stats?.totalEarnings.toFixed(0)}</p>
+                  <p className="text-4xl font-black text-green-600">${(stats?.totalEarnings || 0).toFixed(0)}</p>
                 </div>
                 <div className="mt-6 flex justify-between items-end">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Expenses</p>
-                    <p className="text-lg font-bold text-red-500">-${stats?.totalExpenses.toFixed(0)}</p>
+                    <p className="text-lg font-bold text-red-500">-${(stats?.totalExpenses || 0).toFixed(0)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Break Even</p>
