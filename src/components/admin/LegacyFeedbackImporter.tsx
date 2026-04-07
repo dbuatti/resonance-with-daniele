@@ -31,20 +31,37 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
   const parseLegacyDate = (dateStr: string): Date | null => {
     if (!dateStr) return null;
     const cleanStr = dateStr.trim().replace(/^"|"$/g, "");
-    const formats = ["dd/MM/yyyy HH:mm:ss", "d/M/yyyy HH:mm:ss", "dd/MM/yyyy h:mm:ss a", "d/M/yyyy h:mm:ss a", "dd/MM/yyyy", "d/M/yyyy", "MM/dd/yyyy HH:mm:ss", "M/d/yyyy HH:mm:ss"];
+    // Common Google Forms / Excel date formats
+    const formats = [
+      "dd/MM/yyyy HH:mm:ss", 
+      "d/M/yyyy HH:mm:ss", 
+      "dd/MM/yyyy h:mm:ss a", 
+      "d/M/yyyy h:mm:ss a", 
+      "dd/MM/yyyy", 
+      "d/M/yyyy", 
+      "MM/dd/yyyy HH:mm:ss", 
+      "M/d/yyyy HH:mm:ss",
+      "yyyy-MM-dd HH:mm:ss"
+    ];
+    
     for (const fmt of formats) {
       try {
         const parsed = parse(cleanStr, fmt, new Date());
         if (isValid(parsed)) return parsed;
       } catch (e) { continue; }
     }
+    
     const standardDate = new Date(cleanStr);
     return isValid(standardDate) ? standardDate : null;
   };
 
   const findMatchingEventId = (timestamp: Date | null): string => {
     if (!timestamp || !allEvents || allEvents.length === 0) return eventId;
-    const possibleEvents = allEvents.filter(e => startOfDay(new Date(e.date)) <= startOfDay(timestamp)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Find the most recent event that happened before or on the day of the feedback
+    const possibleEvents = allEvents
+      .filter(e => startOfDay(new Date(e.date)) <= startOfDay(timestamp))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
     return possibleEvents[0]?.id || eventId;
   };
 
@@ -57,25 +74,55 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
     reader.onload = async (e) => {
       try {
         const text = e.target?.result as string;
-        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
-        if (lines.length < 2) throw new Error("CSV file is empty");
-
-        const parseCSVLine = (line: string) => {
-          const result = [];
+        
+        // Robust CSV Parser that handles newlines inside quotes
+        const parseCSV = (csvText: string) => {
+          const rows = [];
+          let currentRow: string[] = [];
           let curValue = "";
           let inQuotes = false;
-          for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') inQuotes = !inQuotes;
-            else if (char === ',' && !inQuotes) { result.push(curValue.trim()); curValue = ""; }
-            else curValue += char;
+          
+          for (let i = 0; i < csvText.length; i++) {
+            const char = csvText[i];
+            const nextChar = csvText[i + 1];
+            
+            if (char === '"') {
+              if (inQuotes && nextChar === '"') {
+                curValue += '"'; // Escaped quote
+                i++;
+              } else {
+                inQuotes = !inQuotes;
+              }
+            } else if (char === ',' && !inQuotes) {
+              currentRow.push(curValue.trim());
+              curValue = "";
+            } else if ((char === '\r' || char === '\n') && !inQuotes) {
+              if (curValue !== "" || currentRow.length > 0) {
+                currentRow.push(curValue.trim());
+                rows.push(currentRow);
+                curValue = "";
+                currentRow = [];
+              }
+              if (char === '\r' && nextChar === '\n') i++; // Skip \n in \r\n
+            } else {
+              curValue += char;
+            }
           }
-          result.push(curValue.trim());
-          return result.map(val => val.replace(/^"|"$/g, "").trim());
+          
+          if (curValue !== "" || currentRow.length > 0) {
+            currentRow.push(curValue.trim());
+            rows.push(currentRow);
+          }
+          return rows;
         };
 
-        const headers = parseCSVLine(lines[0]);
-        const findHeader = (terms: string[]) => headers.findIndex(h => terms.some(term => h.toLowerCase().includes(term.toLowerCase())));
+        const allRows = parseCSV(text);
+        if (allRows.length < 2) throw new Error("CSV file is empty or invalid.");
+
+        const headers = allRows[0];
+        const findHeader = (terms: string[]) => headers.findIndex(h => 
+          terms.some(term => h.toLowerCase().includes(term.toLowerCase()))
+        );
 
         const h = {
           timestamp: findHeader(["timestamp"]),
@@ -97,55 +144,95 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
           futureIdeas: findHeader(["ideas for repertoire going forward"]),
         };
 
-        const feedbackToInsert = lines.slice(1).map(line => {
-          const v = parseCSVLine(line);
-          const timestampDate = parseLegacyDate(v[h.timestamp]);
-          return {
-            event_id: findMatchingEventId(timestampDate),
-            user_id: null,
-            overall_feeling: v[h.feeling] || "Neutral",
-            venue_feedback: v[h.venue] || "",
-            repertoire_feedback: v[h.repertoire] || "",
-            enjoyed_most: v[h.enjoyed] || "",
-            improvements: v[h.improvements] || null,
-            time_slot_rating: v[h.timeSlot] || "Perfect",
-            future_repertoire: v[h.futureRep] || null,
-            future_ideas: v[h.futureIdeas] || null,
-            price_point: v[h.price] || "Other",
-            interest_next_month: v[h.nextMonth] ? v[h.nextMonth].split(",").map(s => s.trim()) : [],
-            best_times_ongoing: v[h.bestTimes] ? v[h.bestTimes].split(",").map(s => s.trim()) : [],
-            regular_attendance_interest: v[h.regular] || "Maybe",
-            attendance_frequency: v[h.frequency] || "Occasionally",
-            recommend_score: parseInt(v[h.score]) || 10,
-            how_heard: v[h.howHeard] || null,
-            additional_comments: v[h.comments] || null,
-            created_at: timestampDate ? timestampDate.toISOString() : new Date().toISOString(),
-          };
-        });
+        const feedbackToInsert = allRows.slice(1)
+          .map(v => {
+            const timestampDate = parseLegacyDate(v[h.timestamp]);
+            
+            // Skip rows that don't have a valid timestamp (likely malformed or empty)
+            if (!timestampDate) return null;
+
+            return {
+              event_id: findMatchingEventId(timestampDate),
+              user_id: null,
+              overall_feeling: v[h.feeling] || "Neutral",
+              venue_feedback: v[h.venue] || "",
+              repertoire_feedback: v[h.repertoire] || "",
+              enjoyed_most: v[h.enjoyed] || "",
+              improvements: v[h.improvements] || null,
+              time_slot_rating: v[h.timeSlot] || "Perfect",
+              future_repertoire: v[h.futureRep] || null,
+              future_ideas: v[h.futureIdeas] || null,
+              price_point: v[h.price] || "Other",
+              interest_next_month: v[h.nextMonth] ? v[h.nextMonth].split(",").map(s => s.trim()) : [],
+              best_times_ongoing: v[h.bestTimes] ? v[h.bestTimes].split(",").map(s => s.trim()) : [],
+              regular_attendance_interest: v[h.regular] || "Maybe",
+              attendance_frequency: v[h.frequency] || "Occasionally",
+              recommend_score: parseInt(v[h.score]) || 10,
+              how_heard: v[h.howHeard] || null,
+              additional_comments: v[h.comments] || null,
+              created_at: timestampDate.toISOString(),
+            };
+          })
+          .filter(Boolean); // Remove null entries
+
+        if (feedbackToInsert.length === 0) {
+          throw new Error("No valid feedback entries found in the CSV.");
+        }
 
         const { error } = await supabase.from("event_feedback").insert(feedbackToInsert);
         if (error) throw error;
+
         showSuccess(`Successfully imported ${feedbackToInsert.length} responses!`);
         queryClient.invalidateQueries({ queryKey: ["eventFeedbackData"] });
         setIsOpen(false);
-      } catch (err: any) { showError(err.message || "Failed to import CSV."); }
-      finally { setIsImporting(false); }
+      } catch (err: any) { 
+        console.error("Import error:", err);
+        showError(err.message || "Failed to import CSV."); 
+      } finally { 
+        setIsImporting(false); 
+      }
     };
     reader.readAsText(file);
   }, [eventId, queryClient, allEvents]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { "text/csv": [".csv"] }, multiple: false });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    onDrop, 
+    accept: { "text/csv": [".csv"] }, 
+    multiple: false 
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild><Button variant="outline" className="rounded-xl font-bold border-primary/20 text-primary"><Upload className="mr-2 h-4 w-4" /> Import Legacy CSV</Button></DialogTrigger>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="rounded-xl font-bold border-primary/20 text-primary">
+          <Upload className="mr-2 h-4 w-4" /> Import Legacy CSV
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] rounded-[2rem]">
-        <DialogHeader><DialogTitle className="text-2xl font-black font-lora">Intelligent Feedback Importer</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-black font-lora">Intelligent Feedback Importer</DialogTitle>
+        </DialogHeader>
         <div className="py-6 space-y-4">
-          <div className="bg-primary/5 p-4 rounded-2xl flex items-start gap-3 border border-primary/10"><Info className="h-5 w-5 text-primary mt-0.5" /><p className="text-xs text-muted-foreground leading-relaxed">I'll now look for <strong>Venue</strong>, <strong>Repertoire</strong>, and <strong>Ongoing Availability</strong> headers automatically.</p></div>
-          <div {...getRootProps()} className={`border-4 border-dashed rounded-[2rem] p-12 text-center transition-all cursor-pointer ${isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/40"}`}><input {...getInputProps()} />{isImporting ? <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" /> : <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />}<p className="text-lg font-bold mt-4">{isDragActive ? "Drop the CSV here" : "Drag & drop Google Forms CSV"}</p></div>
+          <div className="bg-primary/5 p-4 rounded-2xl flex items-start gap-3 border border-primary/10">
+            <Info className="h-5 w-5 text-primary mt-0.5" />
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              I'll automatically match feedback to the correct event based on the timestamp. 
+              I also handle multi-line comments and special characters.
+            </p>
+          </div>
+          <div {...getRootProps()} className={`border-4 border-dashed rounded-[2rem] p-12 text-center transition-all cursor-pointer ${isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/40"}`}>
+            <input {...getInputProps()} />
+            {isImporting ? (
+              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+            ) : (
+              <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            )}
+            <p className="text-lg font-bold mt-4">{isDragActive ? "Drop the CSV here" : "Drag & drop Google Forms CSV"}</p>
+          </div>
         </div>
-        <DialogFooter><Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl font-bold">Cancel</Button></DialogFooter>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl font-bold">Cancel</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
