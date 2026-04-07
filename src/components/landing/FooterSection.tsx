@@ -3,7 +3,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Facebook, Instagram, Mail } from "lucide-react";
+import { Facebook, Instagram, Mail, Users } from "lucide-react";
 
 const FooterSection: React.FC = () => {
   return (
@@ -37,17 +37,22 @@ const FooterSection: React.FC = () => {
         <div>
           <h3 className="text-xl font-bold mb-4">Connect</h3>
           <div className="flex justify-center md:justify-start space-x-4 mb-4">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
-              <a href="https://www.facebook.com/danielebuatti" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild title="Facebook Profile">
+              <a href="https://www.facebook.com/profile.php?id=61583841098904" target="_blank" rel="noopener noreferrer">
                 <Facebook className="h-6 w-6" />
               </a>
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
-              <a href="https://www.instagram.com/daniele.buatti/" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild title="Facebook Group">
+              <a href="https://www.facebook.com/groups/828921456594314" target="_blank" rel="noopener noreferrer">
+                <Users className="h-6 w-6" />
+              </a>
+            </Button>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild title="Instagram">
+              <a href="https://www.instagram.com/resonance.choir.melb/" target="_blank" rel="noopener noreferrer">
                 <Instagram className="h-6 w-6" />
               </a>
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" asChild title="Email">
               <a href="mailto:resonancewithdaniele@gmail.com">
                 <Mail className="h-6 w-6" />
               </a>
