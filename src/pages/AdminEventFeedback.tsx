@@ -4,33 +4,32 @@ import React, { useState, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap } from "lucide-react";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { showSuccess } from "@/utils/toast";
+import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import LegacyFeedbackImporter from "@/components/admin/LegacyFeedbackImporter";
 
 const AdminEventFeedback: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedEventId, setSelectedEventId] = useState<string>("all");
+  const [aiInsights, setAiInsights] = useState<any>(null);
 
   const { data: events, isLoading: loadingEvents } = useQuery({
     queryKey: ["allEventsForFeedbackAdmin"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("id, title, date")
-        .order("date", { ascending: false });
+      const { data, error } = await supabase.from("events").select("id, title, date").order("date", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -39,39 +38,39 @@ const AdminEventFeedback: React.FC = () => {
   const { data: feedback, isLoading: loadingFeedback } = useQuery({
     queryKey: ["eventFeedbackData", selectedEventId],
     queryFn: async () => {
-      let query = supabase
-        .from("event_feedback")
-        .select(`
-          *,
-          profiles (first_name, last_name, email),
-          events (title, date)
-        `)
-        .order("created_at", { ascending: false });
-      
-      if (selectedEventId !== "all") {
-        query = query.eq("event_id", selectedEventId);
-      }
-
+      let query = supabase.from("event_feedback").select(`*, profiles (first_name, last_name, email), events (title, date)`).order("created_at", { ascending: false });
+      if (selectedEventId !== "all") query = query.eq("event_id", selectedEventId);
       const { data, error } = await query;
       if (error) throw error;
       return data;
     },
-    enabled: true,
+  });
+
+  const analyzeMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('analyze-feedback', {
+        body: { eventId: selectedEventId }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setAiInsights(data);
+      showSuccess("AI Analysis Complete!");
+    },
+    onError: (err: any) => showError(err.message)
   });
 
   const stats = useMemo(() => {
     if (!feedback || feedback.length === 0) return null;
-    
     const total = feedback.length;
     const avgScore = feedback.reduce((acc, f) => acc + (f.recommend_score || 0), 0) / total;
-    
     const feelings: Record<string, number> = {};
     const timeSlots: Record<string, number> = {};
     const prices: Record<string, number> = {};
     const regularInterest: Record<string, number> = {};
     const frequencies: Record<string, number> = {};
     const marketingSources: Record<string, number> = {};
-    
     const nextMonthDates: Record<string, number> = {};
     const ongoingTimes: Record<string, number> = {};
     const repertoire: string[] = [];
@@ -82,80 +81,14 @@ const AdminEventFeedback: React.FC = () => {
       prices[f.price_point] = (prices[f.price_point] || 0) + 1;
       regularInterest[f.regular_attendance_interest] = (regularInterest[f.regular_attendance_interest] || 0) + 1;
       frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
-      
-      if (f.how_heard) {
-        marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
-      }
-
-      if (f.future_repertoire) {
-        repertoire.push(f.future_repertoire);
-      }
-
-      const nextMonthArr = f.interest_next_month as string[] || [];
-      nextMonthArr.forEach(date => {
-        nextMonthDates[date] = (nextMonthDates[date] || 0) + 1;
-      });
-
-      const ongoingArr = f.best_times_ongoing as string[] || [];
-      ongoingArr.forEach(time => {
-        ongoingTimes[time] = (ongoingTimes[time] || 0) + 1;
-      });
+      if (f.how_heard) marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
+      if (f.future_repertoire) repertoire.push(f.future_repertoire);
+      (f.interest_next_month as string[] || []).forEach(date => nextMonthDates[date] = (nextMonthDates[date] || 0) + 1);
+      (f.best_times_ongoing as string[] || []).forEach(time => ongoingTimes[time] = (ongoingTimes[time] || 0) + 1);
     });
 
-    return { 
-      total, 
-      avgScore, 
-      feelings, 
-      timeSlots, 
-      prices, 
-      regularInterest, 
-      frequencies, 
-      marketingSources,
-      nextMonthDates,
-      ongoingTimes,
-      repertoire
-    };
+    return { total, avgScore, feelings, timeSlots, prices, regularInterest, frequencies, marketingSources, nextMonthDates, ongoingTimes, repertoire };
   }, [feedback]);
-
-  const handleExport = () => {
-    if (!feedback) return;
-    const csv = [
-      ["Event", "Date", "Name", "Email", "Feeling", "Enjoyed Most", "Improvements", "Score", "Time Slot", "Price", "Regular Interest", "Frequency", "How Heard", "Comments"].join(","),
-      ...feedback.map(f => [
-        `"${f.events?.title || 'Unknown'}"`,
-        `"${f.events?.date || ''}"`,
-        f.profiles ? `"${f.profiles.first_name} ${f.profiles.last_name}"` : '"Legacy/Anonymous"',
-        f.profiles ? `"${f.profiles.email}"` : '""',
-        `"${f.overall_feeling}"`,
-        `"${f.enjoyed_most?.replace(/"/g, '""')}"`,
-        `"${f.improvements?.replace(/"/g, '""')}"`,
-        f.recommend_score,
-        `"${f.time_slot_rating}"`,
-        `"${f.price_point}"`,
-        `"${f.regular_attendance_interest}"`,
-        `"${f.attendance_frequency}"`,
-        `"${f.how_heard || ''}"`,
-        `"${f.additional_comments?.replace(/"/g, '""')}"`
-      ].join(","))
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `resonance-feedback-${selectedEventId}.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showSuccess("Exported to CSV!");
-  };
-
-  const copyQuote = (text: string, author: string, eventTitle?: string) => {
-    const formatted = `"${text}" — ${author}${eventTitle ? ` (${eventTitle})` : ''}, Resonance Participant`;
-    navigator.clipboard.writeText(formatted);
-    showSuccess("Quote copied for social media!");
-  };
 
   if (loading || loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>;
   if (!user?.is_admin) { navigate("/"); return null; }
@@ -166,386 +99,111 @@ const AdminEventFeedback: React.FC = () => {
       
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div className="space-y-2">
-          <h1 className="text-5xl font-black font-lora tracking-tighter">
-            {selectedEventId === "all" ? "Global Feedback" : "Event Feedback"}
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            {selectedEventId === "all" 
-              ? "Aggregated insights from every session in Resonance history." 
-              : "Analyze how this specific session landed with the community."}
-          </p>
+          <h1 className="text-5xl font-black font-lora tracking-tighter">{selectedEventId === "all" ? "Global Feedback" : "Event Feedback"}</h1>
+          <p className="text-xl text-muted-foreground">{selectedEventId === "all" ? "Aggregated insights from every session." : "Analyze how this specific session landed."}</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
           {selectedEventId !== "all" && <LegacyFeedbackImporter eventId={selectedEventId} />}
           <div className="w-full md:w-72 space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select View</label>
             <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-              <SelectTrigger className="h-12 rounded-xl shadow-xl bg-card border-2 border-primary/10">
-                <SelectValue placeholder="Choose an event..." />
-              </SelectTrigger>
+              <SelectTrigger className="h-12 rounded-xl shadow-xl bg-card border-2 border-primary/10"><SelectValue placeholder="Choose an event..." /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="font-bold text-primary">
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" /> All Events (Aggregated)
-                  </div>
-                </SelectItem>
-                {events?.map((event) => (
-                  <SelectItem key={event.id} value={event.id} className="font-bold">
-                    {event.title} ({format(new Date(event.date), "MMM d")})
-                  </SelectItem>
-                ))}
+                <SelectItem value="all" className="font-bold text-primary"><div className="flex items-center gap-2"><Globe className="h-4 w-4" /> All Events</div></SelectItem>
+                {events?.map((event) => (<SelectItem key={event.id} value={event.id} className="font-bold">{event.title} ({format(new Date(event.date), "MMM d")})</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
         </div>
       </header>
 
-      {loadingFeedback ? (
-        <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>
-      ) : !feedback || feedback.length === 0 ? (
-        <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]">
-          <Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" />
-          <p className="text-xl font-bold text-muted-foreground">No feedback found for this selection.</p>
-        </Card>
-      ) : (
-        <div className="space-y-10">
-          {/* High Level Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-primary text-primary-foreground rounded-[2rem] shadow-xl border-none p-8">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p>
-                  <p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1)}</p>
-                </div>
-                <Star className="h-8 w-8 text-accent fill-current" />
+      {selectedEventId !== "all" && (
+        <section className="mb-12">
+          <Card className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-[3rem] shadow-2xl border-none overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+            <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
+              <div className="bg-white/20 p-6 rounded-[2rem] shadow-inner"><Brain className="h-12 w-12 text-accent" /></div>
+              <div className="flex-1 text-center md:text-left space-y-2">
+                <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">AI Strategy Engine</h3>
+                <p className="text-3xl font-black font-lora leading-tight">Generate deep insights from this session's feedback.</p>
               </div>
-              <p className="mt-4 text-sm font-medium opacity-80">Out of 10 based on {stats?.total} total responses.</p>
-            </Card>
-
-            <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-card">
-              <div className="flex justify-between items-start mb-6">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Overall Sentiment</p>
-                <TrendingUp className="h-6 w-6 text-green-500" />
-              </div>
-              <div className="space-y-4">
-                {Object.entries(stats?.feelings || {}).map(([feeling, count]) => (
-                  <div key={feeling} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span>{feeling}</span>
-                      <span>{Math.round((count / stats!.total) * 100)}%</span>
-                    </div>
-                    <Progress value={(count / stats!.total) * 100} className="h-1.5" />
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p>
-                  <p className="text-6xl font-black tracking-tighter">{stats?.total}</p>
-                </div>
-                <Users className="h-8 w-8 opacity-40" />
-              </div>
-              <Button variant="ghost" className="mt-4 w-full bg-white/20 hover:bg-white/30 font-black rounded-xl" onClick={handleExport}>
-                <Download className="h-4 w-4 mr-2" /> Export Full Dataset
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => analyzeMutation.mutate()} disabled={analyzeMutation.isPending}>
+                {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-5 w-5" /> Run AI Analysis</>}
               </Button>
-            </Card>
-          </div>
-
-          {/* Logistics Breakdowns */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="rounded-[2rem] shadow-lg border-none p-6 bg-card">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-blue-50 rounded-lg"><Clock className="h-5 w-5 text-blue-600" /></div>
-                <h3 className="font-black text-sm uppercase tracking-widest">Time Slot Rating</h3>
-              </div>
-              <div className="space-y-4">
-                {Object.entries(stats?.timeSlots || {}).map(([slot, count]) => (
-                  <div key={slot} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span>{slot}</span>
-                      <span className="text-muted-foreground">{count}</span>
-                    </div>
-                    <Progress value={(count / stats!.total) * 100} className="h-1 bg-blue-100" />
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="rounded-[2rem] shadow-lg border-none p-6 bg-card">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-green-50 rounded-lg"><DollarSign className="h-5 w-5 text-green-600" /></div>
-                <h3 className="font-black text-sm uppercase tracking-widest">Price Point Comfort</h3>
-              </div>
-              <div className="space-y-4">
-                {Object.entries(stats?.prices || {}).map(([price, count]) => (
-                  <div key={price} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span>{price}</span>
-                      <span className="text-muted-foreground">{count}</span>
-                    </div>
-                    <Progress value={(count / stats!.total) * 100} className="h-1 bg-green-100" />
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="rounded-[2rem] shadow-lg border-none p-6 bg-card">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-purple-50 rounded-lg"><UserCheck className="h-5 w-5 text-purple-600" /></div>
-                <h3 className="font-black text-sm uppercase tracking-widest">Regular Interest</h3>
-              </div>
-              <div className="space-y-4">
-                {Object.entries(stats?.regularInterest || {}).map(([interest, count]) => (
-                  <div key={interest} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span>{interest}</span>
-                      <span className="text-muted-foreground">{count}</span>
-                    </div>
-                    <Progress value={(count / stats!.total) * 100} className="h-1 bg-purple-100" />
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          {/* Scheduling Intelligence */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="rounded-[2.5rem] shadow-xl border-none bg-card overflow-hidden">
-              <CardHeader className="bg-primary/5 pb-4">
-                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-                  <CalendarCheck className="h-5 w-5 text-primary" /> Upcoming Interest
-                </CardTitle>
-                <CardDescription>Which specific dates are people free for the next session?</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {Object.entries(stats?.nextMonthDates || {})
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([date, count]) => (
-                      <div key={date} className="space-y-1">
-                        <div className="flex justify-between text-sm font-bold">
-                          <span>{date}</span>
-                          <span className="text-primary">{count} votes</span>
-                        </div>
-                        <Progress value={(count / stats!.total) * 100} className="h-2" />
-                      </div>
-                    ))}
-                  {Object.keys(stats?.nextMonthDates || {}).length === 0 && (
-                    <p className="text-center text-muted-foreground italic py-8">No date preferences recorded.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[2.5rem] shadow-xl border-none bg-card overflow-hidden">
-              <CardHeader className="bg-primary/5 pb-4">
-                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" /> Ongoing Availability
-                </CardTitle>
-                <CardDescription>What general times work best for the community long-term?</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {Object.entries(stats?.ongoingTimes || {})
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([time, count]) => (
-                      <div key={time} className="space-y-1">
-                        <div className="flex justify-between text-sm font-bold">
-                          <span>{time}</span>
-                          <span className="text-primary">{count} people</span>
-                        </div>
-                        <Progress value={(count / stats!.total) * 100} className="h-2 bg-primary/10" />
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Repertoire & Growth */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="lg:col-span-2 rounded-[2.5rem] shadow-xl border-none bg-card overflow-hidden">
-              <CardHeader className="bg-accent/10 pb-4">
-                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-                  <Music className="h-5 w-5 text-accent-foreground" /> Repertoire Cloud
-                </CardTitle>
-                <CardDescription>What songs and artists do they want to sing next?</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="flex flex-wrap gap-3">
-                  {stats?.repertoire.map((item, i) => (
-                    <Badge key={i} variant="secondary" className="px-4 py-2 rounded-xl text-sm font-bold bg-muted hover:bg-primary/10 hover:text-primary transition-colors cursor-default">
-                      {item}
-                    </Badge>
-                  ))}
-                  {stats?.repertoire.length === 0 && (
-                    <p className="text-center text-muted-foreground italic w-full py-8">No repertoire suggestions yet.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[2.5rem] shadow-xl border-none bg-card overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4">
-                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-                  <Search className="h-5 w-5 text-primary" /> Marketing Attribution
-                </CardTitle>
-                <CardDescription>How did they find Resonance?</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {Object.entries(stats?.marketingSources || {})
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([source, count]) => (
-                      <div key={source} className="space-y-1">
-                        <div className="flex justify-between text-xs font-bold">
-                          <span>{source}</span>
-                          <span className="text-muted-foreground">{count}</span>
-                        </div>
-                        <Progress value={(count / stats!.total) * 100} className="h-1.5" />
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Attendance Frequency */}
-          <Card className="rounded-[2.5rem] shadow-xl border-none bg-primary text-primary-foreground overflow-hidden">
-            <CardContent className="p-10 flex flex-col md:flex-row items-center gap-12">
-              <div className="md:w-1/3 space-y-4">
-                <div className="bg-white/20 p-4 rounded-2xl inline-block">
-                  <Zap className="h-8 w-8 text-accent" />
-                </div>
-                <h2 className="text-3xl font-black font-lora leading-tight">Commitment Levels</h2>
-                <p className="text-primary-foreground/80 font-medium">How often would your community attend if the timing was right?</p>
-              </div>
-              <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-6">
-                {Object.entries(stats?.frequencies || {}).map(([freq, count]) => (
-                  <div key={freq} className="bg-white/10 p-6 rounded-3xl text-center space-y-2 border border-white/10">
-                    <p className="text-4xl font-black tracking-tighter">{count}</p>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70">{freq}</p>
-                  </div>
-                ))}
-              </div>
             </CardContent>
           </Card>
 
-          {/* Qualitative Feedback */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4">
-                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-primary" /> What they loved
-                </CardTitle>
-                <CardDescription>Aggregated highlights from all selected sessions.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[500px]">
-                  <div className="p-6 space-y-6">
-                    {feedback.map((f, i) => (
-                      <div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0">
-                        <p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            — {f.profiles?.first_name || "Legacy Member"} 
-                            {selectedEventId === "all" && ` (${f.events?.title})`}
-                          </p>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => copyQuote(f.enjoyed_most || "", f.profiles?.first_name || "Member", f.events?.title)}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+          {aiInsights && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 animate-fade-in-up">
+              <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><CheckCircle2 className="h-5 w-5 text-green-500" /> Top Highlights</CardTitle>
+                <ul className="space-y-4">
+                  {aiInsights.top_highlights.map((h: string, i: number) => (
+                    <li key={i} className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-2xl text-sm font-bold">{h}</li>
+                  ))}
+                </ul>
+              </Card>
+              <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><AlertTriangle className="h-5 w-5 text-destructive" /> Critical Friction</CardTitle>
+                <ul className="space-y-4">
+                  {aiInsights.critical_friction.map((f: string, i: number) => (
+                    <li key={i} className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl text-sm font-bold">{f}</li>
+                  ))}
+                </ul>
+              </Card>
+              <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-10 bg-accent text-accent-foreground">
+                <CardTitle className="text-2xl font-black font-lora flex items-center gap-3 mb-4"><Zap className="h-6 w-6" /> Strategic Advice for Daniele</CardTitle>
+                <p className="text-xl font-medium leading-relaxed italic">"{aiInsights.strategic_advice}"</p>
+              </Card>
+            </div>
+          )}
+        </section>
+      )}
 
-            <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4">
-                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" /> Improvements & Suggestions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[500px]">
-                  <div className="p-6 space-y-6">
-                    {feedback.filter(f => f.improvements).map((f, i) => (
-                      <div key={i} className="space-y-2 border-b border-border/50 pb-6 last:border-0">
-                        <p className="text-sm italic font-medium leading-relaxed">"{f.improvements}"</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                          — {f.profiles?.first_name || "Legacy Member"}
-                          {selectedEventId === "all" && ` (${f.events?.title})`}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
+      {loadingFeedback ? (
+        <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>
+      ) : !feedback || feedback.length === 0 ? (
+        <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]"><Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" /><p className="text-xl font-bold text-muted-foreground">No feedback found.</p></Card>
+      ) : (
+        <div className="space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-primary text-primary-foreground rounded-[2rem] shadow-xl border-none p-8">
+              <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p><p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1)}</p></div><Star className="h-8 w-8 text-accent fill-current" /></div>
+            </Card>
+            <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-card">
+              <div className="flex justify-between items-start mb-6"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Overall Sentiment</p><TrendingUp className="h-6 w-6 text-green-500" /></div>
+              <div className="space-y-4">{Object.entries(stats?.feelings || {}).map(([feeling, count]) => (<div key={feeling} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{feeling}</span><span>{Math.round((count / stats!.total) * 100)}%</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5" /></div>))}</div>
+            </Card>
+            <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
+              <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p><p className="text-6xl font-black tracking-tighter">{stats?.total}</p></div><Users className="h-8 w-8 opacity-40" /></div>
             </Card>
           </div>
 
-          {/* Full Table */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
+              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
+              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p></div>))}</div></ScrollArea></CardContent>
+            </Card>
+            <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
+              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> Improvements</CardTitle></CardHeader>
+              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.filter(f => f.improvements).map((f, i) => (<div key={i} className="space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed">"{f.improvements}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p></div>))}</div></ScrollArea></CardContent>
+            </Card>
+          </div>
+
           <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-            <CardHeader className="bg-muted/30">
-              <CardTitle className="text-xl font-black font-lora">Detailed Responses</CardTitle>
-            </CardHeader>
+            <CardHeader className="bg-muted/30"><CardTitle className="text-xl font-black font-lora">Detailed Responses</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-muted/20">
-                    <TableRow>
-                      <TableHead className="pl-8">Member</TableHead>
-                      {selectedEventId === "all" && <TableHead>Event</TableHead>}
-                      <TableHead>Feeling</TableHead>
-                      <TableHead>Score</TableHead>
-                      <TableHead>Time Slot</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead className="pr-8">Regular?</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                  <TableHeader className="bg-muted/20"><TableRow><TableHead className="pl-8">Member</TableHead><TableHead>Feeling</TableHead><TableHead>Venue</TableHead><TableHead>Repertoire</TableHead><TableHead>Score</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {feedback.map((f) => (
                       <TableRow key={f.id} className="hover:bg-muted/10 transition-colors">
-                        <TableCell className="pl-8 font-bold">
-                          {f.profiles ? `${f.profiles.first_name} ${f.profiles.last_name}` : (
-                            <div className="flex items-center gap-2 text-muted-foreground italic">
-                              <History className="h-3 w-3" /> Legacy
-                            </div>
-                          )}
-                        </TableCell>
-                        {selectedEventId === "all" && (
-                          <TableCell className="text-xs font-bold text-primary">
-                            {f.events?.title || "Unknown"}
-                          </TableCell>
-                        )}
-                        <TableCell>
-                          <Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">{f.overall_feeling}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 font-black text-primary">
-                            <Star className="h-3 w-3 fill-current" /> {f.recommend_score}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-xs font-medium">{f.time_slot_rating}</TableCell>
-                        <TableCell className="text-xs font-medium">{f.price_point}</TableCell>
-                        <TableCell className="pr-8">
-                          <Badge className={cn(
-                            "font-black text-[10px] uppercase tracking-widest",
-                            f.regular_attendance_interest === "Yes" ? "bg-green-500" : "bg-muted text-muted-foreground"
-                          )}>
-                            {f.regular_attendance_interest}
-                          </Badge>
-                        </TableCell>
+                        <TableCell className="pl-8 font-bold">{f.profiles ? `${f.profiles.first_name} ${f.profiles.last_name}` : "Legacy"}</TableCell>
+                        <TableCell><Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">{f.overall_feeling}</Badge></TableCell>
+                        <TableCell className="text-xs max-w-[200px] truncate">{f.venue_feedback}</TableCell>
+                        <TableCell className="text-xs max-w-[200px] truncate">{f.repertoire_feedback}</TableCell>
+                        <TableCell><div className="flex items-center gap-1 font-black text-primary"><Star className="h-3 w-3 fill-current" /> {f.recommend_score}</div></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
