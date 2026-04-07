@@ -337,7 +337,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                         <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">Today's High-Impact Mission</h3>
                         <p className="text-4xl font-black font-lora leading-tight">{dailyMission.title}: {dailyMission.task}</p>
                       </div>
-                      <Button size="lg" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90 font-black rounded-2xl h-16 px-8 shadow-2xl group">
+                      <Button size="lg" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => {}}>
                         Execute Mission <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
                       </Button>
                     </CardContent>
