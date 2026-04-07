@@ -89,7 +89,28 @@ const AdminEventFeedback: React.FC = () => {
       (f.best_times_ongoing as string[] || []).forEach(time => ongoingTimes[time] = (ongoingTimes[time] || 0) + 1);
     });
 
-    return { total, avgScore, feelings, timeSlots, prices, regularInterest, frequencies, marketingSources, nextMonthDates, ongoingTimes, repertoire };
+    // Helper to get the most frequent key
+    const getMode = (obj: Record<string, number>) => {
+      return Object.entries(obj).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+    };
+
+    return { 
+      total, 
+      avgScore, 
+      feelings, 
+      timeSlots, 
+      prices, 
+      regularInterest, 
+      frequencies, 
+      marketingSources, 
+      nextMonthDates, 
+      ongoingTimes, 
+      repertoire,
+      topPrice: getMode(prices),
+      topTimeSlot: getMode(timeSlots),
+      topPreferredTime: getMode(ongoingTimes),
+      topFrequency: getMode(frequencies)
+    };
   }, [feedback]);
 
   if (loading || loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>;
@@ -118,6 +139,61 @@ const AdminEventFeedback: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {/* Top Level Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-primary text-primary-foreground rounded-[2rem] shadow-xl border-none p-8">
+          <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p><p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1)}</p></div><Star className="h-8 w-8 text-accent fill-current" /></div>
+        </Card>
+        <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-card">
+          <div className="flex justify-between items-start mb-6"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Overall Sentiment</p><TrendingUp className="h-6 w-6 text-green-500" /></div>
+          <div className="space-y-4">{Object.entries(stats?.feelings || {}).map(([feeling, count]) => (<div key={feeling} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{feeling}</span><span>{Math.round((count / stats!.total) * 100)}%</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5" /></div>))}</div>
+        </Card>
+        <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
+          <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p><p className="text-6xl font-black tracking-tighter">{stats?.total}</p></div><Users className="h-8 w-8 opacity-40" /></div>
+        </Card>
+      </div>
+
+      {/* Logistics Snapshot - Quick Insights */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 px-2">
+          <div className="h-8 w-1.5 bg-primary rounded-full" />
+          <h2 className="text-3xl font-black font-lora tracking-tight">Logistics Snapshot</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><DollarSign className="h-3 w-3" /> Ideal Price Point</p>
+              <p className="text-2xl font-black text-primary">{stats?.topPrice}</p>
+            </div>
+            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Most Frequent Choice</Badge>
+          </Card>
+
+          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Clock className="h-3 w-3" /> Time Slot Fit</p>
+              <p className="text-2xl font-black text-primary">{stats?.topTimeSlot}</p>
+            </div>
+            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Current 10am-1pm Slot</Badge>
+          </Card>
+
+          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><CalendarCheck className="h-3 w-3" /> Peak Demand Time</p>
+              <p className="text-2xl font-black text-primary">{stats?.topPreferredTime}</p>
+            </div>
+            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">For Future Sessions</Badge>
+          </Card>
+
+          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Retention Signal</p>
+              <p className="text-2xl font-black text-primary">{stats?.topFrequency}</p>
+            </div>
+            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Desired Frequency</Badge>
+          </Card>
+        </div>
+      </section>
 
       <section className="mb-12">
         <Card className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-[3rem] shadow-2xl border-none overflow-hidden relative">
@@ -168,20 +244,6 @@ const AdminEventFeedback: React.FC = () => {
         <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]"><Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" /><p className="text-xl font-bold text-muted-foreground">No feedback found.</p></Card>
       ) : (
         <div className="space-y-10">
-          {/* Top Level Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-primary text-primary-foreground rounded-[2rem] shadow-xl border-none p-8">
-              <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p><p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1)}</p></div><Star className="h-8 w-8 text-accent fill-current" /></div>
-            </Card>
-            <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-card">
-              <div className="flex justify-between items-start mb-6"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Overall Sentiment</p><TrendingUp className="h-6 w-6 text-green-500" /></div>
-              <div className="space-y-4">{Object.entries(stats?.feelings || {}).map(([feeling, count]) => (<div key={feeling} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{feeling}</span><span>{Math.round((count / stats!.total) * 100)}%</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5" /></div>))}</div>
-            </Card>
-            <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
-              <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p><p className="text-6xl font-black tracking-tighter">{stats?.total}</p></div><Users className="h-8 w-8 opacity-40" /></div>
-            </Card>
-          </div>
-
           {/* Community & Marketing Insights */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
