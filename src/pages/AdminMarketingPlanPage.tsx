@@ -18,7 +18,8 @@ import {
   Sparkles,
   Leaf,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  Users
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -136,6 +137,21 @@ I'd love to see you there.
 
 — Daniele`;
 
+  const communityPost = `Headline: Any local singers (or shower-singers) in Armadale?
+
+Hi everyone! I’m Daniele, a local music director. I’m hosting a pop-up choir session at Armadale Baptist Church on Saturday, April 18.
+
+It’s a low-pressure morning—no auditions, no experience needed, and no commitment beyond the one session. We just get together to learn some great harmonies (usually a mix of Broadway and Jazz) and meet some new people in the neighborhood.
+
+If you’ve been looking for a creative way to spend a Saturday morning or just want to feel the energy of singing in a group again, we’d love to have you join the circle.
+
+The Details:
+📍 Where: Armadale Baptist Church, 88 Kooyong Rd
+⏰ When: Saturday 18 April, 10am to 1pm
+🎟️ Link: https://events.humanitix.com/resonance-melbourne-s-pop-up-choir-april-2026
+
+Hope to see some local faces there!`;
+
   const handleOpenMail = () => {
     const subject = encodeURIComponent("Let's sing \"Being Alive\" this Saturday! 🎶");
     const body = encodeURIComponent(authenticEmail.split('\n\n').slice(1).join('\n\n'));
@@ -228,6 +244,24 @@ I'd love to see you there.
               </h2>
               
               <div className="space-y-4">
+                <Card className="border-none shadow-lg bg-card overflow-hidden">
+                  <div className="bg-muted/50 px-6 py-3 flex justify-between items-center border-b">
+                    <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <Users className="h-3 w-3" /> Community Post (FB Groups)
+                    </span>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black" onClick={() => copyToClipboard(communityPost, "Community Post")}>
+                        <Copy className="h-3 w-3 mr-1" /> COPY
+                      </Button>
+                    </div>
+                  </div>
+                  <CardContent className="p-6">
+                    <p className="text-sm italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {communityPost}
+                    </p>
+                  </CardContent>
+                </Card>
+
                 <Card className="border-none shadow-lg bg-card overflow-hidden">
                   <div className="bg-muted/50 px-6 py-3 flex justify-between items-center border-b">
                     <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
