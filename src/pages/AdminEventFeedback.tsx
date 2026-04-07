@@ -47,7 +47,6 @@ const AdminEventFeedback: React.FC = () => {
     },
   });
 
-  // Fetch existing AI summary if it exists
   const { data: savedAiSummary } = useQuery({
     queryKey: ["savedAiSummary", selectedEventId],
     queryFn: async () => {
@@ -62,7 +61,6 @@ const AdminEventFeedback: React.FC = () => {
     enabled: !!selectedEventId,
   });
 
-  // Use saved summary if available, otherwise wait for manual trigger
   useMemo(() => {
     if (savedAiSummary) setAiInsights(savedAiSummary);
   }, [savedAiSummary]);
@@ -74,7 +72,6 @@ const AdminEventFeedback: React.FC = () => {
       });
       if (error) throw error;
       
-      // Save the result to the database for next time
       await supabase.from("event_ai_summaries").upsert({
         event_id: selectedEventId,
         summary_type: selectedEventId === "all" ? "global" : "specific",
@@ -86,7 +83,7 @@ const AdminEventFeedback: React.FC = () => {
     },
     onSuccess: (data) => {
       setAiInsights(data);
-      showSuccess("AI Analysis Complete & Saved!");
+      showSuccess("AI Analysis Complete!");
       queryClient.invalidateQueries({ queryKey: ["savedAiSummary", selectedEventId] });
     },
     onError: (err: any) => showError(err.message)
@@ -102,12 +99,9 @@ const AdminEventFeedback: React.FC = () => {
     const prices: Record<string, number> = {};
     const frequencies: Record<string, number> = {};
     const ongoingTimes: Record<string, number> = {};
+    const marketingSources: Record<string, number> = {};
     const repertoire: string[] = [];
-    
-    // Trend Data
     const trendMap: Record<string, { sum: number, count: number }> = {};
-    
-    // Retention Data
     let returningCount = 0;
     let newCount = 0;
 
@@ -116,18 +110,17 @@ const AdminEventFeedback: React.FC = () => {
       if (f.time_slot_rating) timeSlots[f.time_slot_rating] = (timeSlots[f.time_slot_rating] || 0) + 1;
       if (f.price_point) prices[f.price_point] = (prices[f.price_point] || 0) + 1;
       if (f.attendance_frequency) frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
+      if (f.how_heard) marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
       if (f.future_repertoire) repertoire.push(f.future_repertoire);
       
       (f.best_times_ongoing as string[] || []).forEach(time => ongoingTimes[time] = (ongoingTimes[time] || 0) + 1);
 
-      // Calculate Trend (by month of event)
       const eventDate = f.events?.date || f.created_at;
       const monthKey = format(startOfMonth(parseISO(eventDate)), "MMM yyyy");
       if (!trendMap[monthKey]) trendMap[monthKey] = { sum: 0, count: 0 };
       trendMap[monthKey].sum += (f.recommend_score || 0);
       trendMap[monthKey].count += 1;
 
-      // Simple Retention Logic (if they've attended before)
       if (f.how_heard?.toLowerCase().includes("attended before") || f.attendance_frequency !== "Occasionally") {
         returningCount++;
       } else {
@@ -144,17 +137,7 @@ const AdminEventFeedback: React.FC = () => {
     };
 
     return { 
-      total, 
-      avgScore, 
-      feelings, 
-      timeSlots, 
-      prices, 
-      frequencies, 
-      ongoingTimes, 
-      repertoire,
-      trendData,
-      returningCount,
-      newCount,
+      total, avgScore, feelings, timeSlots, prices, frequencies, ongoingTimes, marketingSources, repertoire, trendData, returningCount, newCount,
       topPrice: getMode(prices),
       topTimeSlot: getMode(timeSlots),
       topPreferredTime: getMode(ongoingTimes),
@@ -205,10 +188,7 @@ const AdminEventFeedback: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                 <XAxis dataKey="name" hide />
                 <YAxis domain={[0, 10]} hide />
-                <RechartsTooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                  labelStyle={{ fontWeight: 'bold' }}
-                />
+                <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} labelStyle={{ fontWeight: 'bold' }} />
                 <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 6, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: '#fff' }} />
               </LineChart>
             </ResponsiveContainer>
@@ -228,34 +208,19 @@ const AdminEventFeedback: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><DollarSign className="h-3 w-3" /> Ideal Price Point</p>
-              <p className="text-2xl font-black text-primary">{stats?.topPrice}</p>
-            </div>
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><DollarSign className="h-3 w-3" /> Ideal Price Point</p><p className="text-2xl font-black text-primary">{stats?.topPrice}</p></div>
             <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Most Frequent Choice</Badge>
           </Card>
-
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Clock className="h-3 w-3" /> Time Slot Fit</p>
-              <p className="text-2xl font-black text-primary">{stats?.topTimeSlot}</p>
-            </div>
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Clock className="h-3 w-3" /> Time Slot Fit</p><p className="text-2xl font-black text-primary">{stats?.topTimeSlot}</p></div>
             <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Current 10am-1pm Slot</Badge>
           </Card>
-
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Returning Legends</p>
-              <p className="text-2xl font-black text-green-600">{stats?.returningCount}</p>
-            </div>
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Returning Legends</p><p className="text-2xl font-black text-green-600">{stats?.returningCount}</p></div>
             <Progress value={(stats?.returningCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
           </Card>
-
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserPlus className="h-3 w-3" /> New Faces</p>
-              <p className="text-2xl font-black text-blue-600">{stats?.newCount}</p>
-            </div>
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserPlus className="h-3 w-3" /> New Faces</p><p className="text-2xl font-black text-blue-600">{stats?.newCount}</p></div>
             <Progress value={(stats?.newCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
           </Card>
         </div>
@@ -268,9 +233,7 @@ const AdminEventFeedback: React.FC = () => {
             <div className="bg-white/20 p-6 rounded-[2rem] shadow-inner"><Brain className="h-12 w-12 text-accent" /></div>
             <div className="flex-1 text-center md:text-left space-y-2">
               <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">AI Strategy Engine</h3>
-              <p className="text-3xl font-black font-lora leading-tight">
-                {selectedEventId === "all" ? "Analyze the entire community's feedback history." : "Generate deep insights from this session's feedback."}
-              </p>
+              <p className="text-3xl font-black font-lora leading-tight">{selectedEventId === "all" ? "Analyze the entire community's feedback history." : "Generate deep insights from this session's feedback."}</p>
             </div>
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => analyzeMutation.mutate()} disabled={analyzeMutation.isPending}>
               {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-5 w-5" /> {aiInsights ? "Refresh AI Analysis" : "Run AI Analysis"}</>}
@@ -282,19 +245,11 @@ const AdminEventFeedback: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 animate-fade-in-up">
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
               <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><CheckCircle2 className="h-5 w-5 text-green-500" /> Top Highlights</CardTitle>
-              <ul className="space-y-4">
-                {aiInsights.top_highlights.map((h: string, i: number) => (
-                  <li key={i} className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-2xl text-sm font-bold">{h}</li>
-                ))}
-              </ul>
+              <ul className="space-y-4">{aiInsights.top_highlights.map((h: string, i: number) => (<li key={i} className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-2xl text-sm font-bold">{h}</li>))}</ul>
             </Card>
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
               <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><AlertTriangle className="h-5 w-5 text-destructive" /> Critical Friction</CardTitle>
-              <ul className="space-y-4">
-                {aiInsights.critical_friction.map((f: string, i: number) => (
-                  <li key={i} className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl text-sm font-bold">{f}</li>
-                ))}
-              </ul>
+              <ul className="space-y-4">{aiInsights.critical_friction.map((f: string, i: number) => (<li key={i} className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl text-sm font-bold">{f}</li>))}</ul>
             </Card>
             <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-10 bg-accent text-accent-foreground">
               <CardTitle className="text-2xl font-black font-lora flex items-center gap-3 mb-4"><Zap className="h-6 w-6" /> Strategic Advice for Daniele</CardTitle>
@@ -310,69 +265,32 @@ const AdminEventFeedback: React.FC = () => {
         <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]"><Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" /><p className="text-xl font-bold text-muted-foreground">No feedback found.</p></Card>
       ) : (
         <div className="space-y-10">
-          {/* Community & Marketing Insights */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><PieChart className="h-5 w-5 text-primary" /> Overall Sentiment</CardTitle>
-              <div className="space-y-4">
-                {Object.entries(stats?.feelings || {}).map(([feeling, count]) => (
-                  <div key={feeling} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold"><span>{feeling}</span><span>{Math.round((count / stats!.total) * 100)}%</span></div>
-                    <Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" />
-                  </div>
-                ))}
-              </div>
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><PieChart className="h-5 w-5 text-primary" /> Marketing Sources</CardTitle>
+              <div className="space-y-4">{Object.entries(stats?.marketingSources || {}).sort((a, b) => b[1] - a[1]).map(([source, count]) => (<div key={source} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{source}</span><span>{count}</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
             </Card>
-
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
               <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><BarChart3 className="h-5 w-5 text-primary" /> Attendance Frequency</CardTitle>
-              <div className="space-y-4">
-                {Object.entries(stats?.frequencies || {}).sort((a, b) => b[1] - a[1]).map(([freq, count]) => (
-                  <div key={freq} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold"><span>{freq}</span><span>{count}</span></div>
-                    <Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" />
-                  </div>
-                ))}
-              </div>
+              <div className="space-y-4">{Object.entries(stats?.frequencies || {}).sort((a, b) => b[1] - a[1]).map(([freq, count]) => (<div key={freq} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{freq}</span><span>{count}</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
             </Card>
-
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
               <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><Clock className="h-5 w-5 text-primary" /> Preferred Times</CardTitle>
-              <div className="space-y-4">
-                {Object.entries(stats?.ongoingTimes || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([time, count]) => (
-                  <div key={time} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold"><span>{time}</span><span>{count}</span></div>
-                    <Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" />
-                  </div>
-                ))}
-              </div>
+              <div className="space-y-4">{Object.entries(stats?.ongoingTimes || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([time, count]) => (<div key={time} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{time}</span><span>{count}</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
             </Card>
           </div>
 
-          {/* Repertoire & Qualitative Data */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p></div>))}</div></ScrollArea></CardContent>
             </Card>
-            
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[400px]">
-                  <div className="p-6 space-y-4">
-                    {stats?.repertoire.filter(Boolean).map((rep, i) => (
-                      <div key={i} className="p-4 bg-muted/20 rounded-2xl border border-border/50 text-sm font-bold">
-                        {rep}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
+              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-4">{stats?.repertoire.filter(Boolean).map((rep, i) => (<div key={i} className="p-4 bg-muted/20 rounded-2xl border border-border/50 text-sm font-bold">{rep}</div>))}</div></ScrollArea></CardContent>
             </Card>
           </div>
 
-          {/* Detailed Table */}
           <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
             <CardHeader className="bg-muted/30"><CardTitle className="text-xl font-black font-lora">Detailed Responses</CardTitle></CardHeader>
             <CardContent className="p-0">
