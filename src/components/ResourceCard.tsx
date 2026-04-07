@@ -110,7 +110,6 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
     if (isFile) {
       const link = document.createElement('a');
       link.href = resource.url;
-      // Use original filename if available, otherwise fallback to title
       link.download = resource.original_filename || resource.title; 
       document.body.appendChild(link);
       link.click();
@@ -139,7 +138,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
 
   return (
     <Card className={cn(
-      "group flex flex-col overflow-hidden transition-all duration-500 border-none shadow-lg hover:shadow-2xl bg-card rounded-[2rem]",
+      "group flex flex-col overflow-hidden transition-all duration-500 border-none soft-shadow hover:shadow-2xl bg-card rounded-[2rem] hover-lift",
       !isPublished && isAdmin && "ring-2 ring-yellow-500/50"
     )}>
       {useMediaBackdrop && (
@@ -261,7 +260,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
         {!fileDetails.isAudio && (
           <Button 
             onClick={handlePrimaryAction} 
-            className="w-full h-14 mt-auto font-black text-lg rounded-2xl shadow-lg shadow-primary/10 group/btn transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+            className="w-full h-14 mt-auto font-black text-lg rounded-2xl shadow-lg shadow-primary/10 group/btn transition-all duration-300 hover:shadow-xl"
             variant={isYoutube ? "secondary" : "default"}
           >
             {isYoutube ? <Play className="h-5 w-5 mr-3 fill-current" /> : isLink ? <ExternalLink className="h-5 w-5 mr-3" /> : <Download className="h-5 w-5 mr-3" />}

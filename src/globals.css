@@ -32,7 +32,7 @@
     --input: 220 20% 92%;
     --ring: 220 70% 25%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     --sidebar-background: 220 70% 25%;
     --sidebar-foreground: 0 0% 100%;
@@ -98,11 +98,19 @@
 }
 
 @layer components {
-  .glass-card {
-    @apply bg-card/80 backdrop-blur-md border border-border/50 shadow-sm;
+  .glass-header {
+    @apply bg-primary/95 backdrop-blur-md border-b border-white/10 shadow-lg;
   }
   
+  .soft-shadow {
+    @apply shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)];
+  }
+
   .hover-lift {
-    @apply transition-transform duration-200 hover:-translate-y-1;
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+  }
+
+  .card-gradient {
+    @apply bg-gradient-to-br from-card to-muted/30;
   }
 }

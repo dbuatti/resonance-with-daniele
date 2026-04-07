@@ -57,7 +57,6 @@ const WelcomeHub: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch the most recent past event (within last 7 days) to ask for feedback
   const { data: recentPastEvent } = useQuery<Event | null>({
     queryKey: ['recentPastEvent'],
     queryFn: async () => {
@@ -77,7 +76,6 @@ const WelcomeHub: React.FC = () => {
     enabled: !loadingSession,
   });
 
-  // Check if user has already reviewed the recent past event
   const { data: hasReviewed } = useQuery<boolean>({
     queryKey: ['hasReviewedEvent', recentPastEvent?.id],
     queryFn: async () => {
@@ -152,8 +150,8 @@ const WelcomeHub: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="py-4 md:py-8 space-y-8">
-        <Skeleton className="h-64 w-full rounded-3xl" />
+      <div className="py-8 space-y-8">
+        <Skeleton className="h-64 w-full rounded-[2.5rem]" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
         </div>
@@ -171,9 +169,9 @@ const WelcomeHub: React.FC = () => {
   };
 
   return (
-    <div className="py-4 md:py-8 space-y-12 animate-fade-in-up">
+    <div className="py-8 space-y-12 animate-fade-in-up">
       {/* Hero Welcome Section */}
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground p-8 md:p-16 shadow-2xl border-4 border-white/10">
+      <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground p-8 md:p-16 soft-shadow border-4 border-white/10">
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
           <div className="flex-shrink-0 relative group">
             <div className="absolute -inset-1 bg-accent rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
@@ -182,7 +180,7 @@ const WelcomeHub: React.FC = () => {
               alt="Daniele Buatti" 
               className="relative w-32 h-32 md:w-44 md:h-44 rounded-full object-cover border-4 border-white/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-105" 
             />
-            <div className="absolute -bottom-2 -right-2 bg-accent text-accent-foreground p-2 rounded-full shadow-lg animate-float">
+            <div className="absolute -bottom-2 -right-2 bg-accent text-accent-foreground p-2.5 rounded-full shadow-lg animate-float">
               <Mic2 className="h-5 w-5" />
             </div>
           </div>
@@ -193,7 +191,7 @@ const WelcomeHub: React.FC = () => {
               </h1>
               {memberSince && (
                 <div className="flex items-center justify-center md:justify-start gap-3">
-                  <Badge className="bg-white/20 hover:bg-white/30 text-white border-none px-3 py-1 text-[10px] uppercase tracking-widest font-bold">
+                  <Badge className="bg-white/20 hover:bg-white/30 text-white border-none px-3 py-1 text-[10px] uppercase tracking-widest font-bold transition-colors">
                     <Sparkles className="h-3 w-3 mr-2 text-accent" /> Member since {memberSince}
                   </Badge>
                 </div>
@@ -204,22 +202,21 @@ const WelcomeHub: React.FC = () => {
             </p>
           </div>
         </div>
-        {/* Decorative background elements */}
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[80px] pointer-events-none" />
       </section>
 
-      {/* Feedback Prompt - Only shows if a recent event happened and user hasn't reviewed it */}
+      {/* Feedback Prompt */}
       {recentPastEvent && !hasReviewed && (
         <section className="animate-fade-in-up">
-          <Card className="bg-accent text-accent-foreground border-none shadow-2xl rounded-[2.5rem] overflow-hidden relative">
+          <Card className="bg-accent text-accent-foreground border-none shadow-xl rounded-[2.5rem] overflow-hidden relative hover-lift">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
             <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8 relative z-10">
               <div className="bg-white/20 p-5 rounded-2xl shadow-inner">
                 <MessageSquareQuote className="h-10 w-10" />
               </div>
               <div className="flex-1 text-center md:text-left space-y-1">
-                <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">How was the session?</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-70">How was the session?</h3>
                 <p className="text-2xl font-black font-lora leading-tight">
                   I'd love your feedback on "{recentPastEvent.title}"
                 </p>
@@ -246,13 +243,11 @@ const WelcomeHub: React.FC = () => {
 
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Left Column: Announcements & Events */}
         <div className="lg:col-span-8 space-y-10">
           <LatestAnnouncementsCard />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Next Event Card */}
-            <Card className="shadow-xl border-none bg-secondary/40 dark:bg-secondary/10 overflow-hidden group hover:shadow-2xl transition-all duration-300 rounded-3xl">
+            <Card className="soft-shadow border-none bg-secondary/40 dark:bg-secondary/10 overflow-hidden group hover-lift rounded-3xl">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="bg-background/80 border-primary/20 text-primary font-bold">Next Event</Badge>
@@ -289,9 +284,8 @@ const WelcomeHub: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Nominated Song Card */}
             {nominatedFolder && (
-              <Card className="shadow-xl border-none bg-accent/10 dark:bg-accent/5 overflow-hidden group hover:shadow-2xl transition-all duration-300 rounded-3xl border-t-4 border-accent">
+              <Card className="soft-shadow border-none bg-accent/10 dark:bg-accent/5 overflow-hidden group hover-lift rounded-3xl border-t-4 border-accent">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="bg-background/80 border-accent/30 text-accent-foreground font-bold">Current Focus</Badge>
@@ -318,13 +312,11 @@ const WelcomeHub: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Checklist & Quick Actions */}
         <div className="lg:col-span-4 space-y-10">
           <SetupChecklistCard />
           <QuickActions />
           
-          {/* Recent Resources Sidebar */}
-          <Card className="shadow-xl border-none rounded-3xl overflow-hidden">
+          <Card className="soft-shadow border-none rounded-3xl overflow-hidden">
             <CardHeader className="pb-4 bg-muted/30">
               <CardTitle className="text-xl font-black font-lora flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-lg">
@@ -364,7 +356,6 @@ const WelcomeHub: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Quote/Link */}
       <footer className="text-center pt-12 border-t border-border/50 pb-8">
         <div className="flex flex-col items-center gap-6">
           <div className="p-3 bg-primary/5 rounded-full">

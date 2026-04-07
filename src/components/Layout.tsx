@@ -73,12 +73,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-primary text-primary-foreground p-4 shadow-lg sticky top-0 z-50">
+      <header className="glass-header p-4 sticky top-0 z-50 transition-all duration-300">
         <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora text-primary-foreground">
+          <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora text-primary-foreground hover:opacity-90 transition-opacity">
             Resonance with Daniele
           </Link>
-          <nav className="hidden sm:flex items-center gap-2">
+          <nav className="hidden sm:flex items-center gap-3">
             {isActualAdmin && <AdminViewToggle />}
             <DesktopNav user={user} unreadAnnouncementCount={unreadAnnouncementCount} />
             {user && (
@@ -92,16 +92,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 isSurveyCompleted={isSurveyCompleted}
               />
             )}
+            <div className="h-6 w-px bg-white/10 mx-1" />
             <ThemeToggle />
           </nav>
-          <div className="flex items-center sm:hidden">
+          <div className="flex items-center gap-2 sm:hidden">
             <ThemeToggle />
             <MobileNav />
           </div>
         </div>
       </header>
       <main className="flex-grow bg-background">
-        {/* Container removed from here to allow full-width backgrounds in landing sections */}
         {children}
       </main>
       <FooterSection />
