@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -20,13 +20,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Heart, Star, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSaturday, isSunday } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +71,25 @@ const EventFeedback: React.FC = () => {
     },
     enabled: !!eventId,
   });
+
+  // Logic to calculate the weekends of the following month
+  const nextMonthData = useMemo(() => {
+    if (!event?.date) return { monthName: "Next Month", dates: [] };
+    
+    const eventDate = new Date(event.date);
+    const nextMonth = addMonths(eventDate, 1);
+    const monthName = format(nextMonth, "MMMM");
+    
+    const start = startOfMonth(nextMonth);
+    const end = endOfMonth(nextMonth);
+    
+    const allDays = eachDayOfInterval({ start, end });
+    const weekends = allDays
+      .filter(day => isSaturday(day) || isSunday(day))
+      .map(day => format(day, "EEEE MMMM do"));
+
+    return { monthName, dates: weekends };
+  }, [event?.date]);
 
   const form = useForm<FeedbackFormData>({
     resolver: zodResolver(feedbackSchema),
@@ -316,9 +335,33 @@ const EventFeedback: React.FC = () => {
                   name="interest_next_month"
                   render={() => (
                     <FormItem>
-                      <FormLabel className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Would you be free/interested in another session in April?</FormLabel>
+                      <FormLabel className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                        Would you be free/interested in another session in {nextMonthData.monthName}?
+                      </FormLabel>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                        {["Saturday April 11", "Sunday April 12", "Sunday April 19", "Sunday April 26", "Not free", "May works better"].map((item) => (
+                        {nextMonthData.dates.map((dateStr) => (
+                          <FormField
+                            key={dateStr}
+                            control={form.control}
+                            name="interest_next_month"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-3 rounded-xl bg-background border border-transparent hover:border-primary/20 transition-all">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(dateStr)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...(field.value || []), dateStr])
+                                        : field.onChange(field.value?.filter((value) => value !== dateStr));
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-bold cursor-pointer">{dateStr}</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                        ))}
+                        {["Not free", "Following month works better"].map((item) => (
                           <FormField
                             key={item}
                             control={form.control}
@@ -335,7 +378,7 @@ const EventFeedback: React.FC = () => {
                                     }}
                                   />
                                 </FormControl>
-                                <FormLabel className="font-bold cursor-pointer">{item}</FormLabel>
+                                <FormLabel className="font-bold cursor-pointer italic">{item}</FormLabel>
                               </FormItem>
                             )}
                           />
@@ -453,6 +496,20 @@ const EventFeedback: React.FC = () => {
                           </button>
                         ))}
                       </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="how_heard"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-lg font-bold font-lora">How did you hear about Resonance?</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Social media, a friend, etc." {...field} className="rounded-xl h-12" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
