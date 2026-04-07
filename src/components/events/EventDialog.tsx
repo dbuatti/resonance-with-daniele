@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarDays, Loader2, Sparkles } from "lucide-react";
+import { CalendarDays, Loader2, Sparkles, Music } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +23,7 @@ const eventSchema = z.object({
   date: z.date({ required_error: "Date is required" }),
   location: z.string().optional(),
   description: z.string().optional(),
+  main_song: z.string().optional(), // New field
   humanitix_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   ai_chat_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
@@ -36,6 +37,7 @@ interface Event {
   date: string;
   location?: string;
   description?: string;
+  main_song?: string;
   humanitix_link?: string;
   ai_chat_link?: string;
 }
@@ -56,6 +58,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       date: undefined,
       location: "",
       description: "",
+      main_song: "",
       humanitix_link: "https://events.humanitix.com/resonance-choir",
       ai_chat_link: "",
     },
@@ -68,6 +71,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         date: new Date(editingEvent.date),
         location: editingEvent.location || "",
         description: editingEvent.description || "",
+        main_song: editingEvent.main_song || "",
         humanitix_link: editingEvent.humanitix_link || "",
         ai_chat_link: editingEvent.ai_chat_link || "",
       });
@@ -77,6 +81,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         date: undefined,
         location: "",
         description: "",
+        main_song: "",
         humanitix_link: "https://events.humanitix.com/resonance-choir",
         ai_chat_link: "",
       });
@@ -91,6 +96,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         date: format(data.date, "yyyy-MM-dd"),
         location: data.location || null,
         description: data.description || null,
+        main_song: data.main_song || null,
         humanitix_link: data.humanitix_link || null,
         ai_chat_link: data.ai_chat_link || null,
       };
@@ -170,6 +176,25 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
                       />
                     </PopoverContent>
                   </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="main_song"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Music className="h-4 w-4 text-primary" /> Main Song / Repertoire
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. You Will Be Found" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Recording this helps the AI avoid suggesting songs we've already done.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

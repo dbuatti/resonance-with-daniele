@@ -30,11 +30,16 @@ const AdminEventFeedback: React.FC = () => {
   const { data: events, isLoading: loadingEvents } = useQuery({
     queryKey: ["allEventsForFeedbackAdmin"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("events").select("id, title, date").order("date", { ascending: false });
+      const { data, error } = await supabase.from("events").select("id, title, date, main_song").order("date", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
+
+  const selectedEvent = useMemo(() => 
+    events?.find(e => e.id === selectedEventId), 
+    [events, selectedEventId]
+  );
 
   const { data: feedback, isLoading: loadingFeedback } = useQuery({
     queryKey: ["eventFeedbackData", selectedEventId],
@@ -112,7 +117,6 @@ const AdminEventFeedback: React.FC = () => {
       if (f.attendance_frequency) frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
       if (f.how_heard) marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
       
-      // Aggregate both future_repertoire and future_ideas
       if (f.future_repertoire) repertoire.push(f.future_repertoire);
       if (f.future_ideas) repertoire.push(f.future_ideas);
       
@@ -159,6 +163,11 @@ const AdminEventFeedback: React.FC = () => {
         <div className="space-y-2">
           <h1 className="text-5xl font-black font-lora tracking-tighter">{selectedEventId === "all" ? "Global Feedback" : "Event Feedback"}</h1>
           <p className="text-xl text-muted-foreground">{selectedEventId === "all" ? "Aggregated insights from every session." : "Analyze how this specific session landed."}</p>
+          {selectedEvent?.main_song && (
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold mt-2">
+              <Music className="h-3 w-3 mr-1.5" /> Performed: {selectedEvent.main_song}
+            </Badge>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
           {selectedEventId !== "all" && <LegacyFeedbackImporter eventId={selectedEventId} />}
@@ -344,11 +353,11 @@ const AdminEventFeedback: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
+              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-3"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
             </Card>
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
+              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-3"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-4">{stats?.repertoire.filter(Boolean).map((rep, i) => (<div key={i} className="p-4 bg-muted/20 rounded-2xl border border-border/50 text-sm font-bold">{rep}</div>))}</div></ScrollArea></CardContent>
             </Card>
           </div>

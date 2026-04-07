@@ -39,6 +39,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // 1. Fetch all events to get repertoire history
+    const { data: allEvents } = await supabaseClient
+      .from('events')
+      .select('title, date, main_song')
+      .order('date', { ascending: false });
+
+    const repertoireHistory = allEvents
+      ?.filter(e => e.main_song)
+      .map(e => `${e.main_song} (${e.date})`)
+      .join(', ') || "None recorded yet";
+
+    // 2. Fetch feedback for analysis
     let query = supabaseClient.from('event_feedback').select('*')
     if (eventId !== "all") {
       query = query.eq('event_id', eventId)
@@ -55,7 +67,7 @@ serve(async (req) => {
       enjoyed: f.enjoyed_most,
       improvements: f.improvements,
       repertoire: f.repertoire_feedback,
-      future_repertoire: f.future_repertoire, // Added this field
+      future_repertoire: f.future_repertoire,
       future_ideas: f.future_ideas,
       score: f.recommend_score
     }))
@@ -64,13 +76,16 @@ serve(async (req) => {
     const prompt = `
       Analyze this choir feedback data: ${JSON.stringify(feedbackSummary)}
       
+      IMPORTANT CONTEXT:
+      Songs already performed (DO NOT SUGGEST THESE): ${repertoireHistory}
+
       Provide a JSON response with:
       - "sentiment_score": (0-100)
       - "top_highlights": [3 strings]
       - "critical_friction": [2 strings]
-      - "next_event_action": "ONE specific, high-impact, actionable task for the next session based on this feedback (e.g., 'Print large-print lyrics for the back row' or 'Spend 10 mins on a name-game icebreaker'). Keep it under 15 words."
+      - "next_event_action": "ONE specific, high-impact, actionable task for the next session based on this feedback. Keep it under 15 words."
       - "repertoire_analysis": {
-          "specific_requests": ["List of specific songs or artists identified, corrected for spelling"],
+          "specific_requests": ["List of specific songs or artists identified from the feedback, corrected for spelling. EXCLUDE songs already performed."],
           "thematic_patterns": ["Broader patterns like 'More 80s pop', 'Simpler harmonies', etc."],
           "summary": "A 2-sentence overview of the community's musical appetite."
         },
