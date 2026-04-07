@@ -193,7 +193,7 @@ const Events: React.FC = () => {
                   {isPast && <Badge variant="secondary" className="bg-white/20 text-white border-none">Past Event</Badge>}
                 </div>
 
-                <CardContent className="p-6 flex-grow flex flex-col gap-4">
+                <CardContent className="p-6 flex-grow flex-col gap-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-start gap-2">
                       <CardTitle className="text-2xl font-bold font-lora leading-tight group-hover:text-primary transition-colors">
