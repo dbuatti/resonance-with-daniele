@@ -31,7 +31,8 @@ import {
   Activity,
   Bot,
   CheckCircle2,
-  ShieldAlert
+  ShieldAlert,
+  Building2
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -528,9 +529,9 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 grid grid-cols-2 gap-3">
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://ads.google.com" target="_blank" rel="noopener noreferrer">Google Ads</a></Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.stonnington.vic.gov.au/MyCity/Dashboard" target="_blank" rel="noopener noreferrer">Stonnington Hub</a></Button>
                       <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://humanitix.com" target="_blank" rel="noopener noreferrer">Humanitix</a></Button>
-                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a></Button>
-                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a></Button>
                       <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://kit.com" target="_blank" rel="noopener noreferrer">Kit (Email)</a></Button>
                     </CardContent>
                   </Card>

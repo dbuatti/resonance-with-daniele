@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, DollarSign, Ticket, Zap, Calendar } from "lucide-react";
+import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BackButton from "@/components/ui/BackButton";
 import ExpenseLogger from "@/components/admin/ExpenseLogger";
@@ -15,6 +15,7 @@ import TicketSalesLogger from "@/components/admin/TicketSalesLogger";
 import FlashSaleManager from "@/components/admin/FlashSaleManager";
 import MarketingOverview from "@/components/admin/MarketingOverview";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 const AdminMarketingDashboard: React.FC = () => {
   const { user, loading } = useSession();
@@ -54,7 +55,12 @@ const AdminMarketingDashboard: React.FC = () => {
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <header className="space-y-2">
-            <h1 className="text-4xl font-bold font-lora">Marketing & Finance Hub</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-bold font-lora">Marketing & Finance Hub</h1>
+              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-mono">
+                Ads ID: 775-287-8796
+              </Badge>
+            </div>
             <p className="text-lg text-muted-foreground">
               Track financial health and manage promotions for your events.
             </p>

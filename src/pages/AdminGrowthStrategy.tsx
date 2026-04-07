@@ -20,7 +20,8 @@ import {
   ArrowRight,
   Circle,
   Check,
-  Zap
+  Zap,
+  Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,18 @@ const missions: Mission[] = [
     link: "https://www.google.com/business/",
     linkText: "Start Mission",
     futureVision: "1 Year Goal: Rank #1 for 'Choir Melbourne' and 'Singing Armadale'."
+  },
+  {
+    id: "council-listing",
+    title: "Council Connection (Stonnington)",
+    description: "You've joined MyCity! Now let's make sure the local council knows Resonance is a key community asset.",
+    icon: Building2,
+    color: "bg-emerald-600 border-emerald-400",
+    badge: "Local Gov",
+    steps: ["Log in to Stonnington MyCity Dashboard", "Add Resonance to the Community Directory", "Submit a 'What's On' event for the next session"],
+    link: "https://www.stonnington.vic.gov.au/MyCity/Dashboard",
+    linkText: "Open Dashboard",
+    futureVision: "1 Year Goal: Featured in the Stonnington 'What's On' newsletter monthly."
   },
   {
     id: "google-reviews",
