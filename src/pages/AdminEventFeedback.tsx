@@ -9,7 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, PieChart, BarChart3, MapPin, LineChart as LineChartIcon, UserPlus, EyeOff, ListMusic } from "lucide-react";
+import { 
+  Loader2, Star, TrendingUp, Users, Globe, Clock, DollarSign, UserCheck, 
+  Music, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, 
+  PieChart as PieChartIcon, BarChart3, MapPin, LineChart as LineChartIcon, 
+  UserPlus, EyeOff, ListMusic, Heart, Quote, BarChart, CalendarCheck
+} from "lucide-react";
 import { format, parseISO, startOfMonth } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -18,7 +23,18 @@ import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import LegacyFeedbackImporter from "@/components/admin/LegacyFeedbackImporter";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
+import { 
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, 
+  CartesianGrid, BarChart as ReBarChart, Bar, Cell, PieChart, Pie, Legend 
+} from "recharts";
+
+const COLORS = ["#13294b", "#4a5568", "#d53f8c", "#fefcbf", "#8884d8", "#82ca9d", "#ffc658"];
+const SENTIMENT_COLORS: Record<string, string> = {
+  "Loved It": "#10b981",
+  "Good": "#3b82f6",
+  "Neutral": "#94a3b8",
+  "Not for me": "#ef4444"
+};
 
 const AdminEventFeedback: React.FC = () => {
   const { user, loading } = useSession();
@@ -100,11 +116,13 @@ const AdminEventFeedback: React.FC = () => {
     const avgScore = feedback.reduce((acc, f) => acc + (f.recommend_score || 0), 0) / total;
     
     const feelings: Record<string, number> = {};
-    const timeSlots: Record<string, number> = {};
-    const prices: Record<string, number> = {};
+    const npsDistribution: Record<number, number> = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0};
+    const venueFeelings: Record<string, number> = {};
+    const repertoireFeelings: Record<string, number> = {};
+    const nextMonthInterest: Record<string, number> = {};
+    const marketingSources: Record<string, number> = {};
     const frequencies: Record<string, number> = {};
     const ongoingTimes: Record<string, number> = {};
-    const marketingSources: Record<string, number> = {};
     const repertoire: string[] = [];
     const trendMap: Record<string, { sum: number, count: number }> = {};
     let returningCount = 0;
@@ -112,10 +130,11 @@ const AdminEventFeedback: React.FC = () => {
 
     feedback.forEach(f => {
       if (f.overall_feeling) feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
-      if (f.time_slot_rating) timeSlots[f.time_slot_rating] = (timeSlots[f.time_slot_rating] || 0) + 1;
-      if (f.price_point) prices[f.price_point] = (prices[f.price_point] || 0) + 1;
-      if (f.attendance_frequency) frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
+      if (f.recommend_score) npsDistribution[f.recommend_score] = (npsDistribution[f.recommend_score] || 0) + 1;
+      if (f.venue_feedback) venueFeelings[f.venue_feedback] = (venueFeelings[f.venue_feedback] || 0) + 1;
+      if (f.repertoire_feedback) repertoireFeelings[f.repertoire_feedback] = (repertoireFeelings[f.repertoire_feedback] || 0) + 1;
       if (f.how_heard) marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
+      if (f.attendance_frequency) frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
       
       if (f.future_repertoire) repertoire.push(f.future_repertoire);
       if (f.future_ideas) repertoire.push(f.future_ideas);
@@ -128,27 +147,34 @@ const AdminEventFeedback: React.FC = () => {
       trendMap[monthKey].sum += (f.recommend_score || 0);
       trendMap[monthKey].count += 1;
 
-      if (f.is_first_time === false) {
-        returningCount++;
-      } else {
-        newCount++;
-      }
+      if (f.is_first_time === false) returningCount++;
+      else newCount++;
     });
 
     const trendData = Object.entries(trendMap)
       .map(([name, data]) => ({ name, score: parseFloat((data.sum / data.count).toFixed(1)) }))
       .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
 
+    const npsChartData = Object.entries(npsDistribution).map(([score, count]) => ({ score: `Score ${score}`, count }));
+    const sentimentChartData = Object.entries(feelings).map(([name, value]) => ({ name, value }));
+    const nextMonthChartData = Object.entries(nextMonthInterest)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+
     const getMode = (obj: Record<string, number>) => {
       return Object.entries(obj).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
     };
 
     return { 
-      total, avgScore, feelings, timeSlots, prices, frequencies, ongoingTimes, marketingSources, repertoire, trendData, returningCount, newCount,
-      topPrice: getMode(prices),
-      topTimeSlot: getMode(timeSlots),
+      total, avgScore, feelings, marketingSources, repertoire, trendData, returningCount, newCount,
+      npsChartData, sentimentChartData, nextMonthChartData, venueFeelings, repertoireFeelings,
+      topPrice: getMode(Object.fromEntries(feedback.map(f => [f.price_point, 1]))),
+      topTimeSlot: getMode(Object.fromEntries(feedback.map(f => [f.time_slot_rating, 1]))),
       topPreferredTime: getMode(ongoingTimes),
-      topFrequency: getMode(frequencies)
+      topFrequency: getMode(frequencies),
+      ongoingTimes,
+      frequencies
     };
   }, [feedback]);
 
@@ -212,32 +238,109 @@ const AdminEventFeedback: React.FC = () => {
         </Card>
       </div>
 
-      {/* Logistics & Retention Snapshot */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 px-2">
-          <div className="h-8 w-1.5 bg-primary rounded-full" />
-          <h2 className="text-3xl font-black font-lora tracking-tight">Logistics & Retention</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><DollarSign className="h-3 w-3" /> Ideal Price Point</p><p className="text-2xl font-black text-primary">{stats?.topPrice}</p></div>
-            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Most Frequent Choice</Badge>
-          </Card>
-          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Clock className="h-3 w-3" /> Time Slot Fit</p><p className="text-2xl font-black text-primary">{stats?.topTimeSlot}</p></div>
-            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Current 10am-1pm Slot</Badge>
-          </Card>
-          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Returning Legends</p><p className="text-2xl font-black text-green-600">{stats?.returningCount}</p></div>
-            <Progress value={(stats?.returningCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
-          </Card>
-          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
-            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserPlus className="h-3 w-3" /> New Faces</p><p className="text-2xl font-black text-blue-600">{stats?.newCount}</p></div>
-            <Progress value={(stats?.newCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
-          </Card>
-        </div>
-      </section>
+      {/* Advanced Visualizations Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Sentiment Distribution */}
+        <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+          <CardHeader className="px-0 pt-0">
+            <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+              <PieChartIcon className="h-5 w-5 text-primary" /> Overall Sentiment
+            </CardTitle>
+            <CardDescription>How the session felt for everyone.</CardDescription>
+          </CardHeader>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={stats?.sentimentChartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {stats?.sentimentChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={SENTIMENT_COLORS[entry.name] || COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip />
+                <Legend verticalAlign="bottom" height={36}/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
 
+        {/* NPS Distribution */}
+        <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+          <CardHeader className="px-0 pt-0">
+            <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" /> NPS Score Spread
+            </CardTitle>
+            <CardDescription>Count of each recommendation score (1-10).</CardDescription>
+          </CardHeader>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ReBarChart data={stats?.npsChartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis dataKey="score" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
+                <YAxis axisLine={false} tickLine={false} />
+                <RechartsTooltip cursor={{ fill: 'rgba(0,0,0,0.02)' }} />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </ReBarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        {/* Next Month Date Popularity */}
+        <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+          <CardHeader className="px-0 pt-0">
+            <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-primary" /> Date Popularity
+            </CardTitle>
+            <CardDescription>Most requested dates for the next session.</CardDescription>
+          </CardHeader>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ReBarChart data={stats?.nextMonthChartData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" width={150} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
+                <RechartsTooltip />
+                <Bar dataKey="value" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
+              </ReBarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        {/* Venue vs Repertoire Comparison */}
+        <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+          <CardHeader className="px-0 pt-0">
+            <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" /> Logistics Performance
+            </CardTitle>
+            <CardDescription>Comparing Venue vs. Repertoire satisfaction.</CardDescription>
+          </CardHeader>
+          <div className="space-y-8 pt-4">
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Venue Satisfaction</p>
+                <p className="text-2xl font-black text-primary">{((stats?.venueFeelings["Loved It"] || 0) / (stats?.total || 1) * 100).toFixed(0)}% <span className="text-xs font-medium text-muted-foreground">Loved It</span></p>
+              </div>
+              <Progress value={((stats?.venueFeelings["Loved It"] || 0) / (stats?.total || 1) * 100)} className="h-3" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Repertoire Satisfaction</p>
+                <p className="text-2xl font-black text-primary">{((stats?.repertoireFeelings["Loved It"] || 0) / (stats?.total || 1) * 100).toFixed(0)}% <span className="text-xs font-medium text-muted-foreground">Loved It</span></p>
+              </div>
+              <Progress value={((stats?.repertoireFeelings["Loved It"] || 0) / (stats?.total || 1) * 100)} className="h-3" />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* AI Strategy Engine */}
       <section className="mb-12">
         <Card className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-[3rem] shadow-2xl border-none overflow-hidden relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
@@ -264,7 +367,6 @@ const AdminEventFeedback: React.FC = () => {
               <ul className="space-y-4">{aiInsights.critical_friction.map((f: string, i: number) => (<li key={i} className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl text-sm font-bold">{f}</li>))}</ul>
             </Card>
             
-            {/* Enhanced AI Repertoire Analysis Card */}
             <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-8 bg-card border-t-4 border-primary">
               <CardHeader className="px-0 pt-0">
                 <CardTitle className="text-2xl font-black font-lora flex items-center gap-3">
@@ -285,9 +387,6 @@ const AdminEventFeedback: React.FC = () => {
                             {req}
                           </Badge>
                         ))}
-                        {(!aiInsights.repertoire_analysis.specific_requests || aiInsights.repertoire_analysis.specific_requests.length === 0) && (
-                          <p className="text-sm text-muted-foreground italic">No specific songs or artists identified yet.</p>
-                        )}
                       </div>
                     </div>
 
@@ -330,6 +429,32 @@ const AdminEventFeedback: React.FC = () => {
         )}
       </section>
 
+      {/* Logistics & Retention Snapshot */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 px-2">
+          <div className="h-8 w-1.5 bg-primary rounded-full" />
+          <h2 className="text-3xl font-black font-lora tracking-tight">Logistics & Retention</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><DollarSign className="h-3 w-3" /> Ideal Price Point</p><p className="text-2xl font-black text-primary">{stats?.topPrice}</p></div>
+            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Most Frequent Choice</Badge>
+          </Card>
+          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Clock className="h-3 w-3" /> Time Slot Fit</p><p className="text-2xl font-black text-primary">{stats?.topTimeSlot}</p></div>
+            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Current 10am-1pm Slot</Badge>
+          </Card>
+          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Returning Legends</p><p className="text-2xl font-black text-green-600">{stats?.returningCount}</p></div>
+            <Progress value={(stats?.returningCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
+          </Card>
+          <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
+            <div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserPlus className="h-3 w-3" /> New Faces</p><p className="text-2xl font-black text-blue-600">{stats?.newCount}</p></div>
+            <Progress value={(stats?.newCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
+          </Card>
+        </div>
+      </section>
+
       {loadingFeedback ? (
         <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>
       ) : !feedback || feedback.length === 0 ? (
@@ -338,26 +463,26 @@ const AdminEventFeedback: React.FC = () => {
         <div className="space-y-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><PieChart className="h-5 w-5 text-primary" /> Marketing Sources</CardTitle>
-              <div className="space-y-4">{Object.entries(stats?.marketingSources || {}).sort((a, b) => b[1] - a[1]).map(([source, count]) => (<div key={source} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{source}</span><span>{count}</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><PieChartIcon className="h-5 w-5 text-primary" /> Marketing Sources</CardTitle>
+              <div className="space-y-4">{Object.entries(stats?.marketingSources || {}).sort((a, b) => (b[1] as number) - (a[1] as number)).map(([source, count]) => (<div key={source} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{source}</span><span>{count as React.ReactNode}</span></div><Progress value={((count as number) / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
             </Card>
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><BarChart3 className="h-5 w-5 text-primary" /> Attendance Frequency</CardTitle>
-              <div className="space-y-4">{Object.entries(stats?.frequencies || {}).sort((a, b) => b[1] - a[1]).map(([freq, count]) => (<div key={freq} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{freq}</span><span>{count}</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><BarChart3 className="h-5 w-5 text-primary" /> Preferred Times</CardTitle>
+              <div className="space-y-4">{Object.entries(stats?.ongoingTimes || {}).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 5).map(([time, count]) => (<div key={time} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{time}</span><span>{count as React.ReactNode}</span></div><Progress value={((count as number) / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
             </Card>
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><Clock className="h-5 w-5 text-primary" /> Preferred Times</CardTitle>
-              <div className="space-y-4">{Object.entries(stats?.ongoingTimes || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([time, count]) => (<div key={time} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{time}</span><span>{count}</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><Clock className="h-5 w-5 text-primary" /> Attendance Frequency</CardTitle>
+              <div className="space-y-4">{Object.entries(stats?.frequencies || {}).sort((a, b) => (b[1] as number) - (a[1] as number)).map(([freq, count]) => (<div key={freq} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{freq}</span><span>{count as React.ReactNode}</span></div><Progress value={((count as number) / stats!.total) * 100} className="h-1.5 bg-primary/10" /></div>))}</div>
             </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-3"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
+              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
             </Card>
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-3"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
+              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-4">{stats?.repertoire.filter(Boolean).map((rep, i) => (<div key={i} className="p-4 bg-muted/20 rounded-2xl border border-border/50 text-sm font-bold">{rep}</div>))}</div></ScrollArea></CardContent>
             </Card>
           </div>
