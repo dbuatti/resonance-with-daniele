@@ -9,8 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, PieChart, BarChart3, MapPin } from "lucide-react";
-import { format } from "date-fns";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, PieChart, BarChart3, MapPin, LineChart as LineChartIcon, UserPlus } from "lucide-react";
+import { format, parseISO, startOfMonth } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import LegacyFeedbackImporter from "@/components/admin/LegacyFeedbackImporter";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 
 const AdminEventFeedback: React.FC = () => {
   const { user, loading } = useSession();
@@ -46,17 +47,47 @@ const AdminEventFeedback: React.FC = () => {
     },
   });
 
+  // Fetch existing AI summary if it exists
+  const { data: savedAiSummary } = useQuery({
+    queryKey: ["savedAiSummary", selectedEventId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("event_ai_summaries")
+        .select("content")
+        .eq("event_id", selectedEventId)
+        .maybeSingle();
+      if (error) return null;
+      return data?.content || null;
+    },
+    enabled: !!selectedEventId,
+  });
+
+  // Use saved summary if available, otherwise wait for manual trigger
+  useMemo(() => {
+    if (savedAiSummary) setAiInsights(savedAiSummary);
+  }, [savedAiSummary]);
+
   const analyzeMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('analyze-feedback', {
         body: { eventId: selectedEventId }
       });
       if (error) throw error;
+      
+      // Save the result to the database for next time
+      await supabase.from("event_ai_summaries").upsert({
+        event_id: selectedEventId,
+        summary_type: selectedEventId === "all" ? "global" : "specific",
+        content: data,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'event_id,summary_type' });
+
       return data;
     },
     onSuccess: (data) => {
       setAiInsights(data);
-      showSuccess("AI Analysis Complete!");
+      showSuccess("AI Analysis Complete & Saved!");
+      queryClient.invalidateQueries({ queryKey: ["savedAiSummary", selectedEventId] });
     },
     onError: (err: any) => showError(err.message)
   });
@@ -69,27 +100,45 @@ const AdminEventFeedback: React.FC = () => {
     const feelings: Record<string, number> = {};
     const timeSlots: Record<string, number> = {};
     const prices: Record<string, number> = {};
-    const regularInterest: Record<string, number> = {};
     const frequencies: Record<string, number> = {};
-    const marketingSources: Record<string, number> = {};
-    const nextMonthDates: Record<string, number> = {};
     const ongoingTimes: Record<string, number> = {};
     const repertoire: string[] = [];
+    
+    // Trend Data
+    const trendMap: Record<string, { sum: number, count: number }> = {};
+    
+    // Retention Data
+    let returningCount = 0;
+    let newCount = 0;
 
     feedback.forEach(f => {
       if (f.overall_feeling) feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
       if (f.time_slot_rating) timeSlots[f.time_slot_rating] = (timeSlots[f.time_slot_rating] || 0) + 1;
       if (f.price_point) prices[f.price_point] = (prices[f.price_point] || 0) + 1;
-      if (f.regular_attendance_interest) regularInterest[f.regular_attendance_interest] = (regularInterest[f.regular_attendance_interest] || 0) + 1;
       if (f.attendance_frequency) frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
-      if (f.how_heard) marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
       if (f.future_repertoire) repertoire.push(f.future_repertoire);
       
-      (f.interest_next_month as string[] || []).forEach(date => nextMonthDates[date] = (nextMonthDates[date] || 0) + 1);
       (f.best_times_ongoing as string[] || []).forEach(time => ongoingTimes[time] = (ongoingTimes[time] || 0) + 1);
+
+      // Calculate Trend (by month of event)
+      const eventDate = f.events?.date || f.created_at;
+      const monthKey = format(startOfMonth(parseISO(eventDate)), "MMM yyyy");
+      if (!trendMap[monthKey]) trendMap[monthKey] = { sum: 0, count: 0 };
+      trendMap[monthKey].sum += (f.recommend_score || 0);
+      trendMap[monthKey].count += 1;
+
+      // Simple Retention Logic (if they've attended before)
+      if (f.how_heard?.toLowerCase().includes("attended before") || f.attendance_frequency !== "Occasionally") {
+        returningCount++;
+      } else {
+        newCount++;
+      }
     });
 
-    // Helper to get the most frequent key
+    const trendData = Object.entries(trendMap)
+      .map(([name, data]) => ({ name, score: parseFloat((data.sum / data.count).toFixed(1)) }))
+      .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
+
     const getMode = (obj: Record<string, number>) => {
       return Object.entries(obj).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
     };
@@ -100,12 +149,12 @@ const AdminEventFeedback: React.FC = () => {
       feelings, 
       timeSlots, 
       prices, 
-      regularInterest, 
       frequencies, 
-      marketingSources, 
-      nextMonthDates, 
       ongoingTimes, 
       repertoire,
+      trendData,
+      returningCount,
+      newCount,
       topPrice: getMode(prices),
       topTimeSlot: getMode(timeSlots),
       topPreferredTime: getMode(ongoingTimes),
@@ -141,24 +190,41 @@ const AdminEventFeedback: React.FC = () => {
       </header>
 
       {/* Top Level Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-primary text-primary-foreground rounded-[2rem] shadow-xl border-none p-8">
           <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p><p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1)}</p></div><Star className="h-8 w-8 text-accent fill-current" /></div>
         </Card>
-        <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-card">
-          <div className="flex justify-between items-start mb-6"><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Overall Sentiment</p><TrendingUp className="h-6 w-6 text-green-500" /></div>
-          <div className="space-y-4">{Object.entries(stats?.feelings || {}).map(([feeling, count]) => (<div key={feeling} className="space-y-1"><div className="flex justify-between text-xs font-bold"><span>{feeling}</span><span>{Math.round((count / stats!.total) * 100)}%</span></div><Progress value={(count / stats!.total) * 100} className="h-1.5" /></div>))}</div>
+        
+        <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-card md:col-span-2">
+          <div className="flex justify-between items-start mb-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LineChartIcon className="h-3 w-3" /> NPS Trend Over Time</p>
+          </div>
+          <div className="h-[120px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={stats?.trendData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis dataKey="name" hide />
+                <YAxis domain={[0, 10]} hide />
+                <RechartsTooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  labelStyle={{ fontWeight: 'bold' }}
+                />
+                <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 6, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: '#fff' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
+
         <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
           <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p><p className="text-6xl font-black tracking-tighter">{stats?.total}</p></div><Users className="h-8 w-8 opacity-40" /></div>
         </Card>
       </div>
 
-      {/* Logistics Snapshot - Quick Insights */}
+      {/* Logistics & Retention Snapshot */}
       <section className="space-y-6">
         <div className="flex items-center gap-3 px-2">
           <div className="h-8 w-1.5 bg-primary rounded-full" />
-          <h2 className="text-3xl font-black font-lora tracking-tight">Logistics Snapshot</h2>
+          <h2 className="text-3xl font-black font-lora tracking-tight">Logistics & Retention</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
@@ -179,18 +245,18 @@ const AdminEventFeedback: React.FC = () => {
 
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><CalendarCheck className="h-3 w-3" /> Peak Demand Time</p>
-              <p className="text-2xl font-black text-primary">{stats?.topPreferredTime}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Returning Legends</p>
+              <p className="text-2xl font-black text-green-600">{stats?.returningCount}</p>
             </div>
-            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">For Future Sessions</Badge>
+            <Progress value={(stats?.returningCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
           </Card>
 
           <Card className="border-none shadow-lg bg-card p-6 rounded-3xl flex flex-col justify-between">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserCheck className="h-3 w-3" /> Retention Signal</p>
-              <p className="text-2xl font-black text-primary">{stats?.topFrequency}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><UserPlus className="h-3 w-3" /> New Faces</p>
+              <p className="text-2xl font-black text-blue-600">{stats?.newCount}</p>
             </div>
-            <Badge variant="outline" className="mt-4 w-fit bg-primary/5 border-primary/10 text-[10px] font-bold">Desired Frequency</Badge>
+            <Progress value={(stats?.newCount || 0) / (stats?.total || 1) * 100} className="h-1.5 mt-4" />
           </Card>
         </div>
       </section>
@@ -207,7 +273,7 @@ const AdminEventFeedback: React.FC = () => {
               </p>
             </div>
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => analyzeMutation.mutate()} disabled={analyzeMutation.isPending}>
-              {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-5 w-5" /> Run AI Analysis</>}
+              {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-5 w-5" /> {aiInsights ? "Refresh AI Analysis" : "Run AI Analysis"}</>}
             </Button>
           </CardContent>
         </Card>
@@ -247,11 +313,11 @@ const AdminEventFeedback: React.FC = () => {
           {/* Community & Marketing Insights */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><PieChart className="h-5 w-5 text-primary" /> Marketing Sources</CardTitle>
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><PieChart className="h-5 w-5 text-primary" /> Overall Sentiment</CardTitle>
               <div className="space-y-4">
-                {Object.entries(stats?.marketingSources || {}).sort((a, b) => b[1] - a[1]).map(([source, count]) => (
-                  <div key={source} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold"><span>{source}</span><span>{count}</span></div>
+                {Object.entries(stats?.feelings || {}).map(([feeling, count]) => (
+                  <div key={feeling} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold"><span>{feeling}</span><span>{Math.round((count / stats!.total) * 100)}%</span></div>
                     <Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" />
                   </div>
                 ))}
