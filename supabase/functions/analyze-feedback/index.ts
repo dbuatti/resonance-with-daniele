@@ -17,11 +17,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Fetch all feedback for this event
-    const { data: feedback, error: fError } = await supabaseClient
-      .from('event_feedback')
-      .select('*')
-      .eq('event_id', eventId)
+    // 1. Fetch feedback based on whether it's a specific event or "all"
+    let query = supabaseClient.from('event_feedback').select('*')
+    
+    if (eventId !== "all") {
+      query = query.eq('event_id', eventId)
+    }
+
+    const { data: feedback, error: fError } = await query
 
     if (fError || !feedback || feedback.length === 0) {
       throw new Error("No feedback found to analyze.")
@@ -35,16 +38,18 @@ serve(async (req) => {
       venue: f.venue_feedback,
       repertoire: f.repertoire_feedback,
       future: f.future_repertoire,
-      score: f.recommend_score
+      score: f.recommend_score,
+      frequency: f.attendance_frequency
     }))
 
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     if (!geminiKey) throw new Error("GEMINI_API_KEY not set in Supabase secrets.")
 
-    // 3. Call Gemini
+    // 3. Call Gemini with a context-aware prompt
+    const isGlobal = eventId === "all"
     const prompt = `
       You are a strategic consultant for Daniele Buatti, a world-class vocal coach and choir director.
-      Analyze the following feedback from a recent pop-up choir session.
+      Analyze the following feedback from ${isGlobal ? 'all past sessions combined' : 'a recent pop-up choir session'}.
       
       DATA: ${JSON.stringify(feedbackSummary)}
 
@@ -53,7 +58,7 @@ serve(async (req) => {
       - "top_highlights": [3 strings of what people loved most]
       - "critical_friction": [2 strings of what needs immediate fixing]
       - "repertoire_demand": "Summary of what songs/artists they want next"
-      - "strategic_advice": "A 2-sentence personal note to Daniele on how to make the next session even better based on this data."
+      - "strategic_advice": "A 2-sentence personal note to Daniele on how to make the ${isGlobal ? 'overall choir experience' : 'next session'} even better based on this data."
       
       Keep the tone professional, encouraging, and human.
     `
@@ -70,7 +75,6 @@ serve(async (req) => {
     const result = await response.json()
     const aiResponse = JSON.parse(result.candidates[0].content.parts[0].text)
 
-    // 4. Store the insights back in the event record (or a dedicated table, but we'll return it for now)
     return new Response(JSON.stringify(aiResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200

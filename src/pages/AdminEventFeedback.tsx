@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, PieChart, BarChart3, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -65,6 +65,7 @@ const AdminEventFeedback: React.FC = () => {
     if (!feedback || feedback.length === 0) return null;
     const total = feedback.length;
     const avgScore = feedback.reduce((acc, f) => acc + (f.recommend_score || 0), 0) / total;
+    
     const feelings: Record<string, number> = {};
     const timeSlots: Record<string, number> = {};
     const prices: Record<string, number> = {};
@@ -76,13 +77,14 @@ const AdminEventFeedback: React.FC = () => {
     const repertoire: string[] = [];
 
     feedback.forEach(f => {
-      feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
-      timeSlots[f.time_slot_rating] = (timeSlots[f.time_slot_rating] || 0) + 1;
-      prices[f.price_point] = (prices[f.price_point] || 0) + 1;
-      regularInterest[f.regular_attendance_interest] = (regularInterest[f.regular_attendance_interest] || 0) + 1;
-      frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
+      if (f.overall_feeling) feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
+      if (f.time_slot_rating) timeSlots[f.time_slot_rating] = (timeSlots[f.time_slot_rating] || 0) + 1;
+      if (f.price_point) prices[f.price_point] = (prices[f.price_point] || 0) + 1;
+      if (f.regular_attendance_interest) regularInterest[f.regular_attendance_interest] = (regularInterest[f.regular_attendance_interest] || 0) + 1;
+      if (f.attendance_frequency) frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
       if (f.how_heard) marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
       if (f.future_repertoire) repertoire.push(f.future_repertoire);
+      
       (f.interest_next_month as string[] || []).forEach(date => nextMonthDates[date] = (nextMonthDates[date] || 0) + 1);
       (f.best_times_ongoing as string[] || []).forEach(time => ongoingTimes[time] = (ongoingTimes[time] || 0) + 1);
     });
@@ -106,7 +108,7 @@ const AdminEventFeedback: React.FC = () => {
           {selectedEventId !== "all" && <LegacyFeedbackImporter eventId={selectedEventId} />}
           <div className="w-full md:w-72 space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select View</label>
-            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+            <Select value={selectedEventId} onValueChange={(val) => { setSelectedEventId(val); setAiInsights(null); }}>
               <SelectTrigger className="h-12 rounded-xl shadow-xl bg-card border-2 border-primary/10"><SelectValue placeholder="Choose an event..." /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all" className="font-bold text-primary"><div className="flex items-center gap-2"><Globe className="h-4 w-4" /> All Events</div></SelectItem>
@@ -117,48 +119,48 @@ const AdminEventFeedback: React.FC = () => {
         </div>
       </header>
 
-      {selectedEventId !== "all" && (
-        <section className="mb-12">
-          <Card className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-[3rem] shadow-2xl border-none overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-            <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
-              <div className="bg-white/20 p-6 rounded-[2rem] shadow-inner"><Brain className="h-12 w-12 text-accent" /></div>
-              <div className="flex-1 text-center md:text-left space-y-2">
-                <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">AI Strategy Engine</h3>
-                <p className="text-3xl font-black font-lora leading-tight">Generate deep insights from this session's feedback.</p>
-              </div>
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => analyzeMutation.mutate()} disabled={analyzeMutation.isPending}>
-                {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-5 w-5" /> Run AI Analysis</>}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {aiInsights && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 animate-fade-in-up">
-              <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-                <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><CheckCircle2 className="h-5 w-5 text-green-500" /> Top Highlights</CardTitle>
-                <ul className="space-y-4">
-                  {aiInsights.top_highlights.map((h: string, i: number) => (
-                    <li key={i} className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-2xl text-sm font-bold">{h}</li>
-                  ))}
-                </ul>
-              </Card>
-              <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
-                <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><AlertTriangle className="h-5 w-5 text-destructive" /> Critical Friction</CardTitle>
-                <ul className="space-y-4">
-                  {aiInsights.critical_friction.map((f: string, i: number) => (
-                    <li key={i} className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl text-sm font-bold">{f}</li>
-                  ))}
-                </ul>
-              </Card>
-              <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-10 bg-accent text-accent-foreground">
-                <CardTitle className="text-2xl font-black font-lora flex items-center gap-3 mb-4"><Zap className="h-6 w-6" /> Strategic Advice for Daniele</CardTitle>
-                <p className="text-xl font-medium leading-relaxed italic">"{aiInsights.strategic_advice}"</p>
-              </Card>
+      <section className="mb-12">
+        <Card className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-[3rem] shadow-2xl border-none overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
+            <div className="bg-white/20 p-6 rounded-[2rem] shadow-inner"><Brain className="h-12 w-12 text-accent" /></div>
+            <div className="flex-1 text-center md:text-left space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">AI Strategy Engine</h3>
+              <p className="text-3xl font-black font-lora leading-tight">
+                {selectedEventId === "all" ? "Analyze the entire community's feedback history." : "Generate deep insights from this session's feedback."}
+              </p>
             </div>
-          )}
-        </section>
-      )}
+            <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => analyzeMutation.mutate()} disabled={analyzeMutation.isPending}>
+              {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-5 w-5" /> Run AI Analysis</>}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {aiInsights && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 animate-fade-in-up">
+            <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><CheckCircle2 className="h-5 w-5 text-green-500" /> Top Highlights</CardTitle>
+              <ul className="space-y-4">
+                {aiInsights.top_highlights.map((h: string, i: number) => (
+                  <li key={i} className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-2xl text-sm font-bold">{h}</li>
+                ))}
+              </ul>
+            </Card>
+            <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><AlertTriangle className="h-5 w-5 text-destructive" /> Critical Friction</CardTitle>
+              <ul className="space-y-4">
+                {aiInsights.critical_friction.map((f: string, i: number) => (
+                  <li key={i} className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl text-sm font-bold">{f}</li>
+                ))}
+              </ul>
+            </Card>
+            <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-10 bg-accent text-accent-foreground">
+              <CardTitle className="text-2xl font-black font-lora flex items-center gap-3 mb-4"><Zap className="h-6 w-6" /> Strategic Advice for Daniele</CardTitle>
+              <p className="text-xl font-medium leading-relaxed italic">"{aiInsights.strategic_advice}"</p>
+            </Card>
+          </div>
+        )}
+      </section>
 
       {loadingFeedback ? (
         <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>
@@ -166,6 +168,7 @@ const AdminEventFeedback: React.FC = () => {
         <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]"><Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" /><p className="text-xl font-bold text-muted-foreground">No feedback found.</p></Card>
       ) : (
         <div className="space-y-10">
+          {/* Top Level Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-primary text-primary-foreground rounded-[2rem] shadow-xl border-none p-8">
               <div className="flex justify-between items-start"><div className="space-y-1"><p className="text-[10px] font-black uppercase tracking-widest opacity-70">Average NPS</p><p className="text-6xl font-black tracking-tighter">{stats?.avgScore.toFixed(1)}</p></div><Star className="h-8 w-8 text-accent fill-current" /></div>
@@ -179,17 +182,69 @@ const AdminEventFeedback: React.FC = () => {
             </Card>
           </div>
 
+          {/* Community & Marketing Insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><PieChart className="h-5 w-5 text-primary" /> Marketing Sources</CardTitle>
+              <div className="space-y-4">
+                {Object.entries(stats?.marketingSources || {}).sort((a, b) => b[1] - a[1]).map(([source, count]) => (
+                  <div key={source} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold"><span>{source}</span><span>{count}</span></div>
+                    <Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><BarChart3 className="h-5 w-5 text-primary" /> Attendance Frequency</CardTitle>
+              <div className="space-y-4">
+                {Object.entries(stats?.frequencies || {}).sort((a, b) => b[1] - a[1]).map(([freq, count]) => (
+                  <div key={freq} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold"><span>{freq}</span><span>{count}</span></div>
+                    <Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="rounded-[2.5rem] shadow-xl border-none p-8 bg-card">
+              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-6"><Clock className="h-5 w-5 text-primary" /> Preferred Times</CardTitle>
+              <div className="space-y-4">
+                {Object.entries(stats?.ongoingTimes || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([time, count]) => (
+                  <div key={time} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold"><span>{time}</span><span>{count}</span></div>
+                    <Progress value={(count / stats!.total) * 100} className="h-1.5 bg-primary/10" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Repertoire & Qualitative Data */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p></div>))}</div></ScrollArea></CardContent>
             </Card>
+            
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> Improvements</CardTitle></CardHeader>
-              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.filter(f => f.improvements).map((f, i) => (<div key={i} className="space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed">"{f.improvements}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p></div>))}</div></ScrollArea></CardContent>
+              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[400px]">
+                  <div className="p-6 space-y-4">
+                    {stats?.repertoire.filter(Boolean).map((rep, i) => (
+                      <div key={i} className="p-4 bg-muted/20 rounded-2xl border border-border/50 text-sm font-bold">
+                        {rep}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
             </Card>
           </div>
 
+          {/* Detailed Table */}
           <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
             <CardHeader className="bg-muted/30"><CardTitle className="text-xl font-black font-lora">Detailed Responses</CardTitle></CardHeader>
             <CardContent className="p-0">
