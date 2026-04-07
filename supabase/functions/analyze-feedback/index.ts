@@ -45,7 +45,7 @@ serve(async (req) => {
 
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     if (!geminiKey) {
-      console.error("[analyze-feedback] GEMINI_API_KEY missing");
+      console.error("[analyze-feedback] GEMINI_API_KEY missing from environment variables");
       throw new Error("GEMINI_API_KEY not set.")
     }
 
@@ -59,6 +59,7 @@ serve(async (req) => {
       - "strategic_advice": "2-sentence note to the director"
     `
 
+    console.log("[analyze-feedback] Calling Gemini API...");
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,7 +70,20 @@ serve(async (req) => {
     })
 
     const result = await response.json()
-    const aiResponse = JSON.parse(result.candidates[0].content.parts[0].text)
+
+    // Check if the API returned candidates
+    if (!result.candidates || result.candidates.length === 0) {
+      console.error("[analyze-feedback] Gemini API returned no candidates. Full response:", JSON.stringify(result));
+      
+      if (result.error) {
+        throw new Error(`Gemini API Error: ${result.error.message}`);
+      }
+      
+      throw new Error("AI failed to generate a response. This might be due to safety filters or an invalid API key.");
+    }
+
+    const aiResponseText = result.candidates[0].content.parts[0].text;
+    const aiResponse = JSON.parse(aiResponseText);
 
     console.log("[analyze-feedback] Analysis complete");
 
