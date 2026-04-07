@@ -15,7 +15,8 @@ import {
   Music, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, 
   PieChart as PieChartIcon, BarChart3, MapPin, LineChart as LineChartIcon, 
   UserPlus, EyeOff, ListMusic, Heart, Quote, BarChart, CalendarCheck,
-  Calendar, Info, MessageSquare, ExternalLink, SearchCode, Frown
+  Calendar, Info, MessageSquare, ExternalLink, SearchCode, Frown,
+  MessageSquareText, ClipboardList
 } from "lucide-react";
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
@@ -463,7 +464,7 @@ const AdminEventFeedback: React.FC = () => {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{filteredFeedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
@@ -471,10 +472,6 @@ const AdminEventFeedback: React.FC = () => {
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Frown className="h-5 w-5 text-primary" /> Constructive Feedback</CardTitle></CardHeader>
               <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{filteredFeedback.filter(f => f.improvements).map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.improvements}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
-            </Card>
-            <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
-              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-4">{stats?.repertoire.filter(Boolean).map((rep, i) => (<div key={i} className="p-4 bg-muted/20 rounded-2xl border border-border/50 text-sm font-bold">{rep}</div>))}</div></ScrollArea></CardContent>
             </Card>
           </div>
 
@@ -486,7 +483,16 @@ const AdminEventFeedback: React.FC = () => {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-muted/20"><TableRow><TableHead className="pl-8">Member</TableHead><TableHead>Feeling</TableHead><TableHead>Improvements</TableHead><TableHead>Venue</TableHead><TableHead>Repertoire</TableHead><TableHead>Score</TableHead><TableHead className="text-right pr-8">Action</TableHead></TableRow></TableHeader>
+                  <TableHeader className="bg-muted/20">
+                    <TableRow>
+                      <TableHead className="pl-8">Member</TableHead>
+                      <TableHead>Feeling</TableHead>
+                      <TableHead>Enjoyed Most</TableHead>
+                      <TableHead>Improvements</TableHead>
+                      <TableHead>Score</TableHead>
+                      <TableHead className="text-right pr-8">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
                   <TableBody>
                     {filteredFeedback.map((f) => (
                       <TableRow key={f.id} className="hover:bg-muted/10 transition-colors cursor-pointer" onClick={() => setSelectedResponse(f)}>
@@ -498,9 +504,8 @@ const AdminEventFeedback: React.FC = () => {
                           )}
                         </TableCell>
                         <TableCell><Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">{f.overall_feeling}</Badge></TableCell>
-                        <TableCell className="text-xs max-w-[200px] truncate italic">{f.improvements || "—"}</TableCell>
-                        <TableCell className="text-xs max-w-[150px] truncate">{f.venue_feedback}</TableCell>
-                        <TableCell className="text-xs max-w-[150px] truncate">{f.repertoire_feedback}</TableCell>
+                        <TableCell className="text-xs max-w-[250px] truncate italic">{f.enjoyed_most}</TableCell>
+                        <TableCell className="text-xs max-w-[250px] truncate italic text-destructive">{f.improvements || "—"}</TableCell>
                         <TableCell><div className="flex items-center gap-1 font-black text-primary"><Star className="h-3 w-3 fill-current" /> {f.recommend_score}</div></TableCell>
                         <TableCell className="text-right pr-8">
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"><ExternalLink className="h-4 w-4" /></Button>
@@ -517,7 +522,7 @@ const AdminEventFeedback: React.FC = () => {
 
       {/* Detailed Response Dialog */}
       <Dialog open={!!selectedResponse} onOpenChange={(open) => !open && setSelectedResponse(null)}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-0 border-none shadow-2xl">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-0 border-none shadow-2xl">
           {selectedResponse && (
             <>
               <DialogHeader className="p-8 bg-primary text-primary-foreground">
@@ -573,16 +578,18 @@ const AdminEventFeedback: React.FC = () => {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Enjoyed Most</p>
-                      <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.enjoyed_most}"</p>
+                      <p className="text-sm font-black flex items-center gap-2"><Heart className="h-4 w-4 text-primary" /> Enjoyed Most</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground italic bg-muted/30 p-4 rounded-2xl">"{selectedResponse.enjoyed_most}"</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Improvements</p>
-                      <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.improvements || "No suggestions provided."}"</p>
+                      <p className="text-sm font-black flex items-center gap-2"><Frown className="h-4 w-4 text-destructive" /> Improvements</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground italic bg-red-50 dark:bg-red-950/20 p-4 rounded-2xl border border-red-100 dark:border-red-900/20">
+                        "{selectedResponse.improvements || "No suggestions provided."}"
+                      </p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Additional Comments</p>
-                      <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.additional_comments || "None."}"</p>
+                      <p className="text-sm font-black flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-primary" /> Additional Comments</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground italic bg-muted/30 p-4 rounded-2xl">"{selectedResponse.additional_comments || "None."}"</p>
                     </div>
                   </div>
                 </div>
@@ -597,19 +604,19 @@ const AdminEventFeedback: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <p className="text-sm font-black">Venue Feedback</p>
-                      <p className="text-sm leading-relaxed text-muted-foreground">"{selectedResponse.venue_feedback}"</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground bg-muted/30 p-4 rounded-2xl">"{selectedResponse.venue_feedback}"</p>
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-black">Repertoire Feedback</p>
-                      <p className="text-sm leading-relaxed text-muted-foreground">"{selectedResponse.repertoire_feedback}"</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground bg-muted/30 p-4 rounded-2xl">"{selectedResponse.repertoire_feedback}"</p>
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-black">Time Slot (10am-1pm)</p>
-                      <p className="text-sm font-bold text-primary">{selectedResponse.time_slot_rating}</p>
+                      <p className="text-sm font-bold text-primary bg-primary/5 p-4 rounded-2xl border border-primary/10">{selectedResponse.time_slot_rating}</p>
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-black">Price Point ($35)</p>
-                      <p className="text-sm font-bold text-primary">{selectedResponse.price_point}</p>
+                      <p className="text-sm font-bold text-primary bg-primary/5 p-4 rounded-2xl border border-primary/10">{selectedResponse.price_point}</p>
                     </div>
                   </div>
                 </div>
@@ -623,14 +630,16 @@ const AdminEventFeedback: React.FC = () => {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Future Repertoire Ideas</p>
-                      <p className="text-sm leading-relaxed text-muted-foreground italic">"{selectedResponse.future_repertoire || selectedResponse.future_ideas || "None."}"</p>
+                      <p className="text-sm font-black flex items-center gap-2"><Music className="h-4 w-4 text-primary" /> Future Repertoire Ideas</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground italic bg-muted/30 p-4 rounded-2xl">
+                        "{selectedResponse.future_repertoire || selectedResponse.future_ideas || "None."}"
+                      </p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Interest in Next Month</p>
-                      <div className="flex flex-wrap gap-2">
+                      <p className="text-sm font-black flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /> Interest in Next Month</p>
+                      <div className="flex flex-wrap gap-2 bg-muted/30 p-4 rounded-2xl">
                         {(selectedResponse.interest_next_month as string[] || []).map((date: string, i: number) => (
-                          <Badge key={i} variant="outline" className="text-[10px] font-bold border-primary/20">{date}</Badge>
+                          <Badge key={i} variant="outline" className="text-[10px] font-bold border-primary/20 bg-background">{date}</Badge>
                         ))}
                         {(!selectedResponse.interest_next_month || selectedResponse.interest_next_month.length === 0) && (
                           <p className="text-sm text-muted-foreground italic">No dates selected.</p>
@@ -638,19 +647,22 @@ const AdminEventFeedback: React.FC = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Regular Attendance Interest</p>
-                      <p className="text-sm font-bold text-primary">{selectedResponse.regular_attendance_interest}</p>
+                      <p className="text-sm font-black flex items-center gap-2"><UserCheck className="h-4 w-4 text-primary" /> Regular Attendance Interest</p>
+                      <p className="text-sm font-bold text-primary bg-primary/5 p-4 rounded-2xl border border-primary/10">{selectedResponse.regular_attendance_interest}</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Preferred Frequency</p>
-                      <p className="text-sm font-bold text-primary">{selectedResponse.attendance_frequency}</p>
+                      <p className="text-sm font-black flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Preferred Frequency</p>
+                      <p className="text-sm font-bold text-primary bg-primary/5 p-4 rounded-2xl border border-primary/10">{selectedResponse.attendance_frequency}</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Best Times (Ongoing)</p>
-                      <div className="flex flex-wrap gap-2">
+                      <p className="text-sm font-black flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Best Times (Ongoing)</p>
+                      <div className="flex flex-wrap gap-2 bg-muted/30 p-4 rounded-2xl">
                         {(selectedResponse.best_times_ongoing as string[] || []).map((time: string, i: number) => (
                           <Badge key={i} variant="secondary" className="text-[10px] font-bold">{time}</Badge>
                         ))}
+                        {(!selectedResponse.best_times_ongoing || selectedResponse.best_times_ongoing.length === 0) && (
+                          <p className="text-sm text-muted-foreground italic">No times selected.</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -658,7 +670,7 @@ const AdminEventFeedback: React.FC = () => {
               </div>
               
               <div className="p-8 bg-muted/30 flex justify-end">
-                <Button onClick={() => setSelectedResponse(null)} className="rounded-xl font-bold">Close Details</Button>
+                <Button onClick={() => setSelectedResponse(null)} className="rounded-xl font-black h-12 px-8 shadow-lg">Close Details</Button>
               </div>
             </>
           )}
