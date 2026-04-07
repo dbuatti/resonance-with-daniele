@@ -24,7 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CheckCircle2, MapPin, Music, Sparkles, EyeOff } from "lucide-react";
+import { Loader2, CheckCircle2, MapPin, Music, Sparkles, EyeOff, UserPlus, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSaturday, isSunday } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
@@ -33,13 +33,13 @@ import { Badge } from "@/components/ui/badge";
 
 const feedbackSchema = z.object({
   overall_feeling: z.string().min(1, "Please select how the session felt"),
-  overall_feeling_other: z.string().optional(),
+  is_first_time: z.boolean().default(false),
+  how_heard: z.string().min(1, "Please let us know how you heard about us"),
   venue_feedback: z.string().min(1, "Please tell us about the venue"),
   repertoire_feedback: z.string().min(1, "Please tell us about the repertoire"),
   enjoyed_most: z.string().min(1, "Please tell us what you enjoyed"),
   improvements: z.string().optional(),
   time_slot_rating: z.string().min(1, "Please rate the time slot"),
-  future_repertoire: z.string().optional(),
   future_ideas: z.string().optional(),
   price_point: z.string().min(1, "Please select a price point"),
   interest_next_month: z.array(z.string()).optional(),
@@ -47,7 +47,6 @@ const feedbackSchema = z.object({
   regular_attendance_interest: z.string().min(1, "Please select your interest level"),
   attendance_frequency: z.string().min(1, "Please select a frequency"),
   recommend_score: z.string().min(1, "Please provide a score"),
-  how_heard: z.string().optional(),
   additional_comments: z.string().optional(),
   is_anonymous: z.boolean().default(false),
 });
@@ -96,6 +95,7 @@ const EventFeedback: React.FC = () => {
       interest_next_month: [],
       best_times_ongoing: [],
       is_anonymous: false,
+      is_first_time: false,
     },
   });
 
@@ -106,13 +106,13 @@ const EventFeedback: React.FC = () => {
         event_id: eventId,
         user_id: user?.id || null,
         overall_feeling: data.overall_feeling,
-        overall_feeling_other: data.overall_feeling_other || null,
+        is_first_time: data.is_first_time,
+        how_heard: data.how_heard,
         venue_feedback: data.venue_feedback,
         repertoire_feedback: data.repertoire_feedback,
         enjoyed_most: data.enjoyed_most,
         improvements: data.improvements || null,
         time_slot_rating: data.time_slot_rating,
-        future_repertoire: data.future_repertoire || null,
         future_ideas: data.future_ideas || null,
         price_point: data.price_point,
         interest_next_month: data.interest_next_month,
@@ -120,7 +120,6 @@ const EventFeedback: React.FC = () => {
         regular_attendance_interest: data.regular_attendance_interest,
         attendance_frequency: data.attendance_frequency,
         recommend_score: parseInt(data.recommend_score),
-        how_heard: data.how_heard || null,
         additional_comments: data.additional_comments || null,
         is_anonymous: data.is_anonymous,
       });
@@ -158,122 +157,197 @@ const EventFeedback: React.FC = () => {
       <Card className="shadow-2xl rounded-[2.5rem] border-none overflow-hidden">
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
               
-              <FormField
-                control={form.control}
-                name="overall_feeling"
-                render={({ field }) => (
-                  <FormItem className="space-y-4">
-                    <FormLabel className="text-xl font-black font-lora">How did the session feel for you overall?</FormLabel>
-                    <FormControl>
-                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {["Loved It", "Good", "Neutral", "Not for me"].map((option) => (
-                          <FormItem key={option}>
-                            <FormControl><RadioGroupItem value={option} className="sr-only" /></FormControl>
-                            <FormLabel className={cn("flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all text-center font-bold", field.value === option ? "border-primary bg-primary/5 text-primary" : "border-muted hover:border-primary/20")}>{option}</FormLabel>
-                          </FormItem>
-                        ))}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Section 1: The Experience */}
+              <div className="space-y-8">
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-1 bg-primary rounded-full" />
+                  <h2 className="text-2xl font-black font-lora">The Experience</h2>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField
                   control={form.control}
-                  name="venue_feedback"
+                  name="overall_feeling"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-bold font-lora flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> What did you think of the venue?</FormLabel>
-                      <FormControl><Textarea placeholder="Location, acoustics, comfort..." {...field} className="rounded-xl min-h-[100px]" /></FormControl>
+                    <FormItem className="space-y-4">
+                      <FormLabel className="text-lg font-bold">How did the session feel for you overall?</FormLabel>
+                      <FormControl>
+                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {["Loved It", "Good", "Neutral", "Not for me"].map((option) => (
+                            <FormItem key={option}>
+                              <FormControl><RadioGroupItem value={option} className="sr-only" /></FormControl>
+                              <FormLabel className={cn("flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all text-center font-bold h-full", field.value === option ? "border-primary bg-primary/5 text-primary" : "border-muted hover:border-primary/20")}>{option}</FormLabel>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="repertoire_feedback"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-bold font-lora flex items-center gap-2"><Music className="h-4 w-4 text-primary" /> How did you feel about the repertoire?</FormLabel>
-                      <FormControl><Textarea placeholder="Song choice, difficulty, style..." {...field} className="rounded-xl min-h-[100px]" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <FormField
+                    control={form.control}
+                    name="is_first_time"
+                    render={({ field }) => (
+                      <FormItem className="space-y-4">
+                        <FormLabel className="text-lg font-bold flex items-center gap-2"><UserPlus className="h-4 w-4 text-primary" /> Was this your first time?</FormLabel>
+                        <FormControl>
+                          <RadioGroup onValueChange={(val) => field.onChange(val === "true")} className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="true" id="first-yes" />
+                              <FormLabel htmlFor="first-yes" className="font-bold">Yes, first time!</FormLabel>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="false" id="first-no" />
+                              <FormLabel htmlFor="first-no" className="font-bold">No, I'm a regular.</FormLabel>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="how_heard"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold flex items-center gap-2"><Search className="h-4 w-4 text-primary" /> How did you hear about this session?</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="Select source" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {["Instagram", "Facebook", "Friend / Word of Mouth", "Email Newsletter", "Google Search", "Flyer / Poster", "Other"].map(opt => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <FormField
+                    control={form.control}
+                    name="enjoyed_most"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold">What did you enjoy most?</FormLabel>
+                        <FormControl><Textarea placeholder="The harmonies, the people, the energy..." {...field} className="rounded-xl min-h-[120px] resize-none" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="improvements"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold">What could be improved?</FormLabel>
+                        <FormControl><Textarea placeholder="Anything that didn't quite land for you..." {...field} className="rounded-xl min-h-[120px] resize-none" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField
-                  control={form.control}
-                  name="enjoyed_most"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-bold font-lora">What did you enjoy most?</FormLabel>
-                      <FormControl><Textarea placeholder="The harmonies, the people..." {...field} className="rounded-xl min-h-[100px]" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="improvements"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-bold font-lora">What could be improved for next time?</FormLabel>
-                      <FormControl><Textarea placeholder="Anything that didn't quite land..." {...field} className="rounded-xl min-h-[100px]" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Section 2: Logistics */}
+              <div className="space-y-8">
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-1 bg-primary rounded-full" />
+                  <h2 className="text-2xl font-black font-lora">Logistics</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <FormField
+                    control={form.control}
+                    name="venue_feedback"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> The Venue</FormLabel>
+                        <FormControl><Textarea placeholder="Location, acoustics, comfort..." {...field} className="rounded-xl min-h-[100px] resize-none" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="repertoire_feedback"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold flex items-center gap-2"><Music className="h-4 w-4 text-primary" /> The Repertoire</FormLabel>
+                        <FormControl><Textarea placeholder="Song choice, difficulty, style..." {...field} className="rounded-xl min-h-[100px] resize-none" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <FormField
+                    control={form.control}
+                    name="time_slot_rating"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold">10am–1pm Time Slot</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="How was the timing?" /></SelectTrigger></FormControl>
+                          <SelectContent>{["Perfect", "A bit early", "A bit late", "Too long", "Too short", "Other"].map(opt => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}</SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="price_point"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold">Price Point ($35)</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="Does the price feel right?" /></SelectTrigger></FormControl>
+                          <SelectContent>{["Perfect", "A bit high", "A bit low", "Other"].map(opt => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}</SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField
-                  control={form.control}
-                  name="time_slot_rating"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-bold font-lora">What did you think of the 10am–1pm time slot?</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="Select an option" /></SelectTrigger></FormControl>
-                        <SelectContent>{["Perfect", "A bit early", "A bit late", "Too long", "Too short", "Other"].map(opt => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}</SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="price_point"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-bold font-lora">What price point feels right for future 3-hour sessions?</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="Select an option" /></SelectTrigger></FormControl>
-                        <SelectContent>{["$20–$30", "$30–$40", "$40–$50", "$50+", "Other"].map(opt => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}</SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* Section 3: Planning Ahead */}
+              <div className="space-y-8 p-8 bg-muted/30 rounded-[2rem]">
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-1 bg-primary rounded-full" />
+                  <h2 className="text-2xl font-black font-lora">Planning Ahead</h2>
+                </div>
 
-              <div className="space-y-6 p-6 bg-muted/30 rounded-3xl">
-                <h3 className="text-xl font-black font-lora">Planning Ahead</h3>
+                <FormField
+                  control={form.control}
+                  name="future_ideas"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-lg font-bold flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Any songs or styles for next time?</FormLabel>
+                      <FormControl><Textarea placeholder="I'd love to sing some..." {...field} className="rounded-xl min-h-[100px] bg-background" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="interest_next_month"
                   render={() => (
                     <FormItem>
-                      <FormLabel className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Would you be free/interested in another session in {nextMonthData.monthName}?</FormLabel>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                      <FormLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">Would you be free for another session in {nextMonthData.monthName}?</FormLabel>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                         {nextMonthData.dates.map((dateStr) => (
                           <FormField key={dateStr} control={form.control} name="interest_next_month" render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-3 rounded-xl bg-background border border-transparent hover:border-primary/20 transition-all">
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 rounded-2xl bg-background border-2 border-transparent hover:border-primary/20 transition-all shadow-sm">
                               <FormControl><Checkbox checked={field.value?.includes(dateStr)} onCheckedChange={(checked) => checked ? field.onChange([...(field.value || []), dateStr]) : field.onChange(field.value?.filter((value) => value !== dateStr))} /></FormControl>
                               <FormLabel className="font-bold cursor-pointer">{dateStr}</FormLabel>
                             </FormItem>
@@ -283,6 +357,37 @@ const EventFeedback: React.FC = () => {
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <FormField
+                    control={form.control}
+                    name="regular_attendance_interest"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold">Interest in regular sessions?</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger className="rounded-xl h-12 bg-background"><SelectValue placeholder="Select interest level" /></SelectTrigger></FormControl>
+                          <SelectContent>{["Very Interested", "Somewhat Interested", "Neutral", "Not for me"].map(opt => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}</SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="attendance_frequency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-lg font-bold">Preferred Frequency?</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger className="rounded-xl h-12 bg-background"><SelectValue placeholder="How often?" /></SelectTrigger></FormControl>
+                          <SelectContent>{["Weekly", "Fortnightly", "Monthly", "Occasionally"].map(opt => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}</SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               <FormField
@@ -290,14 +395,18 @@ const EventFeedback: React.FC = () => {
                 name="recommend_score"
                 render={({ field }) => (
                   <FormItem className="space-y-6">
-                    <FormLabel className="text-xl font-black font-lora">How likely are you to recommend this session to a friend?</FormLabel>
+                    <FormLabel className="text-xl font-black font-lora text-center block">How likely are you to recommend this to a friend?</FormLabel>
                     <FormControl>
                       <div className="flex justify-between gap-1 md:gap-2">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                          <button key={num} type="button" onClick={() => field.onChange(num.toString())} className={cn("flex-1 h-12 rounded-lg font-black transition-all border-2", field.value === num.toString() ? "bg-primary border-primary text-white shadow-lg scale-110" : "bg-background border-muted text-muted-foreground hover:border-primary/40")}>{num}</button>
+                          <button key={num} type="button" onClick={() => field.onChange(num.toString())} className={cn("flex-1 h-14 rounded-xl font-black transition-all border-2", field.value === num.toString() ? "bg-primary border-primary text-white shadow-lg scale-110" : "bg-background border-muted text-muted-foreground hover:border-primary/40")}>{num}</button>
                         ))}
                       </div>
                     </FormControl>
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">
+                      <span>Not Likely</span>
+                      <span>Extremely Likely</span>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -307,27 +416,28 @@ const EventFeedback: React.FC = () => {
                 control={form.control}
                 name="is_anonymous"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-2xl border-2 border-primary/10 p-6 bg-primary/5">
+                  <FormItem className="flex flex-row items-start space-x-4 space-y-0 rounded-[2rem] border-4 border-primary/10 p-8 bg-primary/5">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        className="h-6 w-6 rounded-lg border-2"
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-lg font-bold flex items-center gap-2">
-                        <EyeOff className="h-4 w-4 text-primary" /> Submit Anonymously
+                      <FormLabel className="text-xl font-black flex items-center gap-2">
+                        <EyeOff className="h-5 w-5 text-primary" /> Submit Anonymously
                       </FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        If checked, your name will not be visible to the director.
+                      <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                        If checked, your name will not be visible to Daniele. I value your honest feedback above all else.
                       </p>
                     </div>
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" className="w-full h-16 text-xl font-black rounded-2xl shadow-2xl" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? <><Loader2 className="mr-2 h-6 w-6 animate-spin" /> Submitting...</> : "Submit Feedback"}
+              <Button type="submit" className="w-full h-20 text-2xl font-black rounded-[2rem] shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98]" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? <><Loader2 className="mr-3 h-8 w-8 animate-spin" /> Submitting...</> : "Send My Feedback"}
               </Button>
             </form>
           </Form>

@@ -35,11 +35,13 @@ serve(async (req) => {
 
     const feedbackSummary = feedback.map(f => ({
       feeling: f.overall_feeling,
+      isFirstTime: f.is_first_time,
+      howHeard: f.how_heard,
       enjoyed: f.enjoyed_most,
       improvements: f.improvements,
       venue: f.venue_feedback,
       repertoire: f.repertoire_feedback,
-      future: f.future_repertoire,
+      future: f.future_ideas,
       score: f.recommend_score
     }))
 
@@ -56,7 +58,7 @@ serve(async (req) => {
       - "top_highlights": [3 strings]
       - "critical_friction": [2 strings]
       - "repertoire_demand": "string"
-      - "strategic_advice": "2-sentence note to the director"
+      - "strategic_advice": "2-sentence note to the director focusing on retention and marketing based on the data"
     `
 
     console.log("[analyze-feedback] Calling Gemini API...");
@@ -71,15 +73,10 @@ serve(async (req) => {
 
     const result = await response.json()
 
-    // Check if the API returned candidates
     if (!result.candidates || result.candidates.length === 0) {
       console.error("[analyze-feedback] Gemini API returned no candidates. Full response:", JSON.stringify(result));
-      
-      if (result.error) {
-        throw new Error(`Gemini API Error: ${result.error.message}`);
-      }
-      
-      throw new Error("AI failed to generate a response. This might be due to safety filters or an invalid API key.");
+      if (result.error) throw new Error(`Gemini API Error: ${result.error.message}`);
+      throw new Error("AI failed to generate a response.");
     }
 
     const aiResponseText = result.candidates[0].content.parts[0].text;

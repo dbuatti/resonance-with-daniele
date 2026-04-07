@@ -111,7 +111,7 @@ const AdminEventFeedback: React.FC = () => {
       if (f.price_point) prices[f.price_point] = (prices[f.price_point] || 0) + 1;
       if (f.attendance_frequency) frequencies[f.attendance_frequency] = (frequencies[f.attendance_frequency] || 0) + 1;
       if (f.how_heard) marketingSources[f.how_heard] = (marketingSources[f.how_heard] || 0) + 1;
-      if (f.future_repertoire) repertoire.push(f.future_repertoire);
+      if (f.future_ideas) repertoire.push(f.future_ideas);
       
       (f.best_times_ongoing as string[] || []).forEach(time => ongoingTimes[time] = (ongoingTimes[time] || 0) + 1);
 
@@ -121,7 +121,7 @@ const AdminEventFeedback: React.FC = () => {
       trendMap[monthKey].sum += (f.recommend_score || 0);
       trendMap[monthKey].count += 1;
 
-      if (f.how_heard?.toLowerCase().includes("attended before") || f.attendance_frequency !== "Occasionally") {
+      if (f.is_first_time === false) {
         returningCount++;
       } else {
         newCount++;
