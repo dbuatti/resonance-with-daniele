@@ -7,6 +7,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper for exponential backoff retries
+async function fetchWithRetry(url, options, maxRetries = 3) {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+      
+      // If it's a 503 (Service Unavailable) or 429 (Rate Limit), retry
+      if (response.status === 503 || response.status === 429) {
+        console.log(`[analyze-feedback] Gemini API returned ${response.status}. Retry attempt ${i + 1}...`);
+        const waitTime = Math.pow(2, i) * 1000; // 1s, 2s, 4s
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+      
+      return response;
+    } catch (err) {
+      lastError = err;
+      console.error(`[analyze-feedback] Fetch error on attempt ${i + 1}:`, err.message);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  throw lastError || new Error("Max retries reached");
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -61,16 +86,16 @@ serve(async (req) => {
       - "strategic_advice": "2-sentence note to the director focusing on retention and marketing based on the data"
     `
 
-    console.log("[analyze-feedback] Calling Gemini 2.5 Flash API...");
-    // Updated to use gemini-2.5-flash
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+    console.log("[analyze-feedback] Calling Gemini 2.5 Flash API with retry logic...");
+    
+    const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { response_mime_type: "application/json" }
       })
-    })
+    });
 
     const result = await response.json()
 
