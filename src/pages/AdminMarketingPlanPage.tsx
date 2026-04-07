@@ -556,6 +556,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
         eventTitle={selectedEvent?.title}
         eventDate={eventDateFormatted}
         eventLink={eventLink}
+        eventLocation={eventLocation}
       />
     </div>
   );

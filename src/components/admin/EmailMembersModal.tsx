@@ -24,6 +24,7 @@ interface EmailMembersModalProps {
   eventTitle?: string;
   eventDate?: string;
   eventLink?: string;
+  eventLocation?: string;
 }
 
 const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
@@ -32,6 +33,7 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
   eventTitle,
   eventDate,
   eventLink,
+  eventLocation,
 }) => {
   const [copiedEmails, setCopiedEmails] = useState(false);
   const [copiedBody, setCopiedBody] = useState(false);
@@ -53,8 +55,8 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
   });
 
   const sampleBody = useMemo(() => {
-    return `Hi everyone,\n\nI’d love to see you back in the circle for ${eventTitle || "our next session"} on ${eventDate || "the upcoming date"}.\n\nWe're going to be working on some beautiful new harmonies and I can't wait to hear the room full of voices again.\n\nYou can grab your spot and see all the details here: ${eventLink || "https://events.humanitix.com/resonance-choir"}\n\nHope to see you there!\n\n— Daniele`;
-  }, [eventTitle, eventDate, eventLink]);
+    return `Hi everyone,\n\nI’d love to see you back in the circle for ${eventTitle || "our next session"} on ${eventDate || "the upcoming date"}. 10:00am - 1:00pm at ${eventLocation || "Armadale Baptist Church"}.\n\nYou can grab your spot and see all the details here: ${eventLink || "https://events.humanitix.com/resonance-choir"}\n\nHope to see you there!\n\n— Daniele`;
+  }, [eventTitle, eventDate, eventLink, eventLocation]);
 
   const copyToClipboard = (text: string, setter: (v: boolean) => void) => {
     navigator.clipboard.writeText(text);
