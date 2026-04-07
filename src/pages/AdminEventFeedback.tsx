@@ -17,7 +17,7 @@ import {
   UserPlus, EyeOff, ListMusic, Heart, Quote, BarChart, CalendarCheck,
   Calendar, Info, MessageSquare, ExternalLink
 } from "lucide-react";
-import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -47,19 +47,22 @@ const AdminEventFeedback: React.FC = () => {
   const [aiInsights, setAiInsights] = useState<any>(null);
   const [selectedResponse, setSelectedResponse] = useState<any>(null);
 
-  // Fetch all feedback to derive months and show global stats
-  const { data: allFeedback, isLoading: loadingAllFeedback } = useQuery({
-    queryKey: ["allEventFeedbackForMonths"],
+  // Fetch ALL feedback once to handle filtering and month derivation locally
+  // This is much more reliable for "Legacy" data than complex PostgREST OR queries
+  const { data: allFeedback, isLoading: loadingFeedback } = useQuery({
+    queryKey: ["allEventFeedbackData"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_feedback")
-        .select(`created_at, events (date)`);
+        .select(`*, profiles (first_name, last_name, email), events (title, date)`)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
+    enabled: !loading,
   });
 
-  // Generate unique months from feedback data
+  // Generate unique months from all feedback data
   const uniqueMonths = useMemo(() => {
     if (!allFeedback) return [];
     const months = new Set<string>();
@@ -73,26 +76,27 @@ const AdminEventFeedback: React.FC = () => {
     return Array.from(months).sort().reverse();
   }, [allFeedback]);
 
-  const { data: feedback, isLoading: loadingFeedback } = useQuery({
-    queryKey: ["eventFeedbackData", selectedFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from("event_feedback")
-        .select(`*, profiles (first_name, last_name, email), events (title, date)`)
-        .order("created_at", { ascending: false });
+  // Filter feedback based on selection
+  const filteredFeedback = useMemo(() => {
+    if (!allFeedback) return [];
+    if (selectedFilter === "all") return allFeedback;
 
-      if (selectedFilter.startsWith("month:")) {
-        const monthStr = selectedFilter.split(":")[1];
-        const startDate = `${monthStr}-01`;
-        const endDate = format(endOfMonth(parseISO(startDate)), "yyyy-MM-dd");
-        query = query.or(`and(events.date.gte.${startDate},events.date.lte.${endDate}),and(created_at.gte.${startDate},created_at.lte.${endDate})`);
-      }
+    if (selectedFilter.startsWith("month:")) {
+      const monthStr = selectedFilter.split(":")[1]; // "2024-03"
+      const start = startOfMonth(parseISO(`${monthStr}-01`));
+      const end = endOfMonth(start);
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
+      return allFeedback.filter((f: any) => {
+        const eventDate = Array.isArray(f.events) ? f.events[0]?.date : f.events?.date;
+        const dateStr = eventDate || f.created_at;
+        if (!dateStr) return false;
+        const date = parseISO(dateStr);
+        return isWithinInterval(date, { start, end });
+      });
+    }
+
+    return allFeedback;
+  }, [allFeedback, selectedFilter]);
 
   const { data: savedAiSummary } = useQuery({
     queryKey: ["savedAiSummary", selectedFilter],
@@ -137,9 +141,9 @@ const AdminEventFeedback: React.FC = () => {
   });
 
   const stats = useMemo(() => {
-    if (!feedback || feedback.length === 0) return null;
-    const total = feedback.length;
-    const avgScore = feedback.reduce((acc, f) => acc + (f.recommend_score || 0), 0) / total;
+    if (!filteredFeedback || filteredFeedback.length === 0) return null;
+    const total = filteredFeedback.length;
+    const avgScore = filteredFeedback.reduce((acc, f) => acc + (f.recommend_score || 0), 0) / total;
     
     const feelings: Record<string, number> = {};
     const npsDistribution: Record<number, number> = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0};
@@ -153,7 +157,7 @@ const AdminEventFeedback: React.FC = () => {
     let returningCount = 0;
     let newCount = 0;
 
-    feedback.forEach((f: any) => {
+    filteredFeedback.forEach((f: any) => {
       if (f.overall_feeling) feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
       if (f.recommend_score) npsDistribution[f.recommend_score] = (npsDistribution[f.recommend_score] || 0) + 1;
       if (f.venue_feedback) venueFeelings[f.venue_feedback] = (venueFeelings[f.venue_feedback] || 0) + 1;
@@ -190,16 +194,16 @@ const AdminEventFeedback: React.FC = () => {
     return { 
       total, avgScore, feelings, marketingSources, repertoire, trendData, returningCount, newCount,
       npsChartData, sentimentChartData, venueFeelings, repertoireFeelings,
-      topPrice: getMode(Object.fromEntries(feedback.map(f => [f.price_point, 1]))),
-      topTimeSlot: getMode(Object.fromEntries(feedback.map(f => [f.time_slot_rating, 1]))),
+      topPrice: getMode(Object.fromEntries(filteredFeedback.map(f => [f.price_point, 1]))),
+      topTimeSlot: getMode(Object.fromEntries(filteredFeedback.map(f => [f.time_slot_rating, 1]))),
       topPreferredTime: getMode(ongoingTimes),
       topFrequency: getMode(frequencies),
       ongoingTimes,
       frequencies
     };
-  }, [feedback]);
+  }, [filteredFeedback]);
 
-  if (loading || loadingAllFeedback) return <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>;
+  if (loading || loadingFeedback) return <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>;
   if (!user?.is_admin) { navigate("/"); return null; }
 
   return (
@@ -441,7 +445,7 @@ const AdminEventFeedback: React.FC = () => {
 
       {loadingFeedback ? (
         <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>
-      ) : !feedback || feedback.length === 0 ? (
+      ) : !filteredFeedback || filteredFeedback.length === 0 ? (
         <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]"><Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" /><p className="text-xl font-bold text-muted-foreground">No feedback found for this timeframe.</p></Card>
       ) : (
         <div className="space-y-10">
@@ -463,7 +467,7 @@ const AdminEventFeedback: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> What they loved</CardTitle></CardHeader>
-              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{feedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
+              <CardContent className="p-0"><ScrollArea className="h-[400px]"><div className="p-6 space-y-6">{filteredFeedback.map((f, i) => (<div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0"><p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.is_anonymous ? "Anonymous Member" : (f.profiles?.first_name || "Legacy Member")}</p></div>))}</div></ScrollArea></CardContent>
             </Card>
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xl font-black font-lora flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Repertoire Demand</CardTitle></CardHeader>
@@ -481,7 +485,7 @@ const AdminEventFeedback: React.FC = () => {
                 <Table>
                   <TableHeader className="bg-muted/20"><TableRow><TableHead className="pl-8">Member</TableHead><TableHead>Feeling</TableHead><TableHead>Venue</TableHead><TableHead>Repertoire</TableHead><TableHead>Score</TableHead><TableHead className="text-right pr-8">Action</TableHead></TableRow></TableHeader>
                   <TableBody>
-                    {feedback.map((f) => (
+                    {filteredFeedback.map((f) => (
                       <TableRow key={f.id} className="hover:bg-muted/10 transition-colors cursor-pointer" onClick={() => setSelectedResponse(f)}>
                         <TableCell className="pl-8 font-bold">
                           {f.is_anonymous ? (
