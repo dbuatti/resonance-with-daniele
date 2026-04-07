@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy } from "lucide-react"; // Added Copy
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History } from "lucide-react";
 import { format } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
+import LegacyFeedbackImporter from "@/components/admin/LegacyFeedbackImporter";
 
 const AdminEventFeedback: React.FC = () => {
   const { user, loading } = useSession();
@@ -79,8 +80,8 @@ const AdminEventFeedback: React.FC = () => {
     const csv = [
       ["Name", "Email", "Feeling", "Enjoyed Most", "Improvements", "Score", "Comments"].join(","),
       ...feedback.map(f => [
-        `"${f.profiles?.first_name} ${f.profiles?.last_name}"`,
-        `"${f.profiles?.email}"`,
+        f.profiles ? `"${f.profiles.first_name} ${f.profiles.last_name}"` : '"Legacy/Anonymous"',
+        f.profiles ? `"${f.profiles.email}"` : '""',
         `"${f.overall_feeling}"`,
         `"${f.enjoyed_most?.replace(/"/g, '""')}"`,
         `"${f.improvements?.replace(/"/g, '""')}"`,
@@ -119,20 +120,23 @@ const AdminEventFeedback: React.FC = () => {
           <h1 className="text-5xl font-black font-lora tracking-tighter">Event Feedback</h1>
           <p className="text-xl text-muted-foreground">Analyze how your sessions are landing with the community.</p>
         </div>
-        <div className="w-full md:w-72 space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Event</label>
-          <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-            <SelectTrigger className="h-12 rounded-xl shadow-xl bg-card border-2 border-primary/10">
-              <SelectValue placeholder="Choose an event..." />
-            </SelectTrigger>
-            <SelectContent>
-              {events?.map((event) => (
-                <SelectItem key={event.id} value={event.id} className="font-bold">
-                  {event.title} ({format(new Date(event.date), "MMM d")})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          {selectedEventId && <LegacyFeedbackImporter eventId={selectedEventId} />}
+          <div className="w-full md:w-72 space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Event</label>
+            <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
+              <SelectTrigger className="h-12 rounded-xl shadow-xl bg-card border-2 border-primary/10">
+                <SelectValue placeholder="Choose an event..." />
+              </SelectTrigger>
+              <SelectContent>
+                {events?.map((event) => (
+                  <SelectItem key={event.id} value={event.id} className="font-bold">
+                    {event.title} ({format(new Date(event.date), "MMM d")})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </header>
 
@@ -210,7 +214,7 @@ const AdminEventFeedback: React.FC = () => {
                     {feedback.map((f, i) => (
                       <div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0">
                         <p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p>
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -238,7 +242,7 @@ const AdminEventFeedback: React.FC = () => {
                     {feedback.filter(f => f.improvements).map((f, i) => (
                       <div key={i} className="space-y-2 border-b border-border/50 pb-6 last:border-0">
                         <p className="text-sm italic font-medium leading-relaxed">"{f.improvements}"</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p>
                       </div>
                     ))}
                   </div>
@@ -268,7 +272,13 @@ const AdminEventFeedback: React.FC = () => {
                   <TableBody>
                     {feedback.map((f) => (
                       <TableRow key={f.id} className="hover:bg-muted/10 transition-colors">
-                        <TableCell className="pl-8 font-bold">{f.profiles?.first_name} {f.profiles?.last_name}</TableCell>
+                        <TableCell className="pl-8 font-bold">
+                          {f.profiles ? `${f.profiles.first_name} ${f.profiles.last_name}` : (
+                            <div className="flex items-center gap-2 text-muted-foreground italic">
+                              <History className="h-3 w-3" /> Legacy
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">{f.overall_feeling}</Badge>
                         </TableCell>
