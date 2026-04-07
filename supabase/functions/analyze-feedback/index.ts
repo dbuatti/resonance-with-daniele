@@ -8,19 +8,19 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     const { eventId } = await req.json()
+    console.log("[analyze-feedback] Starting analysis for event:", eventId);
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Fetch feedback
     let query = supabaseClient.from('event_feedback').select('*')
     if (eventId !== "all") {
       query = query.eq('event_id', eventId)
@@ -29,10 +29,10 @@ serve(async (req) => {
     const { data: feedback, error: fError } = await query
 
     if (fError || !feedback || feedback.length === 0) {
+      console.error("[analyze-feedback] No feedback found", { fError });
       throw new Error("No feedback found to analyze.")
     }
 
-    // 2. Prepare data for AI
     const feedbackSummary = feedback.map(f => ({
       feeling: f.overall_feeling,
       enjoyed: f.enjoyed_most,
@@ -44,9 +44,11 @@ serve(async (req) => {
     }))
 
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
-    if (!geminiKey) throw new Error("GEMINI_API_KEY not set.")
+    if (!geminiKey) {
+      console.error("[analyze-feedback] GEMINI_API_KEY missing");
+      throw new Error("GEMINI_API_KEY not set.")
+    }
 
-    const isGlobal = eventId === "all"
     const prompt = `
       Analyze this choir feedback data: ${JSON.stringify(feedbackSummary)}
       Provide a JSON response with:
@@ -69,12 +71,15 @@ serve(async (req) => {
     const result = await response.json()
     const aiResponse = JSON.parse(result.candidates[0].content.parts[0].text)
 
+    console.log("[analyze-feedback] Analysis complete");
+
     return new Response(JSON.stringify(aiResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200
     })
 
   } catch (error: any) {
+    console.error("[analyze-feedback] Error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400

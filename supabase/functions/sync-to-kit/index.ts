@@ -15,12 +15,12 @@ serve(async (req) => {
   }
 
   try {
+    console.log("[sync-to-kit] Starting manual bulk sync...");
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Supabase Auth Check
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) throw new Error("Missing Authorization header")
 
@@ -52,7 +52,6 @@ serve(async (req) => {
       return resText ? JSON.parse(resText) : {}
     }
 
-    // 1. Get or create 'choir' tag
     const tagsData = await kitRequest("/tags")
     let choirTag = tagsData.tags?.find((t: any) => t.name.toLowerCase() === "choir")
     if (!choirTag) {
@@ -60,17 +59,13 @@ serve(async (req) => {
       choirTag = newTagData.tag
     }
 
-    // 2. Fetch from both tables
     const { data: members } = await supabaseClient.from('profiles').select('email, first_name, last_name')
     const { data: interests } = await supabaseClient.from('interest_submissions').select('email, first_name, last_name')
 
-    console.log(`[Manual Sync] Found ${members?.length || 0} Members and ${interests?.length || 0} Expressions of Interest.`);
-
-    // 3. Combine and de-duplicate by email
     const allPeople = [...(members || []), ...(interests || [])]
     const uniquePeople = Array.from(new Map(allPeople.filter(p => p.email).map(p => [p.email.toLowerCase(), p])).values())
 
-    console.log(`[Manual Sync] Total unique emails to process: ${uniquePeople.length}`);
+    console.log(`[sync-to-kit] Total unique emails to process: ${uniquePeople.length}`);
 
     let successCount = 0
     for (const person of uniquePeople) {
@@ -91,9 +86,11 @@ serve(async (req) => {
         })
         successCount++
       } catch (e) {
-        console.error(`Failed for ${email}:`, e.message)
+        console.error(`[sync-to-kit] Failed for ${email}:`, e.message)
       }
     }
+
+    console.log(`[sync-to-kit] Sync complete. Total synced: ${successCount}`);
 
     return new Response(
       JSON.stringify({ success: true, synced: successCount }),
@@ -101,7 +98,7 @@ serve(async (req) => {
     )
 
   } catch (error: any) {
-    console.error("[Manual Sync] Error:", error.message)
+    console.error("[sync-to-kit] Error:", error.message)
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

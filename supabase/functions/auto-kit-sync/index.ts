@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const KIT_API_BASE = "https://api.kit.com/v4";
 
@@ -10,7 +9,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -19,17 +17,15 @@ serve(async (req) => {
     const kitToken = Deno.env.get('KIT_API_SECRET')?.trim()
     if (!kitToken) throw new Error("KIT_API_SECRET not found.")
 
-    // Parse the Webhook payload from Supabase
     const payload = await req.json()
     const { record, type } = payload
 
-    // We only care about new profiles or updates where we have an email
     if (!record || !record.email) {
-      console.log("[Auto-Sync] No record or email found in payload. Skipping.");
+      console.log("[auto-kit-sync] No record or email found. Skipping.");
       return new Response(JSON.stringify({ skipped: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    console.log(`[Auto-Sync] Processing ${type} for: ${record.email}`);
+    console.log(`[auto-kit-sync] Processing ${type} for: ${record.email}`);
 
     const kitRequest = async (endpoint: string, options: any = {}) => {
       const url = `${KIT_API_BASE}${endpoint}`
@@ -49,7 +45,6 @@ serve(async (req) => {
       return resText ? JSON.parse(resText) : {}
     }
 
-    // 1. Get or create 'choir' tag
     const tagsData = await kitRequest("/tags")
     let choirTag = tagsData.tags?.find((t: any) => t.name.toLowerCase() === "choir")
 
@@ -61,7 +56,6 @@ serve(async (req) => {
       choirTag = newTagData.tag
     }
 
-    // 2. Create/Update subscriber
     await kitRequest("/subscribers", {
       method: "POST",
       body: JSON.stringify({
@@ -71,7 +65,6 @@ serve(async (req) => {
       })
     })
 
-    // 3. Add the 'choir' tag
     await kitRequest(`/tags/${choirTag.id}/subscribers`, {
       method: "POST",
       body: JSON.stringify({
@@ -79,7 +72,7 @@ serve(async (req) => {
       })
     })
 
-    console.log(`[Auto-Sync] Successfully synced ${record.email} to Kit.`);
+    console.log(`[auto-kit-sync] Successfully synced ${record.email} to Kit.`);
 
     return new Response(
       JSON.stringify({ success: true, email: record.email }),
@@ -87,7 +80,7 @@ serve(async (req) => {
     )
 
   } catch (error: any) {
-    console.error("[Auto-Sync] Error:", error.message)
+    console.error("[auto-kit-sync] Error:", error.message)
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
