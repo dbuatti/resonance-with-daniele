@@ -1,24 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   MapPin, 
   Star, 
   Facebook, 
   Instagram, 
-  CheckCircle2, 
   Sparkles, 
-  ExternalLink, 
   Trophy,
   Rocket,
   Target,
   ArrowRight,
-  Circle,
   Check,
   Zap,
   Building2
@@ -28,7 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
 import { showSuccess, showError } from "@/utils/toast";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface Mission {
   id: string;
@@ -104,7 +100,6 @@ const AdminGrowthStrategy: React.FC = () => {
   const { user } = useSession();
   const queryClient = useQueryClient();
 
-  // Fetch completed steps from Supabase
   const { data: completedSteps, isLoading } = useQuery({
     queryKey: ["growthMissionSteps"],
     queryFn: async () => {
@@ -136,7 +131,6 @@ const AdminGrowthStrategy: React.FC = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["growthMissionSteps"] });
       if (data.wasCompleted) {
-        // Check if this was the last step for the mission
         const mission = missions.find(m => m.id === data.missionId);
         const missionSteps = completedSteps?.filter(s => s.mission_key === data.missionId) || [];
         if (mission && missionSteps.length + 1 === mission.steps.length) {
@@ -182,7 +176,6 @@ const AdminGrowthStrategy: React.FC = () => {
         {missions.map((mission) => {
           const missionCompletedSteps = completedSteps?.filter(s => s.mission_key === mission.id) || [];
           const isMissionDone = missionCompletedSteps.length === mission.steps.length;
-          const missionProgress = (missionCompletedSteps.length / mission.steps.length) * 100;
 
           return (
             <Card 
@@ -194,7 +187,6 @@ const AdminGrowthStrategy: React.FC = () => {
                   : `border-transparent ${mission.color} text-white`
               )}
             >
-              {/* Satisfying "Complete" Overlay */}
               {isMissionDone && (
                 <div className="absolute inset-0 bg-green-500/10 backdrop-blur-[2px] z-10 flex items-center justify-center pointer-events-none animate-in fade-in duration-700">
                   <div className="bg-white p-4 rounded-full shadow-2xl transform rotate-12">

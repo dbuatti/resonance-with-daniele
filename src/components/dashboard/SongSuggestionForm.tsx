@@ -24,13 +24,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
+import { Checkbox } from "@/components/ui/checkbox";
 
 const songSuggestionSchema = z.object({
   title: z.string().min(1, "Song title is required"),
   artist: z.string().min(1, "Artist name is required"),
   reason: z.string().optional(),
-  submit_anonymously: z.boolean().optional(), // New field for anonymous submission
+  submit_anonymously: z.boolean().optional(),
 });
 
 type SongSuggestionFormData = z.infer<typeof songSuggestionSchema>;
@@ -50,7 +50,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
       title: "",
       artist: "",
       reason: "",
-      submit_anonymously: false, // Default to not anonymous
+      submit_anonymously: false,
     },
   });
 
@@ -64,7 +64,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
 
     try {
       const { error } = await supabase.from("song_suggestions").insert({
-        user_id: userIdToSubmit, // Use null if submitting anonymously
+        user_id: userIdToSubmit,
         title: data.title,
         artist: data.artist,
         reason: data.reason || null,
@@ -75,7 +75,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
         showError("Failed to submit song suggestion: " + error.message);
       } else {
         showSuccess("Song suggestion added successfully!");
-        form.reset({ submit_anonymously: false }); // Reset form, keep anonymous checkbox unchecked
+        form.reset({ submit_anonymously: false });
         setIsSubmittedSuccessfully(true);
         setTimeout(() => setIsSubmittedSuccessfully(false), 3000);
         queryClient.invalidateQueries({ queryKey: ['songSuggestions'] });

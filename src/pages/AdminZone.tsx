@@ -5,7 +5,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AlertCircle, Mail, BellRing, Users, BarChart3, Settings, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
