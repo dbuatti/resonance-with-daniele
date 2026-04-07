@@ -24,7 +24,10 @@ import {
   Ticket,
   TrendingUp,
   Music,
-  Globe
+  Globe,
+  Zap,
+  DollarSign,
+  AlertTriangle
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -37,7 +40,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, subDays } from "date-fns";
+import { format, subDays, differenceInDays, startOfDay } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 
 const AdminMarketingPlanPage: React.FC = () => {
@@ -71,22 +74,31 @@ const AdminMarketingPlanPage: React.FC = () => {
     [events, selectedEventId]
   );
 
-  // 2. Fetch Live Stats for the selected event
+  // 2. Fetch Live Stats & Financials
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["eventMarketingStats", selectedEventId],
     queryFn: async () => {
       if (!selectedEventId) return null;
-      const { data: orders, error } = await supabase
+      
+      // Fetch Orders
+      const { data: orders, error: orderError } = await supabase
         .from("event_orders")
         .select("valid_tickets, your_earnings")
         .eq("event_id", selectedEventId);
-      
-      if (error) throw error;
+      if (orderError) throw orderError;
+
+      // Fetch Expenses
+      const { data: expenses, error: expenseError } = await supabase
+        .from("event_expenses")
+        .select("amount")
+        .eq("event_id", selectedEventId);
+      if (expenseError) throw expenseError;
 
       const totalTickets = orders?.reduce((sum, o) => sum + (o.valid_tickets || 0), 0) || 0;
       const totalEarnings = orders?.reduce((sum, o) => sum + Number(o.your_earnings || 0), 0) || 0;
+      const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
       
-      return { totalTickets, totalEarnings };
+      return { totalTickets, totalEarnings, totalExpenses };
     },
     enabled: !!selectedEventId,
   });
@@ -106,29 +118,35 @@ const AdminMarketingPlanPage: React.FC = () => {
     },
   });
 
-  // 4. Dynamic Countdown Logic
+  // 4. Dynamic Countdown & Mission Logic
+  const daysUntil = useMemo(() => {
+    if (!selectedEvent?.date) return null;
+    return differenceInDays(startOfDay(new Date(selectedEvent.date)), startOfDay(new Date()));
+  }, [selectedEvent]);
+
+  const dailyMission = useMemo(() => {
+    if (daysUntil === null) return null;
+    if (daysUntil > 7) return { title: "Build Anticipation", task: "Share a 'behind the scenes' photo of your prep.", icon: <Sparkles /> };
+    if (daysUntil === 7) return { title: "The 1-Week Mark", task: "Email the full list. Remind them why this song matters.", icon: <Mail /> };
+    if (daysUntil === 3) return { title: "Relational Push", task: "Message your '10 People'. This is the most important day.", icon: <Target /> };
+    if (daysUntil === 2) return { title: "Vibe Check", task: "Post a video of you playing the chords. Make it feel safe.", icon: <Instagram /> };
+    if (daysUntil === 1) return { title: "Final Call", task: "Instagram Story: 'Last few spots left. See you tomorrow?'", icon: <Zap /> };
+    if (daysUntil === 0) return { title: "Showtime", task: "Inhabit the room. Focus on the humans, not the notes.", icon: <Heart /> };
+    return { title: "Keep Momentum", task: "Check your outreach list and follow up on replies.", icon: <Users /> };
+  }, [daysUntil]);
+
   useEffect(() => {
     if (!selectedEvent?.date) return;
-
     const targetDate = new Date(`${selectedEvent.date}T10:00:00`).getTime();
-    
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const distance = targetDate - now;
-      
-      if (distance < 0) {
-        setTimeLeft("Event Started!");
-        clearInterval(timer);
-        return;
-      }
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      
-      setTimeLeft(`${days}d ${hours}h ${minutes}m`);
+      if (distance < 0) { setTimeLeft("Event Started!"); clearInterval(timer); return; }
+      const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeLeft(`${d}d ${h}h ${m}m`);
     }, 1000);
-
     return () => clearInterval(timer);
   }, [selectedEvent]);
 
@@ -137,11 +155,7 @@ const AdminMarketingPlanPage: React.FC = () => {
     queryKey: ["adminBrainDump", selectedEventId],
     queryFn: async () => {
       if (!selectedEventId) return "";
-      const { data, error } = await supabase
-        .from("admin_notes")
-        .select("content")
-        .eq("note_key", `brain_dump_${selectedEventId}`)
-        .single();
+      const { data, error } = await supabase.from("admin_notes").select("content").eq("note_key", `brain_dump_${selectedEventId}`).single();
       if (error && error.code !== 'PGRST116') throw error;
       return data?.content || "";
     },
@@ -151,30 +165,16 @@ const AdminMarketingPlanPage: React.FC = () => {
   const [localBrainDump, setLocalBrainDump] = useState("");
   const debouncedBrainDump = useDebounce(localBrainDump, 1000);
 
-  useEffect(() => {
-    if (noteData !== undefined) setLocalBrainDump(noteData);
-  }, [noteData]);
+  useEffect(() => { if (noteData !== undefined) setLocalBrainDump(noteData); }, [noteData]);
 
   const saveNoteMutation = useMutation({
     mutationFn: async (content: string) => {
       if (!selectedEventId) return;
-      const { error } = await supabase
-        .from("admin_notes")
-        .upsert({ 
-          admin_id: user?.id, 
-          note_key: `brain_dump_${selectedEventId}`, 
-          event_id: selectedEventId,
-          content 
-        }, { onConflict: 'note_key' });
-      if (error) throw error;
+      await supabase.from("admin_notes").upsert({ admin_id: user?.id, note_key: `brain_dump_${selectedEventId}`, event_id: selectedEventId, content }, { onConflict: 'note_key' });
     }
   });
 
-  useEffect(() => {
-    if (debouncedBrainDump !== noteData && selectedEventId) {
-      saveNoteMutation.mutate(debouncedBrainDump);
-    }
-  }, [debouncedBrainDump, selectedEventId]);
+  useEffect(() => { if (debouncedBrainDump !== noteData && selectedEventId) saveNoteMutation.mutate(debouncedBrainDump); }, [debouncedBrainDump, selectedEventId]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -188,52 +188,13 @@ const AdminMarketingPlanPage: React.FC = () => {
   const eventLocation = selectedEvent?.location || "Armadale Baptist Church";
   const eventLink = selectedEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
   const focusSong = nominatedFolder?.name || "some incredible new harmonies";
-  
   const promoExpiryDate = subDays(eventDate, 1);
   const promoExpiryFormatted = format(promoExpiryDate, "EEEE 'at' 1:00 PM");
 
   // --- DYNAMIC TEMPLATES ---
-  const authenticCaption = `We're back for ${selectedEvent?.title || "our next session"}. 
-  
-We'll be diving into "${focusSong}" — the harmonies are sounding beautiful already.
-
-📍 ${eventLocation}
-⏰ ${eventDateFormatted}, 10am
-
-If you've been meaning to come, this is the one. Use SING20 for 20% off until ${format(promoExpiryDate, "EEEE")}.
-
-Link in bio. Come sing with us. 🌿`;
-
-  const authenticEmail = `Subject: Let's sing together this ${eventDayName}! 🎶
-
-Hi there,
-
-I’d love to see you back in the circle for ${selectedEvent?.title || "our next session"} this ${eventDateFormatted} (10am–1pm) at ${eventLocation}.
-
-We're going to be working on "${focusSong}", and I can't wait to hear how it sounds with a full room.
-
-I’m opening up a 20% discount for my past singers to help get the room full of familiar voices.
-
-Use code SING20 at checkout.
-(Valid until ${promoExpiryFormatted})
-
-Grab your spot here: ${eventLink}
-
-I'd love to see you there.
-
-— Daniele`;
-
-  const fullCommunityPost = `Any local singers (or shower-singers) in Armadale? 🎶
-
-Hi everyone! I’m Daniele, a local music director. I’m hosting a pop-up choir session at ${eventLocation} on ${eventDateFormatted}.
-
-We're learning "${focusSong}" this month. It’s a low-pressure morning. There are no auditions and no experience is needed. We just get together to learn some great harmonies and meet some new people in the neighborhood.
-
-📍 Where: ${eventLocation}
-⏰ When: ${eventDateFormatted}, 10am to 1pm
-🎟️ Link: ${eventLink}
-
-Hope to see some local faces there!`;
+  const authenticCaption = `We're back for ${selectedEvent?.title || "our next session"}. \n\nWe'll be diving into "${focusSong}" — the harmonies are sounding beautiful already.\n\n📍 ${eventLocation}\n⏰ ${eventDateFormatted}, 10am\n\nIf you've been meaning to come, this is the one. Use SING20 for 20% off until ${format(promoExpiryDate, "EEEE")}.\n\nLink in bio. Come sing with us. 🌿`;
+  const authenticEmail = `Subject: Let's sing together this ${eventDayName}! 🎶\n\nHi there,\n\nI’d love to see you back in the circle for ${selectedEvent?.title || "our next session"} this ${eventDateFormatted} (10am–1pm) at ${eventLocation}.\n\nWe're going to be working on "${focusSong}", and I can't wait to hear how it sounds with a full room.\n\nI’m opening up a 20% discount for my past singers to help get the room full of familiar voices.\n\nUse code SING20 at checkout.\n(Valid until ${promoExpiryFormatted})\n\nGrab your spot here: ${eventLink}\n\nI'd love to see you there.\n\n— Daniele`;
+  const fullCommunityPost = `Any local singers (or shower-singers) in Armadale? 🎶\n\nHi everyone! I’m Daniele, a local music director. I’m hosting a pop-up choir session at ${eventLocation} on ${eventDateFormatted}.\n\nWe're learning "${focusSong}" this month. It’s a low-pressure morning. There are no auditions and no experience is needed. We just get together to learn some great harmonies and meet some new people in the neighborhood.\n\n📍 Where: ${eventLocation}\n⏰ When: ${eventDateFormatted}, 10am to 1pm\n🎟️ Link: ${eventLink}\n\nHope to see some local faces there!`;
 
   const handleOpenMail = () => {
     const subject = encodeURIComponent(`Let's sing together for ${selectedEvent?.title}! 🎶`);
@@ -245,6 +206,7 @@ Hope to see some local faces there!`;
 
   const targetTickets = 125;
   const ticketProgress = stats ? (stats.totalTickets / targetTickets) * 100 : 0;
+  const netProfit = stats ? stats.totalEarnings - stats.totalExpenses : 0;
 
   return (
     <div className="space-y-8 py-8 md:py-12 bg-background/50 min-h-screen">
@@ -254,20 +216,20 @@ Hope to see some local faces there!`;
         <header className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-12">
           <div className="space-y-6 flex-1">
             <div className="flex items-center gap-2">
-              <Badge className="bg-primary text-primary-foreground px-3 py-1 rounded-full">🚀 Event Sprint</Badge>
-              <Badge variant="outline" className="border-primary text-primary px-3 py-1 rounded-full">🤝 Relational Focus</Badge>
+              <Badge className="bg-primary text-primary-foreground px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px]">War Room</Badge>
+              <Badge variant="outline" className="border-primary text-primary px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px]">Live Intel</Badge>
             </div>
-            <h1 className="text-4xl md:text-7xl font-black font-lora tracking-tight leading-none">Event Command Center</h1>
+            <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Command Center</h1>
             
             <div className="w-full md:w-96 space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select Active Event</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Active Operation</label>
               <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-                <SelectTrigger className="h-14 rounded-2xl shadow-sm bg-card border-2 border-primary/10 text-lg font-bold">
+                <SelectTrigger className="h-16 rounded-[1.5rem] shadow-xl bg-card border-4 border-primary/10 text-xl font-black">
                   <SelectValue placeholder="Choose an event..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl">
                   {events?.map((event) => (
-                    <SelectItem key={event.id} value={event.id} className="py-3">
+                    <SelectItem key={event.id} value={event.id} className="py-4 font-bold">
                       {event.title} ({format(new Date(event.date), "MMM d")})
                     </SelectItem>
                   ))}
@@ -277,48 +239,100 @@ Hope to see some local faces there!`;
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:w-auto">
-            <Card className="bg-card p-6 rounded-[2rem] shadow-xl border-none flex items-center gap-4 min-w-[200px]">
+            <Card className="bg-card p-6 rounded-[2.5rem] shadow-2xl border-none flex items-center gap-4 min-w-[220px]">
               <div className="bg-primary/10 p-4 rounded-2xl">
                 <Clock className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Countdown</p>
-                <p className="text-2xl font-black text-primary">{timeLeft}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">T-Minus</p>
+                <p className="text-3xl font-black text-primary tracking-tighter">{timeLeft}</p>
               </div>
             </Card>
             
-            <Card className="bg-primary text-primary-foreground p-6 rounded-[2rem] shadow-xl border-none flex items-center gap-4 min-w-[200px]">
+            <Card className="bg-primary text-primary-foreground p-6 rounded-[2.5rem] shadow-2xl border-none flex items-center gap-4 min-w-[220px]">
               <div className="bg-white/20 p-4 rounded-2xl">
-                <Ticket className="h-8 w-8 text-white" />
+                <DollarSign className="h-8 w-8 text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Tickets Sold</p>
-                <p className="text-2xl font-black">{stats?.totalTickets || 0} / {targetTickets}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Net Profit</p>
+                <p className="text-3xl font-black tracking-tighter">${netProfit.toFixed(0)}</p>
               </div>
             </Card>
           </div>
         </header>
 
         {!selectedEventId ? (
-          <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]">
+          <Card className="p-24 text-center border-dashed border-4 rounded-[4rem]">
             <Calendar className="h-20 w-20 text-muted-foreground mx-auto mb-6 opacity-10" />
-            <p className="text-2xl font-bold text-muted-foreground font-lora">Please select an event to begin your sprint.</p>
+            <p className="text-2xl font-bold text-muted-foreground font-lora">Select an operation to begin.</p>
           </Card>
         ) : (
           <>
-            {/* Live Progress Bar */}
-            <section className="mb-12">
-              <Card className="border-none bg-muted/30 p-8 rounded-[2.5rem] shadow-inner">
-                <div className="flex justify-between items-end mb-4">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" /> Sales Momentum
-                    </h3>
-                    <p className="text-muted-foreground text-sm">Target: {targetTickets} singers in the room.</p>
-                  </div>
-                  <p className="text-3xl font-black text-primary">{Math.round(ticketProgress)}%</p>
+            {/* Daily Mission Banner */}
+            {dailyMission && (
+              <section className="mb-12 animate-fade-in-up">
+                <Card className="bg-accent text-accent-foreground border-none shadow-2xl rounded-[3rem] overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+                  <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
+                    <div className="bg-white/20 p-6 rounded-[2rem] shadow-inner">
+                      {React.cloneElement(dailyMission.icon as React.ReactElement, { className: "h-12 w-12" })}
+                    </div>
+                    <div className="flex-1 text-center md:text-left space-y-2">
+                      <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">Today's High-Impact Mission</h3>
+                      <p className="text-4xl font-black font-lora leading-tight">{dailyMission.title}: {dailyMission.task}</p>
+                    </div>
+                    <Button size="lg" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90 font-black rounded-2xl h-16 px-8 shadow-2xl group">
+                      Execute Mission <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </section>
+            )}
+
+            {/* Stats Grid */}
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              <Card className="border-none bg-muted/30 p-8 rounded-[2.5rem] shadow-inner flex flex-col justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <Ticket className="h-4 w-4" /> Ticket Momentum
+                  </h3>
+                  <p className="text-4xl font-black text-primary">{stats?.totalTickets || 0} / {targetTickets}</p>
                 </div>
-                <Progress value={ticketProgress} className="h-4 bg-primary/10" />
+                <div className="mt-6 space-y-2">
+                  <Progress value={ticketProgress} className="h-3 bg-primary/10" />
+                  <p className="text-[10px] font-bold text-muted-foreground text-right">{Math.round(ticketProgress)}% of target reached</p>
+                </div>
+              </Card>
+
+              <Card className="border-none bg-muted/30 p-8 rounded-[2.5rem] shadow-inner flex flex-col justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-green-600 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" /> Revenue Intel
+                  </h3>
+                  <p className="text-4xl font-black text-green-600">${stats?.totalEarnings.toFixed(0)}</p>
+                </div>
+                <div className="mt-6 flex justify-between items-end">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Expenses</p>
+                    <p className="text-lg font-bold text-red-500">-${stats?.totalExpenses.toFixed(0)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Break Even</p>
+                    <p className="text-lg font-bold text-foreground">{stats && stats.totalEarnings >= stats.totalExpenses ? "✅ SECURED" : "PENDING"}</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="border-none bg-muted/30 p-8 rounded-[2.5rem] shadow-inner flex flex-col justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-accent-foreground flex items-center gap-2">
+                    <Music className="h-4 w-4" /> Repertoire Focus
+                  </h3>
+                  <p className="text-2xl font-black font-lora leading-tight line-clamp-2">"{focusSong}"</p>
+                </div>
+                <Button variant="outline" className="mt-6 rounded-xl font-bold border-primary/20 text-primary" asChild>
+                  <a href={`/resources?folderId=${nominatedFolder?.name}`} target="_blank" rel="noopener noreferrer">View Materials</a>
+                </Button>
               </Card>
             </section>
 
@@ -330,12 +344,9 @@ Hope to see some local faces there!`;
                       <Target className="h-12 w-12" />
                     </div>
                     <div className="space-y-2">
-                      <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Current Focus</h2>
-                      <p className="text-4xl font-black font-lora leading-tight">Message the 10 people who "need" to be there.</p>
-                      <div className="flex items-center gap-2 text-muted-foreground font-medium">
-                        <Music className="h-4 w-4 text-accent" />
-                        <span>Focus Song: <span className="text-foreground font-bold">"{focusSong}"</span></span>
-                      </div>
+                      <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Relational Outreach</h2>
+                      <p className="text-4xl font-black font-lora leading-tight">The 10 People Rule.</p>
+                      <p className="text-muted-foreground leading-relaxed">Identify 10 specific people who would love this session. Message them personally. This is your highest ROI activity.</p>
                     </div>
                   </div>
                   
@@ -350,40 +361,7 @@ Hope to see some local faces there!`;
               <div className="lg:col-span-7 space-y-12">
                 <section className="space-y-6">
                   <h2 className="text-3xl font-black font-lora flex items-center gap-3">
-                    <UserPlus className="h-8 w-8 text-primary" /> 1. Human Connections
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="border-none shadow-lg bg-card border-l-8 border-primary rounded-2xl">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-black uppercase tracking-widest">The 10 People Rule</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <p className="text-sm text-muted-foreground leading-relaxed">Identify 10 specific people for this event. Message them personally. This is your highest ROI activity.</p>
-                        <Badge className="bg-primary/10 text-primary border-none font-bold">Tracked in Focus Mode ↑</Badge>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-none shadow-lg bg-card border-l-8 border-accent rounded-2xl">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-black uppercase tracking-widest">Community Nodes</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {["Neha & Brad", "The Sangha", "Regular Members"].map((node) => (
-                          <div key={node} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
-                            <div className="flex items-center gap-3">
-                              <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
-                              <span className="text-sm font-bold">{node}</span>
-                            </div>
-                            <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </section>
-
-                <section className="space-y-6">
-                  <h2 className="text-3xl font-black font-lora flex items-center gap-3">
-                    <Mic2 className="h-8 w-8 text-primary" /> 2. Copy & Paste
+                    <Mic2 className="h-8 w-8 text-primary" /> Marketing Assets
                   </h2>
                   
                   <div className="space-y-6">
@@ -397,9 +375,7 @@ Hope to see some local faces there!`;
                         </Button>
                       </div>
                       <CardContent className="p-8">
-                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                          {fullCommunityPost}
-                        </p>
+                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{fullCommunityPost}</p>
                       </CardContent>
                     </Card>
 
@@ -413,9 +389,7 @@ Hope to see some local faces there!`;
                         </Button>
                       </div>
                       <CardContent className="p-8">
-                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                          {authenticCaption}
-                        </p>
+                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{authenticCaption}</p>
                       </CardContent>
                     </Card>
 
@@ -434,9 +408,7 @@ Hope to see some local faces there!`;
                         </div>
                       </div>
                       <CardContent className="p-8">
-                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                          {authenticEmail}
-                        </p>
+                        <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{authenticEmail}</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -450,9 +422,7 @@ Hope to see some local faces there!`;
                       <CardTitle className="text-xl font-black flex items-center gap-3 text-yellow-800 dark:text-yellow-400">
                         <Brain className="h-6 w-6" /> Brain Dump
                       </CardTitle>
-                      <CardDescription className="text-yellow-700/70 dark:text-yellow-400/60 font-medium">
-                        Ideas for {selectedEvent?.title}. Auto-saves.
-                      </CardDescription>
+                      <CardDescription className="text-yellow-700/70 dark:text-yellow-400/60 font-medium">Ideas for {selectedEvent?.title}. Auto-saves.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <Textarea 
@@ -474,18 +444,10 @@ Hope to see some local faces there!`;
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 grid grid-cols-2 gap-3">
-                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild>
-                        <a href="https://humanitix.com" target="_blank" rel="noopener noreferrer">Humanitix</a>
-                      </Button>
-                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild>
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
-                      </Button>
-                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild>
-                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a>
-                      </Button>
-                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild>
-                        <a href="https://kit.com" target="_blank" rel="noopener noreferrer">Kit (Email)</a>
-                      </Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://humanitix.com" target="_blank" rel="noopener noreferrer">Humanitix</a></Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a></Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a></Button>
+                      <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://kit.com" target="_blank" rel="noopener noreferrer">Kit (Email)</a></Button>
                     </CardContent>
                   </Card>
                 </div>
