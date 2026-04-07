@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History } from "lucide-react";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe } from "lucide-react";
 import { format } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -22,7 +22,7 @@ import LegacyFeedbackImporter from "@/components/admin/LegacyFeedbackImporter";
 const AdminEventFeedback: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string>("all"); // Default to 'all'
 
   const { data: events, isLoading: loadingEvents } = useQuery({
     queryKey: ["allEventsForFeedbackAdmin"],
@@ -39,27 +39,25 @@ const AdminEventFeedback: React.FC = () => {
   const { data: feedback, isLoading: loadingFeedback } = useQuery({
     queryKey: ["eventFeedbackData", selectedEventId],
     queryFn: async () => {
-      if (!selectedEventId) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from("event_feedback")
         .select(`
           *,
-          profiles (first_name, last_name, email)
+          profiles (first_name, last_name, email),
+          events (title, date)
         `)
-        .eq("event_id", selectedEventId)
         .order("created_at", { ascending: false });
+      
+      if (selectedEventId !== "all") {
+        query = query.eq("event_id", selectedEventId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
-    enabled: !!selectedEventId,
+    enabled: true,
   });
-
-  // Set default event
-  React.useEffect(() => {
-    if (events && events.length > 0 && !selectedEventId) {
-      setSelectedEventId(events[0].id);
-    }
-  }, [events, selectedEventId]);
 
   const stats = useMemo(() => {
     if (!feedback || feedback.length === 0) return null;
@@ -78,8 +76,10 @@ const AdminEventFeedback: React.FC = () => {
   const handleExport = () => {
     if (!feedback) return;
     const csv = [
-      ["Name", "Email", "Feeling", "Enjoyed Most", "Improvements", "Score", "Comments"].join(","),
+      ["Event", "Date", "Name", "Email", "Feeling", "Enjoyed Most", "Improvements", "Score", "Comments"].join(","),
       ...feedback.map(f => [
+        `"${f.events?.title || 'Unknown'}"`,
+        `"${f.events?.date || ''}"`,
         f.profiles ? `"${f.profiles.first_name} ${f.profiles.last_name}"` : '"Legacy/Anonymous"',
         f.profiles ? `"${f.profiles.email}"` : '""',
         `"${f.overall_feeling}"`,
@@ -95,15 +95,15 @@ const AdminEventFeedback: React.FC = () => {
     const a = document.createElement('a');
     a.setAttribute('hidden', '');
     a.setAttribute('href', url);
-    a.setAttribute('download', `feedback-${selectedEventId}.csv`);
+    a.setAttribute('download', `resonance-feedback-${selectedEventId}.csv`);
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     showSuccess("Exported to CSV!");
   };
 
-  const copyQuote = (text: string, author: string) => {
-    const formatted = `"${text}" — ${author}, Resonance Participant`;
+  const copyQuote = (text: string, author: string, eventTitle?: string) => {
+    const formatted = `"${text}" — ${author}${eventTitle ? ` (${eventTitle})` : ''}, Resonance Participant`;
     navigator.clipboard.writeText(formatted);
     showSuccess("Quote copied for social media!");
   };
@@ -117,18 +117,29 @@ const AdminEventFeedback: React.FC = () => {
       
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div className="space-y-2">
-          <h1 className="text-5xl font-black font-lora tracking-tighter">Event Feedback</h1>
-          <p className="text-xl text-muted-foreground">Analyze how your sessions are landing with the community.</p>
+          <h1 className="text-5xl font-black font-lora tracking-tighter">
+            {selectedEventId === "all" ? "Global Feedback" : "Event Feedback"}
+          </h1>
+          <p className="text-xl text-muted-foreground">
+            {selectedEventId === "all" 
+              ? "Aggregated insights from every session in Resonance history." 
+              : "Analyze how this specific session landed with the community."}
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-          {selectedEventId && <LegacyFeedbackImporter eventId={selectedEventId} />}
+          {selectedEventId !== "all" && <LegacyFeedbackImporter eventId={selectedEventId} />}
           <div className="w-full md:w-72 space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Event</label>
-            <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select View</label>
+            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
               <SelectTrigger className="h-12 rounded-xl shadow-xl bg-card border-2 border-primary/10">
                 <SelectValue placeholder="Choose an event..." />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all" className="font-bold text-primary">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" /> All Events (Aggregated)
+                  </div>
+                </SelectItem>
                 {events?.map((event) => (
                   <SelectItem key={event.id} value={event.id} className="font-bold">
                     {event.title} ({format(new Date(event.date), "MMM d")})
@@ -140,17 +151,12 @@ const AdminEventFeedback: React.FC = () => {
         </div>
       </header>
 
-      {!selectedEventId ? (
-        <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]">
-          <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" />
-          <p className="text-xl font-bold text-muted-foreground">Select an event to view feedback.</p>
-        </Card>
-      ) : loadingFeedback ? (
+      {loadingFeedback ? (
         <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>
       ) : !feedback || feedback.length === 0 ? (
         <Card className="p-24 text-center border-dashed border-4 rounded-[3rem]">
           <Quote className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" />
-          <p className="text-xl font-bold text-muted-foreground">No feedback submitted for this event yet.</p>
+          <p className="text-xl font-bold text-muted-foreground">No feedback found for this selection.</p>
         </Card>
       ) : (
         <div className="space-y-10">
@@ -164,7 +170,7 @@ const AdminEventFeedback: React.FC = () => {
                 </div>
                 <Star className="h-8 w-8 text-accent fill-current" />
               </div>
-              <p className="mt-4 text-sm font-medium opacity-80">Out of 10 based on {stats?.total} responses.</p>
+              <p className="mt-4 text-sm font-medium opacity-80">Out of 10 based on {stats?.total} total responses.</p>
             </Card>
 
             <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-card">
@@ -188,13 +194,13 @@ const AdminEventFeedback: React.FC = () => {
             <Card className="rounded-[2rem] shadow-xl border-none p-8 bg-accent text-accent-foreground">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Response Rate</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Responses</p>
                   <p className="text-6xl font-black tracking-tighter">{stats?.total}</p>
                 </div>
                 <Users className="h-8 w-8 opacity-40" />
               </div>
               <Button variant="ghost" className="mt-4 w-full bg-white/20 hover:bg-white/30 font-black rounded-xl" onClick={handleExport}>
-                <Download className="h-4 w-4 mr-2" /> Export CSV
+                <Download className="h-4 w-4 mr-2" /> Export Full Dataset
               </Button>
             </Card>
           </div>
@@ -206,20 +212,25 @@ const AdminEventFeedback: React.FC = () => {
                 <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
                   <Heart className="h-5 w-5 text-primary" /> What they loved
                 </CardTitle>
-                <CardDescription>Click the copy icon to grab a quote for social media.</CardDescription>
+                <CardDescription>Aggregated highlights from all selected sessions.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-[500px]">
                   <div className="p-6 space-y-6">
                     {feedback.map((f, i) => (
                       <div key={i} className="group relative space-y-2 border-b border-border/50 pb-6 last:border-0">
                         <p className="text-sm italic font-medium leading-relaxed pr-10">"{f.enjoyed_most}"</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            — {f.profiles?.first_name || "Legacy Member"} 
+                            {selectedEventId === "all" && ` (${f.events?.title})`}
+                          </p>
+                        </div>
                         <Button 
                           variant="ghost" 
                           size="icon" 
                           className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => copyQuote(f.enjoyed_most || "", f.profiles?.first_name || "Member")}
+                          onClick={() => copyQuote(f.enjoyed_most || "", f.profiles?.first_name || "Member", f.events?.title)}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -233,16 +244,19 @@ const AdminEventFeedback: React.FC = () => {
             <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4">
                 <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" /> Improvements
+                  <TrendingUp className="h-5 w-5 text-primary" /> Improvements & Suggestions
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-[500px]">
                   <div className="p-6 space-y-6">
                     {feedback.filter(f => f.improvements).map((f, i) => (
                       <div key={i} className="space-y-2 border-b border-border/50 pb-6 last:border-0">
                         <p className="text-sm italic font-medium leading-relaxed">"{f.improvements}"</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">— {f.profiles?.first_name || "Legacy Member"}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                          — {f.profiles?.first_name || "Legacy Member"}
+                          {selectedEventId === "all" && ` (${f.events?.title})`}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -262,6 +276,7 @@ const AdminEventFeedback: React.FC = () => {
                   <TableHeader className="bg-muted/20">
                     <TableRow>
                       <TableHead className="pl-8">Member</TableHead>
+                      {selectedEventId === "all" && <TableHead>Event</TableHead>}
                       <TableHead>Feeling</TableHead>
                       <TableHead>Score</TableHead>
                       <TableHead>Time Slot</TableHead>
@@ -279,6 +294,11 @@ const AdminEventFeedback: React.FC = () => {
                             </div>
                           )}
                         </TableCell>
+                        {selectedEventId === "all" && (
+                          <TableCell className="text-xs font-bold text-primary">
+                            {f.events?.title || "Unknown"}
+                          </TableCell>
+                        )}
                         <TableCell>
                           <Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">{f.overall_feeling}</Badge>
                         </TableCell>
