@@ -80,7 +80,7 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
     addMutation.mutate(newName.trim());
   };
 
-  if (isLoading) return <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />;
+  if (isLoading) return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   const remainingSlots = 10 - (targets?.length || 0);
 
