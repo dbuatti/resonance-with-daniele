@@ -22,7 +22,7 @@ const tasks: Task[] = [
   { id: "email-november", label: "Email the 'November Crew'", category: "Wednesday", energy: "low" },
   { id: "insta-story-why", label: "Story: 30s video on why these songs", category: "Wednesday", energy: "high" },
   { id: "sangha-outreach", label: "Reach out to Sangha community", category: "Thursday", energy: "high" },
-  { id: "insta-story-chords", label: "Story: Play 'Being Alive' chords", category: "Thursday", energy: "low" },
+  { id: "insta-story-chords", label: "Story: Play chords from the repertoire", category: "Thursday", energy: "low" },
   { id: "helper-outreach", label: "DM 3 potential 'Helpers' personally", category: "Thursday", energy: "high" },
   { id: "fb-groups-invite", label: "Post in community groups", category: "Friday", energy: "low" },
   { id: "insta-story-final", label: "Story: Final personal invitation", category: "Friday", energy: "high" },
@@ -30,21 +30,26 @@ const tasks: Task[] = [
   { id: "inhabit-room", label: "Focus on inhabiting the room", category: "Day Of", energy: "high" },
 ];
 
-const MarketingChecklist: React.FC = () => {
+interface MarketingChecklistProps {
+  eventId: string;
+}
+
+const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
 
   const { data: completedTaskIds, isLoading } = useQuery<string[]>({
-    queryKey: ["marketingTaskStatus"],
+    queryKey: ["marketingTaskStatus", eventId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("marketing_task_status")
         .select("task_id")
+        .eq("event_id", eventId)
         .eq("is_completed", true);
       if (error) throw error;
       return data.map(d => d.task_id);
     },
-    enabled: !!user,
+    enabled: !!user && !!eventId,
   });
 
   const toggleMutation = useMutation({
@@ -55,11 +60,12 @@ const MarketingChecklist: React.FC = () => {
         .upsert({ 
           admin_id: user?.id, 
           task_id: taskId, 
+          event_id: eventId,
           is_completed: !isCurrentlyCompleted 
-        }, { onConflict: 'admin_id,task_id' });
+        }, { onConflict: 'admin_id,task_id,event_id' });
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus", eventId] }),
   });
 
   if (isLoading) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></div>;

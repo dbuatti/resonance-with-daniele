@@ -15,35 +15,41 @@ interface OutreachTarget {
   id: string;
   name: string;
   is_messaged: boolean;
+  event_id: string | null;
 }
 
-const OutreachTracker: React.FC = () => {
+interface OutreachTrackerProps {
+  eventId: string;
+}
+
+const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [newName, setNewName] = useState("");
 
   const { data: targets, isLoading } = useQuery<OutreachTarget[]>({
-    queryKey: ["outreachTargets"],
+    queryKey: ["outreachTargets", eventId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("outreach_targets")
         .select("*")
+        .eq("event_id", eventId)
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user,
+    enabled: !!user && !!eventId,
   });
 
   const addMutation = useMutation({
     mutationFn: async (name: string) => {
       const { error } = await supabase
         .from("outreach_targets")
-        .insert({ name, admin_id: user?.id });
+        .insert({ name, admin_id: user?.id, event_id: eventId });
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["outreachTargets"] });
+      queryClient.invalidateQueries({ queryKey: ["outreachTargets", eventId] });
       setNewName("");
     },
     onError: (error: any) => showError(error.message),
@@ -57,7 +63,7 @@ const OutreachTracker: React.FC = () => {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outreachTargets"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outreachTargets", eventId] }),
   });
 
   const deleteMutation = useMutation({
@@ -65,7 +71,7 @@ const OutreachTracker: React.FC = () => {
       const { error } = await supabase.from("outreach_targets").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outreachTargets"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outreachTargets", eventId] }),
   });
 
   const handleAdd = (e: React.FormEvent) => {
@@ -80,7 +86,6 @@ const OutreachTracker: React.FC = () => {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Add Name Input */}
       {remainingSlots > 0 && (
         <form onSubmit={handleAdd} className="flex gap-2">
           <Input
@@ -96,7 +101,6 @@ const OutreachTracker: React.FC = () => {
         </form>
       )}
 
-      {/* The List */}
       <div className="space-y-3">
         {targets?.map((target) => (
           <div
@@ -134,7 +138,6 @@ const OutreachTracker: React.FC = () => {
           </div>
         ))}
 
-        {/* Empty Slots Visualizer */}
         {[...Array(remainingSlots)].map((_, i) => (
           <div key={i} className="h-16 rounded-2xl border-2 border-dashed border-muted-foreground/10 flex items-center justify-center text-muted-foreground/20">
             <UserPlus className="h-5 w-5" />
