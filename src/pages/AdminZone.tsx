@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertCircle, Mail, BellRing, Users, BarChart3, Settings, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight } from "lucide-react";
+import { AlertCircle, Mail, BellRing, Users, BarChart3, Settings, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -65,6 +65,15 @@ const AdminZone: React.FC = () => {
       label: "View Missions",
       highlight: true,
       badge: "Priority"
+    },
+    {
+      title: "Feedback Analysis",
+      description: "Review post-session feedback. See what people loved and what needs refining for next time.",
+      icon: <MessageSquareQuote className="h-6 w-6 text-primary" />,
+      link: "/admin/feedback",
+      label: "Analyze Feedback",
+      highlight: true,
+      badge: "New"
     },
     {
       title: "Member Directory",

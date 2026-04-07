@@ -3,11 +3,11 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, FileText, User as UserIcon, Folder, CheckCircle2, ArrowRight, Sparkles, Mic2, Heart } from "lucide-react";
+import { CalendarDays, Music, FileText, User as UserIcon, Folder, CheckCircle2, ArrowRight, Sparkles, Mic2, Heart, MessageSquareQuote } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, subDays, isAfter, isBefore } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import LatestAnnouncementsCard from "@/components/dashboard/LatestAnnouncementsCard";
 import CoreHubLinks from "@/components/dashboard/CoreHubLinks";
@@ -55,6 +55,42 @@ const WelcomeHub: React.FC = () => {
     },
     enabled: !loadingSession,
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch the most recent past event (within last 7 days) to ask for feedback
+  const { data: recentPastEvent } = useQuery<Event | null>({
+    queryKey: ['recentPastEvent'],
+    queryFn: async () => {
+      const sevenDaysAgo = format(subDays(new Date(), 7), "yyyy-MM-dd");
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .lt("date", today)
+        .gte("date", sevenDaysAgo)
+        .order("date", { ascending: false })
+        .limit(1)
+        .single();
+      if (error && error.code !== 'PGRST116') return null;
+      return data;
+    },
+    enabled: !loadingSession,
+  });
+
+  // Check if user has already reviewed the recent past event
+  const { data: hasReviewed } = useQuery<boolean>({
+    queryKey: ['hasReviewedEvent', recentPastEvent?.id],
+    queryFn: async () => {
+      if (!user?.id || !recentPastEvent?.id) return false;
+      const { count, error } = await supabase
+        .from("event_feedback")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("event_id", recentPastEvent.id);
+      if (error) return false;
+      return (count || 0) > 0;
+    },
+    enabled: !!recentPastEvent?.id && !!user?.id,
   });
 
   const { data: hasRsvpd, isLoading: loadingRsvp } = useQuery<boolean, Error, boolean, ['eventRsvpStatus', string | undefined]>({
@@ -136,7 +172,7 @@ const WelcomeHub: React.FC = () => {
 
   return (
     <div className="py-4 md:py-8 space-y-12 animate-fade-in-up">
-      {/* Hero Welcome Section - More Premium Design */}
+      {/* Hero Welcome Section */}
       <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground p-8 md:p-16 shadow-2xl border-4 border-white/10">
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
           <div className="flex-shrink-0 relative group">
@@ -173,7 +209,33 @@ const WelcomeHub: React.FC = () => {
         <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[80px] pointer-events-none" />
       </section>
 
-      {/* Core Navigation Links - More Visual Impact */}
+      {/* Feedback Prompt - Only shows if a recent event happened and user hasn't reviewed it */}
+      {recentPastEvent && !hasReviewed && (
+        <section className="animate-fade-in-up">
+          <Card className="bg-accent text-accent-foreground border-none shadow-2xl rounded-[2.5rem] overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+            <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8 relative z-10">
+              <div className="bg-white/20 p-5 rounded-2xl shadow-inner">
+                <MessageSquareQuote className="h-10 w-10" />
+              </div>
+              <div className="flex-1 text-center md:text-left space-y-1">
+                <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">How was the session?</h3>
+                <p className="text-2xl font-black font-lora leading-tight">
+                  I'd love your feedback on "{recentPastEvent.title}"
+                </p>
+                <p className="text-sm font-medium opacity-80">It only takes 2 minutes and helps me make the next one even better.</p>
+              </div>
+              <Button size="lg" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90 font-black rounded-2xl h-14 px-8 shadow-2xl group" asChild>
+                <Link to={`/feedback?eventId=${recentPastEvent.id}`}>
+                  Give Feedback <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {/* Core Navigation Links */}
       <section className="space-y-6">
         <div className="flex items-center gap-3 px-2">
           <div className="h-8 w-1.5 bg-primary rounded-full" />
@@ -189,7 +251,7 @@ const WelcomeHub: React.FC = () => {
           <LatestAnnouncementsCard />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Next Event Card - Enhanced */}
+            {/* Next Event Card */}
             <Card className="shadow-xl border-none bg-secondary/40 dark:bg-secondary/10 overflow-hidden group hover:shadow-2xl transition-all duration-300 rounded-3xl">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
@@ -227,7 +289,7 @@ const WelcomeHub: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Nominated Song Card - Enhanced */}
+            {/* Nominated Song Card */}
             {nominatedFolder && (
               <Card className="shadow-xl border-none bg-accent/10 dark:bg-accent/5 overflow-hidden group hover:shadow-2xl transition-all duration-300 rounded-3xl border-t-4 border-accent">
                 <CardHeader className="pb-4">
@@ -261,7 +323,7 @@ const WelcomeHub: React.FC = () => {
           <SetupChecklistCard />
           <QuickActions />
           
-          {/* Recent Resources Sidebar - Enhanced */}
+          {/* Recent Resources Sidebar */}
           <Card className="shadow-xl border-none rounded-3xl overflow-hidden">
             <CardHeader className="pb-4 bg-muted/30">
               <CardTitle className="text-xl font-black font-lora flex items-center gap-3">
@@ -302,7 +364,7 @@ const WelcomeHub: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Quote/Link - More Elegant */}
+      {/* Footer Quote/Link */}
       <footer className="text-center pt-12 border-t border-border/50 pb-8">
         <div className="flex flex-col items-center gap-6">
           <div className="p-3 bg-primary/5 rounded-full">

@@ -15,8 +15,10 @@ import AdminAnnouncementsPage from "./pages/AdminAnnouncementsPage";
 import AdminIssueReportsPage from "./pages/AdminIssueReportsPage";
 import AdminMarketingDashboard from "./pages/AdminMarketingDashboard";
 import AdminMarketingPlanPage from "./pages/AdminMarketingPlanPage";
-import AdminGrowthStrategy from "./pages/AdminGrowthStrategy"; // Import new page
+import AdminGrowthStrategy from "./pages/AdminGrowthStrategy";
+import AdminEventFeedback from "./pages/AdminEventFeedback"; // Import new admin page
 import CurrentEventPage from "./pages/CurrentEventPage";
+import EventFeedback from "./pages/EventFeedback"; // Import new user page
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -44,6 +46,7 @@ const App = () => (
               <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
               <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} />
               <Route path="/song-suggestions" element={<Layout><SongSuggestionsPage /></Layout>} />
+              <Route path="/feedback" element={<Layout><EventFeedback /></Layout>} /> {/* New Route */}
               
               <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
                 <Route index element={<ProfileDetails />} />
@@ -58,7 +61,8 @@ const App = () => (
               <Route path="/admin/issue-reports" element={<Layout><AdminIssueReportsPage /></Layout>} />
               <Route path="/admin/marketing" element={<Layout><AdminMarketingDashboard /></Layout>} />
               <Route path="/admin/marketing-plan" element={<Layout><AdminMarketingPlanPage /></Layout>} />
-              <Route path="/admin/growth" element={<Layout><AdminGrowthStrategy /></Layout>} /> {/* New Route */}
+              <Route path="/admin/growth" element={<Layout><AdminGrowthStrategy /></Layout>} />
+              <Route path="/admin/feedback" element={<Layout><AdminEventFeedback /></Layout>} /> {/* New Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SessionContextProvider>
