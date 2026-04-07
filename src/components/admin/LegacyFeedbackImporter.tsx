@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { parse, isValid, isBefore, startOfDay } from "date-fns";
+import { parse, isValid, startOfDay } from "date-fns";
 
 interface LegacyFeedbackImporterProps {
   eventId: string;
@@ -32,36 +32,43 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
     },
   });
 
-  const parseLegacyDate = (dateStr: string): string => {
-    if (!dateStr) return new Date().toISOString();
+  const parseLegacyDate = (dateStr: string): Date | null => {
+    if (!dateStr) return null;
+    
+    // 1. Try standard JS parsing
     const standardDate = new Date(dateStr);
-    if (isValid(standardDate)) return standardDate.toISOString();
+    if (isValid(standardDate)) return standardDate;
 
+    // 2. Try common Google Forms formats
     const formats = [
       "dd/MM/yyyy HH:mm:ss",
+      "MM/dd/yyyy HH:mm:ss",
       "yyyy/MM/dd HH:mm:ss",
       "dd/MM/yyyy h:mm:ss a",
+      "MM/dd/yyyy h:mm:ss a",
+      "d/M/yyyy H:mm:ss",
       "M/d/yyyy H:mm:ss",
     ];
 
     for (const fmt of formats) {
-      const parsed = parse(dateStr.split(' GMT')[0], fmt, new Date());
-      if (isValid(parsed)) return parsed.toISOString();
+      try {
+        const parsed = parse(dateStr.split(' GMT')[0], fmt, new Date());
+        if (isValid(parsed)) return parsed;
+      } catch (e) {
+        continue;
+      }
     }
-    return new Date().toISOString();
+    return null;
   };
 
-  // Helper to find the event that happened on or most recently before the feedback
-  const findMatchingEventId = (timestamp: string): string => {
-    if (!allEvents || allEvents.length === 0) return eventId;
+  const findMatchingEventId = (timestamp: Date | null): string => {
+    if (!timestamp || !allEvents || allEvents.length === 0) return eventId;
 
-    const feedbackDate = new Date(timestamp);
-    
-    // Filter for events that happened on or before the feedback date
+    // Find events that happened on or before the feedback date
     const possibleEvents = allEvents
       .filter(e => {
         const eventDate = new Date(e.date);
-        return startOfDay(eventDate) <= startOfDay(feedbackDate);
+        return startOfDay(eventDate) <= startOfDay(timestamp);
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -88,30 +95,36 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
         };
 
         const headers = parseCSVLine(lines[0]);
-        
+        const findHeader = (terms: string[]) => 
+          headers.findIndex(h => terms.some(term => h.toLowerCase().includes(term.toLowerCase())));
+
         const h = {
-          timestamp: headers.findIndex(h => h.toLowerCase().includes("timestamp")),
-          feeling: headers.findIndex(h => h.includes("How did the session feel")),
-          enjoyed: headers.findIndex(h => h.includes("What did you enjoy most")),
-          improvements: headers.findIndex(h => h.includes("What could be improved")),
-          timeSlot: headers.findIndex(h => h.includes("10am–1pm time slot")),
-          repertoire: headers.findIndex(h => h.includes("repertoire would you enjoy")),
-          price: headers.findIndex(h => h.includes("price point feels right")),
-          nextMonth: headers.findIndex(h => h.includes("another session in")),
-          bestTimes: headers.findIndex(h => h.includes("times generally work best")),
-          regular: headers.findIndex(h => h.includes("attending Resonance regularly")),
-          frequency: headers.findIndex(h => h.includes("How often would you attend")),
-          score: headers.findIndex(h => h.includes("recommend this session")),
-          comments: headers.findIndex(h => h.includes("Anything else you’d like to share")),
-          howHeard: headers.findIndex(h => h.includes("How did you hear")),
+          timestamp: findHeader(["timestamp"]),
+          feeling: findHeader(["how did the session feel"]),
+          enjoyed: findHeader(["what did you enjoy most"]),
+          improvements: findHeader(["what could be improved"]),
+          timeSlot: findHeader(["10am–1pm time slot"]),
+          repertoire: findHeader(["repertoire would you enjoy"]),
+          price: findHeader(["price point feels right"]),
+          nextMonth: findHeader(["another session in"]),
+          bestTimes: findHeader(["times generally work best"]),
+          regular: findHeader(["attending Resonance regularly"]),
+          frequency: findHeader(["how often would you attend"]),
+          score: findHeader(["recommend this session"]),
+          comments: findHeader(["anything else you’d like to share"]),
+          howHeard: findHeader(["how did you hear"]),
         };
+
+        if (h.timestamp === -1) {
+          throw new Error("Could not find a 'Timestamp' column in your CSV. Please check the file.");
+        }
 
         const feedbackToInsert = lines.slice(1)
           .filter(line => line.trim() !== "")
           .map(line => {
             const v = parseCSVLine(line);
-            const timestamp = parseLegacyDate(v[h.timestamp]);
-            const matchedEventId = findMatchingEventId(timestamp);
+            const timestampDate = parseLegacyDate(v[h.timestamp]);
+            const matchedEventId = findMatchingEventId(timestampDate);
             
             const nextMonthArr = v[h.nextMonth] ? v[h.nextMonth].split(",").map(s => s.trim()) : [];
             const bestTimesArr = v[h.bestTimes] ? v[h.bestTimes].split(",").map(s => s.trim()) : [];
@@ -132,20 +145,19 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
               recommend_score: parseInt(v[h.score]) || 10,
               how_heard: v[h.howHeard] || null,
               additional_comments: v[h.comments] || null,
-              created_at: timestamp,
+              created_at: timestampDate ? timestampDate.toISOString() : new Date().toISOString(),
             };
           });
 
         const { error } = await supabase.from("event_feedback").insert(feedbackToInsert);
         if (error) throw error;
 
-        showSuccess(`Successfully imported ${feedbackToInsert.length} responses and matched them to events!`);
+        showSuccess(`Successfully imported ${feedbackToInsert.length} responses!`);
         queryClient.invalidateQueries({ queryKey: ["eventFeedbackData"] });
-        queryClient.invalidateQueries({ queryKey: ["adminDashboardCounts"] });
         setIsOpen(false);
       } catch (err: any) {
         console.error("Import error:", err);
-        showError("Failed to import CSV: " + err.message);
+        showError(err.message || "Failed to import CSV.");
       } finally {
         setIsImporting(false);
       }
@@ -175,7 +187,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
           <div className="bg-primary/5 p-4 rounded-2xl flex items-start gap-3 border border-primary/10">
             <Info className="h-5 w-5 text-primary mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              This importer will automatically match each response to the correct event based on the date it was submitted.
+              This will match responses to events based on the <strong>Timestamp</strong> column. If a date can't be read, it will use the currently selected event.
             </p>
           </div>
           <div
@@ -193,7 +205,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
             <p className="text-lg font-bold mt-4">
               {isDragActive ? "Drop the CSV here" : "Drag & drop Google Forms CSV"}
             </p>
-            <p className="text-sm text-muted-foreground mt-2">Only .csv files from your Google Form are supported.</p>
+            <p className="text-sm text-muted-foreground mt-2">Only .csv files are supported.</p>
           </div>
         </div>
         <DialogFooter>
