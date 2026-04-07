@@ -65,7 +65,7 @@ serve(async (req) => {
       improvements: f.improvements,
       venue: f.venue_feedback,
       repertoire: f.repertoire_feedback,
-      future: f.future_ideas, // This contains the repertoire suggestions
+      future: f.future_ideas, // This contains the messy repertoire suggestions
       score: f.recommend_score
     }))
 
@@ -77,11 +77,19 @@ serve(async (req) => {
 
     const prompt = `
       Analyze this choir feedback data: ${JSON.stringify(feedbackSummary)}
+      
+      CONTEXT: The 'future' and 'repertoire' fields often contain long-form text with spelling errors, typos, and messy formatting. 
+      Your job is to act as an expert music director: decipher these messy responses, correct the spelling of artists/songs, and extract meaningful data.
+
       Provide a JSON response with:
       - "sentiment_score": (0-100)
       - "top_highlights": [3 strings]
       - "critical_friction": [2 strings]
-      - "repertoire_analysis": "A concise summary of specific songs, artists, or musical styles requested by members in the 'future' field."
+      - "repertoire_analysis": {
+          "specific_requests": ["List of specific songs or artists identified, corrected for spelling"],
+          "thematic_patterns": ["Broader patterns like 'More 80s pop', 'Simpler harmonies', 'Theatrical ballads', 'Upbeat energy', etc."],
+          "summary": "A 2-sentence overview of the community's musical appetite."
+        },
       - "strategic_advice": "2-sentence note to the director focusing on retention and marketing based on the data"
     `
 

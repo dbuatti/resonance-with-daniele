@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, PieChart, BarChart3, MapPin, LineChart as LineChartIcon, UserPlus, EyeOff } from "lucide-react";
+import { Loader2, MessageSquare, Star, TrendingUp, Users, Calendar, Download, Quote, Heart, Copy, History, Globe, Clock, DollarSign, UserCheck, Music, CalendarCheck, Search, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2, PieChart, BarChart3, MapPin, LineChart as LineChartIcon, UserPlus, EyeOff, ListMusic } from "lucide-react";
 import { format, parseISO, startOfMonth } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
 import { Progress } from "@/components/ui/progress";
@@ -252,12 +252,62 @@ const AdminEventFeedback: React.FC = () => {
               <ul className="space-y-4">{aiInsights.critical_friction.map((f: string, i: number) => (<li key={i} className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-2xl text-sm font-bold">{f}</li>))}</ul>
             </Card>
             
-            {/* New AI Repertoire Analysis Card */}
+            {/* Enhanced AI Repertoire Analysis Card */}
             <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-8 bg-card border-t-4 border-primary">
-              <CardTitle className="text-xl font-black font-lora flex items-center gap-2 mb-4"><Music className="h-5 w-5 text-primary" /> AI Repertoire Analysis</CardTitle>
-              <p className="text-lg font-medium leading-relaxed text-muted-foreground italic">
-                {aiInsights.repertoire_analysis || "No specific repertoire patterns identified yet."}
-              </p>
+              <CardHeader className="px-0 pt-0">
+                <CardTitle className="text-2xl font-black font-lora flex items-center gap-3">
+                  <Music className="h-6 w-6 text-primary" /> AI Repertoire Intelligence
+                </CardTitle>
+                <CardDescription className="text-base font-medium">Deciphered from messy long-form feedback and corrected for spelling.</CardDescription>
+              </CardHeader>
+              <CardContent className="px-0 space-y-8">
+                {typeof aiInsights.repertoire_analysis === 'object' ? (
+                  <>
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <ListMusic className="h-4 w-4" /> Specific Requests Identified
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {aiInsights.repertoire_analysis.specific_requests?.map((req: string, i: number) => (
+                          <Badge key={i} variant="secondary" className="px-4 py-2 rounded-xl text-sm font-bold bg-primary/5 text-primary border-primary/10">
+                            {req}
+                          </Badge>
+                        ))}
+                        {(!aiInsights.repertoire_analysis.specific_requests || aiInsights.repertoire_analysis.specific_requests.length === 0) && (
+                          <p className="text-sm text-muted-foreground italic">No specific songs or artists identified yet.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                          <Zap className="h-4 w-4" /> Thematic Patterns
+                        </h4>
+                        <ul className="space-y-2">
+                          {aiInsights.repertoire_analysis.thematic_patterns?.map((pattern: string, i: number) => (
+                            <li key={i} className="flex items-center gap-2 text-sm font-bold">
+                              <div className="w-1.5 h-1.5 rounded-full bg-accent" /> {pattern}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                          <Brain className="h-4 w-4" /> Community Appetite
+                        </h4>
+                        <p className="text-lg font-medium leading-relaxed text-muted-foreground italic">
+                          "{aiInsights.repertoire_analysis.summary}"
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-lg font-medium leading-relaxed text-muted-foreground italic">
+                    {aiInsights.repertoire_analysis || "No specific repertoire patterns identified yet."}
+                  </p>
+                )}
+              </CardContent>
             </Card>
 
             <Card className="md:col-span-2 rounded-[2.5rem] shadow-xl border-none p-10 bg-accent text-accent-foreground">
