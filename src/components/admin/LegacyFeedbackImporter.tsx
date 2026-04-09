@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
@@ -209,6 +209,9 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
       <DialogContent className="sm:max-w-[500px] rounded-[2rem]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black font-lora">Intelligent Feedback Importer</DialogTitle>
+          <DialogDescription>
+            Upload a CSV file from Google Forms to import legacy feedback data.
+          </DialogDescription>
         </DialogHeader>
         <div className="py-6 space-y-4">
           <div className="bg-primary/5 p-4 rounded-2xl flex items-start gap-3 border border-primary/10">

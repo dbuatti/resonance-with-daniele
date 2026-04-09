@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Resource, ResourceFolder } from "@/types/Resource"; 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -307,6 +307,9 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col p-0 overflow-y-auto">
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle className="font-lora">{title}</DialogTitle>
+          <DialogDescription>
+            {editingResource ? "Update the details for this resource." : "Add a new resource for the choir members."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">

@@ -5,12 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CardDescription } from "@/components/ui/card";
 import AvatarUpload from "@/components/AvatarUpload";
 import VoiceTypeSelector from "@/components/profile/VoiceTypeSelector";
 import { supabase } from "@/integrations/supabase/client";
@@ -129,7 +128,7 @@ const MemberEditDialog: React.FC<MemberEditDialogProps> = ({ isOpen, onOpenChang
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-lora">Edit Profile for {member?.first_name || member?.email}</DialogTitle>
-          <CardDescription>Update the personal details for this member.</CardDescription>
+          <DialogDescription>Update the personal details for this member.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 py-4">
