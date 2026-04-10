@@ -39,13 +39,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col">
-        <header className="glass-header p-4 md:p-5 sticky top-0 z-50">
+        <header className="glass-header p-4 md:p-6 sticky top-0 z-50">
           <div className="max-w-6xl mx-auto flex justify-between items-center px-4">
             <div className="flex items-center gap-3">
               <div className="bg-primary-foreground text-primary rounded-xl p-2">
                 <Sparkles className="h-5 w-5" />
               </div>
-              <span className="text-2xl font-black font-lora text-primary-foreground tracking-tighter">
+              <span className="text-xl font-black font-lora text-primary-foreground tracking-tighter">
                 Resonance
               </span>
             </div>
@@ -69,14 +69,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 border-b border-border/50 flex items-center justify-between px-4 md:px-8 sticky top-0 bg-background/80 backdrop-blur-md z-40">
+          <header className="h-16 border-b border-border/50 flex items-center justify-between px-4 md:px-6 sticky top-0 bg-background/80 backdrop-blur-md z-40">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="hidden md:flex" />
               <div className="md:hidden flex items-center gap-3">
                 <div className="bg-primary rounded-lg p-1.5">
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
-                <span className="font-black font-lora text-lg tracking-tighter">Resonance</span>
+                <span className="font-black font-lora text-xl tracking-tighter">Resonance</span>
               </div>
             </div>
             

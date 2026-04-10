@@ -74,7 +74,7 @@ const AppSidebar: React.FC = () => {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50">
+          <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50">
             Member Hub
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -93,8 +93,8 @@ const AppSidebar: React.FC = () => {
                     )}
                   >
                     <Link to={item.url}>
-                      <item.icon className={cn("h-5 w-5", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
-                      <span className="ml-3">{item.title}</span>
+                      <item.icon className={cn("h-5 w-5 shrink-0", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
+                      <span className="ml-3 text-sm">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -105,7 +105,7 @@ const AppSidebar: React.FC = () => {
 
         {user?.is_admin && isAdminView && (
           <SidebarGroup className="mt-4">
-            <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-sidebar-accent/70">
+            <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-accent/70">
               Admin Zone
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -124,8 +124,8 @@ const AppSidebar: React.FC = () => {
                       )}
                     >
                       <Link to={item.url}>
-                        <item.icon className={cn("h-5 w-5", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
-                        <span className="ml-3">{item.title}</span>
+                        <item.icon className={cn("h-5 w-5 shrink-0", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
+                        <span className="ml-3 text-sm">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

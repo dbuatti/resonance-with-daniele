@@ -28,7 +28,7 @@ const HowItWorksSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 md:py-20 bg-secondary/30 border-y border-border/50">
+    <section className="py-16 md:py-24 bg-secondary/30 border-y border-border/50">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold font-lora">How it works</h2>
@@ -41,7 +41,7 @@ const HowItWorksSection: React.FC = () => {
               <div className="mb-6 w-16 h-16 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 {step.icon}
               </div>
-              <h3 className="text-2xl font-bold font-lora mb-3">{step.title}</h3>
+              <h3 className="text-xl font-bold font-lora mb-3">{step.title}</h3>
               <p className="text-muted-foreground leading-relaxed">{step.description}</p>
               {index < steps.length - 1 && (
                 <div className="hidden lg:block absolute top-8 left-full w-full h-px bg-border -translate-x-8" />

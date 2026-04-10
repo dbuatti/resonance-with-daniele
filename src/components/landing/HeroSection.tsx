@@ -14,12 +14,12 @@ const HeroSection: React.FC = () => {
           <span>Melbourne's Monthly Pop-Up Choir</span>
         </div>
         
-        <h1 className="text-5xl md:text-8xl font-extrabold tracking-tight mb-6 font-lora text-foreground leading-[1.1] animate-fade-in-up [animation-delay:200ms]">
+        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 font-lora text-foreground leading-[1.1] animate-fade-in-up [animation-delay:200ms]">
           Come and sing <br />
           <span className="text-primary">with us.</span>
         </h1>
         
-        <p className="text-xl md:text-2xl mb-6 max-w-3xl mx-auto text-muted-foreground leading-relaxed animate-fade-in-up [animation-delay:400ms]">
+        <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto text-muted-foreground leading-relaxed animate-fade-in-up [animation-delay:400ms]">
           I run a joyful pop-up choir in Armadale. You don't need to audition or have any experience—just come along and sing great songs in harmony with a friendly group.
         </p>
 

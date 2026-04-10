@@ -5,7 +5,7 @@ import { Users, Heart, Sparkles, Music, MapPin } from "lucide-react";
 
 const AboutChoirSection: React.FC = () => {
   return (
-    <section className="py-16 md:py-20 bg-background overflow-hidden">
+    <section className="py-16 md:py-24 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="flex flex-col lg:flex-row items-center gap-16">
           <div className="lg:w-1/2 space-y-8">
@@ -16,7 +16,7 @@ const AboutChoirSection: React.FC = () => {
               <div className="w-20 h-1.5 bg-primary rounded-full" />
             </div>
             
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
               I'm Daniele, and I lead this choir in Armadale. It's a space for anyone who loves music to get together and sing. Whether you're a total beginner or you've been singing for years, you're welcome to join the circle.
             </p>
 

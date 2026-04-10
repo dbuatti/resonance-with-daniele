@@ -79,7 +79,7 @@ const FeaturedSection: React.FC = () => {
                 )}
               </div>
 
-              <p className="text-xl text-muted-foreground leading-relaxed font-medium">
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
                 {featuredEvent.description || "Join us for a morning of harmony and connection. No auditions, no experience needed—just bring your voice!"}
               </p>
 
