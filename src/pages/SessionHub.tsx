@@ -4,7 +4,7 @@ import React from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar } from "lucide-react";
+import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -21,11 +21,11 @@ interface EventWithResources {
   resources: any[];
 }
 
-const LessonsHub: React.FC = () => {
+const SessionHub: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
 
   const { data: eventsData, isLoading } = useQuery({
-    queryKey: ['lessonsHubData'],
+    queryKey: ['sessionHubData'],
     queryFn: async () => {
       // 1. Fetch all events
       const { data: events, error: eventsError } = await supabase
@@ -64,7 +64,7 @@ const LessonsHub: React.FC = () => {
     return (
       <div className="py-20 text-center">
         <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary mb-4" />
-        <p className="text-muted-foreground font-medium">Loading your lesson library...</p>
+        <p className="text-muted-foreground font-medium">Loading your session library...</p>
       </div>
     );
   }
@@ -78,7 +78,7 @@ const LessonsHub: React.FC = () => {
           <BookOpen className="h-3 w-3" />
           <span>Learning Portal</span>
         </div>
-        <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">Lessons Hub</h1>
+        <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">Session Hub</h1>
         <p className="text-xl text-muted-foreground max-w-2xl font-medium">
           Everything we've learned, organized by session. Access your tracks, lyrics, and my personal notes here.
         </p>
@@ -191,4 +191,4 @@ const LessonsHub: React.FC = () => {
   );
 };
 
-export default LessonsHub;
+export default SessionHub;

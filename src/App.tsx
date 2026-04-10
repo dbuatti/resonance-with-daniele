@@ -19,7 +19,7 @@ import AdminGrowthStrategy from "./pages/AdminGrowthStrategy";
 import AdminEventFeedback from "./pages/AdminEventFeedback";
 import CurrentEventPage from "./pages/CurrentEventPage";
 import EventFeedback from "./pages/EventFeedback";
-import LessonsHub from "./pages/LessonsHub"; // Import new page
+import SessionHub from "./pages/SessionHub";
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -42,7 +42,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Layout><Index /></Layout>} />
               <Route path="/resources" element={<Layout><Resources /></Layout>} />
-              <Route path="/lessons" element={<Layout><LessonsHub /></Layout>} /> {/* New Route */}
+              <Route path="/sessions" element={<Layout><SessionHub /></Layout>} />
               <Route path="/events" element={<Layout><Events /></Layout>} />
               <Route path="/login" element={<Layout><Login /></Layout>} />
               <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />

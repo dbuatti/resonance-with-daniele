@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 const coreLinks = [
   {
     icon: <BookOpen className="h-5 w-5" />,
-    title: "Lessons Hub",
+    title: "Session Hub",
     description: "Materials by event.",
-    link: "/lessons",
+    link: "/sessions",
     color: "text-accent-foreground",
     bg: "bg-accent/20"
   },

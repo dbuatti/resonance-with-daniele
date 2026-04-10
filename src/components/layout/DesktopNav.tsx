@@ -59,10 +59,10 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ user, unreadAnnouncementCount }
 
       {user && (
         <>
-          <Button variant="ghost" asChild className={getNavLinkClass("/lessons")}>
-            <Link to="/lessons">
+          <Button variant="ghost" asChild className={getNavLinkClass("/sessions")}>
+            <Link to="/sessions">
               <BookOpen className="h-4 w-4" />
-              <span>Lessons Hub</span>
+              <span>Session Hub</span>
             </Link>
           </Button>
           <Button variant="ghost" asChild className={getNavLinkClass("/resources")}>

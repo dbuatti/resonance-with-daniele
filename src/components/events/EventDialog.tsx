@@ -124,7 +124,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       showSuccess(`Event ${editingEvent ? "updated" : "added"} successfully!`);
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["upcomingEvent"] });
-      queryClient.invalidateQueries({ queryKey: ["lessonsHubData"] });
+      queryClient.invalidateQueries({ queryKey: ["sessionHubData"] }); // Updated key
       onClose();
     } catch (error: any) {
       showError(`Failed to save event: ${error.message}`);
@@ -225,7 +225,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
                     />
                   </FormControl>
                   <FormDescription className="text-[10px] text-yellow-700/60">
-                    These notes will appear in the Lessons Hub for all members.
+                    These notes will appear in the Session Hub for all members.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
