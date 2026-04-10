@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, FileText, ArrowRight, Mic2, MessageSquareQuote, MapPin, Heart, Sparkles, BookOpen } from "lucide-react";
+import { CalendarDays, Music, FileText, ArrowRight, Mic2, MessageSquareQuote, MapPin, Heart, Sparkles, BookOpen, User as UserIcon } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import SetupChecklistCard from "@/components/dashboard/SetupChecklistCard";
 import QuickActions from "@/components/dashboard/QuickActions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Event {
   id: string;
@@ -146,6 +147,7 @@ const WelcomeHub: React.FC = () => {
   };
 
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
+  const avatarUrl = profile?.avatar_url || "/images/daniele-buatti-headshot.jpeg";
 
   if (isLoading) {
     return (
@@ -176,11 +178,12 @@ const WelcomeHub: React.FC = () => {
     <div className="py-8 space-y-12 animate-fade-in-up">
       <section className="flex flex-col md:flex-row items-center gap-8 border-b border-border pb-12">
         <div className="flex-shrink-0 relative group">
-          <img 
-            src={profile?.avatar_url || "/images/daniele-buatti-headshot.jpeg"} 
-            alt={firstName} 
-            className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-2 border-primary/10 shadow-lg" 
-          />
+          <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-primary/10 shadow-lg">
+            <AvatarImage src={avatarUrl} alt={firstName} className="object-cover" />
+            <AvatarFallback className="bg-primary/5 text-primary">
+              <UserIcon className="w-12 h-12 md:w-16 md:h-16" />
+            </AvatarFallback>
+          </Avatar>
           <div className="absolute -bottom-1 -right-1 bg-accent text-accent-foreground p-1.5 rounded-lg shadow-md border-2 border-background">
             <Mic2 className="h-4 w-4" />
           </div>
