@@ -39,7 +39,7 @@ const AdminZone: React.FC = () => {
     {
       title: "Growth Strategy",
       description: "High-impact missions to scale Resonance. Track your 1-year vision and local SEO progress.",
-      icon: <Rocket className="h-5 w-5 text-primary" />,
+      icon: <Rocket className="h-6 w-6 text-primary" />,
       link: "/admin/growth",
       label: "View Missions",
       highlight: true,
@@ -48,7 +48,7 @@ const AdminZone: React.FC = () => {
     {
       title: "Session Hub Guide",
       description: "Learn how to link resources to events and manage your personal lesson notes for members.",
-      icon: <BookOpen className="h-5 w-5 text-primary" />,
+      icon: <BookOpen className="h-6 w-6 text-primary" />,
       link: "/admin/session-hub-guide",
       label: "Read Guide",
       highlight: true,
@@ -57,99 +57,99 @@ const AdminZone: React.FC = () => {
     {
       title: "Feedback Analysis",
       description: "Review post-session feedback. See what people loved and what needs refining for next time.",
-      icon: <MessageSquareQuote className="h-5 w-5 text-primary" />,
+      icon: <MessageSquareQuote className="h-6 w-6 text-primary" />,
       link: "/admin/feedback",
       label: "Analyze Feedback"
     },
     {
       title: "Member Directory",
       description: "Manage your community. View profiles, update roles, and sync data with Kit.com.",
-      icon: <Users className="h-5 w-5 text-primary" />,
+      icon: <Users className="h-6 w-6 text-primary" />,
       link: "/admin/members",
       label: "Manage Members"
     },
     {
       title: "Marketing & Finance",
       description: "The engine room. Track ticket sales, log expenses, and manage flash sale promotions.",
-      icon: <TrendingUp className="h-5 w-5 text-primary" />,
+      icon: <TrendingUp className="h-6 w-6 text-primary" />,
       link: "/admin/marketing",
       label: "View Dashboard"
     },
     {
       title: "Event Command",
       description: "Real-time execution for upcoming sessions. Outreach trackers and AI prompt generators.",
-      icon: <Lightbulb className="h-5 w-5 text-primary" />,
+      icon: <Lightbulb className="h-6 w-6 text-primary" />,
       link: "/admin/marketing-plan",
       label: "Open Command Center"
     },
     {
       title: "Survey Insights",
       description: "Understand your singers. Analyze aggregated feedback and community preferences.",
-      icon: <BarChart3 className="h-5 w-5 text-primary" />,
+      icon: <BarChart3 className="h-6 w-6 text-primary" />,
       link: "/admin/survey-data",
       label: "View Insights"
     },
     {
       title: "Announcements",
       description: "Keep the circle informed. Create and manage updates that appear on member dashboards.",
-      icon: <BellRing className="h-5 w-5 text-primary" />,
+      icon: <BellRing className="h-6 w-6 text-primary" />,
       link: "/admin/announcements",
       label: "Manage Updates"
     }
   ];
 
   return (
-    <div className="py-2 space-y-8">
-      <header className="space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
+    <div className="py-2 space-y-12">
+      <header className="space-y-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
           <ShieldCheck className="h-3 w-3" />
           <span>Administrator Access</span>
         </div>
         <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">
           Command Center
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl font-medium">
+        <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl font-medium leading-relaxed">
           Welcome back, Daniele. Oversee your community and track your growth.
         </p>
       </header>
 
-      <section className="space-y-6">
+      <section className="space-y-8">
         <div className="flex items-center gap-3">
-          <div className="h-6 w-1 bg-primary rounded-full" />
-          <h2 className="text-xl font-black font-lora uppercase tracking-widest text-muted-foreground">Live Overview</h2>
+          <div className="h-8 w-1.5 bg-primary rounded-full" />
+          <h2 className="text-lg font-black uppercase tracking-[0.2em] text-muted-foreground">Live Overview</h2>
         </div>
         <AdminDashboardOverview />
       </section>
 
-      <section className="space-y-8">
+      <section className="space-y-10">
         <div className="flex items-center gap-3">
-          <div className="h-6 w-1 bg-primary rounded-full" />
-          <h2 className="text-xl font-black font-lora uppercase tracking-widest text-muted-foreground">Management Tools</h2>
+          <div className="h-8 w-1.5 bg-primary rounded-full" />
+          <h2 className="text-lg font-black uppercase tracking-[0.2em] text-muted-foreground">Management Tools</h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {adminTools.map((tool, i) => (
             <div key={i} className={cn(
-              "relative flex flex-col p-8 rounded-[2rem] border-2 transition-all duration-500 group",
-              tool.highlight ? "bg-primary/5 border-primary/20 shadow-lg" : "bg-card border-primary/5 hover:border-primary/20 hover:shadow-xl"
+              "relative flex flex-col p-10 rounded-[2.5rem] border-2 transition-all duration-500 group",
+              tool.highlight ? "bg-primary/5 border-primary/20 shadow-2xl" : "bg-card border-primary/5 hover:border-primary/20 hover:shadow-2xl"
             )}>
               {tool.highlight && (
-                <div className="absolute top-6 right-6">
-                  <Badge className="bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-black uppercase tracking-widest text-[9px]">
+                <div className="absolute top-8 right-8">
+                  <Badge className="bg-primary text-primary-foreground px-3 py-1 rounded-full font-black uppercase tracking-widest text-[9px]">
                     {tool.badge}
                   </Badge>
                 </div>
               )}
-              <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+              <div className="bg-primary/10 w-16 h-16 rounded-[1.5rem] flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 shadow-inner">
                 {tool.icon}
               </div>
-              <h3 className="text-2xl font-black font-lora leading-tight mb-2">{tool.title}</h3>
-              <p className="text-sm font-medium text-muted-foreground leading-relaxed mb-8">
+              <h3 className="text-2xl md:text-3xl font-black font-lora leading-tight mb-3">{tool.title}</h3>
+              <p className="text-base font-medium text-muted-foreground leading-relaxed mb-10">
                 {tool.description}
               </p>
-              <Button asChild size="lg" className="mt-auto w-full font-black rounded-xl" variant={tool.highlight ? "default" : "secondary"}>
+              <Button asChild size="lg" className="mt-auto w-full h-14 font-black rounded-xl shadow-lg" variant={tool.highlight ? "default" : "secondary"}>
                 <Link to={tool.link}>
-                  {tool.label} <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  {tool.label} <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>
@@ -159,8 +159,8 @@ const AdminZone: React.FC = () => {
         </div>
       </section>
 
-      <footer className="text-center pt-12 border-t border-border/50 pb-8">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/40">
+      <footer className="text-center pt-16 border-t border-border/50 pb-8">
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40">
           Resonance Admin System v2.0
         </p>
       </footer>

@@ -154,46 +154,46 @@ const ProfileDetails: React.FC = () => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto soft-shadow border-none rounded-[2.5rem] overflow-hidden animate-fade-in-up">
-      <CardHeader className="text-center bg-muted/30 pb-10 border-b border-border/50">
-        <div className="relative inline-block mx-auto mb-6">
-          <Avatar className="w-32 h-32 border-4 border-background shadow-2xl">
+      <CardHeader className="text-center bg-muted/30 pb-12 border-b border-border/50">
+        <div className="relative inline-block mx-auto mb-8">
+          <Avatar className="w-40 h-40 border-4 border-background shadow-2xl">
             {displayAvatarUrl ? (
               <AvatarImage src={displayAvatarUrl} className="object-cover" />
             ) : (
               <AvatarFallback className="bg-primary text-primary-foreground">
-                <UserIcon className="h-16 w-16" />
+                <UserIcon className="h-20 w-20" />
               </AvatarFallback>
             )}
           </Avatar>
           {profile?.is_admin && (
-            <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 text-[10px] uppercase tracking-widest font-black shadow-xl">
-              <ShieldCheck className="h-3 w-3 mr-1.5" /> Admin
+            <Badge className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-6 py-1.5 text-[10px] uppercase tracking-widest font-black shadow-2xl">
+              <ShieldCheck className="h-4 w-4 mr-2" /> Admin
             </Badge>
           )}
         </div>
-        <CardTitle className="text-4xl font-black font-lora tracking-tight">Personal Details</CardTitle>
-        <CardDescription className="text-lg font-medium text-muted-foreground mt-2">
+        <CardTitle className="text-3xl md:text-4xl font-black font-lora tracking-tight">Personal Details</CardTitle>
+        <CardDescription className="text-lg font-medium text-muted-foreground mt-3">
           Manage your identity within the Resonance community.
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-8 md:p-12">
+      <CardContent className="p-10 md:p-16">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-            <div className="grid gap-8">
-              <div className="grid gap-3">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Email Address</Label>
-                <Input value={user.email || ""} disabled className="h-12 bg-muted/50 font-bold rounded-xl border-none" />
-                <p className="text-[10px] text-muted-foreground italic font-medium">Your email is used for secure login and cannot be changed here.</p>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+            <div className="grid gap-10">
+              <div className="grid gap-4">
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Email Address</Label>
+                <Input value={user.email || ""} disabled className="h-14 bg-muted/50 font-bold rounded-2xl border-none text-lg" />
+                <p className="text-[10px] text-muted-foreground italic font-bold uppercase tracking-widest">Your email is used for secure login and cannot be changed here.</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <FormField
                   control={form.control}
                   name="first_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">First Name</FormLabel>
-                      <FormControl><Input {...field} disabled={isSavingProfile} className="h-12 rounded-xl font-bold" /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">First Name</FormLabel>
+                      <FormControl><Input {...field} disabled={isSavingProfile} className="h-14 rounded-2xl font-bold text-lg shadow-sm" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -203,16 +203,16 @@ const ProfileDetails: React.FC = () => {
                   name="last_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Last Name</FormLabel>
-                      <FormControl><Input {...field} disabled={isSavingProfile} className="h-12 rounded-xl font-bold" /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Last Name</FormLabel>
+                      <FormControl><Input {...field} disabled={isSavingProfile} className="h-14 rounded-2xl font-bold text-lg shadow-sm" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Profile Picture</Label>
+              <div className="space-y-6">
+                <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Profile Picture</Label>
                 <AvatarUpload
                   currentAvatarUrl={profile?.avatar_url || null}
                   onFileChange={handleAvatarFileChange}
@@ -227,9 +227,9 @@ const ProfileDetails: React.FC = () => {
                 name="voice_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Your Voice Type(s)</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Your Voice Type(s)</FormLabel>
                     <FormControl>
-                      <div className="p-6 bg-muted/30 rounded-[2rem] border-2 border-dashed border-border/50">
+                      <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-border/50 shadow-inner">
                         <VoiceTypeSelector value={field.value || []} onChange={field.onChange} disabled={isSavingProfile} />
                       </div>
                     </FormControl>
@@ -239,22 +239,22 @@ const ProfileDetails: React.FC = () => {
               />
             </div>
 
-            <div className="pt-6 space-y-4">
-              <Button type="submit" className="w-full h-16 font-black text-xl rounded-2xl shadow-2xl shadow-primary/20 hover-lift" disabled={isSavingProfile}>
+            <div className="pt-10 space-y-6">
+              <Button type="submit" className="w-full h-20 font-black text-2xl rounded-[2rem] shadow-2xl shadow-primary/20 hover-lift" disabled={isSavingProfile}>
                 {isSavingProfile ? (
-                  <><Loader2 className="mr-3 h-6 w-6 animate-spin" /> Saving Changes...</>
+                  <><Loader2 className="mr-4 h-8 w-8 animate-spin" /> Saving Changes...</>
                 ) : (
-                  <><Save className="mr-3 h-6 w-6" /> Save Profile</>
+                  <><Save className="mr-4 h-8 w-8" /> Save Profile</>
                 )}
               </Button>
               
               <Button 
                 variant="ghost" 
                 onClick={logout} 
-                className="w-full h-12 text-muted-foreground hover:text-destructive hover:bg-destructive/5 font-black uppercase tracking-[0.2em] text-[10px]" 
+                className="w-full h-14 text-muted-foreground hover:text-destructive hover:bg-destructive/5 font-black uppercase tracking-[0.3em] text-[10px]" 
                 disabled={isLoggingOut}
               >
-                {isLoggingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />} Sign Out
+                {isLoggingOut ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <LogOut className="mr-3 h-5 w-5" />} Sign Out
               </Button>
             </div>
           </form>

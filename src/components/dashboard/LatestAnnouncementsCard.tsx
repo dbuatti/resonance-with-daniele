@@ -53,7 +53,7 @@ const LatestAnnouncementsCard: React.FC = () => {
   const unreadCount = (announcements || []).filter(a => !a.is_read).length;
 
   if (isLoading) {
-    return <Skeleton className="h-64 w-full rounded-2xl" />;
+    return <Skeleton className="h-64 w-full rounded-[2rem]" />;
   }
 
   if (error || !announcements || announcements.length === 0) {
@@ -63,7 +63,7 @@ const LatestAnnouncementsCard: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <BellRing className={cn("h-4 w-4", unreadCount > 0 ? "text-primary animate-pulse" : "text-muted-foreground")} /> 
           Latest Updates
         </h3>
@@ -74,30 +74,30 @@ const LatestAnnouncementsCard: React.FC = () => {
         )}
       </div>
       
-      <div className="bg-muted/20 rounded-[2rem] overflow-hidden border border-border/50">
+      <div className="bg-muted/20 rounded-[2.5rem] overflow-hidden border border-border/50 shadow-inner">
         <div className="divide-y divide-border/50">
           {announcements.map((announcement) => {
             const isNew = !announcement.is_read;
             return (
               <div key={announcement.id} className={cn(
-                "p-8 transition-colors hover:bg-muted/30",
+                "p-10 transition-colors hover:bg-muted/30",
                 isNew && "bg-primary/5"
               )}>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    {isNew && <div className="w-2 h-2 rounded-full bg-primary shrink-0" />}
-                    <h4 className="font-black text-xl font-lora leading-tight">{announcement.title}</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    {isNew && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 shadow-lg shadow-primary/20" />}
+                    <h4 className="font-black text-2xl font-lora leading-tight">{announcement.title}</h4>
                   </div>
                   <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
                     {format(new Date(announcement.created_at), "MMMM do, yyyy")}
                   </p>
-                  <p className="text-muted-foreground font-medium leading-relaxed">
+                  <p className="text-lg text-muted-foreground font-medium leading-relaxed">
                     {announcement.content}
                   </p>
                   {announcement.link_url && (
-                    <Button variant="link" className="p-0 h-auto mt-2 text-primary font-black group text-base" asChild>
+                    <Button variant="link" className="p-0 h-auto mt-2 text-primary font-black group text-lg" asChild>
                       <a href={announcement.link_url} target="_blank" rel="noopener noreferrer">
-                        View Details <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        View Details <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                       </a>
                     </Button>
                   )}

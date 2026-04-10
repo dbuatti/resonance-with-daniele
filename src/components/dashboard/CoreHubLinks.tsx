@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const coreLinks = [
   {
-    icon: <BookOpen className="h-5 w-5" />,
+    icon: <BookOpen className="h-6 w-6" />,
     title: "Session Hub",
     description: "Materials by event.",
     link: "/sessions",
@@ -15,7 +15,7 @@ const coreLinks = [
     bg: "bg-accent/20"
   },
   {
-    icon: <FileText className="h-5 w-5" />,
+    icon: <FileText className="h-6 w-6" />,
     title: "Resources",
     description: "Sheet music & audio.",
     link: "/resources",
@@ -23,7 +23,7 @@ const coreLinks = [
     bg: "bg-blue-500/10"
   },
   {
-    icon: <CalendarDays className="h-5 w-5" />,
+    icon: <CalendarDays className="h-6 w-6" />,
     title: "Events",
     description: "Upcoming sessions.",
     link: "/events",
@@ -31,7 +31,7 @@ const coreLinks = [
     bg: "bg-green-500/10"
   },
   {
-    icon: <Music className="h-5 w-5" />,
+    icon: <Music className="h-6 w-6" />,
     title: "Suggestions",
     description: "Vote on songs.",
     link: "/song-suggestions",
@@ -42,20 +42,20 @@ const coreLinks = [
 
 const CoreHubLinks: React.FC = () => {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
       {coreLinks.map((item, index) => (
         <Link key={index} to={item.link} className="group">
           <div className={cn(
-            "h-full flex flex-col p-5 transition-all duration-300 rounded-2xl border border-border/50 bg-card",
-            "hover:border-primary/30 hover:shadow-lg hover:-translate-y-1"
+            "h-full flex flex-col p-8 transition-all duration-300 rounded-[2rem] border-2 border-border/50 bg-card shadow-sm",
+            "hover:border-primary/30 hover:shadow-2xl hover:-translate-y-2"
           )}>
-            <div className={cn("mb-4 p-2.5 rounded-xl w-fit transition-transform group-hover:scale-110", item.bg, item.color)}>
+            <div className={cn("mb-6 p-4 rounded-2xl w-fit transition-transform group-hover:scale-110 shadow-inner", item.bg, item.color)}>
               {item.icon}
             </div>
-            <h3 className="text-lg font-black font-lora mb-1 group-hover:text-primary transition-colors">
+            <h3 className="text-2xl font-black font-lora mb-2 group-hover:text-primary transition-colors">
               {item.title}
             </h3>
-            <p className="text-xs font-medium text-muted-foreground leading-tight">
+            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
               {item.description}
             </p>
           </div>

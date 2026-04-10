@@ -41,8 +41,8 @@ const QuickActions: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+    <div className="space-y-6">
+      <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
         <Zap className="h-4 w-4 text-primary" /> Quick Actions
       </h3>
       <div className="grid grid-cols-1 gap-3">
@@ -50,27 +50,27 @@ const QuickActions: React.FC = () => {
           <Button 
             key={i}
             variant="ghost" 
-            className="w-full justify-between h-14 px-5 hover:bg-muted/50 group rounded-2xl border border-border/50 bg-card"
+            className="w-full justify-between h-16 px-6 hover:bg-muted/50 group rounded-2xl border border-border/50 bg-card shadow-sm"
             asChild={!!action.link}
             onClick={action.onClick}
           >
             {action.link ? (
               <Link to={action.link}>
                 <div className="flex items-center gap-4">
-                  <div className={`p-2.5 rounded-xl ${action.bg} ${action.color} transition-transform group-hover:scale-110`}>
+                  <div className={`p-3 rounded-xl ${action.bg} ${action.color} transition-transform group-hover:scale-110 shadow-inner`}>
                     {action.icon}
                   </div>
-                  <span className="font-bold text-base">{action.label}</span>
+                  <span className="font-black text-base">{action.label}</span>
                 </div>
                 <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 text-primary" />
               </Link>
             ) : (
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-4">
-                  <div className={`p-2.5 rounded-xl ${action.bg} ${action.color} transition-transform group-hover:scale-110`}>
+                  <div className={`p-3 rounded-xl ${action.bg} ${action.color} transition-transform group-hover:scale-110 shadow-inner`}>
                     {action.icon}
                   </div>
-                  <span className="font-bold text-base">{action.label}</span>
+                  <span className="font-black text-base">{action.label}</span>
                 </div>
                 <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 text-primary" />
               </div>

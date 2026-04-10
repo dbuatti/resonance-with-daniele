@@ -30,30 +30,29 @@ const ResourcesBenefitsSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora">What You Get</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+      <div className="max-w-6xl mx-auto px-4">
+        <h2 className="text-4xl md:text-6xl font-black font-lora tracking-tight text-center mb-16">What You Get</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {benefits.map((benefit, index) => (
-            <Card key={index} className="text-center p-6 shadow-lg rounded-xl">
-              <CardHeader className="flex flex-col items-center">
-                <div className="bg-primary/10 p-3 rounded-full mb-4">
+            <Card key={index} className="text-center p-8 shadow-lg rounded-[2rem] border-none bg-card">
+              <CardHeader className="flex flex-col items-center pb-4">
+                <div className="bg-primary/10 p-4 rounded-2xl mb-4">
                   {benefit.icon}
                 </div>
-                <CardTitle className="text-xl font-semibold font-lora">{benefit.title}</CardTitle>
+                <CardTitle className="text-2xl font-black font-lora leading-tight">{benefit.title}</CardTitle>
               </CardHeader>
-              <CardContent className="text-muted-foreground">
+              <CardContent className="text-muted-foreground font-medium leading-relaxed">
                 {benefit.description}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Testimonial Highlight */}
-        <div className="max-w-2xl mx-auto text-center">
-          <Card className="p-8 shadow-lg rounded-xl bg-card border-l-4 border-primary">
-            <CardContent className="text-lg italic text-muted-foreground">
+        <div className="max-w-3xl mx-auto text-center">
+          <Card className="p-10 shadow-xl rounded-[2.5rem] bg-card border-l-8 border-primary">
+            <CardContent className="text-xl md:text-2xl italic font-medium text-muted-foreground leading-relaxed">
               “I enjoyed the open, fun, inclusive and relaxed atmosphere. Beautiful arrangement and fantastic people.”
-              <p className="mt-4 font-semibold text-foreground not-italic">— Past Participant</p>
+              <p className="mt-6 font-black text-foreground not-italic text-sm uppercase tracking-widest">— Past Participant</p>
             </CardContent>
           </Card>
         </div>
