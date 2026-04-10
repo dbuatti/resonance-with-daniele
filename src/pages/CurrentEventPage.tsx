@@ -27,28 +27,29 @@ const CurrentEventPage: React.FC = () => {
     }
   });
 
-  // Extract the slug from the Humanitix link to use in the embed
+  // Extract the slug from the Humanitix link
   const eventSlug = useMemo(() => {
     if (!event?.humanitix_link) return null;
     try {
-      // Handles both full URLs and just slugs
       if (!event.humanitix_link.startsWith('http')) return event.humanitix_link;
       const url = new URL(event.humanitix_link);
-      return url.pathname.split('/').filter(Boolean).pop();
+      // Get the first part of the path (the slug)
+      return url.pathname.split('/').filter(Boolean)[0];
     } catch (e) {
       return null;
     }
   }, [event]);
 
   const humanitixUrl = event?.humanitix_link || "#";
-  const embedUrl = eventSlug ? `https://events.humanitix.com/${eventSlug}?widget=checkout` : null;
 
   useEffect(() => {
+    // Inject the Humanitix widget script if it's not already there
     if (typeof window !== 'undefined' && !document.querySelector('script[src*="humanitix.com/scripts/widgets/inline.js"]')) {
       const script = document.createElement('script');
       script.src = "https://events.humanitix.com/scripts/widgets/inline.js";
       script.type = "module";
       document.body.appendChild(script);
+      console.log("[CurrentEventPage] Injected Humanitix inline script.");
     }
   }, []);
 
@@ -115,13 +116,12 @@ const CurrentEventPage: React.FC = () => {
       <div className="relative">
         <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-[4rem] -z-10" />
         
-        <div className="w-full rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white dark:border-gray-900 min-h-[80vh] bg-muted/20">
-          {embedUrl ? (
+        <div className="w-full rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white dark:border-gray-900 min-h-[900px] bg-muted/20">
+          {eventSlug ? (
             <iframe
-              src={embedUrl}
               data-checkout={eventSlug}
               title={event.title}
-              className="w-full h-full border-0"
+              className="w-full min-h-[900px] border-0"
               allowFullScreen
               allow="payment"
             ></iframe>
