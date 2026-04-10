@@ -54,17 +54,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <header className="bg-primary text-primary-foreground p-4 shadow-lg">
+        <header className="bg-primary text-primary-foreground p-6 shadow-2xl">
           <div className="container mx-auto flex justify-between items-center">
-            <Skeleton className="h-8 w-48 bg-primary-foreground/20" />
-            <div className="hidden sm:flex gap-2">
-              <Skeleton className="h-8 w-20 bg-primary-foreground/20" />
-              <Skeleton className="h-8 w-20 bg-primary-foreground/20" />
+            <Skeleton className="h-10 w-64 bg-primary-foreground/20 rounded-xl" />
+            <div className="hidden sm:flex gap-4">
+              <Skeleton className="h-10 w-24 bg-primary-foreground/20 rounded-xl" />
+              <Skeleton className="h-10 w-24 bg-primary-foreground/20 rounded-xl" />
             </div>
           </div>
         </header>
         <main className="flex-grow flex items-center justify-center bg-background">
-          <p className="text-lg text-muted-foreground">Loading application...</p>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-lg font-bold text-muted-foreground font-lora">Finding the resonance...</p>
+          </div>
         </main>
         <FooterSection />
       </div>
@@ -72,13 +75,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="glass-header p-4 sticky top-0 z-50 transition-all duration-300">
+    <div className="min-h-screen flex flex-col selection:bg-primary selection:text-primary-foreground">
+      <header className="glass-header p-4 md:p-6 sticky top-0 z-50 transition-all duration-500">
         <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold whitespace-nowrap font-lora text-primary-foreground hover:opacity-90 transition-opacity">
-            Resonance with Daniele
+          <Link to="/" className="text-2xl md:text-3xl font-black whitespace-nowrap font-lora text-primary-foreground hover:opacity-80 transition-all tracking-tighter">
+            Resonance
           </Link>
-          <nav className="hidden sm:flex items-center gap-3">
+          <nav className="hidden sm:flex items-center gap-4">
             {isActualAdmin && <AdminViewToggle />}
             <DesktopNav user={user} unreadAnnouncementCount={unreadAnnouncementCount} />
             {user && (
@@ -92,10 +95,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 isSurveyCompleted={isSurveyCompleted}
               />
             )}
-            <div className="h-6 w-px bg-white/10 mx-1" />
+            <div className="h-8 w-px bg-white/10 mx-2" />
             <ThemeToggle />
           </nav>
-          <div className="flex items-center gap-2 sm:hidden">
+          <div className="flex items-center gap-3 sm:hidden">
             <ThemeToggle />
             <MobileNav />
           </div>
