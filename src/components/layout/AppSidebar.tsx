@@ -35,9 +35,11 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import AdminViewToggle from "@/components/AdminViewToggle";
 
 const AppSidebar: React.FC = () => {
-  const { user, profile, logout, isAdminView } = useSession();
+  const { user, profile, logout, isAdminView, isActualAdmin } = useSession();
   const location = useLocation();
 
   const memberLinks = [
@@ -136,7 +138,12 @@ const AppSidebar: React.FC = () => {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border/50">
+      <SidebarFooter className="p-4 border-t border-border/50 space-y-4">
+        <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-4">
+          {isActualAdmin && <AdminViewToggle />}
+          <ThemeToggle />
+        </div>
+        
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton 

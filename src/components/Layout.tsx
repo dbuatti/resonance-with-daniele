@@ -65,25 +65,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 border-b border-border/50 flex items-center justify-between px-4 md:px-6 sticky top-0 bg-background/80 backdrop-blur-md z-40">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger className="hidden md:flex" />
-              <div className="md:hidden flex items-center gap-3">
-                <div className="bg-primary rounded-lg p-1.5">
-                  <Sparkles className="h-4 w-4 text-white" />
-                </div>
-                <span className="font-black font-lora text-xl tracking-tighter">Resonance</span>
-              </div>
-            </div>
-            
+          {/* Mobile Header Only */}
+          <header className="md:hidden h-16 border-b border-border/50 flex items-center justify-between px-4 sticky top-0 bg-background/80 backdrop-blur-md z-40">
             <div className="flex items-center gap-3">
-              {isActualAdmin && <AdminViewToggle />}
-              <div className="h-6 w-px bg-border mx-1 hidden md:block" />
-              <ThemeToggle />
+              <div className="bg-primary rounded-lg p-1.5">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <span className="font-black font-lora text-xl tracking-tighter">Resonance</span>
             </div>
+            <SidebarTrigger />
           </header>
 
-          <main className="flex-1 p-4 md:p-8 pt-2 md:pt-4 pb-24 md:pb-8">
+          <main className="flex-1 p-4 md:p-8 pt-6 md:pt-8 pb-24 md:pb-8 relative">
+            {/* Desktop Sidebar Trigger (Floating) */}
+            <div className="hidden md:block absolute top-6 left-4 z-50">
+              <SidebarTrigger className="h-10 w-10 rounded-xl bg-background/50 backdrop-blur-md border border-border/50 shadow-sm hover:bg-background transition-all" />
+            </div>
+            
             <div className="max-w-6xl mx-auto animate-fade-in-up">
               {children}
             </div>
