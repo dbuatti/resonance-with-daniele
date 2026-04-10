@@ -4,13 +4,14 @@ export interface Resource {
   description: string | null;
   url: string | null;
   type: 'file' | 'url' | 'youtube' | 'lyrics'; // 'file' for uploaded files, 'url' for external links, 'youtube', 'lyrics'
-  folder_id: string | null; // Added folder_id
+  folder_id: string | null;
   is_published: boolean;
   created_at: string;
-  voice_part: string | null; // New: Voice part (e.g., 'Soprano 1', 'Alto')
-  original_filename: string | null; // New: Original filename before server renaming
-  sort_order: number | null; // New: Custom sort order for drag-and-drop
-  file_size: number | null; // New: Size in bytes
+  voice_part: string | null;
+  original_filename: string | null;
+  sort_order: number | null;
+  file_size: number | null;
+  youtube_url?: string | null;
 }
 
 export interface ResourceFolder {
@@ -20,8 +21,8 @@ export interface ResourceFolder {
   user_id: string;
   created_at: string;
   updated_at: string;
-  is_nominated_for_dashboard: boolean; // New field
-  event_id: string | null; // New: Link to a specific event
+  is_nominated_for_dashboard: boolean;
+  event_id: string | null;
 }
 
 // Helper function to determine resource type for color coding

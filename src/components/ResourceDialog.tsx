@@ -17,6 +17,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -37,6 +38,9 @@ const resourceSchema = z.object({
   description: z.string().optional(),
   type: z.enum(['file', 'url', 'youtube', 'lyrics'], { required_error: "Resource type is required" }),
   url: z.string().optional().nullable(),
+  youtube_url: z.string().optional().nullable().refine(val => !val || z.string().url().safeParse(val).success, {
+    message: "Must be a valid URL",
+  }),
   is_published: z.boolean().default(true),
   folder_id: z.string().optional().nullable(),
   voice_part: z.string().optional().nullable(),
@@ -73,6 +77,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       description: "",
       type: 'file',
       url: null,
+      youtube_url: null,
       is_published: true,
       folder_id: null,
       voice_part: null,
@@ -132,6 +137,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         description: editingResource.description || "",
         type: editingResource.type,
         url: editingResource.url || null,
+        youtube_url: editingResource.youtube_url || null,
         is_published: editingResource.is_published,
         folder_id: editingResource.folder_id || null,
         voice_part: editingResource.voice_part || null,
@@ -144,6 +150,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         description: "",
         type: 'file',
         url: null,
+        youtube_url: null,
         is_published: true,
         folder_id: currentFolderId || null,
         voice_part: null,
@@ -272,6 +279,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
         title: data.title,
         description: data.description || null,
         url: finalUrl,
+        youtube_url: data.youtube_url || null,
         type: data.type,
         is_published: data.is_published,
         folder_id: data.folder_id || null,
@@ -471,6 +479,35 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
                           disabled={isSaving} 
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* New YouTube URL field for File/Lyrics types */}
+              {(currentType === 'file' || currentType === 'lyrics') && (
+                <FormField
+                  control={form.control}
+                  name="youtube_url"
+                  render={({ field }) => (
+                    <FormItem className="bg-red-50/30 dark:bg-red-950/10 p-4 rounded-xl border border-red-100 dark:border-red-900/20">
+                      <FormLabel className="flex items-center gap-2 text-red-600">
+                        <Youtube className="h-4 w-4" /> Associated YouTube Link (Optional)
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://youtube.com/watch?v=..." 
+                          {...field} 
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          disabled={isSaving} 
+                          className="bg-background"
+                        />
+                      </FormControl>
+                      <FormDescription className="text-[10px]">
+                        Link a reference video or performance to this file.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -4,7 +4,7 @@ import React, { useEffect, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart, History, ArrowRight } from "lucide-react";
+import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart, History, ArrowRight, Youtube } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO, isAfter, startOfToday } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -109,34 +109,42 @@ const SessionHub: React.FC = () => {
         {event.resources.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {event.resources.map((res) => (
-              <a 
-                key={res.id} 
-                href={res.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group block"
-              >
-                <Card className="h-full border-2 border-primary/5 hover:border-primary/20 transition-all duration-300 hover:shadow-lg rounded-2xl overflow-hidden bg-card">
-                  <CardContent className="p-5 flex items-center gap-4">
-                    <div className={cn(
-                      "p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110",
-                      res.type === 'youtube' ? "bg-red-50 text-red-600" : 
-                      res.type === 'lyrics' ? "bg-orange-50 text-orange-600" :
-                      "bg-blue-50 text-blue-600"
-                    )}>
-                      {res.type === 'youtube' ? <Video className="h-5 w-5" /> : 
-                       res.type === 'lyrics' ? <Mic2 className="h-5 w-5" /> : 
-                       <FileText className="h-5 w-5" />}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-sm truncate">{res.title}</p>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">
-                        {res.voice_part || res.type}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </a>
+              <div key={res.id} className="space-y-2">
+                <a 
+                  href={res.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group block"
+                >
+                  <Card className="h-full border-2 border-primary/5 hover:border-primary/20 transition-all duration-300 hover:shadow-lg rounded-2xl overflow-hidden bg-card">
+                    <CardContent className="p-5 flex items-center gap-4">
+                      <div className={cn(
+                        "p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110",
+                        res.type === 'youtube' ? "bg-red-50 text-red-600" : 
+                        res.type === 'lyrics' ? "bg-orange-50 text-orange-600" :
+                        "bg-blue-50 text-blue-600"
+                      )}>
+                        {res.type === 'youtube' ? <Video className="h-5 w-5" /> : 
+                         res.type === 'lyrics' ? <Mic2 className="h-5 w-5" /> : 
+                         <FileText className="h-5 w-5" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm truncate">{res.title}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">
+                          {res.voice_part || res.type}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </a>
+                {res.youtube_url && (
+                  <Button variant="ghost" size="sm" className="w-full h-8 text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl" asChild>
+                    <a href={res.youtube_url} target="_blank" rel="noopener noreferrer">
+                      <Youtube className="h-3 w-3 mr-2" /> Watch Reference Video
+                    </a>
+                  </Button>
+                )}
+              </div>
             ))}
           </div>
         ) : (

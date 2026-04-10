@@ -148,7 +148,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
               <iframe
                 src={resource.url!}
                 title={resource.title}
-                className="w-full h-full border-none pointer-events-none scale-110 origin-top transition-transform duration-700 group-hover/preview:scale-125"
+                className="w-full h-full border-none pointer-events-none scale-110 origin-top transition-transform duration-700 group/preview:scale-125"
                 style={{ marginTop: '-20px' }}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[4px]">
@@ -257,17 +257,32 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isAdmin, onEdit, 
           </div>
         </div>
 
-        {!fileDetails.isAudio && (
-          <Button 
-            onClick={handlePrimaryAction} 
-            className="w-full h-14 mt-auto font-black text-lg rounded-2xl shadow-lg shadow-primary/10 group/btn transition-all duration-300 hover:shadow-xl"
-            variant={isYoutube ? "secondary" : "default"}
-          >
-            {isYoutube ? <Play className="h-5 w-5 mr-3 fill-current" /> : isLink ? <ExternalLink className="h-5 w-5 mr-3" /> : <Download className="h-5 w-5 mr-3" />}
-            {getPrimaryActionText()}
-            <ArrowRight className="ml-3 h-5 w-5 opacity-0 -translate-x-3 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-300" />
-          </Button>
-        )}
+        <div className="flex flex-col gap-3 mt-auto">
+          {!fileDetails.isAudio && (
+            <Button 
+              onClick={handlePrimaryAction} 
+              className="w-full h-14 font-black text-lg rounded-2xl shadow-lg shadow-primary/10 group/btn transition-all duration-300 hover:shadow-xl"
+              variant={isYoutube ? "secondary" : "default"}
+            >
+              {isYoutube ? <Play className="h-5 w-5 mr-3 fill-current" /> : isLink ? <ExternalLink className="h-5 w-5 mr-3" /> : <Download className="h-5 w-5 mr-3" />}
+              {getPrimaryActionText()}
+              <ArrowRight className="ml-3 h-5 w-5 opacity-0 -translate-x-3 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-300" />
+            </Button>
+          )}
+
+          {/* Associated YouTube Link Button */}
+          {resource.youtube_url && !isYoutube && (
+            <Button 
+              variant="outline" 
+              className="w-full h-12 font-bold rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              asChild
+            >
+              <a href={resource.youtube_url} target="_blank" rel="noopener noreferrer">
+                <Youtube className="h-5 w-5 mr-2" /> Watch Reference Video
+              </a>
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
