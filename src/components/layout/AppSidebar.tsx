@@ -71,7 +71,7 @@ const AppSidebar: React.FC = () => {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+          <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50">
             Member Hub
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -84,11 +84,13 @@ const AppSidebar: React.FC = () => {
                     tooltip={item.title}
                     className={cn(
                       "h-11 px-4 rounded-xl transition-all duration-200",
-                      isActive(item.url) ? "bg-primary/10 text-primary font-bold" : "hover:bg-muted"
+                      isActive(item.url) 
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-bold" 
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
                     )}
                   >
                     <Link to={item.url}>
-                      <item.icon className={cn("h-5 w-5", isActive(item.url) && "text-primary")} />
+                      <item.icon className={cn("h-5 w-5", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
                       <span className="ml-3">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -100,7 +102,7 @@ const AppSidebar: React.FC = () => {
 
         {user?.is_admin && isAdminView && (
           <SidebarGroup className="mt-4">
-            <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary/50">
+            <SidebarGroupLabel className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-sidebar-accent/70">
               Admin Zone
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -113,11 +115,13 @@ const AppSidebar: React.FC = () => {
                       tooltip={item.title}
                       className={cn(
                         "h-11 px-4 rounded-xl transition-all duration-200",
-                        isActive(item.url) ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20" : "hover:bg-primary/5 text-muted-foreground hover:text-primary"
+                        isActive(item.url) 
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-bold shadow-lg shadow-black/20" 
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
                       )}
                     >
                       <Link to={item.url}>
-                        <item.icon className="h-5 w-5" />
+                        <item.icon className={cn("h-5 w-5", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
                         <span className="ml-3">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -134,24 +138,24 @@ const AppSidebar: React.FC = () => {
           <SidebarMenuItem>
             <SidebarMenuButton 
               asChild 
-              className="h-14 px-2 rounded-2xl hover:bg-muted transition-all group"
+              className="h-14 px-2 rounded-2xl hover:bg-sidebar-accent/20 transition-all group"
             >
               <Link to="/profile" className="flex items-center gap-3">
                 <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
                   <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
-                  <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
+                  <AvatarFallback className="bg-sidebar-accent/20 text-sidebar-accent font-black text-xs">
                     {profile?.first_name?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-                  <span className="text-sm font-black truncate">
+                  <span className="text-sm font-black truncate text-sidebar-foreground">
                     {profile?.first_name || "My Account"}
                   </span>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <span className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-widest">
                     View Profile
                   </span>
                 </div>
-                <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                <ChevronRight className="h-4 w-4 ml-auto text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
