@@ -11,23 +11,23 @@ const LearnMore: React.FC = () => {
   const steps = [
     {
       icon: <CheckCircle className="h-12 w-12 text-primary" />,
-      title: "Warm Welcome",
-      description: "We gather, settle in, and connect in a friendly, low-pressure atmosphere."
+      title: "A Warm Welcome",
+      description: "We start by gathering and settling in. It's a friendly, low-pressure environment where everyone is welcome."
     },
     {
       icon: <Mic className="h-12 w-12 text-primary" />,
       title: "Gentle Warm-ups",
-      description: "Playful exercises to get your body and voice comfortable and ready to sing."
+      description: "We do some simple exercises to get your body and voice ready to sing comfortably."
     },
     {
       icon: <Users className="h-12 w-12 text-primary" />,
-      title: "Learn the Song",
-      description: "I’ll guide the group through the harmonies step by step. No sheet music reading required."
+      title: "Learning the Song",
+      description: "I'll guide the group through the harmonies step by step. You don't need to be able to read music."
     },
     {
       icon: <Heart className="h-12 w-12 text-primary" />,
-      title: "Sing in Harmony",
-      description: "That special moment when voices blend as one, creating something truly resonant."
+      title: "Singing Together",
+      description: "The best part is when all the voices come together in harmony. It's a powerful and uplifting experience."
     }
   ];
 
@@ -38,10 +38,10 @@ const LearnMore: React.FC = () => {
         
         <section className="text-center space-y-8 mb-32">
           <h1 className="text-5xl md:text-8xl font-black font-lora text-foreground tracking-tighter leading-none">
-            Find Your <br /> <span className="text-primary">Resonance</span>
+            Find your <br /> <span className="text-primary">resonance.</span>
           </h1>
           <p className="text-xl md:text-3xl max-w-3xl mx-auto text-muted-foreground leading-relaxed font-medium">
-            A community choir that’s all about joy, connection, and the magic of voices joining together. 
+            A community choir that's all about the joy of singing together.
           </p>
           <div className="relative inline-block mt-12">
             <div className="absolute -inset-4 bg-primary/5 rounded-full blur-2xl" />
@@ -58,9 +58,9 @@ const LearnMore: React.FC = () => {
         <section className="space-y-20 mt-32">
           <div className="text-center space-y-4">
             <h2 className="text-4xl md:text-6xl font-black font-lora text-foreground tracking-tight">
-              The Session Experience
+              What to expect
             </h2>
-            <p className="text-lg text-muted-foreground font-medium">What to expect when you join the circle.</p>
+            <p className="text-lg text-muted-foreground font-medium">A typical session looks like this.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
@@ -85,14 +85,14 @@ const LearnMore: React.FC = () => {
           
           <div className="relative z-10 space-y-6">
             <h2 className="text-4xl md:text-7xl font-black font-lora tracking-tighter">
-              Ready to Give It a Try?
+              Ready to sing?
             </h2>
             <p className="text-xl md:text-2xl max-w-2xl mx-auto opacity-90 font-medium leading-relaxed">
-              If this sounds like your kind of vibe, we’d love to have you join us in Armadale.
+              If this sounds like your kind of thing, we'd love to have you join us in Armadale.
             </p>
             <Button size="lg" className="bg-white text-primary hover:bg-white/90 h-16 px-10 text-xl font-black rounded-2xl shadow-2xl group" asChild>
               <Link to="/events">
-                See Upcoming Dates <ArrowRight className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-2" />
+                See upcoming dates <ArrowRight className="ml-2 h-6 w-6 transition-transform group-hover:translate-x-2" />
               </Link>
             </Button>
           </div>

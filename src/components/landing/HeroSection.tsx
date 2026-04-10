@@ -11,21 +11,21 @@ const HeroSection: React.FC = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-8 animate-fade-in-up">
           <Music className="h-4 w-4" />
-          <span>Melbourne's Premier Pop-Up Choir</span>
+          <span>Melbourne's Monthly Pop-Up Choir</span>
         </div>
         
         <h1 className="text-5xl md:text-8xl font-extrabold tracking-tight mb-6 font-lora text-foreground leading-[1.1] animate-fade-in-up [animation-delay:200ms]">
-          Find Your Voice. <br />
-          <span className="text-primary">Find Your People.</span>
+          Come and sing <br />
+          <span className="text-primary">with us.</span>
         </h1>
         
         <p className="text-xl md:text-2xl mb-6 max-w-3xl mx-auto text-muted-foreground leading-relaxed animate-fade-in-up [animation-delay:400ms]">
-          Join Melbourne's most joyful pop-up choir. <span className="text-foreground font-bold">No auditions, no experience needed</span>—just the simple, resonant joy of group singing in Armadale.
+          I run a joyful pop-up choir in Armadale. You don't need to audition or have any experience—just come along and sing great songs in harmony with a friendly group.
         </p>
 
         <div className="flex items-center justify-center gap-2 text-primary font-bold mb-10 animate-fade-in-up [animation-delay:600ms]">
           <MapPin className="h-5 w-5" />
-          <span>Based in Armadale, VIC 3143</span>
+          <span>Armadale, VIC 3143</span>
         </div>
         
         <div className="flex flex-col items-center gap-4 animate-fade-in-up [animation-delay:800ms]">
@@ -36,13 +36,13 @@ const HeroSection: React.FC = () => {
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-xl bg-background/50 backdrop-blur-sm flex-1" asChild>
-              <Link to="/learn-more">How It Works</Link>
+              <Link to="/learn-more">How it works</Link>
             </Button>
           </div>
           
           <div className="space-y-4">
             <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-widest">
-              Tickets $30 via Humanitix — Pay what you can options available
+              Tickets are $35 via Humanitix
             </p>
             
             <Link 
@@ -53,10 +53,6 @@ const HeroSection: React.FC = () => {
               Already a member? Log in here
             </Link>
           </div>
-        </div>
-
-        <div className="mt-12 flex items-center justify-center gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-          <p className="text-sm font-bold uppercase tracking-widest">As seen in Melbourne's vibrant arts scene</p>
         </div>
       </div>
       

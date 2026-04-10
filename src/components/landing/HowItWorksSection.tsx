@@ -8,22 +8,22 @@ const HowItWorksSection: React.FC = () => {
     {
       icon: <UserPlus className="h-8 w-8" />,
       title: "Sign Up",
-      description: "Join online in seconds and become part of my vibrant community.",
+      description: "Join the community online to stay updated on our next sessions.",
     },
     {
       icon: <BookOpen className="h-8 w-8" />,
-      title: "Access Resources",
-      description: "Get instant access to sheet music, audio tracks, and tutorials.",
+      title: "Get the Music",
+      description: "I'll give you access to sheet music and practice tracks to help you learn.",
     },
     {
       icon: <Calendar className="h-8 w-8" />,
-      title: "Attend Rehearsals",
-      description: "Join weekly sessions or one-off pop-up events, tailored for all levels.",
+      title: "Come to a Session",
+      description: "Join us for a morning of singing in Armadale. All levels are welcome.",
     },
     {
       icon: <Mic className="h-8 w-8" />,
-      title: "Sing & Shine",
-      description: "Perform in concerts or simply enjoy the pure joy of singing.",
+      title: "Sing Together",
+      description: "Experience the simple joy of group singing and beautiful harmonies.",
     },
   ];
 
@@ -31,8 +31,8 @@ const HowItWorksSection: React.FC = () => {
     <section className="py-16 md:py-20 bg-secondary/30 border-y border-border/50">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold font-lora">How It Works</h2>
-          <p className="text-lg text-muted-foreground">Four simple steps to finding your voice with us.</p>
+          <h2 className="text-4xl md:text-5xl font-bold font-lora">How it works</h2>
+          <p className="text-lg text-muted-foreground">Four simple steps to join the circle.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">

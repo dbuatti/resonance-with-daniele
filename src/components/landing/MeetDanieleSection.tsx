@@ -10,8 +10,8 @@ const MeetDanieleSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
       <div className="max-w-6xl mx-auto text-center px-4">
-        <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora">Meet Daniele</h2>
-        <Card className="max-w-4xl mx-auto p-8 md:p-12 shadow-2xl rounded-3xl border-none bg-muted/20 flex flex-col md:flex-row items-center gap-10">
+        <h2 className="text-3xl md:text-4xl font-bold mb-12 font-lora">Hi, I'm Daniele</h2>
+        <div className="max-w-4xl mx-auto p-8 md:p-12 flex flex-col md:flex-row items-center gap-10">
           <div className="relative flex-shrink-0">
             <img
               src="/images/daniele-buatti-headshot.jpeg"
@@ -26,26 +26,26 @@ const MeetDanieleSection: React.FC = () => {
             <div>
               <CardTitle className="text-3xl font-bold mb-2 font-lora">Daniele Buatti</CardTitle>
               <CardDescription className="text-xl text-primary font-medium">
-                Vocal Coach, Musical Director, and Space Holder
+                Vocal Coach and Musical Director
               </CardDescription>
             </div>
-            <CardContent className="p-0 space-y-4 text-muted-foreground text-lg leading-relaxed">
+            <div className="p-0 space-y-4 text-muted-foreground text-lg leading-relaxed">
               <p>
-                Daniele’s approach to singing is something you <span className="text-foreground font-semibold italic">feel</span> more than just hear. As a vocal coach and musical director, he brings a warm, expressive, and deeply human quality to every room he leads.
+                I believe that singing should feel good. My approach is all about helping you find a natural, easy way to use your voice that feels authentic to you.
               </p>
               <p>
-                His philosophy is grounded in the body—focusing on natural resonance, lived-in ease, and the subtle textures that make a voice authentic. He believes singing isn't just about hitting notes; it's about storytelling and genuine connection.
+                In our sessions, I focus on creating a warm and relaxed environment where we can focus on the music and the connection between us. It's not just about hitting the right notes; it's about the joy of singing together.
               </p>
               <div className="pt-4">
                 <Button variant="link" className="p-0 h-auto text-primary font-bold text-lg hover:underline group" asChild>
                   <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer">
-                    Learn more about Daniele's work <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
+                    See more of my work <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
                   </a>
                 </Button>
               </div>
-            </CardContent>
+            </div>
           </div>
-        </Card>
+        </div>
       </div>
     </section>
   );

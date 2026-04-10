@@ -11,13 +11,13 @@ const AboutChoirSection: React.FC = () => {
           <div className="lg:w-1/2 space-y-8">
             <div className="space-y-4">
               <h2 className="text-4xl md:text-5xl font-bold font-lora leading-tight">
-                A space where every <br /> voice belongs.
+                A simple place to <br /> sing together.
               </h2>
               <div className="w-20 h-1.5 bg-primary rounded-full" />
             </div>
             
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Led by Daniele Buatti, our choir meets regularly in <span className="text-foreground font-bold">Armadale, Melbourne</span>. It's about the magic that happens when voices join together. Whether you're a total beginner or a seasoned singer, there's a place for you here.
+              I'm Daniele, and I lead this choir in Armadale. It's a space for anyone who loves music to get together and sing. Whether you're a total beginner or you've been singing for years, you're welcome to join the circle.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
@@ -26,8 +26,8 @@ const AboutChoirSection: React.FC = () => {
                   <MapPin className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-1">Local Community</h4>
-                  <p className="text-sm text-muted-foreground">Conveniently located for singers in Armadale, Malvern, and Toorak.</p>
+                  <h4 className="font-bold text-lg mb-1">Local Group</h4>
+                  <p className="text-sm text-muted-foreground">We meet at Armadale Baptist Church, near Malvern and Toorak.</p>
                 </div>
               </div>
               <div className="flex gap-4">
@@ -35,8 +35,8 @@ const AboutChoirSection: React.FC = () => {
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-1">Real Connection</h4>
-                  <p className="text-sm text-muted-foreground">Connect with people who love music as much as you.</p>
+                  <h4 className="font-bold text-lg mb-1">Meet People</h4>
+                  <p className="text-sm text-muted-foreground">It's a great way to connect with others who enjoy singing.</p>
                 </div>
               </div>
               <div className="flex gap-4">
@@ -45,7 +45,7 @@ const AboutChoirSection: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-lg mb-1">No Pressure</h4>
-                  <p className="text-sm text-muted-foreground">No auditions. No stress. Just great harmonies.</p>
+                  <p className="text-sm text-muted-foreground">There are no auditions. We just focus on the joy of the music.</p>
                 </div>
               </div>
               <div className="flex gap-4">
@@ -53,8 +53,8 @@ const AboutChoirSection: React.FC = () => {
                   <Music className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg mb-1">Vocal Growth</h4>
-                  <p className="text-sm text-muted-foreground">Learn technique while singing the songs you love.</p>
+                  <h4 className="font-bold text-lg mb-1">Learn Harmonies</h4>
+                  <p className="text-sm text-muted-foreground">I'll help you learn your part and improve your voice as we go.</p>
                 </div>
               </div>
             </div>
