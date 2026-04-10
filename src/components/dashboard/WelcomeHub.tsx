@@ -306,22 +306,24 @@ const WelcomeHub: React.FC = () => {
           <Button 
             asChild 
             size="lg" 
-            className="w-full h-24 md:h-32 rounded-[2.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-[1.01] transition-all group relative overflow-hidden"
+            className="w-full h-auto md:h-32 py-6 md:py-0 rounded-[2.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-[1.01] transition-all group relative overflow-hidden"
           >
             <Link to={bannerLink}>
               <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-              <div className="flex items-center justify-between w-full px-6 md:px-12">
-                <div className="flex items-center gap-6 md:gap-8">
-                  <div className="bg-white/20 p-4 md:p-6 rounded-[1.5rem] shadow-inner">
-                    <Music className="h-8 w-8 md:h-10 md:w-10 text-accent" />
+              <div className="flex flex-col md:flex-row items-center justify-between w-full px-6 md:px-12 gap-6">
+                <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto">
+                  <div className="bg-white/20 p-3 md:p-6 rounded-[1.25rem] md:rounded-[1.5rem] shadow-inner shrink-0">
+                    <Music className="h-6 w-6 md:h-10 md:w-10 text-accent" />
                   </div>
-                  <div className="text-left">
-                    <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] opacity-70">Current Focus</p>
-                    <p className="text-2xl md:text-4xl font-black font-lora tracking-tight">Practice: {currentResourceFolder.name}</p>
+                  <div className="text-left min-w-0">
+                    <p className="text-[9px] md:text-xs font-black uppercase tracking-[0.3em] md:tracking-[0.4em] opacity-70">Current Focus</p>
+                    <p className="text-xl md:text-4xl font-black font-lora tracking-tight truncate">Practice: {currentResourceFolder.name}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 font-black text-base md:text-xl uppercase tracking-widest">
-                  Open Session Hub <ArrowRight className="h-6 w-6 md:h-8 md:w-8 transition-transform group-hover:translate-x-2" />
+                <div className="flex items-center gap-2 md:gap-3 font-black text-xs md:text-xl uppercase tracking-widest self-end md:self-center">
+                  <span className="hidden sm:inline">Open Session Hub</span>
+                  <span className="sm:hidden">Open Hub</span>
+                  <ArrowRight className="h-5 w-5 md:h-8 md:w-8 transition-transform group-hover:translate-x-2" />
                 </div>
               </div>
             </Link>
@@ -439,7 +441,7 @@ const WelcomeHub: React.FC = () => {
       <footer className="text-center pt-16 border-t border-border/50 pb-8">
         <div className="flex flex-col items-center gap-6">
           <Heart className="h-8 w-8 text-primary opacity-20" />
-          <p className="text-2xl font-lora italic font-medium text-muted-foreground max-w-xl leading-relaxed">
+          <p className="text-2xl font-lora italic font-medium text-muted-foreground max-xl leading-relaxed">
             "Singing is the shortest distance between two people."
           </p>
         </div>
