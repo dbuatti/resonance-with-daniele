@@ -63,7 +63,7 @@ const AboutChoirSection: React.FC = () => {
           <div className="lg:w-1/2 relative">
             <div className="absolute -inset-4 bg-primary/5 rounded-3xl -rotate-2" />
             <img
-              src="/images/daniele-conduct.jpeg"
+              src="/images/choir-session-1.jpg"
               alt="Daniele Buatti conducting the choir in Melbourne"
               className="relative w-full rounded-2xl shadow-2xl object-cover aspect-[4/3]"
             />

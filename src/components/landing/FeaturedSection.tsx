@@ -98,7 +98,7 @@ const FeaturedSection: React.FC = () => {
             <div className="relative hidden lg:block">
               <div className="absolute -inset-4 bg-primary/5 rounded-[4rem] rotate-3" />
               <img 
-                src="/images/daniele-conduct.jpeg" 
+                src="/images/choir-session-2.jpg" 
                 alt="Daniele conducting" 
                 className="relative rounded-[3rem] shadow-2xl object-cover aspect-square"
               />

@@ -46,8 +46,8 @@ const LearnMore: React.FC = () => {
           <div className="relative inline-block mt-12">
             <div className="absolute -inset-4 bg-primary/5 rounded-full blur-2xl" />
             <img
-              src="/images/daniele-buatti-headshot.jpeg"
-              alt="Daniele Buatti"
+              src="/images/choir-session-3.jpg"
+              alt="Resonance Choir Session"
               className="relative w-56 h-56 rounded-full object-cover shadow-2xl border-8 border-white dark:border-gray-900"
             />
           </div>
