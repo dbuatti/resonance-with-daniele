@@ -170,6 +170,11 @@ const WelcomeHub: React.FC = () => {
 
   // Determine which folder to link to for the "Current Resources" button
   const currentResourceFolder = eventFolder || nominatedFolder;
+  
+  // Determine the target link for the banner
+  const bannerLink = upcomingEvent 
+    ? `/sessions#event-${upcomingEvent.id}` 
+    : (nominatedFolder?.event_id ? `/sessions#event-${nominatedFolder.event_id}` : "/sessions");
 
   return (
     <div className="py-8 space-y-12 animate-fade-in-up">
@@ -223,7 +228,7 @@ const WelcomeHub: React.FC = () => {
             size="lg" 
             className="w-full h-20 md:h-24 rounded-[2rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-[1.01] transition-all group relative overflow-hidden"
           >
-            <Link to={`/resources?folderId=${currentResourceFolder.id}`}>
+            <Link to={bannerLink}>
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
               <div className="flex items-center justify-between w-full px-4 md:px-8">
                 <div className="flex items-center gap-4 md:gap-6">
@@ -236,7 +241,7 @@ const WelcomeHub: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 font-black text-sm md:text-lg uppercase tracking-widest">
-                  Get Music <ArrowRight className="h-5 w-5 md:h-6 md:w-6 transition-transform group-hover:translate-x-2" />
+                  Open Session Hub <ArrowRight className="h-5 w-5 md:h-6 md:w-6 transition-transform group-hover:translate-x-2" />
                 </div>
               </div>
             </Link>

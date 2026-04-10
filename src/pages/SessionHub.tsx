@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
 interface EventWithResources {
   id: string;
@@ -23,6 +24,7 @@ interface EventWithResources {
 
 const SessionHub: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
+  const { hash } = useLocation();
 
   const { data: eventsData, isLoading } = useQuery({
     queryKey: ['sessionHubData'],
@@ -60,6 +62,19 @@ const SessionHub: React.FC = () => {
     enabled: !loadingSession
   });
 
+  // Handle scrolling to hash on load
+  useEffect(() => {
+    if (!isLoading && hash) {
+      const id = hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [isLoading, hash]);
+
   if (isLoading) {
     return (
       <div className="py-20 text-center">
@@ -86,7 +101,7 @@ const SessionHub: React.FC = () => {
 
       <div className="space-y-20">
         {eventsData?.map((event) => (
-          <section key={event.id} className="space-y-8 animate-fade-in-up">
+          <section key={event.id} id={`event-${event.id}`} className="space-y-8 animate-fade-in-up scroll-mt-24">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-4 border-primary/10 pb-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
