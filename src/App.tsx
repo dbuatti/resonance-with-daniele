@@ -17,13 +17,14 @@ import AdminMarketingDashboard from "./pages/AdminMarketingDashboard";
 import AdminMarketingPlanPage from "./pages/AdminMarketingPlanPage";
 import AdminGrowthStrategy from "./pages/AdminGrowthStrategy";
 import AdminEventFeedback from "./pages/AdminEventFeedback";
-import AdminSessionHubGuide from "./pages/AdminSessionHubGuide"; // New Import
+import AdminSessionHubGuide from "./pages/AdminSessionHubGuide";
 import CurrentEventPage from "./pages/CurrentEventPage";
 import EventFeedback from "./pages/EventFeedback";
 import SessionHub from "./pages/SessionHub";
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "@/components/theme-provider";
+import ScrollToTop from "./components/ScrollToTop";
 
 import ProfileLayoutPage from "./pages/ProfileLayoutPage";
 import ProfileDetails from "./components/profile/ProfileDetails";
@@ -39,6 +40,7 @@ const App = () => (
       <Sonner />
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <BrowserRouter>
+          <ScrollToTop />
           <SessionContextProvider>
             <Routes>
               <Route path="/" element={<Layout><Index /></Layout>} />
@@ -66,7 +68,7 @@ const App = () => (
               <Route path="/admin/marketing-plan" element={<Layout><AdminMarketingPlanPage /></Layout>} />
               <Route path="/admin/growth" element={<Layout><AdminGrowthStrategy /></Layout>} />
               <Route path="/admin/feedback" element={<Layout><AdminEventFeedback /></Layout>} />
-              <Route path="/admin/session-hub-guide" element={<Layout><AdminSessionHubGuide /></Layout>} /> {/* New Route */}
+              <Route path="/admin/session-hub-guide" element={<Layout><AdminSessionHubGuide /></Layout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SessionContextProvider>
