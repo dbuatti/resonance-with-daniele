@@ -2,23 +2,23 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Star } from "lucide-react";
+import { Star, Quote as QuoteIcon } from "lucide-react";
 
 const testimonials = [
   {
-    quote: "I haven't sung in years, and I was so nervous. Daniele made me feel completely at ease. The sound we made together was breathtaking.",
-    author: "Sarah M.",
-    role: "First-time Participant"
+    quote: "I loved doing the big circle at the end to sing together. It was so nice to hear it all come together and I felt so connected to the music and the harmonies.",
+    author: "Past Participant",
+    role: "Resonance Member"
   },
   {
-    quote: "The energy in the room is infectious. It's not just about the music; it's about the connection with everyone else in the circle.",
-    author: "James L.",
-    role: "Regular Member"
+    quote: "I enjoyed the open, fun, inclusive and relaxed atmosphere. Beautiful arrangement and fantastic people. Amazing organisation!",
+    author: "Past Participant",
+    role: "Resonance Member"
   },
   {
-    quote: "Daniele has a way of bringing out the best in every voice. I leave every session feeling uplifted and inspired.",
-    author: "Elena R.",
-    role: "Community Member"
+    quote: "The fluidity of the session was great. I loved the creative process, the movement, and the breathing and relaxation too.",
+    author: "Past Participant",
+    role: "Resonance Member"
   }
 ];
 
@@ -37,10 +37,13 @@ const TestimonialsSection: React.FC = () => {
           {testimonials.map((t, i) => (
             <Card key={i} className="border-none shadow-xl bg-card rounded-2xl overflow-hidden hover:scale-[1.02] transition-transform duration-300">
               <CardContent className="p-8 space-y-6">
-                <div className="flex gap-1 text-accent">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-current" />
-                  ))}
+                <div className="flex justify-between items-start">
+                  <div className="flex gap-1 text-accent">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-current" />
+                    ))}
+                  </div>
+                  <QuoteIcon className="h-8 w-8 text-primary/10" />
                 </div>
                 <p className="text-lg italic leading-relaxed text-foreground/90">
                   "{t.quote}"

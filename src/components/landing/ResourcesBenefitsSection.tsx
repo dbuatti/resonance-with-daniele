@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sheet, Headphones, Mic2, Users, Leaf } from "lucide-react"; // Import Leaf icon
+import { Sheet, Headphones, Mic2, Users, Leaf } from "lucide-react";
 
 const ResourcesBenefitsSection: React.FC = () => {
   const benefits = [
@@ -22,7 +22,7 @@ const ResourcesBenefitsSection: React.FC = () => {
       description: "Showcase your talent in concerts and pop-up events.",
     },
     {
-      icon: <Leaf className="h-8 w-8 text-primary" />, // New icon for mindfulness
+      icon: <Leaf className="h-8 w-8 text-primary" />,
       title: "Mindful Breathing & Body Awareness",
       description: "Develop a deeper connection to your voice through breathwork and body awareness exercises.",
     },
@@ -30,7 +30,7 @@ const ResourcesBenefitsSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 bg-muted text-foreground">
-      <div className="max-w-6xl mx-auto"> {/* Added max-w-6xl mx-auto for centering */}
+      <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-lora">What You Get</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {benefits.map((benefit, index) => (
@@ -52,8 +52,8 @@ const ResourcesBenefitsSection: React.FC = () => {
         <div className="max-w-2xl mx-auto text-center">
           <Card className="p-8 shadow-lg rounded-xl bg-card border-l-4 border-primary">
             <CardContent className="text-lg italic text-muted-foreground">
-              “I’ve never sung in a choir before, but this felt welcoming and so fun!”
-              <p className="mt-4 font-semibold text-foreground not-italic">— Chloe, Participant</p>
+              “I enjoyed the open, fun, inclusive and relaxed atmosphere. Beautiful arrangement and fantastic people.”
+              <p className="mt-4 font-semibold text-foreground not-italic">— Past Participant</p>
             </CardContent>
           </Card>
         </div>

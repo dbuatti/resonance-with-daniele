@@ -68,7 +68,7 @@ const AboutChoirSection: React.FC = () => {
               className="relative w-full rounded-2xl shadow-2xl object-cover aspect-[4/3]"
             />
             <div className="absolute -bottom-6 -left-6 bg-accent p-6 rounded-2xl shadow-xl hidden md:block">
-              <p className="text-accent-foreground font-black text-2xl font-lora">"Incredible sound."</p>
+              <p className="text-accent-foreground font-black text-2xl font-lora">"Achieving the resonance 🥰"</p>
               <p className="text-accent-foreground/80 text-sm font-bold uppercase tracking-widest mt-1">— Past Participant</p>
             </div>
           </div>
