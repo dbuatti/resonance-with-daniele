@@ -17,6 +17,7 @@ import AdminMarketingDashboard from "./pages/AdminMarketingDashboard";
 import AdminMarketingPlanPage from "./pages/AdminMarketingPlanPage";
 import AdminGrowthStrategy from "./pages/AdminGrowthStrategy";
 import AdminEventFeedback from "./pages/AdminEventFeedback";
+import AdminSessionHubGuide from "./pages/AdminSessionHubGuide"; // New Import
 import CurrentEventPage from "./pages/CurrentEventPage";
 import EventFeedback from "./pages/EventFeedback";
 import SessionHub from "./pages/SessionHub";
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/admin/marketing-plan" element={<Layout><AdminMarketingPlanPage /></Layout>} />
               <Route path="/admin/growth" element={<Layout><AdminGrowthStrategy /></Layout>} />
               <Route path="/admin/feedback" element={<Layout><AdminEventFeedback /></Layout>} />
+              <Route path="/admin/session-hub-guide" element={<Layout><AdminSessionHubGuide /></Layout>} /> {/* New Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SessionContextProvider>

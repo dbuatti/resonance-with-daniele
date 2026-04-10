@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote } from "lucide-react";
+import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -46,13 +46,20 @@ const AdminZone: React.FC = () => {
       badge: "Priority"
     },
     {
+      title: "Session Hub Guide",
+      description: "Learn how to link resources to events and manage your personal lesson notes for members.",
+      icon: <BookOpen className="h-5 w-5 text-primary" />,
+      link: "/admin/session-hub-guide",
+      label: "Read Guide",
+      highlight: true,
+      badge: "New"
+    },
+    {
       title: "Feedback Analysis",
       description: "Review post-session feedback. See what people loved and what needs refining for next time.",
       icon: <MessageSquareQuote className="h-5 w-5 text-primary" />,
       link: "/admin/feedback",
-      label: "Analyze Feedback",
-      highlight: true,
-      badge: "New"
+      label: "Analyze Feedback"
     },
     {
       title: "Member Directory",
