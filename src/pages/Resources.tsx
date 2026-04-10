@@ -4,9 +4,8 @@ import React, { useState, useMemo, useCallback } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, UploadCloud, LayoutGrid, ListFilter } from "lucide-react";
+import { Loader2, UploadCloud, LayoutGrid, ListFilter } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ResourceCard from "@/components/ResourceCard";
@@ -14,11 +13,10 @@ import ResourceDialog from "@/components/ResourceDialog";
 import ResourceFolderCard from "@/components/ResourceFolderCard";
 import ResourceFolderDialog from "@/components/ResourceFolderDialog";
 import MoveResourceDialog from "@/components/MoveResourceDialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Resource, ResourceFolder } from "@/types/Resource";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
 import SortableResourceList from "@/components/SortableResourceList";
@@ -27,6 +25,7 @@ import ResourceBreadcrumbs from "@/components/resources/ResourceBreadcrumbs";
 import ResourceControls from "@/components/resources/ResourceControls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PdfListView from "@/components/resources/PdfListView";
+import BackButton from "@/components/ui/BackButton";
 
 type FilterType = 'all' | 'pdf' | 'audio' | 'link' | 'youtube' | 'lyrics';
 type SortBy = 'title' | 'created_at' | 'sort_order';
@@ -56,8 +55,8 @@ const Resources: React.FC = () => {
   const [editingFolder, setEditingFolder] = useState<ResourceFolder | null>(null);
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<ResourceFolder | null>(null);
-  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
   const [isUploadingFileToFolder, setIsUploadingFileToFolder] = useState<string | null>(null);
+  const [isDeletingFolder, setIsDeletingFolder] = useState(false); // Added missing state
 
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearchTerm = useDebounce(searchInput, 300);
@@ -158,7 +157,6 @@ const Resources: React.FC = () => {
     const isNowNominated = !folder.is_nominated_for_dashboard;
 
     try {
-      // If we are nominating this folder, we should un-nominate all others first
       if (isNowNominated) {
         await supabase
           .from("resource_folders")
@@ -265,12 +263,15 @@ const Resources: React.FC = () => {
   const renderResourceSection = (title: string, res: Resource[]) => {
     if (res.length === 0) return null;
     return (
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold font-lora text-foreground border-b pb-2 border-border/50">{title}</h2>
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="h-6 w-1 bg-primary rounded-full" />
+          <h2 className="text-xl font-black font-lora uppercase tracking-widest text-muted-foreground">{title}</h2>
+        </div>
         {isAdmin && sortBy === 'sort_order' ? (
           <SortableResourceList resources={res} isAdmin={isAdmin} currentFolderId={currentFolderId} onEdit={setEditingResource} onDelete={setResourceToDelete} onMove={setResourceToMove} />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {res.map(r => <ResourceCard key={r.id} resource={r} isAdmin={isAdmin} onEdit={setEditingResource} onDelete={setResourceToDelete} onMove={setResourceToMove} />)}
           </div>
         )}
@@ -278,29 +279,47 @@ const Resources: React.FC = () => {
     );
   };
 
-  if (loadingSession) return <div className="p-4"><Skeleton className="h-10 w-full" /></div>;
+  const handleDeleteFolder = async (folderId: string) => {
+    if (!isAdmin) return;
+    setIsDeletingFolder(true);
+    try {
+      const { error } = await supabase.from("resource_folders").delete().eq("id", folderId);
+      if (error) throw error;
+      showSuccess("Folder deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] });
+    } catch (err: any) {
+      showError("Failed to delete folder: " + err.message);
+    } finally {
+      setIsDeletingFolder(false);
+      setFolderToDelete(null);
+    }
+  };
+
+  if (loadingSession) return <div className="py-8"><Skeleton className="h-12 w-full rounded-xl" /></div>;
 
   return (
-    <div className="space-y-6 py-4">
-      <header className="text-center space-y-2">
-        <h1 className="text-4xl font-bold font-lora">Member Resources</h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">Access sheet music, audio tracks, and important links.</p>
+    <div className="py-8 space-y-12">
+      <BackButton to="/" />
+      
+      <header className="space-y-4">
+        <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">Member Resources</h1>
+        <p className="text-xl text-muted-foreground max-w-2xl font-medium">Access sheet music, audio tracks, and important links.</p>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4">
-        <Tabs defaultValue="browse" className="space-y-8">
-          <div className="flex justify-center">
-            <TabsList className="grid w-full max-w-md grid-cols-2 rounded-xl h-12 p-1 bg-muted/50">
-              <TabsTrigger value="browse" className="rounded-lg font-bold flex items-center gap-2">
-                <LayoutGrid className="h-4 w-4" /> Browse All
-              </TabsTrigger>
-              <TabsTrigger value="pdfs" className="rounded-lg font-bold flex items-center gap-2">
-                <ListFilter className="h-4 w-4" /> PDF Library
-              </TabsTrigger>
-            </TabsList>
-          </div>
+      <Tabs defaultValue="browse" className="space-y-12">
+        <div className="flex justify-center">
+          <TabsList className="grid w-full max-w-md grid-cols-2 rounded-2xl h-14 p-1 bg-muted/50">
+            <TabsTrigger value="browse" className="rounded-xl font-black flex items-center gap-2">
+              <LayoutGrid className="h-4 w-4" /> Browse All
+            </TabsTrigger>
+            <TabsTrigger value="pdfs" className="rounded-xl font-black flex items-center gap-2">
+              <ListFilter className="h-4 w-4" /> PDF Library
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-          <TabsContent value="browse" className="space-y-6">
+        <TabsContent value="browse" className="space-y-12">
+          <div className="space-y-6">
             <ResourceBreadcrumbs breadcrumbs={breadcrumbs} onNavigate={handleNavigate} />
             <ResourceControls 
               searchInput={searchInput} setSearchInput={setSearchInput} loadingResources={loadingResources}
@@ -309,58 +328,58 @@ const Resources: React.FC = () => {
               sortBy={sortBy} setSortBy={setSortBy} sortOrder={sortOrder} setSortOrder={setSortOrder} voiceParts={voiceParts}
               onResetFilters={handleResetFilters}
             />
+          </div>
 
-            <div {...getMainRootProps()} className={cn("space-y-8 p-4 rounded-xl relative", isMainDragActive && isAdmin && "border-4 border-dashed border-primary/50 bg-primary/5")}>
-              {isMainDragActive && isAdmin && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl pointer-events-none">
-                  <div className="text-center p-12 border-4 border-dashed border-primary rounded-xl bg-card/90 shadow-2xl">
-                    <UploadCloud className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
-                    <p className="text-2xl font-bold text-primary font-lora">Drop file here to upload</p>
-                  </div>
+          <div {...getMainRootProps()} className={cn("space-y-12 relative min-h-[400px]", isMainDragActive && isAdmin && "border-4 border-dashed border-primary/50 bg-primary/5 rounded-[3rem]")}>
+            {isMainDragActive && isAdmin && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-[3rem] pointer-events-none">
+                <div className="text-center p-12">
+                  <UploadCloud className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
+                  <p className="text-2xl font-black text-primary font-lora">Drop file here to upload</p>
                 </div>
-              )}
-
-              {currentSubFolders.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {currentSubFolders.map(f => (
-                    <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={setEditingFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={handleToggleNomination} />
-                  ))}
-                </div>
-              )}
-
-              {currentSubFolders.length > 0 && Object.values(categorizedResources).some(a => a.length > 0) && <Separator />}
-
-              <div className="space-y-10">
-                {renderResourceSection("Sheet Music (PDF)", categorizedResources.pdf)}
-                {renderResourceSection("Lyrics (PDF/Text)", categorizedResources.lyrics)}
-                {renderResourceSection("Audio Resources", categorizedResources.audio)}
-                {renderResourceSection("YouTube Clips", categorizedResources.youtube)}
-                {renderResourceSection("External Links", categorizedResources.links)}
               </div>
-            </div>
-          </TabsContent>
+            )}
 
-          <TabsContent value="pdfs" className="space-y-6">
-            <div className="flex flex-col gap-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold font-lora">PDF Document Library</h2>
-                <p className="text-sm text-muted-foreground">Showing all PDF resources across all folders.</p>
+            {currentSubFolders.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {currentSubFolders.map(f => (
+                  <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={setEditingFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={handleToggleNomination} />
+                ))}
               </div>
-              {loadingAllResources ? (
-                <div className="space-y-4">
-                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
-                </div>
-              ) : (
-                <PdfListView 
-                  resources={allResourcesForLibrary || []} 
-                  folders={allFolders || []} 
-                  onDownload={handleDownload} 
-                />
-              )}
+            )}
+
+            {currentSubFolders.length > 0 && Object.values(categorizedResources).some(a => a.length > 0) && <Separator className="opacity-50" />}
+
+            <div className="space-y-16">
+              {renderResourceSection("Sheet Music (PDF)", categorizedResources.pdf)}
+              {renderResourceSection("Lyrics (PDF/Text)", categorizedResources.lyrics)}
+              {renderResourceSection("Audio Resources", categorizedResources.audio)}
+              {renderResourceSection("YouTube Clips", categorizedResources.youtube)}
+              {renderResourceSection("External Links", categorizedResources.links)}
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="pdfs" className="space-y-8">
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-black font-lora">PDF Document Library</h2>
+              <p className="text-sm font-medium text-muted-foreground">Showing all PDF resources across all folders.</p>
+            </div>
+            {loadingAllResources ? (
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+              </div>
+            ) : (
+              <PdfListView 
+                resources={allResourcesForLibrary || []} 
+                folders={allFolders || []} 
+                onDownload={handleDownload} 
+              />
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <ResourceDialog isOpen={isResourceDialogOpen} onClose={() => setIsResourceDialogOpen(false)} editingResource={editingResource} currentFolderId={currentFolderId} />
       <ResourceFolderDialog isOpen={isFolderDialogOpen} onClose={() => setIsFolderDialogOpen(false)} editingFolder={editingFolder} currentParentFolderId={currentFolderId} />

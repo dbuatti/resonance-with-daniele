@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Music, MessageSquare, User, Zap, Calendar, ArrowRight } from "lucide-react";
@@ -42,46 +41,44 @@ const QuickActions: React.FC = () => {
   ];
 
   return (
-    <Card className="shadow-lg border-none">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-lora flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" /> Quick Actions
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-3">
+    <div className="space-y-4">
+      <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <Zap className="h-4 w-4 text-primary" /> Quick Actions
+      </h3>
+      <div className="grid grid-cols-1 gap-3">
         {actions.map((action, i) => (
           <Button 
             key={i}
             variant="ghost" 
-            className="w-full justify-between h-12 px-4 hover:bg-muted group"
+            className="w-full justify-between h-14 px-5 hover:bg-muted/50 group rounded-2xl border border-border/50 bg-card"
             asChild={!!action.link}
             onClick={action.onClick}
           >
             {action.link ? (
               <Link to={action.link}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${action.bg} ${action.color}`}>
+                <div className="flex items-center gap-4">
+                  <div className={`p-2.5 rounded-xl ${action.bg} ${action.color} transition-transform group-hover:scale-110`}>
                     {action.icon}
                   </div>
-                  <span className="font-medium">{action.label}</span>
+                  <span className="font-bold text-base">{action.label}</span>
                 </div>
-                <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 text-primary" />
               </Link>
             ) : (
               <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${action.bg} ${action.color}`}>
+                <div className="flex items-center gap-4">
+                  <div className={`p-2.5 rounded-xl ${action.bg} ${action.color} transition-transform group-hover:scale-110`}>
                     {action.icon}
                   </div>
-                  <span className="font-medium">{action.label}</span>
+                  <span className="font-bold text-base">{action.label}</span>
                 </div>
-                <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 text-primary" />
               </div>
             )}
           </Button>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

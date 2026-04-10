@@ -54,19 +54,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <header className="bg-primary text-primary-foreground p-6 shadow-2xl">
-          <div className="container mx-auto flex justify-between items-center">
-            <Skeleton className="h-10 w-64 bg-primary-foreground/20 rounded-xl" />
+        <header className="bg-primary text-primary-foreground p-4 md:p-6 shadow-lg">
+          <div className="max-w-6xl mx-auto flex justify-between items-center">
+            <Skeleton className="h-8 w-48 bg-primary-foreground/20 rounded-lg" />
             <div className="hidden sm:flex gap-4">
-              <Skeleton className="h-10 w-24 bg-primary-foreground/20 rounded-xl" />
-              <Skeleton className="h-10 w-24 bg-primary-foreground/20 rounded-xl" />
+              <Skeleton className="h-8 w-20 bg-primary-foreground/20 rounded-lg" />
+              <Skeleton className="h-8 w-20 bg-primary-foreground/20 rounded-lg" />
             </div>
           </div>
         </header>
         <main className="flex-grow flex items-center justify-center bg-background">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-lg font-bold text-muted-foreground font-lora">Finding the resonance...</p>
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-base font-bold text-muted-foreground font-lora">Finding the resonance...</p>
           </div>
         </main>
         <FooterSection />
@@ -76,9 +76,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col selection:bg-primary selection:text-primary-foreground">
-      <header className="glass-header p-4 md:p-6 sticky top-0 z-50 transition-all duration-500">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl md:text-3xl font-black whitespace-nowrap font-lora text-primary-foreground hover:opacity-80 transition-all tracking-tighter">
+      <header className="glass-header p-4 md:p-5 sticky top-0 z-50 transition-all duration-500">
+        <div className="max-w-6xl mx-auto flex justify-between items-center px-4">
+          <Link to="/" className="text-xl md:text-2xl font-black whitespace-nowrap font-lora text-primary-foreground hover:opacity-80 transition-all tracking-tighter">
             Resonance
           </Link>
           <nav className="hidden sm:flex items-center gap-4">
@@ -95,7 +95,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 isSurveyCompleted={isSurveyCompleted}
               />
             )}
-            <div className="h-8 w-px bg-white/10 mx-2" />
+            <div className="h-6 w-px bg-white/10 mx-1" />
             <ThemeToggle />
           </nav>
           <div className="flex items-center gap-3 sm:hidden">
@@ -105,7 +105,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
       <main className="flex-grow bg-background">
-        {children}
+        <div className="max-w-6xl mx-auto px-4">
+          {children}
+        </div>
       </main>
       <FooterSection />
       <BackToTopButton />

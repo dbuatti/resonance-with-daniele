@@ -3,30 +3,27 @@
 import React from "react";
 import SongSuggestionForm from "@/components/dashboard/SongSuggestionForm";
 import SongVotingList from "@/components/dashboard/SongVotingList";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import BackButton from "@/components/ui/BackButton";
 
 const SongSuggestionsPage: React.FC = () => {
   return (
-    <div className="py-8 md:py-12 space-y-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <BackButton className="mb-6" />
-        
-        <header className="text-center space-y-4 mb-12">
-          <h1 className="text-4xl font-bold text-center font-lora">Song Suggestions & Voting</h1>
-          <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-            Suggest new songs for the choir to learn and vote on your favorites!
-          </p>
-        </header>
+    <div className="py-8 space-y-12">
+      <BackButton to="/" />
+      
+      <header className="space-y-4">
+        <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">Song Suggestions</h1>
+        <p className="text-xl text-muted-foreground max-w-2xl font-medium">
+          Suggest new songs for the choir to learn and vote on your favorites!
+        </p>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Song Voting List (Takes 2/3 width on large screens) */}
-          <div className="lg:col-span-2">
-            <SongVotingList />
-          </div>
-          
-          {/* Song Suggestion Form (Takes 1/3 width on large screens) */}
-          <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-8">
+          <SongVotingList />
+        </div>
+        
+        <div className="lg:col-span-4">
+          <div className="sticky top-24">
             <SongSuggestionForm />
           </div>
         </div>

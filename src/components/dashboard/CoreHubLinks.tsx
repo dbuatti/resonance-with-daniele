@@ -1,35 +1,42 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { FileText, CalendarDays, Music, Users, Mic2, Camera } from "lucide-react";
+import { FileText, CalendarDays, Music, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const coreLinks = [
   {
-    icon: <FileText className="h-6 w-6 text-primary" />,
+    icon: <FileText className="h-5 w-5" />,
     title: "Resources",
-    description: "Sheet music, audio, and tutorials.",
+    description: "Sheet music & audio.",
     link: "/resources",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10"
   },
   {
-    icon: <CalendarDays className="h-6 w-6 text-primary" />,
+    icon: <CalendarDays className="h-5 w-5" />,
     title: "Events",
-    description: "Upcoming sessions and RSVPs.",
+    description: "Upcoming sessions.",
     link: "/events",
+    color: "text-green-500",
+    bg: "bg-green-500/10"
   },
   {
-    icon: <Music className="h-6 w-6 text-primary" />,
+    icon: <Music className="h-5 w-5" />,
     title: "Suggestions",
-    description: "Suggest and vote on songs.",
+    description: "Vote on songs.",
     link: "/song-suggestions",
+    color: "text-purple-500",
+    bg: "bg-purple-500/10"
   },
   {
-    icon: <Users className="h-6 w-6 text-primary" />,
+    icon: <Users className="h-5 w-5" />,
     title: "Community",
-    description: "Connect and view highlights.",
+    description: "Connect with us.",
     link: "/resources?folderId=media",
+    color: "text-orange-500",
+    bg: "bg-orange-500/10"
   },
 ];
 
@@ -37,19 +44,21 @@ const CoreHubLinks: React.FC = () => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {coreLinks.map((item, index) => (
-        <Link key={index} to={item.link} className="block h-full">
-          <Card className={cn(
-            "h-full flex flex-col items-start p-4 transition-all duration-200 border-l-4 border-primary/50 rounded-xl",
-            "hover:bg-muted/50 hover:shadow-md"
+        <Link key={index} to={item.link} className="group">
+          <div className={cn(
+            "h-full flex flex-col p-5 transition-all duration-300 rounded-2xl border border-border/50 bg-card",
+            "hover:border-primary/30 hover:shadow-lg hover:-translate-y-1"
           )}>
-            <div className="mb-3 bg-primary/5 p-2 rounded-lg">{item.icon}</div>
-            <CardTitle className="text-base font-lora font-bold mb-0.5">
+            <div className={cn("mb-4 p-2.5 rounded-xl w-fit transition-transform group-hover:scale-110", item.bg, item.color)}>
+              {item.icon}
+            </div>
+            <h3 className="text-lg font-black font-lora mb-1 group-hover:text-primary transition-colors">
               {item.title}
-            </CardTitle>
-            <CardDescription className="text-[11px] leading-tight text-muted-foreground">
+            </h3>
+            <p className="text-xs font-medium text-muted-foreground leading-tight">
               {item.description}
-            </CardDescription>
-          </Card>
+            </p>
+          </div>
         </Link>
       ))}
     </div>
