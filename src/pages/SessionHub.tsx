@@ -4,7 +4,7 @@ import React, { useEffect, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart, History, ArrowRight, Youtube, Play, Download, ExternalLink } from "lucide-react";
+import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart, History, ArrowRight, Youtube, Play, Download, ExternalLink, ChevronRight, ListMusic } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO, isAfter, startOfToday } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,15 @@ const getYouTubeEmbedUrl = (url: string | null): string | null => {
   }
   return null;
 };
+
+const voicePartOrder = [
+  "General / Full Choir", "Full Choir", "Unison",
+  "Soprano", "Soprano 1", "Soprano 2", 
+  "Alto", "Alto 1", "Alto 2", 
+  "Tenor", "Tenor 1", "Tenor 2", 
+  "Bass", "Bass 1", "Bass 2", 
+  "Other"
+];
 
 const SessionHub: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
@@ -98,25 +107,40 @@ const SessionHub: React.FC = () => {
     }
   }, [isLoading, hash]);
 
-  if (isLoading) {
-    return (
-      <div className="py-20 text-center">
-        <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary mb-4" />
-        <p className="text-muted-foreground font-medium">Loading your session library...</p>
-      </div>
-    );
-  }
+  const scrollToSession = (id: string) => {
+    const element = document.getElementById(`event-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const renderEventContent = (event: EventWithResources) => {
     const videoResources = event.resources.filter(r => r.type === 'youtube' || r.youtube_url);
     const fileResources = event.resources.filter(r => r.type !== 'youtube');
     const hasNotes = !!event.lesson_notes?.trim();
 
+    // Group resources by voice part with explicit typing
+    const groupedResources: Record<string, any[]> = fileResources.reduce((acc: Record<string, any[]>, res) => {
+      const part = res.voice_part || "General / Full Choir";
+      if (!acc[part]) acc[part] = [];
+      acc[part].push(res);
+      return acc;
+    }, {});
+
+    const sortedGroups = Object.entries(groupedResources).sort(([a], [b]) => {
+      const indexA = voicePartOrder.indexOf(a);
+      const indexB = voicePartOrder.indexOf(b);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
     return (
       <div className="space-y-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Resources Column */}
-          <div className={cn("space-y-8", hasNotes ? "lg:col-span-7" : "lg:col-span-12")}>
+          <div className={cn("space-y-10", hasNotes ? "lg:col-span-7" : "lg:col-span-12")}>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Mic2 className="h-5 w-5 text-primary" />
@@ -126,45 +150,47 @@ const SessionHub: React.FC = () => {
               </h3>
             </div>
             
-            {fileResources.length > 0 ? (
-              <div className={cn(
-                "grid gap-6",
-                hasNotes ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-              )}>
-                {fileResources.map((res) => (
-                  <a 
-                    key={res.id}
-                    href={res.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="group block"
-                  >
-                    <Card className="h-full border-none soft-shadow hover:shadow-xl transition-all duration-500 rounded-[2rem] overflow-hidden bg-card hover:-translate-y-1">
-                      <CardContent className="p-6 flex flex-col h-full">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className={cn(
-                            "p-4 rounded-2xl shrink-0 transition-transform group-hover:scale-110 shadow-inner",
-                            res.type === 'lyrics' ? "bg-orange-50 text-orange-600" : "bg-blue-50 text-blue-600"
-                          )}>
-                            {res.type === 'lyrics' ? <Mic2 className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
-                          </div>
-                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/10 bg-primary/5 text-primary">
-                            {res.voice_part || "General"}
-                          </Badge>
-                        </div>
-                        <div className="space-y-2 flex-grow">
-                          <p className="font-black font-lora text-lg leading-tight group-hover:text-primary transition-colors">{res.title}</p>
-                          <p className="text-xs font-medium text-muted-foreground line-clamp-2">
-                            {res.description || `Access the ${res.type} for this session.`}
-                          </p>
-                        </div>
-                        <div className="mt-6 pt-4 border-t border-border/50 flex items-center justify-between text-primary font-black text-[10px] uppercase tracking-widest">
-                          <span>{res.type === 'file' ? 'Download File' : 'Open Link'}</span>
-                          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </a>
+            {sortedGroups.length > 0 ? (
+              <div className="space-y-12">
+                {sortedGroups.map(([part, resources]) => (
+                  <div key={part} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="h-px flex-1 bg-border/50" />
+                      <Badge variant="outline" className="bg-muted/50 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border-border/50">
+                        {part}
+                      </Badge>
+                      <div className="h-px flex-1 bg-border/50" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {(resources as any[]).map((res) => (
+                        <a 
+                          key={res.id}
+                          href={res.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="group block"
+                        >
+                          <Card className="h-full border-none soft-shadow hover:shadow-xl transition-all duration-500 rounded-2xl overflow-hidden bg-card hover:-translate-y-1">
+                            <CardContent className="p-5 flex items-center gap-4">
+                              <div className={cn(
+                                "p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110 shadow-inner",
+                                res.type === 'lyrics' ? "bg-orange-50 text-orange-600" : "bg-blue-50 text-blue-600"
+                              )}>
+                                {res.type === 'lyrics' ? <Mic2 className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-sm leading-tight truncate group-hover:text-primary transition-colors">{res.title}</p>
+                                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mt-1">
+                                  {res.type === 'file' ? 'Download' : 'Open Link'}
+                                </p>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
+                            </CardContent>
+                          </Card>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -247,18 +273,46 @@ const SessionHub: React.FC = () => {
   };
 
   return (
-    <div className="py-8 space-y-20 max-w-6xl mx-auto px-4">
+    <div className="py-8 space-y-16 max-w-6xl mx-auto px-4">
       <BackButton to="/" />
       
-      <header className="space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
-          <BookOpen className="h-4 w-4" />
-          <span>Learning Portal</span>
+      <header className="space-y-8">
+        <div className="space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
+            <BookOpen className="h-4 w-4" />
+            <span>Learning Portal</span>
+          </div>
+          <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Session Hub</h1>
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl font-medium leading-relaxed">
+            Access your tracks, lyrics, and my personal notes for our current and past sessions.
+          </p>
         </div>
-        <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Session Hub</h1>
-        <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl font-medium leading-relaxed">
-          Access your tracks, lyrics, and my personal notes for our current and past sessions.
-        </p>
+
+        {/* Quick Jump Navigator */}
+        {allEvents && allEvents.length > 1 && (
+          <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/50 space-y-4">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <ListMusic className="h-3 w-3" /> Session Navigator
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {allEvents.map((event) => (
+                <Button 
+                  key={event.id}
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => scrollToSession(event.id)}
+                  className={cn(
+                    "rounded-full font-bold border-primary/10 hover:bg-primary hover:text-primary-foreground transition-all",
+                    event.id === currentEvent?.id && "bg-primary/5 border-primary/30 text-primary"
+                  )}
+                >
+                  {event.id === currentEvent?.id && <Heart className="h-3 w-3 mr-2 fill-current" />}
+                  {event.title}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Featured Current Session */}
