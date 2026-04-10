@@ -48,8 +48,8 @@ const WelcomeHub: React.FC = () => {
         .gte("date", format(new Date(), "yyyy-MM-dd"))
         .order("date", { ascending: true })
         .limit(1)
-        .single();
-      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+        .maybeSingle(); // Changed to maybeSingle
+      if (fetchError) throw fetchError;
       return data || null;
     },
     enabled: !loadingSession,
@@ -85,8 +85,8 @@ const WelcomeHub: React.FC = () => {
         .gte("date", sevenDaysAgo)
         .order("date", { ascending: false })
         .limit(1)
-        .single();
-      if (error && error.code !== 'PGRST116') return null;
+        .maybeSingle(); // Changed to maybeSingle
+      if (error) return null;
       return data;
     },
     enabled: !loadingSession,
@@ -130,8 +130,8 @@ const WelcomeHub: React.FC = () => {
         .select("*")
         .eq("is_nominated_for_dashboard", true)
         .limit(1)
-        .single();
-      if (error && error.code !== 'PGRST116') throw error;
+        .maybeSingle(); // Changed to maybeSingle
+      if (error) throw error;
       return data || null;
     },
     enabled: !loadingSession,
