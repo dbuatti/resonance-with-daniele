@@ -147,7 +147,8 @@ const WelcomeHub: React.FC = () => {
   };
 
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
-  const avatarUrl = profile?.avatar_url || "/images/daniele-buatti-headshot.jpeg";
+  // Prioritize the uploaded avatar, then the auth metadata avatar, then no fallback image (let AvatarFallback handle it)
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   if (isLoading) {
     return (
@@ -179,7 +180,7 @@ const WelcomeHub: React.FC = () => {
       <section className="flex flex-col md:flex-row items-center gap-8 border-b border-border pb-12">
         <div className="flex-shrink-0 relative group">
           <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-primary/10 shadow-lg">
-            <AvatarImage src={avatarUrl} alt={firstName} className="object-cover" />
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={firstName} className="object-cover" />}
             <AvatarFallback className="bg-primary/5 text-primary">
               <UserIcon className="w-12 h-12 md:w-16 md:h-16" />
             </AvatarFallback>
