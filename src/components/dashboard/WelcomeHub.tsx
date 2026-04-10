@@ -1,13 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, FileText, ArrowRight, Mic2, MessageSquareQuote, MapPin, Heart, Sparkles, BookOpen, User as UserIcon } from "lucide-react";
+import { CalendarDays, Music, FileText, ArrowRight, Mic2, MessageSquareQuote, MapPin, Heart, Sparkles, BookOpen, User as UserIcon, Camera, Loader2 } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, subDays } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LatestAnnouncementsCard from "@/components/dashboard/LatestAnnouncementsCard";
 import CoreHubLinks from "@/components/dashboard/CoreHubLinks";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import SetupChecklistCard from "@/components/dashboard/SetupChecklistCard";
 import QuickActions from "@/components/dashboard/QuickActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useDropzone } from "react-dropzone";
+import { showSuccess, showError } from "@/utils/toast";
 
 interface Event {
   id: string;
@@ -39,6 +41,8 @@ const resourcePillStyles: { [key: string]: { text: string, border: string } } = 
 
 const WelcomeHub: React.FC = () => {
   const { user, profile, loading: loadingSession } = useSession();
+  const queryClient = useQueryClient();
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: upcomingEvent, isLoading: loadingEvent } = useQuery<Event | null, Error, Event | null, ['upcomingEvent']>({
     queryKey: ['upcomingEvent'],
@@ -137,6 +141,62 @@ const WelcomeHub: React.FC = () => {
     enabled: !loadingSession,
   });
 
+  const handlePhotoUpload = useCallback(async (file: File) => {
+    if (!user) return;
+    setIsUploading(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+      
+      const newAvatarUrl = publicUrlData?.publicUrl;
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ 
+          avatar_url: newAvatarUrl,
+          updated_at: new Date().toISOString() 
+        })
+        .eq("id", user.id);
+
+      if (profileError) throw profileError;
+
+      await supabase.auth.updateUser({
+        data: { avatar_url: newAvatarUrl }
+      });
+
+      showSuccess("Profile photo updated!");
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+    } catch (error: any) {
+      showError("Failed to upload photo: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [user, queryClient]);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      handlePhotoUpload(acceptedFiles[0]);
+    }
+  }, [handlePhotoUpload]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"] },
+    maxFiles: 1,
+    disabled: isUploading
+  });
+
   const isLoading = loadingSession || loadingEvent || loadingResources || loadingNominatedFolder;
   
   const getGreeting = () => {
@@ -147,7 +207,6 @@ const WelcomeHub: React.FC = () => {
   };
 
   const firstName = profile?.first_name || user?.email?.split('@')[0] || "there";
-  // Prioritize the uploaded avatar, then the auth metadata avatar, then no fallback image (let AvatarFallback handle it)
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   if (isLoading) {
@@ -178,23 +237,47 @@ const WelcomeHub: React.FC = () => {
   return (
     <div className="py-8 space-y-12 animate-fade-in-up">
       <section className="flex flex-col md:flex-row items-center gap-8 border-b border-border pb-12">
-        <div className="flex-shrink-0 relative group">
-          <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-primary/10 shadow-lg">
+        <div 
+          {...getRootProps()} 
+          className={cn(
+            "flex-shrink-0 relative group cursor-pointer transition-all duration-300",
+            isDragActive && "scale-110",
+            isUploading && "opacity-50 cursor-wait"
+          )}
+        >
+          <input {...getInputProps()} />
+          <Avatar className={cn(
+            "w-24 h-24 md:w-32 md:h-32 border-4 transition-all duration-300 shadow-lg",
+            isDragActive ? "border-primary ring-4 ring-primary/20" : "border-primary/10"
+          )}>
             {avatarUrl && <AvatarImage src={avatarUrl} alt={firstName} className="object-cover" />}
             <AvatarFallback className="bg-primary/5 text-primary">
               <UserIcon className="w-12 h-12 md:w-16 md:h-16" />
             </AvatarFallback>
           </Avatar>
+          
+          <div className={cn(
+            "absolute inset-0 rounded-full flex items-center justify-center bg-primary/40 backdrop-blur-[2px] transition-opacity duration-300",
+            isDragActive || isUploading ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          )}>
+            {isUploading ? (
+              <Loader2 className="h-8 w-8 text-white animate-spin" />
+            ) : (
+              <Camera className="h-8 w-8 text-white" />
+            )}
+          </div>
+
           <div className="absolute -bottom-1 -right-1 bg-accent text-accent-foreground p-1.5 rounded-lg shadow-md border-2 border-background">
             <Mic2 className="h-4 w-4" />
           </div>
         </div>
+        
         <div className="text-center md:text-left space-y-2">
           <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">
             {getGreeting()}, <span className="text-primary">{firstName}</span>!
           </h1>
           <p className="text-xl text-muted-foreground font-medium max-w-xl">
-            Ready to find your resonance today?
+            {isDragActive ? "Drop to update photo!" : "Ready to find your resonance today?"}
           </p>
         </div>
       </section>
