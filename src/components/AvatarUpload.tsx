@@ -3,19 +3,18 @@
 import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Image as ImageIcon, UploadCloud, XCircle, Loader2 } from "lucide-react";
+import { Image as ImageIcon, UploadCloud, XCircle, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { showSuccess } from "@/utils/toast"; // Only for paste notification
+import { showSuccess } from "@/utils/toast";
 
 interface AvatarUploadProps {
   currentAvatarUrl: string | null;
-  onFileChange: (file: File | null) => void; // Callback for when a file is selected or cleared
-  onRemoveRequested: () => void; // Callback for when user explicitly requests removal
-  isSaving: boolean; // Prop to indicate if parent is saving, for loading states
-  selectedFile: File | null; // The file currently selected in the parent
+  onFileChange: (file: File | null) => void;
+  onRemoveRequested: () => void;
+  isSaving: boolean;
+  selectedFile: File | null;
 }
 
 const AvatarUpload: React.FC<AvatarUploadProps> = ({
@@ -29,11 +28,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
   useEffect(() => {
     if (selectedFile) {
-      setPreview(URL.createObjectURL(selectedFile));
-    } else if (currentAvatarUrl) {
-      setPreview(currentAvatarUrl);
+      const objectUrl = URL.createObjectURL(selectedFile);
+      setPreview(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
     } else {
-      setPreview(null);
+      setPreview(currentAvatarUrl);
     }
   }, [selectedFile, currentAvatarUrl]);
 
@@ -47,13 +46,20 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "image/*": [".jpeg", ".png", ".gif", ".webp"],
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
     },
     maxFiles: 1,
+    disabled: isSaving,
   });
 
-  const handleClearSelection = () => {
-    onFileChange(null); // Clear the selected file
+  const handleClearSelection = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering dropzone click
+    onFileChange(null);
+  };
+
+  const handleRemoveCurrent = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering dropzone click
+    onRemoveRequested();
   };
 
   const handlePaste = useCallback((event: ClipboardEvent) => {
@@ -79,62 +85,78 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     };
   }, [handlePaste]);
 
-  const displayImage = selectedFile ? URL.createObjectURL(selectedFile) : currentAvatarUrl;
-
   return (
     <div className="space-y-4">
-      <Label htmlFor="avatar-upload">Avatar Image</Label>
-      <div className="flex items-center gap-4">
-        <Avatar className="w-24 h-24">
-          {displayImage ? (
-            <AvatarImage src={displayImage} alt="Avatar Preview" className="object-cover" />
-          ) : (
-            <AvatarFallback className="bg-muted text-muted-foreground">
-              <ImageIcon className="h-12 w-12" />
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div className="flex-1 space-y-2">
-          <div
-            {...getRootProps()}
-            className={cn(
-              "flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md cursor-pointer transition-colors",
-              isDragActive ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-            )}
-          >
-            <input {...getInputProps()} id="avatar-upload" />
-            <UploadCloud className="h-8 w-8 text-muted-foreground mb-2" />
-            {isDragActive ? (
-              <p className="text-sm text-muted-foreground">Drop the image here...</p>
+      <div 
+        {...getRootProps()} 
+        className={cn(
+          "relative group flex flex-col md:flex-row items-center gap-8 p-8 rounded-[2.5rem] border-4 border-dashed transition-all duration-300 cursor-pointer",
+          isDragActive 
+            ? "border-primary bg-primary/10 scale-[1.02] shadow-2xl" 
+            : "border-primary/10 bg-muted/30 hover:border-primary/30 hover:bg-muted/50",
+          isSaving && "opacity-50 cursor-not-allowed"
+        )}
+      >
+        <input {...getInputProps()} />
+        
+        <div className="relative shrink-0">
+          <Avatar className="w-32 h-32 border-4 border-background shadow-xl transition-transform group-hover:scale-105">
+            {preview ? (
+              <AvatarImage src={preview} alt="Avatar Preview" className="object-cover" />
             ) : (
-              <p className="text-sm text-muted-foreground text-center">
-                Drag 'n' drop an image here, click to select, or paste from clipboard.
-              </p>
+              <AvatarFallback className="bg-primary/5 text-primary">
+                <ImageIcon className="h-12 w-12 opacity-20" />
+              </AvatarFallback>
             )}
-            {selectedFile && (
-              <p className="text-sm text-primary mt-2">Selected: {selectedFile.name}</p>
-            )}
+          </Avatar>
+          <div className={cn(
+            "absolute inset-0 rounded-full flex items-center justify-center bg-primary/40 backdrop-blur-[2px] transition-opacity duration-300",
+            isDragActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          )}>
+            <Camera className="h-8 w-8 text-white" />
           </div>
+        </div>
+
+        <div className="flex-1 text-center md:text-left space-y-3">
+          <div className="space-y-1">
+            <p className="text-xl font-black font-lora">
+              {isDragActive ? "Drop it here!" : "Change your photo"}
+            </p>
+            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+              Drag and drop an image directly onto the circle, click to browse, or even paste from your clipboard.
+            </p>
+          </div>
+
+          {selectedFile && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
+              <UploadCloud className="h-3 w-3" /> Selected: {selectedFile.name}
+            </div>
+          )}
+
           {(selectedFile || currentAvatarUrl) && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
               {selectedFile && (
                 <Button
+                  type="button"
                   variant="outline"
+                  size="sm"
                   onClick={handleClearSelection}
                   disabled={isSaving}
-                  className="flex-1"
+                  className="rounded-xl font-bold h-9 border-primary/20 text-primary hover:bg-primary/5"
                 >
                   <XCircle className="mr-2 h-4 w-4" /> Clear Selection
                 </Button>
               )}
-              {currentAvatarUrl && !selectedFile && ( // Only show remove if there's a current avatar and no new file selected
+              {currentAvatarUrl && !selectedFile && (
                 <Button
+                  type="button"
                   variant="outline"
-                  onClick={onRemoveRequested}
+                  size="sm"
+                  onClick={handleRemoveCurrent}
                   disabled={isSaving}
-                  className="flex-1 text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                  className="rounded-xl font-bold h-9 text-destructive hover:bg-destructive/5 border-destructive/20"
                 >
-                  <XCircle className="mr-2 h-4 w-4" /> Remove Current Avatar
+                  <XCircle className="mr-2 h-4 w-4" /> Remove Current Photo
                 </Button>
               )}
             </div>
