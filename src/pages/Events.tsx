@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom"; // Added useNavigate
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, PlusCircle, Search, AlertCircle, MapPin, Clock, Share2, Sparkles, Calendar as CalendarIcon, ArrowRight, ExternalLink, Info } from "lucide-react";
+import { CalendarDays, PlusCircle, Search, AlertCircle, MapPin, Clock, Share2, Sparkles, Calendar as CalendarIcon, ArrowRight, ExternalLink, Info, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { format, parseISO, isAfter, startOfToday } from "date-fns";
@@ -32,7 +32,7 @@ interface Event {
 }
 
 const Events: React.FC = () => {
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -45,7 +45,7 @@ const Events: React.FC = () => {
     let query = supabase
       .from("events")
       .select("*")
-      .order("date", { ascending: false }); // Newest first for the list
+      .order("date", { ascending: false });
 
     if (currentSearchTerm) {
       query = query.or(
@@ -109,11 +109,9 @@ const Events: React.FC = () => {
 
   const handleFeedback = (event: Event) => {
     if (user?.is_admin) {
-      // Admins see the feedback request template modal
       setSelectedEventForFeedback(event);
       setIsFeedbackModalOpen(true);
     } else {
-      // Regular users go straight to the feedback form
       navigate(`/feedback?eventId=${event.id}`);
     }
   };
@@ -173,16 +171,27 @@ const Events: React.FC = () => {
                       Book Your Spot <ArrowRight className="ml-2 h-6 w-6 transition-transform group-hover/btn:translate-x-2" />
                     </a>
                   </Button>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                     <Button variant="ghost" className="text-white hover:bg-white/10 font-bold" onClick={() => handleShare(featuredEvent)}>
-                      <Share2 className="h-5 w-5 mr-2" /> Share Event
+                      <Share2 className="h-5 w-5 mr-2" /> Share
                     </Button>
-                    {user?.is_admin && featuredEvent.ai_chat_link && (
-                      <Button variant="ghost" className="text-accent hover:bg-accent/10 font-bold" asChild>
-                        <a href={featuredEvent.ai_chat_link} target="_blank" rel="noopener noreferrer">
-                          <Sparkles className="h-5 w-5 mr-2" /> AI Chat
-                        </a>
-                      </Button>
+                    {user?.is_admin && (
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          className="text-white hover:bg-white/10 font-bold" 
+                          onClick={() => { setEditingEvent(featuredEvent); setIsDialogOpen(true); }}
+                        >
+                          <Edit className="h-5 w-5 mr-2" /> Edit
+                        </Button>
+                        {featuredEvent.ai_chat_link && (
+                          <Button variant="ghost" className="text-accent hover:bg-accent/10 font-bold" asChild>
+                            <a href={featuredEvent.ai_chat_link} target="_blank" rel="noopener noreferrer">
+                              <Sparkles className="h-5 w-5 mr-2" /> AI Chat
+                            </a>
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
