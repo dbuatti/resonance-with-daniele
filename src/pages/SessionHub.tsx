@@ -4,12 +4,13 @@ import React, { useEffect, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart, History, ArrowRight, Youtube } from "lucide-react";
+import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart, History, ArrowRight, Youtube, Play } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO, isAfter, startOfToday } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 
@@ -21,6 +22,16 @@ interface EventWithResources {
   main_song: string | null;
   resources: any[];
 }
+
+const getYouTubeEmbedUrl = (url: string | null): string | null => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  if (match && match[2].length === 11) {
+    return `https://www.youtube.com/embed/${match[2]}?rel=0&showinfo=0&modestbranding=1`;
+  }
+  return null;
+};
 
 const SessionHub: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
@@ -62,7 +73,6 @@ const SessionHub: React.FC = () => {
     if (!allEvents || allEvents.length === 0) return { currentEvent: null, pastEvents: [] };
     
     const today = startOfToday();
-    // Find the soonest upcoming event
     const upcoming = allEvents
       .filter(e => !isAfter(today, parseISO(e.date)))
       .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
@@ -73,7 +83,6 @@ const SessionHub: React.FC = () => {
       return { currentEvent: current, pastEvents: others };
     }
 
-    // If no upcoming, the most recent past one is "current"
     return { currentEvent: allEvents[0], pastEvents: allEvents.slice(1) };
   }, [allEvents]);
 
@@ -98,88 +107,118 @@ const SessionHub: React.FC = () => {
     );
   }
 
-  const renderEventContent = (event: EventWithResources, isFeatured: boolean = false) => (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {/* Resources Column */}
-      <div className="lg:col-span-7 space-y-6">
-        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-          <Mic2 className="h-4 w-4" /> Practice Materials
-        </h3>
-        
-        {event.resources.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {event.resources.map((res) => (
-              <div key={res.id} className="space-y-2">
-                <a 
-                  href={res.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="group block"
-                >
-                  <Card className="h-full border-2 border-primary/5 hover:border-primary/20 transition-all duration-300 hover:shadow-lg rounded-2xl overflow-hidden bg-card">
-                    <CardContent className="p-5 flex items-center gap-4">
-                      <div className={cn(
-                        "p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110",
-                        res.type === 'youtube' ? "bg-red-50 text-red-600" : 
-                        res.type === 'lyrics' ? "bg-orange-50 text-orange-600" :
-                        "bg-blue-50 text-blue-600"
-                      )}>
-                        {res.type === 'youtube' ? <Video className="h-5 w-5" /> : 
-                         res.type === 'lyrics' ? <Mic2 className="h-5 w-5" /> : 
-                         <FileText className="h-5 w-5" />}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-bold text-sm truncate">{res.title}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">
-                          {res.voice_part || res.type}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </a>
-                {res.youtube_url && (
-                  <Button variant="ghost" size="sm" className="w-full h-8 text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl" asChild>
-                    <a href={res.youtube_url} target="_blank" rel="noopener noreferrer">
-                      <Youtube className="h-3 w-3 mr-2" /> Watch Reference Video
-                    </a>
-                  </Button>
-                )}
+  const renderEventContent = (event: EventWithResources) => {
+    // Separate resources into videos and files/links
+    const videoResources = event.resources.filter(r => r.type === 'youtube' || r.youtube_url);
+    const fileResources = event.resources.filter(r => r.type !== 'youtube');
+
+    return (
+      <div className="space-y-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Resources Column */}
+          <div className="lg:col-span-7 space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
+              <Mic2 className="h-4 w-4" /> Practice Materials
+            </h3>
+            
+            {fileResources.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {fileResources.map((res) => (
+                  <a 
+                    key={res.id}
+                    href={res.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group block"
+                  >
+                    <Card className="h-full border-2 border-primary/5 hover:border-primary/20 transition-all duration-300 hover:shadow-lg rounded-2xl overflow-hidden bg-card">
+                      <CardContent className="p-5 flex items-center gap-4">
+                        <div className={cn(
+                          "p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110",
+                          res.type === 'lyrics' ? "bg-orange-50 text-orange-600" : "bg-blue-50 text-blue-600"
+                        )}>
+                          {res.type === 'lyrics' ? <Mic2 className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm truncate">{res.title}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">
+                            {res.voice_part || res.type}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </a>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="p-10 text-center bg-muted/20 rounded-[2rem] border-2 border-dashed border-border">
+                <Music className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium text-muted-foreground">No files uploaded for this session yet.</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="p-10 text-center bg-muted/20 rounded-[2rem] border-2 border-dashed border-border">
-            <Music className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
-            <p className="text-sm font-medium text-muted-foreground">No specific resources uploaded for this session yet.</p>
+
+          {/* Notes Column */}
+          <div className="lg:col-span-5 space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
+              <StickyNote className="h-4 w-4" /> Daniele's Notes
+            </h3>
+            <Card className="border-none shadow-xl bg-yellow-50/50 dark:bg-yellow-950/10 rounded-[2rem] overflow-hidden relative min-h-[200px]">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+              <CardContent className="p-8 relative z-10">
+                {event.lesson_notes ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <p className="text-lg font-medium font-lora italic leading-relaxed text-yellow-900 dark:text-yellow-200/80 whitespace-pre-wrap">
+                      {event.lesson_notes}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-3">
+                    <StickyNote className="h-8 w-8 text-yellow-600/20" />
+                    <p className="text-sm font-medium text-yellow-800/40 italic">No notes added for this session.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Video Embeds Section */}
+        {videoResources.length > 0 && (
+          <div className="space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
+              <Play className="h-4 w-4" /> Video References
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {videoResources.map((res) => {
+                const embedUrl = getYouTubeEmbedUrl(res.type === 'youtube' ? res.url : res.youtube_url);
+                if (!embedUrl) return null;
+                
+                return (
+                  <div key={res.id} className="space-y-3">
+                    <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white dark:border-gray-800 bg-black">
+                      <iframe
+                        src={embedUrl}
+                        title={res.title}
+                        className="absolute inset-0 w-full h-full"
+                        allowFullScreen
+                      />
+                    </div>
+                    <div className="px-4">
+                      <p className="font-bold text-sm">{res.title}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">
+                        {res.voice_part ? `Part: ${res.voice_part}` : "Reference Video"}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
-
-      {/* Notes Column */}
-      <div className="lg:col-span-5 space-y-6">
-        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-          <StickyNote className="h-4 w-4" /> Daniele's Notes
-        </h3>
-        <Card className="border-none shadow-xl bg-yellow-50/50 dark:bg-yellow-950/10 rounded-[2rem] overflow-hidden relative min-h-[200px]">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-          <CardContent className="p-8 relative z-10">
-            {event.lesson_notes ? (
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <p className="text-lg font-medium font-lora italic leading-relaxed text-yellow-900 dark:text-yellow-200/80 whitespace-pre-wrap">
-                  {event.lesson_notes}
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-3">
-                <StickyNote className="h-8 w-8 text-yellow-600/20" />
-                <p className="text-sm font-medium text-yellow-800/40 italic">No notes added for this session.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="py-8 space-y-16 max-w-6xl mx-auto px-4">
@@ -219,7 +258,7 @@ const SessionHub: React.FC = () => {
             </div>
           </div>
 
-          {renderEventContent(currentEvent, true)}
+          {renderEventContent(currentEvent)}
         </section>
       ) : (
         <div className="text-center py-20 bg-muted/20 rounded-[3rem] border-4 border-dashed border-border">
@@ -240,51 +279,23 @@ const SessionHub: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-12">
             {pastEvents.map((event) => (
-              <Card key={event.id} id={`event-${event.id}`} className="rounded-2xl border-none shadow-sm hover:shadow-md transition-all bg-muted/30 overflow-hidden scroll-mt-24">
-                <CardHeader className="p-6 pb-0">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                          {format(parseISO(event.date), "MMMM yyyy")}
-                        </span>
-                        {event.main_song && (
-                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-primary/20 text-primary">
-                            {event.main_song}
-                          </Badge>
-                        )}
-                      </div>
-                      <CardTitle className="text-2xl font-black font-lora">{event.title}</CardTitle>
-                    </div>
-                    <Button variant="ghost" className="font-bold text-primary hover:bg-primary/5 group" asChild>
-                      <a href={`#event-${event.id}`}>
-                        View Materials <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </a>
-                    </Button>
+              <div key={event.id} id={`event-${event.id}`} className="space-y-8 scroll-mt-24">
+                <div className="flex items-center gap-4">
+                  <div className="bg-muted p-3 rounded-2xl">
+                    <Calendar className="h-6 w-6 text-muted-foreground" />
                   </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                  {/* Compact view of resources for past events */}
-                  <div className="flex flex-wrap gap-3">
-                    {event.resources.slice(0, 4).map((res) => (
-                      <div key={res.id} className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border border-border/50 text-xs font-bold">
-                        {res.type === 'youtube' ? <Video className="h-3 w-3 text-red-500" /> : <FileText className="h-3 w-3 text-blue-500" />}
-                        <span className="truncate max-w-[120px]">{res.title}</span>
-                      </div>
-                    ))}
-                    {event.resources.length > 4 && (
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border border-border/50 text-[10px] font-black text-muted-foreground uppercase">
-                        +{event.resources.length - 4} more
-                      </div>
-                    )}
-                    {event.resources.length === 0 && (
-                      <span className="text-xs italic text-muted-foreground">No resources recorded.</span>
-                    )}
+                  <div>
+                    <h3 className="text-2xl font-black font-lora">{event.title}</h3>
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                      {format(parseISO(event.date), "MMMM yyyy")}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                {renderEventContent(event)}
+                <Separator className="opacity-50" />
+              </div>
             ))}
           </div>
         </section>
