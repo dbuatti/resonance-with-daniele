@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 const CurrentEventPage: React.FC = () => {
   const eventSlug = "resonance-melbourne-s-pop-up-choir-april-2026";
   const humanitixUrl = `https://events.humanitix.com/${eventSlug}`;
+  // Using the absolute widget URL to prevent relative path 404 errors
+  const embedUrl = `https://events.humanitix.com/${eventSlug}?widget=checkout`;
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !document.querySelector('script[src*="humanitix.com/scripts/widgets/inline.js"]')) {
@@ -35,6 +37,7 @@ const CurrentEventPage: React.FC = () => {
         <CardContent className="space-y-8">
           <div className="w-full mx-auto rounded-[2rem] overflow-hidden shadow-2xl border-2 border-border min-h-[70vh] bg-muted/20">
             <iframe
+              src={embedUrl}
               data-checkout={eventSlug}
               title="Resonance April 2026 Event"
               className="w-full h-full border-0"
