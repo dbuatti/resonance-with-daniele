@@ -309,7 +309,7 @@ const Resources: React.FC = () => {
   if (loadingSession) return <div className="py-8"><Skeleton className="h-12 w-full rounded-xl" /></div>;
 
   return (
-    <div className="py-4 space-y-12">
+    <div className="py-2 space-y-8">
       <header className="space-y-4">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
           <LibraryIcon className="h-4 w-4" />
@@ -383,7 +383,7 @@ const Resources: React.FC = () => {
             </div>
             {loadingAllResources ? (
               <div className="space-y-4">
-                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+                {[...Array(5)].map((_, i) => <Skeleton className="h-16 w-full rounded-xl" />)}
               </div>
             ) : (
               <PdfListView 

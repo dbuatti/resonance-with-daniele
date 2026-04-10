@@ -14,9 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
+interface LayoutProps { children: React.ReactNode; }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, loading, isActualAdmin } = useSession();
@@ -35,7 +33,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     );
   }
 
-  // Public view (Landing Page)
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -63,7 +60,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     );
   }
 
-  // Authenticated view (App Shell)
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -87,7 +83,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </header>
 
-          <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">
+          <main className="flex-1 p-4 md:p-8 pt-2 md:pt-4 pb-24 md:pb-8">
             <div className="max-w-6xl mx-auto animate-fade-in-up">
               {children}
             </div>

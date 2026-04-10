@@ -7,11 +7,9 @@ import BackButton from "@/components/ui/BackButton";
 
 const SongSuggestionsPage: React.FC = () => {
   return (
-    <div className="py-8 space-y-12">
-      <BackButton to="/" />
-      
+    <div className="py-2 space-y-8">
       <header className="space-y-4">
-        <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">Song Suggestions</h1>
+        <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Song Suggestions</h1>
         <p className="text-xl text-muted-foreground max-w-2xl font-medium">
           Suggest new songs for the choir to learn and vote on your favorites!
         </p>

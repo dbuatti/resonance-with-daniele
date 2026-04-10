@@ -99,15 +99,13 @@ const AdminZone: React.FC = () => {
   ];
 
   return (
-    <div className="py-8 space-y-12">
-      <BackButton to="/" />
-      
+    <div className="py-2 space-y-8">
       <header className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
           <ShieldCheck className="h-3 w-3" />
           <span>Administrator Access</span>
         </div>
-        <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter leading-none">
+        <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">
           Command Center
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl font-medium">

@@ -41,7 +41,6 @@ const Events: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
 
-  // Security: Redirect non-admins away from this management page
   useEffect(() => {
     if (!loadingUserSession && (!user || !user.is_admin)) {
       navigate("/");
@@ -105,16 +104,14 @@ const Events: React.FC = () => {
   }
 
   return (
-    <div className="py-8 space-y-12 max-w-6xl mx-auto">
-      <BackButton to="/admin" />
-      
+    <div className="py-2 space-y-8">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
             <ShieldCheck className="h-3 w-3" />
             <span>Event Operations</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter leading-none">
+          <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">
             Manage Sessions
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl font-medium">
@@ -154,7 +151,7 @@ const Events: React.FC = () => {
 
         <div className="space-y-4">
           {isLoading ? (
-            [...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
+            [...Array(3)].map((_, i) => <Skeleton className="h-24 w-full rounded-2xl" />)
           ) : events?.length === 0 ? (
             <div className="text-center py-20 bg-muted/10 rounded-[2rem] border-4 border-dashed border-border/50">
               <CalendarDays className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" />

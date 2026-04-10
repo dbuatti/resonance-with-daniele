@@ -160,7 +160,6 @@ const SessionHub: React.FC = () => {
 
     return (
       <div className="space-y-12">
-        {/* Event Logistics Card (The "Risky" Merge) */}
         {!isPast && (
           <Card className="border-none shadow-xl bg-primary text-primary-foreground rounded-[2.5rem] overflow-hidden relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
@@ -188,7 +187,6 @@ const SessionHub: React.FC = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Resources Column */}
           <div className={cn("space-y-10", hasNotes ? "lg:col-span-7" : "lg:col-span-12")}>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -249,7 +247,6 @@ const SessionHub: React.FC = () => {
             )}
           </div>
 
-          {/* Notes Column */}
           {hasNotes && (
             <div className="lg:col-span-5 space-y-8">
               <div className="flex items-center gap-3">
@@ -274,7 +271,6 @@ const SessionHub: React.FC = () => {
           )}
         </div>
 
-        {/* Video Embeds Section */}
         {videoResources.length > 0 && (
           <div className="space-y-10">
             <div className="flex items-center gap-3">
@@ -321,7 +317,7 @@ const SessionHub: React.FC = () => {
   };
 
   return (
-    <div className="py-4 space-y-16">
+    <div className="py-2 space-y-8">
       <header className="space-y-8">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
@@ -334,7 +330,6 @@ const SessionHub: React.FC = () => {
           </p>
         </div>
 
-        {/* Quick Jump Navigator */}
         {allEvents && allEvents.length > 1 && (
           <div className="bg-muted/30 p-6 rounded-[2rem] border border-border/50 space-y-4">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -361,7 +356,6 @@ const SessionHub: React.FC = () => {
         )}
       </header>
 
-      {/* Featured Current Session */}
       {currentEvent ? (
         <section id={`event-${currentEvent.id}`} className="space-y-12 animate-fade-in-up scroll-mt-24">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-8 border-primary pb-8">
@@ -393,7 +387,6 @@ const SessionHub: React.FC = () => {
         </div>
       )}
 
-      {/* Past Sessions Section */}
       {pastEvents.length > 0 && (
         <section className="space-y-16 pt-20 border-t-2 border-border/50">
           <div className="space-y-2">
