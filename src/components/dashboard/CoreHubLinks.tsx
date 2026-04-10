@@ -2,10 +2,18 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { FileText, CalendarDays, Music, Users } from "lucide-react";
+import { FileText, CalendarDays, Music, Users, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const coreLinks = [
+  {
+    icon: <BookOpen className="h-5 w-5" />,
+    title: "Lessons Hub",
+    description: "Materials by event.",
+    link: "/lessons",
+    color: "text-accent-foreground",
+    bg: "bg-accent/20"
+  },
   {
     icon: <FileText className="h-5 w-5" />,
     title: "Resources",
@@ -29,14 +37,6 @@ const coreLinks = [
     link: "/song-suggestions",
     color: "text-purple-500",
     bg: "bg-purple-500/10"
-  },
-  {
-    icon: <Users className="h-5 w-5" />,
-    title: "Community",
-    description: "Connect with us.",
-    link: "/resources?folderId=media",
-    color: "text-orange-500",
-    bg: "bg-orange-500/10"
   },
 ];
 

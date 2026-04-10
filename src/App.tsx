@@ -16,9 +16,10 @@ import AdminIssueReportsPage from "./pages/AdminIssueReportsPage";
 import AdminMarketingDashboard from "./pages/AdminMarketingDashboard";
 import AdminMarketingPlanPage from "./pages/AdminMarketingPlanPage";
 import AdminGrowthStrategy from "./pages/AdminGrowthStrategy";
-import AdminEventFeedback from "./pages/AdminEventFeedback"; // Import new admin page
+import AdminEventFeedback from "./pages/AdminEventFeedback";
 import CurrentEventPage from "./pages/CurrentEventPage";
-import EventFeedback from "./pages/EventFeedback"; // Import new user page
+import EventFeedback from "./pages/EventFeedback";
+import LessonsHub from "./pages/LessonsHub"; // Import new page
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -41,12 +42,13 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Layout><Index /></Layout>} />
               <Route path="/resources" element={<Layout><Resources /></Layout>} />
+              <Route path="/lessons" element={<Layout><LessonsHub /></Layout>} /> {/* New Route */}
               <Route path="/events" element={<Layout><Events /></Layout>} />
               <Route path="/login" element={<Layout><Login /></Layout>} />
               <Route path="/current-event" element={<Layout><CurrentEventPage /></Layout>} />
               <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} />
               <Route path="/song-suggestions" element={<Layout><SongSuggestionsPage /></Layout>} />
-              <Route path="/feedback" element={<Layout><EventFeedback /></Layout>} /> {/* New Route */}
+              <Route path="/feedback" element={<Layout><EventFeedback /></Layout>} />
               
               <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
                 <Route index element={<ProfileDetails />} />
@@ -62,7 +64,7 @@ const App = () => (
               <Route path="/admin/marketing" element={<Layout><AdminMarketingDashboard /></Layout>} />
               <Route path="/admin/marketing-plan" element={<Layout><AdminMarketingPlanPage /></Layout>} />
               <Route path="/admin/growth" element={<Layout><AdminGrowthStrategy /></Layout>} />
-              <Route path="/admin/feedback" element={<Layout><AdminEventFeedback /></Layout>} /> {/* New Route */}
+              <Route path="/admin/feedback" element={<Layout><AdminEventFeedback /></Layout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SessionContextProvider>

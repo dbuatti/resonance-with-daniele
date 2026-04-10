@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarDays, Loader2, Sparkles, Music } from "lucide-react";
+import { CalendarDays, Loader2, Sparkles, Music, StickyNote } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +23,8 @@ const eventSchema = z.object({
   date: z.date({ required_error: "Date is required" }),
   location: z.string().optional(),
   description: z.string().optional(),
-  main_song: z.string().optional(), // New field
+  main_song: z.string().optional(),
+  lesson_notes: z.string().optional(), // New field
   humanitix_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   ai_chat_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
@@ -38,6 +39,7 @@ interface Event {
   location?: string;
   description?: string;
   main_song?: string;
+  lesson_notes?: string;
   humanitix_link?: string;
   ai_chat_link?: string;
 }
@@ -59,6 +61,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       location: "Armadale Baptist Church",
       description: "",
       main_song: "",
+      lesson_notes: "",
       humanitix_link: "https://events.humanitix.com/resonance-melbourne-s-pop-up-choir-april-2026",
       ai_chat_link: "",
     },
@@ -72,6 +75,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         location: editingEvent.location || "Armadale Baptist Church",
         description: editingEvent.description || "",
         main_song: editingEvent.main_song || "",
+        lesson_notes: editingEvent.lesson_notes || "",
         humanitix_link: editingEvent.humanitix_link || "",
         ai_chat_link: editingEvent.ai_chat_link || "",
       });
@@ -82,6 +86,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         location: "Armadale Baptist Church",
         description: "",
         main_song: "",
+        lesson_notes: "",
         humanitix_link: "https://events.humanitix.com/resonance-melbourne-s-pop-up-choir-april-2026",
         ai_chat_link: "",
       });
@@ -97,6 +102,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         location: data.location || null,
         description: data.description || null,
         main_song: data.main_song || null,
+        lesson_notes: data.lesson_notes || null,
         humanitix_link: data.humanitix_link || null,
         ai_chat_link: data.ai_chat_link || null,
       };
@@ -118,6 +124,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       showSuccess(`Event ${editingEvent ? "updated" : "added"} successfully!`);
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["upcomingEvent"] });
+      queryClient.invalidateQueries({ queryKey: ["lessonsHubData"] });
       onClose();
     } catch (error: any) {
       showError(`Failed to save event: ${error.message}`);
@@ -126,10 +133,10 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto rounded-[2rem]">
         <DialogHeader>
-          <DialogTitle className="font-lora">{editingEvent ? "Edit Event" : "Add New Event"}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="font-lora text-2xl font-black">{editingEvent ? "Edit Event" : "Add New Event"}</DialogTitle>
+          <DialogDescription className="font-medium">
             {editingEvent ? "Update the details for this choir event." : "Create a new event for the choir community."}
           </DialogDescription>
         </DialogHeader>
@@ -140,63 +147,85 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Event Title" {...field} />
+                    <Input placeholder="Event Title" {...field} className="rounded-xl font-bold" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarDays className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-bold rounded-xl h-11",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="main_song"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <Music className="h-3 w-3 text-primary" /> Main Song
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. You Will Be Found" {...field} className="rounded-xl font-bold" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
-              name="main_song"
+              name="lesson_notes"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Music className="h-4 w-4 text-primary" /> Main Song / Repertoire
+                <FormItem className="bg-yellow-50/50 dark:bg-yellow-950/10 p-4 rounded-2xl border border-yellow-200/50">
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-yellow-800 dark:text-yellow-400 flex items-center gap-2">
+                    <StickyNote className="h-3 w-3" /> Lesson Notes (Public)
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. You Will Be Found" {...field} />
+                    <Textarea 
+                      placeholder="Write your handwritten-style notes for the members here..." 
+                      {...field} 
+                      className="min-h-[120px] rounded-xl bg-background/50 font-medium border-yellow-200/30"
+                    />
                   </FormControl>
-                  <FormDescription>
-                    Recording this helps the AI avoid suggesting songs we've already done.
+                  <FormDescription className="text-[10px] text-yellow-700/60">
+                    These notes will appear in the Lessons Hub for all members.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -208,9 +237,9 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location (Optional)</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Location</FormLabel>
                   <FormControl>
-                    <Input placeholder="Venue Name" {...field} />
+                    <Input placeholder="Venue Name" {...field} className="rounded-xl font-bold" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -222,9 +251,9 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Details about the event..." {...field} />
+                    <Textarea placeholder="Details about the event..." {...field} className="rounded-xl font-medium" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -236,36 +265,17 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
               name="humanitix_link"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Humanitix Link (Optional)</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Humanitix Link</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://events.humanitix.com/..." {...field} />
+                    <Input placeholder="https://events.humanitix.com/..." {...field} className="rounded-xl font-bold" />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="ai_chat_link"
-              render={({ field }) => (
-                <FormItem className="bg-primary/5 p-4 rounded-lg border border-primary/20">
-                  <FormLabel className="flex items-center gap-2 text-primary">
-                    <Sparkles className="h-4 w-4" /> Admin AI Chat Link (Private)
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://gemini.google.com/..." {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    This link is only visible to administrators.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             <DialogFooter>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button type="submit" className="w-full h-12 font-black rounded-xl shadow-lg" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...

@@ -3,7 +3,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Info, FileText, CalendarDays, Music, Shield, LogIn } from "lucide-react";
+import { Home, Info, FileText, CalendarDays, Music, Shield, LogIn, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -59,6 +59,12 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ user, unreadAnnouncementCount }
 
       {user && (
         <>
+          <Button variant="ghost" asChild className={getNavLinkClass("/lessons")}>
+            <Link to="/lessons">
+              <BookOpen className="h-4 w-4" />
+              <span>Lessons Hub</span>
+            </Link>
+          </Button>
           <Button variant="ghost" asChild className={getNavLinkClass("/resources")}>
             <Link to="/resources">
               <FileText className="h-4 w-4" />
