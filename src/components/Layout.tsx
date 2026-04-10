@@ -65,23 +65,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile Header Only */}
-          <header className="md:hidden h-16 border-b border-border/50 flex items-center justify-between px-4 sticky top-0 bg-background/80 backdrop-blur-md z-40">
-            <div className="flex items-center gap-3">
+          {/* Consistent Header for Trigger */}
+          <header className="h-14 border-b border-border/50 flex items-center px-4 sticky top-0 bg-background/80 backdrop-blur-md z-40">
+            <SidebarTrigger className="h-9 w-9 rounded-lg hover:bg-muted transition-colors" />
+            <div className="md:hidden flex items-center gap-3 ml-4">
               <div className="bg-primary rounded-lg p-1.5">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="font-black font-lora text-xl tracking-tighter">Resonance</span>
+              <span className="font-black font-lora text-lg tracking-tighter">Resonance</span>
             </div>
-            <SidebarTrigger />
           </header>
 
-          <main className="flex-1 p-4 md:p-8 pt-6 md:pt-8 pb-24 md:pb-8 relative">
-            {/* Desktop Sidebar Trigger (Floating) */}
-            <div className="hidden md:block absolute top-6 left-4 z-50">
-              <SidebarTrigger className="h-10 w-10 rounded-xl bg-background/50 backdrop-blur-md border border-border/50 shadow-sm hover:bg-background transition-all" />
-            </div>
-            
+          <main className="flex-1 p-4 md:p-8 pt-4 md:pt-6 pb-24 md:pb-8">
             <div className="max-w-6xl mx-auto animate-fade-in-up">
               {children}
             </div>

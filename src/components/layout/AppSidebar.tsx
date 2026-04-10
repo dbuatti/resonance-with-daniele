@@ -63,12 +63,12 @@ const AppSidebar: React.FC = () => {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
-      <SidebarHeader className="p-4">
-        <Link to="/" className="flex items-center gap-3 px-2">
-          <div className="bg-primary rounded-xl p-2 shadow-lg shadow-primary/20">
+      <SidebarHeader className="p-2 md:p-4">
+        <Link to="/" className="flex items-center gap-3 px-2 justify-center md:justify-start">
+          <div className="bg-primary rounded-xl p-2 shadow-lg shadow-primary/20 shrink-0">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <span className="font-black font-lora text-xl tracking-tighter group-data-[collapsible=icon]:hidden">
+          <span className="font-black font-lora text-xl tracking-tighter group-data-[collapsible=icon]:hidden truncate">
             Resonance
           </span>
         </Link>
@@ -76,7 +76,7 @@ const AppSidebar: React.FC = () => {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50">
+          <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
             Member Hub
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -96,7 +96,7 @@ const AppSidebar: React.FC = () => {
                   >
                     <Link to={item.url}>
                       <item.icon className={cn("h-5 w-5 shrink-0", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
-                      <span className="ml-3 text-sm">{item.title}</span>
+                      <span className="ml-3 text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -107,7 +107,7 @@ const AppSidebar: React.FC = () => {
 
         {user?.is_admin && isAdminView && (
           <SidebarGroup className="mt-4">
-            <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-accent/70">
+            <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-accent/70 group-data-[collapsible=icon]:hidden">
               Admin Zone
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -127,7 +127,7 @@ const AppSidebar: React.FC = () => {
                     >
                       <Link to={item.url}>
                         <item.icon className={cn("h-5 w-5 shrink-0", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
-                        <span className="ml-3 text-sm">{item.title}</span>
+                        <span className="ml-3 text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -151,7 +151,7 @@ const AppSidebar: React.FC = () => {
               className="h-14 px-2 rounded-2xl hover:bg-sidebar-accent/20 transition-all group"
             >
               <Link to="/profile" className="flex items-center gap-3">
-                <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
+                <Avatar className="h-9 w-9 border-2 border-background shadow-sm shrink-0">
                   <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
                   <AvatarFallback className="bg-sidebar-accent/20 text-sidebar-accent font-black text-xs">
                     {profile?.first_name?.[0] || "U"}
