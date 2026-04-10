@@ -15,7 +15,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { DialogDescription } from "@/components/ui/dialog"; // Import DialogDescription
+import { DialogDescription } from "@/components/ui/dialog";
 
 const issueReportSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -25,7 +25,7 @@ const issueReportSchema = z.object({
 type IssueReportFormData = z.infer<typeof issueReportSchema>;
 
 const ReportIssueButton: React.FC = () => {
-  const { user, profile } = useSession();
+  const { user } = useSession();
   const location = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -59,7 +59,7 @@ const ReportIssueButton: React.FC = () => {
       } else {
         showSuccess("Issue report submitted successfully! Thank you for your feedback.");
         form.reset({
-          email: user?.email || "", // Reset email to user's email or empty
+          email: user?.email || "",
           issue_description: "",
         });
         setIsDialogOpen(false);
@@ -74,19 +74,19 @@ const ReportIssueButton: React.FC = () => {
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="default"
-          size="lg"
-          className="fixed bottom-8 left-8 p-3 rounded-full shadow-lg z-50 flex items-center gap-2"
+          variant="outline"
+          size="icon"
+          className="fixed bottom-8 right-24 p-3 rounded-full shadow-lg z-50 bg-background hover:bg-muted transition-all duration-300"
+          title="Report an Issue"
         >
-          <MessageSquare className="h-5 w-5" />
-          <span className="hidden md:inline">Report an Issue</span>
-          <span className="sr-only md:hidden">Report Issue</span>
+          <MessageSquare className="h-5 w-5 text-primary" />
+          <span className="sr-only">Report Issue</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-lora">Report an Issue or Complaint</DialogTitle>
-          <DialogDescription> {/* Changed from <p> to DialogDescription */}
+          <DialogDescription>
             Help me improve the app by letting me know about any bugs or problems you encounter.
           </DialogDescription>
         </DialogHeader>
