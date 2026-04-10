@@ -35,18 +35,19 @@ const CurrentEventPage: React.FC = () => {
       if (!urlStr.startsWith('http')) return urlStr;
       
       const url = new URL(urlStr);
-      // Get the last part of the path which is usually the slug
+      // Get the first part of the path which is the slug
       const parts = url.pathname.split('/').filter(Boolean);
-      return parts[parts.length - 1];
+      return parts[0];
     } catch (e) {
       return null;
     }
   }, [event]);
 
-  // Construct the direct widget URL as a fallback/primary source
+  // Construct the direct widget URL
   const widgetUrl = useMemo(() => {
     if (!eventSlug) return null;
-    return `https://events.humanitix.com/${eventSlug}/tickets?widget=checkout`;
+    // Using the root slug with the widget param is the most reliable method
+    return `https://events.humanitix.com/${eventSlug}?widget=checkout`;
   }, [eventSlug]);
 
   const humanitixUrl = event?.humanitix_link || "#";
@@ -137,6 +138,7 @@ const CurrentEventPage: React.FC = () => {
         <div className="w-full rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white dark:border-gray-900 min-h-[800px] bg-muted/20">
           {eventSlug ? (
             <iframe
+              key={eventSlug}
               src={widgetUrl || undefined}
               data-checkout={eventSlug}
               title={event.title}
