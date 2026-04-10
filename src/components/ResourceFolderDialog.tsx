@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Folder, CheckCircle2 } from "lucide-react";
+import { Loader2, Folder, CheckCircle2, Calendar } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -36,11 +36,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { format } from "date-fns";
 
 // Define the schema for the folder form
 const folderSchema = z.object({
   name: z.string().min(1, "Folder name is required"),
   parent_folder_id: z.string().optional().nullable(),
+  event_id: z.string().optional().nullable(),
 });
 
 type FolderFormData = z.infer<typeof folderSchema>;
@@ -67,6 +69,7 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
     defaultValues: {
       name: "",
       parent_folder_id: null,
+      event_id: null,
     },
   });
 
@@ -74,26 +77,31 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
   const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
     const { data, error } = await supabase
       .from("resource_folders")
-      .select("*") // Select all fields to include is_nominated_for_dashboard
+      .select("*")
       .order("name", { ascending: true });
 
-    if (error) {
-      console.error("Error fetching all folders:", error);
-      throw new Error("Failed to load folders.");
-    }
+    if (error) throw error;
     return data || [];
   };
 
-  const { data: allFolders, isLoading: loadingFolders } = useQuery<
-    ResourceFolder[],
-    Error,
-    ResourceFolder[],
-    ['allResourceFolders']
-  >({
+  const { data: allFolders, isLoading: loadingFolders } = useQuery({
     queryKey: ['allResourceFolders'],
     queryFn: fetchAllFolders,
     enabled: isOpen,
-    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch all events for the event selection dropdown
+  const { data: allEvents, isLoading: loadingEvents } = useQuery({
+    queryKey: ['allEventsForFolderLink'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, title, date")
+        .order("date", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isOpen,
   });
 
   // Effect to reset form and state when dialog opens/changes folder
@@ -102,17 +110,17 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
       form.reset({
         name: editingFolder.name,
         parent_folder_id: editingFolder.parent_folder_id || null,
+        event_id: editingFolder.event_id || null,
       });
     } else {
-      // When creating, default the parent to the current view's folder ID
       form.reset({
         name: "",
         parent_folder_id: currentParentFolderId || null,
+        event_id: null,
       });
     }
   }, [editingFolder, form, isOpen, currentParentFolderId]);
 
-  // Helper function to get the full path display for a folder
   const getFolderPathDisplay = (folderId: string | null) => {
     if (folderId === null) return "Home (Root)";
     const folder = allFolders?.find(f => f.id === folderId);
@@ -132,58 +140,16 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
     return path;
   };
 
-  // Function to check if a folder is an ancestor of the current editing folder (to prevent circular nesting)
-  const isAncestor = (potentialAncestorId: string, currentFolderId: string) => {
-    if (!allFolders) return false;
-    let current = allFolders.find(f => f.id === currentFolderId);
-    while (current) {
-      if (current.parent_folder_id === potentialAncestorId) return true;
-      current = allFolders.find(f => f.id === current.parent_folder_id);
-    }
-    return false;
-  };
-
-  // Filter out the folder being edited and its descendants from the parent selection list
-  const getValidParentFolders = () => {
-    if (!allFolders) return [];
-    
-    const invalidIds = new Set<string>();
-    if (editingFolder) {
-      // 1. Exclude the folder itself
-      invalidIds.add(editingFolder.id);
-
-      // 2. Exclude all descendants (cannot move a folder into its own child)
-      const findDescendants = (parentId: string) => {
-        allFolders.filter(f => f.parent_folder_id === parentId).forEach(child => {
-          invalidIds.add(child.id);
-          findDescendants(child.id);
-        });
-      };
-      findDescendants(editingFolder.id);
-    }
-
-    return allFolders.filter(folder => !invalidIds.has(folder.id));
-  };
-
   const onSubmit = async (data: FolderFormData) => {
-    if (!user) {
-      showError("You must be logged in to manage folders.");
-      return;
-    }
-
-    // Final check for circular nesting if editing
-    if (editingFolder && data.parent_folder_id && isAncestor(data.parent_folder_id, editingFolder.id)) {
-        showError("Cannot move a folder into one of its own sub-folders.");
-        return;
-    }
-
+    if (!user) return;
     setIsSaving(true);
+    
     const folderData = {
       id: editingFolder?.id,
       user_id: user.id,
       name: data.name,
       parent_folder_id: data.parent_folder_id || null,
-      // Preserve nomination status if editing
+      event_id: data.event_id || null,
       is_nominated_for_dashboard: editingFolder?.is_nominated_for_dashboard ?? false,
     };
 
@@ -192,38 +158,28 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
         .from("resource_folders")
         .upsert(folderData, { onConflict: "id" });
 
-      if (error) {
-        console.error("Error saving folder:", error);
-        showError("Failed to save folder: " + error.message);
-      } else {
-        showSuccess(`Folder "${data.name}" ${editingFolder ? 'updated' : 'created'} successfully!`);
-        
-        // Invalidate all resource and folder queries
-        queryClient.invalidateQueries({ queryKey: ['resources'] });
-        queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] });
-        queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
+      if (error) throw error;
 
-        onClose();
-      }
+      showSuccess(`Folder "${data.name}" saved successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['resources'] });
+      queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] });
+      onClose();
     } catch (error: any) {
-      console.error("Unexpected error during folder operation:", error);
-      showError("An unexpected error occurred: " + error.message);
+      showError("Failed to save folder: " + error.message);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const title = editingFolder ? "Edit Folder" : "Create New Folder";
-  const submitButtonText = editingFolder ? "Save Changes" : "Create Folder";
-  const validParentFolders = getValidParentFolders();
+  const validParentFolders = allFolders?.filter(f => f.id !== editingFolder?.id) || [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="font-lora">{title}</DialogTitle>
+          <DialogTitle className="font-lora">{editingFolder ? "Edit Folder" : "Create New Folder"}</DialogTitle>
           <DialogDescription>
-            {editingFolder ? "Update the folder name or location." : "Create a new folder to organize choir resources."}
+            Organize your resources and link them to specific events.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -278,20 +234,45 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="event_id"
+              render={({ field }) => (
+                <FormItem className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                  <FormLabel className="flex items-center gap-2 text-primary">
+                    <Calendar className="h-4 w-4" /> Link to Event (Optional)
+                  </FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value === "null" ? null : value)}
+                    value={field.value || "null"}
+                    disabled={isSaving || loadingEvents}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Select an event" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="null">No Event Link</SelectItem>
+                      {allEvents?.map((event) => (
+                        <SelectItem key={event.id} value={event.id}>
+                          {event.title} ({format(new Date(event.date), "MMM d")})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" /> {submitButtonText}
-                  </>
-                )}
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                {editingFolder ? "Save Changes" : "Create Folder"}
               </Button>
             </DialogFooter>
           </form>

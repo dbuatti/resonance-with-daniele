@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, FileText, ArrowRight, Mic2, MessageSquareQuote, MapPin, Heart } from "lucide-react";
+import { CalendarDays, Music, FileText, ArrowRight, Mic2, MessageSquareQuote, MapPin, Heart, Sparkles } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,6 +54,23 @@ const WelcomeHub: React.FC = () => {
     },
     enabled: !loadingSession,
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Find folder linked to the upcoming event
+  const { data: eventFolder } = useQuery<ResourceFolder | null>({
+    queryKey: ['eventFolder', upcomingEvent?.id],
+    queryFn: async () => {
+      if (!upcomingEvent?.id) return null;
+      const { data, error } = await supabase
+        .from("resource_folders")
+        .select("*")
+        .eq("event_id", upcomingEvent.id)
+        .limit(1)
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!upcomingEvent?.id,
   });
 
   const { data: recentPastEvent } = useQuery<Event | null>({
@@ -151,6 +168,9 @@ const WelcomeHub: React.FC = () => {
     return <Badge variant="outline" className={cn("text-[9px] uppercase tracking-widest font-black bg-card border", style.text, style.border)}>{text}</Badge>;
   };
 
+  // Determine which folder to link to for the "Current Resources" button
+  const currentResourceFolder = eventFolder || nominatedFolder;
+
   return (
     <div className="py-8 space-y-12 animate-fade-in-up">
       {/* Hero Welcome Section */}
@@ -193,6 +213,35 @@ const WelcomeHub: React.FC = () => {
             </Link>
           </Button>
         </div>
+      )}
+
+      {/* Current Resources Prominent Button */}
+      {currentResourceFolder && (
+        <section className="animate-fade-in-up">
+          <Button 
+            asChild 
+            size="lg" 
+            className="w-full h-20 md:h-24 rounded-[2rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-[1.01] transition-all group relative overflow-hidden"
+          >
+            <Link to={`/resources?folderId=${currentResourceFolder.id}`}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+              <div className="flex items-center justify-between w-full px-4 md:px-8">
+                <div className="flex items-center gap-4 md:gap-6">
+                  <div className="bg-white/20 p-3 md:p-4 rounded-2xl shadow-inner">
+                    <Music className="h-6 w-6 md:h-8 md:w-8 text-accent" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] opacity-70">Current Focus</p>
+                    <p className="text-xl md:text-3xl font-black font-lora tracking-tight">Practice: {currentResourceFolder.name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 font-black text-sm md:text-lg uppercase tracking-widest">
+                  Get Music <ArrowRight className="h-5 w-5 md:h-6 md:w-6 transition-transform group-hover:translate-x-2" />
+                </div>
+              </div>
+            </Link>
+          </Button>
+        </section>
       )}
 
       {/* Core Navigation Links */}
@@ -243,29 +292,27 @@ const WelcomeHub: React.FC = () => {
               </div>
             </div>
 
-            {nominatedFolder && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Current Focus</h3>
-                  <Music className="h-4 w-4 text-accent opacity-50" />
-                </div>
-                <div className="bg-accent/5 rounded-2xl p-6 space-y-6 border border-accent/20">
-                  <div className="space-y-2">
-                    <p className="text-2xl font-black font-lora leading-tight">
-                      {nominatedFolder.name}
-                    </p>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Practice materials for our current song are ready for you.
-                    </p>
-                  </div>
-                  <Button size="lg" variant="outline" className="w-full font-bold border-accent/50 text-accent-foreground hover:bg-accent hover:text-accent-foreground rounded-xl" asChild>
-                    <Link to={`/resources?folderId=${nominatedFolder.id}`}>
-                      Practice Now <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Community Voice</h3>
+                <Sparkles className="h-4 w-4 text-accent opacity-50" />
               </div>
-            )}
+              <div className="bg-accent/5 rounded-2xl p-6 space-y-6 border border-accent/20">
+                <div className="space-y-2">
+                  <p className="text-2xl font-black font-lora leading-tight">
+                    Song Suggestions
+                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Have a song you'd love to sing? Suggest it and vote on others!
+                  </p>
+                </div>
+                <Button size="lg" variant="outline" className="w-full font-bold border-accent/50 text-accent-foreground hover:bg-accent hover:text-accent-foreground rounded-xl" asChild>
+                  <Link to="/song-suggestions">
+                    Go to Suggestions <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 

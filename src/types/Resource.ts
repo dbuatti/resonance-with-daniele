@@ -21,6 +21,7 @@ export interface ResourceFolder {
   created_at: string;
   updated_at: string;
   is_nominated_for_dashboard: boolean; // New field
+  event_id: string | null; // New: Link to a specific event
 }
 
 // Helper function to determine resource type for color coding
