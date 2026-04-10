@@ -1,23 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ExternalLink, PlusCircle, Edit, Trash2, Search, AlertCircle, MapPin, Clock, Share2, Sparkles, Calendar as CalendarIcon, MessageSquareQuote } from "lucide-react";
+import { CalendarDays, PlusCircle, Search, AlertCircle, MapPin, Clock, Share2, Sparkles, Calendar as CalendarIcon, ArrowRight, ExternalLink, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
+import { format, parseISO, isAfter, startOfToday } from "date-fns";
 import { showSuccess, showError } from "@/utils/toast";
 import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import EventDialog from "@/components/events/EventDialog";
 import FeedbackEmailModal from "@/components/admin/FeedbackEmailModal";
+import EventHorizontalCard from "@/components/events/EventHorizontalCard";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import BackButton from "@/components/ui/BackButton";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Event {
   id: string;
@@ -28,6 +27,7 @@ interface Event {
   description?: string;
   humanitix_link?: string;
   ai_chat_link?: string;
+  main_song?: string;
 }
 
 const Events: React.FC = () => {
@@ -43,7 +43,7 @@ const Events: React.FC = () => {
     let query = supabase
       .from("events")
       .select("*")
-      .order("date", { ascending: true });
+      .order("date", { ascending: false }); // Newest first for the list
 
     if (currentSearchTerm) {
       query = query.or(
@@ -62,6 +62,26 @@ const Events: React.FC = () => {
     enabled: !loadingUserSession,
     staleTime: 5 * 60 * 1000,
   });
+
+  const { featuredEvent, otherEvents } = useMemo(() => {
+    if (!events) return { featuredEvent: null, otherEvents: [] };
+    
+    const today = startOfToday();
+    const upcoming = events
+      .filter(e => !isAfter(today, parseISO(e.date)))
+      .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+    
+    const past = events
+      .filter(e => isAfter(today, parseISO(e.date)))
+      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+
+    const featured = upcoming.length > 0 ? upcoming[0] : null;
+    const others = upcoming.length > 0 
+      ? [...upcoming.slice(1), ...past] 
+      : past;
+
+    return { featuredEvent: featured, otherEvents: others };
+  }, [events]);
 
   const handleDelete = async (eventId: string) => {
     if (!user) return;
@@ -85,16 +105,21 @@ const Events: React.FC = () => {
     showSuccess(`Link for "${event.title}" copied to clipboard!`);
   };
 
+  const handleFeedback = (event: Event) => {
+    setSelectedEventForFeedback(event);
+    setIsFeedbackModalOpen(true);
+  };
+
   return (
-    <div className="py-8 space-y-12">
-      <BackButton to="/" />
-      
-      <header className="space-y-4">
-        <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">Upcoming Events</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl font-medium">
-          Join us for rehearsals, performances, and social gatherings.
-        </p>
-      </header>
+    <div className="py-8 space-y-12 max-w-5xl mx-auto">
+      <div className="flex justify-between items-center">
+        <BackButton to="/" />
+        {user?.is_admin && (
+          <Button onClick={() => { setEditingEvent(null); setIsDialogOpen(true); }} className="rounded-xl font-bold shadow-lg">
+            <PlusCircle className="mr-2 h-5 w-5" /> Add New Event
+          </Button>
+        )}
+      </div>
 
       {fetchError && (
         <Alert variant="destructive">
@@ -103,141 +128,123 @@ const Events: React.FC = () => {
         </Alert>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center gap-4">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="Search events..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-12 h-12 rounded-xl font-bold"
-          />
-        </div>
-        {user?.is_admin && (
-          <Button size="lg" onClick={() => { setEditingEvent(null); setIsDialogOpen(true); }} className="rounded-xl h-12 px-6 font-bold">
-            <PlusCircle className="mr-2 h-5 w-5" /> Add Event
-          </Button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Featured Event Section */}
+      <section className="space-y-6">
         {isLoading ? (
-          [...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 w-full rounded-2xl" />)
-        ) : events && events.length === 0 ? (
-          <div className="col-span-full text-center py-20 bg-muted/20 rounded-3xl border-2 border-dashed border-border">
-            <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-            <p className="text-xl font-bold text-muted-foreground font-lora">No events found.</p>
-          </div>
-        ) : (
-          events?.map((event) => {
-            const eventDate = new Date(event.date);
-            const isPast = eventDate < new Date();
-            
-            return (
-              <div key={event.id} className={cn(
-                "group flex flex-col p-8 rounded-[2rem] border-2 transition-all duration-500",
-                isPast ? "opacity-60 bg-muted/30 border-transparent" : "bg-card border-primary/5 hover:border-primary/20 hover:shadow-xl"
-              )}>
-                <div className="flex justify-between items-start mb-6">
-                  <div className="space-y-1">
-                    <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest border-primary/20 text-primary mb-2">
-                      {format(eventDate, "EEEE, MMM do")}
-                    </Badge>
-                    <h3 className="text-2xl font-black font-lora leading-tight group-hover:text-primary transition-colors">
-                      {event.title}
-                    </h3>
+          <Skeleton className="h-[400px] w-full rounded-[3rem]" />
+        ) : featuredEvent ? (
+          <div className="relative group overflow-hidden rounded-[3rem] bg-primary text-primary-foreground shadow-2xl border-none">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+            <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center">
+              <div className="flex-1 space-y-6 text-center md:text-left">
+                <div className="space-y-2">
+                  <Badge className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Next Session</Badge>
+                  <h1 className="text-4xl md:text-7xl font-black font-lora tracking-tighter leading-none">
+                    {featuredEvent.title}
+                  </h1>
+                </div>
+
+                <div className="flex flex-wrap justify-center md:justify-start gap-6">
+                  <div className="flex items-center gap-3 text-lg font-bold">
+                    <CalendarIcon className="h-6 w-6 text-accent" />
+                    <span>{format(parseISO(featuredEvent.date), "EEEE, MMMM do")}</span>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl" onClick={() => handleShare(event)}>
-                      <Share2 className="h-5 w-5" />
-                    </Button>
+                  <div className="flex items-center gap-3 text-lg font-bold">
+                    <MapPin className="h-6 w-6 text-accent" />
+                    <span>{featuredEvent.location || "Armadale Baptist Church"}</span>
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-8">
-                  {event.location && (
-                    <div className="flex items-center gap-3 text-muted-foreground font-bold">
-                      <MapPin className="h-5 w-5 text-primary" />
-                      <span className="text-sm">{event.location}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3 text-muted-foreground font-bold">
-                    <Clock className="h-5 w-5 text-primary" />
-                    <span className="text-sm">10:00 am – 1:00 pm</span>
-                  </div>
-                </div>
-
-                <p className="text-muted-foreground font-medium leading-relaxed mb-8 line-clamp-3">
-                  {event.description || "Join us for a morning of harmony and connection."}
+                <p className="text-xl opacity-90 font-medium leading-relaxed max-w-2xl">
+                  {featuredEvent.description || "Join us for a morning of harmony and connection. No auditions, no experience needed—just bring your voice!"}
                 </p>
 
-                <div className="mt-auto space-y-4">
-                  {event.humanitix_link ? (
-                    <Button asChild className="w-full h-14 font-black text-lg rounded-xl shadow-lg" size="lg">
-                      <a href={event.humanitix_link} target="_blank" rel="noopener noreferrer">
-                        Book Your Spot <ExternalLink className="ml-2 h-5 w-5" />
-                      </a>
-                    </Button>
-                  ) : (
-                    <Button variant="outline" className="w-full h-14 font-bold rounded-xl" disabled>Details Coming Soon</Button>
-                  )}
-
-                  {user?.is_admin && (
-                    <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => { setEditingEvent(event); setIsDialogOpen(true); }} className="font-bold">
-                          <Edit className="h-4 w-4 mr-2" /> Edit
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="font-bold text-destructive hover:bg-destructive/10">
-                              <Trash2 className="h-4 w-4 mr-2" /> Delete
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="rounded-[2rem]">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="text-2xl font-black font-lora">Delete Event?</AlertDialogTitle>
-                              <AlertDialogDescription className="text-lg font-medium">This will permanently remove "{event.title}".</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(event.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl font-bold">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                      {isPast && (
-                        <Button variant="secondary" size="sm" onClick={() => { setSelectedEventForFeedback(event); setIsFeedbackModalOpen(true); }} className="font-bold">
-                          <MessageSquareQuote className="h-4 w-4 mr-2" /> Feedback
-                        </Button>
-                      )}
-                    </div>
-                  )}
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                  <Button asChild size="lg" className="h-16 px-10 text-xl font-black rounded-2xl bg-white text-primary hover:bg-white/90 shadow-2xl group/btn w-full sm:w-auto">
+                    <a href={featuredEvent.humanitix_link} target="_blank" rel="noopener noreferrer">
+                      Book Your Spot <ArrowRight className="ml-2 h-6 w-6 transition-transform group-hover/btn:translate-x-2" />
+                    </a>
+                  </Button>
+                  <Button variant="ghost" className="text-white hover:bg-white/10 font-bold" onClick={() => handleShare(featuredEvent)}>
+                    <Share2 className="h-5 w-5 mr-2" /> Share Event
+                  </Button>
                 </div>
               </div>
-            );
-          })
+
+              <div className="hidden lg:block w-72 h-72 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/20 rotate-3">
+                <img src="/images/choir-session-2.jpg" alt="Choir session" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          </div>
+        ) : !searchTerm && (
+          <div className="text-center py-20 bg-muted/20 rounded-[3rem] border-4 border-dashed border-border">
+            <CalendarDays className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-20" />
+            <h2 className="text-3xl font-black font-lora text-muted-foreground">No upcoming sessions scheduled</h2>
+            <p className="text-muted-foreground font-medium mt-2">Check back soon for new dates in Armadale!</p>
+          </div>
         )}
-      </div>
+      </section>
+
+      {/* Search and List Section */}
+      <section className="space-y-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black font-lora flex items-center gap-3">
+              <CalendarIcon className="h-6 w-6 text-primary" /> Past & Other Events
+            </h2>
+            <p className="text-sm font-medium text-muted-foreground">Browse our history and catch up on feedback.</p>
+          </div>
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search events..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-11 rounded-xl font-bold bg-muted/30 border-none focus-visible:ring-primary"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {isLoading ? (
+            [...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
+          ) : otherEvents.length === 0 ? (
+            <div className="text-center py-12 bg-muted/10 rounded-2xl border-2 border-dashed border-border/50">
+              <p className="text-muted-foreground font-medium">No other events found.</p>
+            </div>
+          ) : (
+            otherEvents.map((event) => (
+              <EventHorizontalCard
+                key={event.id}
+                event={event}
+                isAdmin={!!user?.is_admin}
+                onEdit={(e) => { setEditingEvent(e); setIsDialogOpen(true); }}
+                onDelete={handleDelete}
+                onShare={handleShare}
+                onFeedback={handleFeedback}
+              />
+            ))
+          )}
+        </div>
+      </section>
 
       {user?.is_admin && (
-        <>
-          <EventDialog 
-            isOpen={isDialogOpen} 
-            onClose={() => setIsDialogOpen(false)} 
-            editingEvent={editingEvent} 
-            userId={user.id} 
-          />
-          {selectedEventForFeedback && (
-            <FeedbackEmailModal 
-              isOpen={isFeedbackModalOpen}
-              onClose={() => setIsFeedbackModalOpen(false)}
-              eventId={selectedEventForFeedback.id}
-              eventTitle={selectedEventForFeedback.title}
-              eventDate={format(new Date(selectedEventForFeedback.date), "EEEE, MMM do")}
-            />
-          )}
-        </>
+        <EventDialog 
+          isOpen={isDialogOpen} 
+          onClose={() => setIsDialogOpen(false)} 
+          editingEvent={editingEvent} 
+          userId={user.id} 
+        />
+      )}
+
+      {selectedEventForFeedback && (
+        <FeedbackEmailModal 
+          isOpen={isFeedbackModalOpen}
+          onClose={() => setIsFeedbackModalOpen(false)}
+          eventId={selectedEventForFeedback.id}
+          eventTitle={selectedEventForFeedback.title}
+          eventDate={format(parseISO(selectedEventForFeedback.date), "EEEE, MMM do")}
+        />
       )}
     </div>
   );
