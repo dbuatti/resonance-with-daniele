@@ -56,7 +56,7 @@ const Resources: React.FC = () => {
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<ResourceFolder | null>(null);
   const [isUploadingFileToFolder, setIsUploadingFileToFolder] = useState<string | null>(null);
-  const [isDeletingFolder, setIsDeletingFolder] = useState(false); // Added missing state
+  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearchTerm = useDebounce(searchInput, 300);
@@ -139,6 +139,16 @@ const Resources: React.FC = () => {
     setFilterVoicePart('all');
     setSortBy('sort_order');
     setSortOrder('asc');
+  };
+
+  const handleEditResource = (resource: Resource) => {
+    setEditingResource(resource);
+    setIsResourceDialogOpen(true);
+  };
+
+  const handleMoveResource = (resource: Resource) => {
+    setResourceToMove(resource);
+    setIsMoveDialogOpen(true);
   };
 
   const handleDownload = (resource: Resource) => {
@@ -269,10 +279,10 @@ const Resources: React.FC = () => {
           <h2 className="text-xl font-black font-lora uppercase tracking-widest text-muted-foreground">{title}</h2>
         </div>
         {isAdmin && sortBy === 'sort_order' ? (
-          <SortableResourceList resources={res} isAdmin={isAdmin} currentFolderId={currentFolderId} onEdit={setEditingResource} onDelete={setResourceToDelete} onMove={setResourceToMove} />
+          <SortableResourceList resources={res} isAdmin={isAdmin} currentFolderId={currentFolderId} onEdit={handleEditResource} onDelete={setResourceToDelete} onMove={handleMoveResource} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {res.map(r => <ResourceCard key={r.id} resource={r} isAdmin={isAdmin} onEdit={setEditingResource} onDelete={setResourceToDelete} onMove={setResourceToMove} />)}
+            {res.map(r => <ResourceCard key={r.id} resource={r} isAdmin={isAdmin} onEdit={handleEditResource} onDelete={setResourceToDelete} onMove={handleMoveResource} />)}
           </div>
         )}
       </section>
@@ -375,6 +385,7 @@ const Resources: React.FC = () => {
                 resources={allResourcesForLibrary || []} 
                 folders={allFolders || []} 
                 onDownload={handleDownload} 
+                onEdit={isAdmin ? handleEditResource : undefined}
               />
             )}
           </div>

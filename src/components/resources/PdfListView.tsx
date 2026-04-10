@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import { Resource, ResourceFolder } from "@/types/Resource";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, ArrowUpDown, Calendar, HardDrive, FolderOpen } from "lucide-react";
+import { FileText, Download, ArrowUpDown, Calendar, HardDrive, FolderOpen, Edit } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -13,11 +13,12 @@ interface PdfListViewProps {
   resources: Resource[];
   folders: ResourceFolder[];
   onDownload: (resource: Resource) => void;
+  onEdit?: (resource: Resource) => void; // New prop
 }
 
 type SortKey = 'title' | 'created_at' | 'file_size';
 
-const PdfListView: React.FC<PdfListViewProps> = ({ resources, folders, onDownload }) => {
+const PdfListView: React.FC<PdfListViewProps> = ({ resources, folders, onDownload, onEdit }) => {
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -88,7 +89,7 @@ const PdfListView: React.FC<PdfListViewProps> = ({ resources, folders, onDownloa
               </Button>
             </TableHead>
             <TableHead>Folder Month</TableHead>
-            <TableHead className="text-right">Action</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -133,9 +134,16 @@ const PdfListView: React.FC<PdfListViewProps> = ({ resources, folders, onDownloa
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button size="sm" variant="outline" onClick={() => onDownload(pdf)} className="h-8 rounded-lg font-bold">
-                    <Download className="h-3.5 w-3.5 mr-1.5" /> Download
-                  </Button>
+                  <div className="flex justify-end gap-2">
+                    {onEdit && (
+                      <Button size="sm" variant="ghost" onClick={() => onEdit(pdf)} className="h-8 w-8 p-0 rounded-lg">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" onClick={() => onDownload(pdf)} className="h-8 rounded-lg font-bold">
+                      <Download className="h-3.5 w-3.5 mr-1.5" /> Download
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
