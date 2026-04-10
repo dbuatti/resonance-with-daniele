@@ -20,7 +20,7 @@ const HeroSection: React.FC = () => {
         </h1>
         
         <p className="text-xl md:text-2xl mb-6 max-w-3xl mx-auto text-muted-foreground leading-relaxed animate-fade-in-up [animation-delay:400ms]">
-          Experience the transformative power of group singing in <span className="text-foreground font-bold">Armadale & Melbourne</span>. From Broadway hits to soulful jazz—no auditions, no pressure.
+          Experience the simple, resonant joy of group singing in <span className="text-foreground font-bold">Armadale & Melbourne</span>. From Broadway hits to soulful jazz—no auditions, no pressure.
         </p>
 
         <div className="flex items-center justify-center gap-2 text-primary font-bold mb-10 animate-fade-in-up [animation-delay:600ms]">
@@ -28,10 +28,10 @@ const HeroSection: React.FC = () => {
           <span>Based in Armadale, VIC 3143</span>
         </div>
         
-        <div className="flex flex-col items-center gap-6 animate-fade-in-up [animation-delay:800ms]">
+        <div className="flex flex-col items-center gap-4 animate-fade-in-up [animation-delay:800ms]">
           <div className="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-md mx-auto">
             <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl shadow-xl shadow-primary/20 group flex-1" asChild>
-              <Link to="/events">
+              <Link to="/current-event">
                 Book Your Spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
@@ -40,13 +40,19 @@ const HeroSection: React.FC = () => {
             </Button>
           </div>
           
-          <Link 
-            to="/login" 
-            className="text-primary font-bold hover:underline flex items-center gap-2 transition-all hover:gap-3"
-          >
-            <LogIn className="h-5 w-5" />
-            Already a member? Log in here
-          </Link>
+          <div className="space-y-4">
+            <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-widest">
+              Tickets $35 via Humanitix — Pay what you can options available
+            </p>
+            
+            <Link 
+              to="/login" 
+              className="text-primary font-bold hover:underline flex items-center justify-center gap-2 transition-all hover:gap-3"
+            >
+              <LogIn className="h-5 w-5" />
+              Already a member? Log in here
+            </Link>
+          </div>
         </div>
 
         <div className="mt-12 flex items-center justify-center gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
