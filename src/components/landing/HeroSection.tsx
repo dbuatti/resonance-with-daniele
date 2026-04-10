@@ -20,7 +20,7 @@ const HeroSection: React.FC = () => {
         </h1>
         
         <p className="text-xl md:text-2xl mb-6 max-w-3xl mx-auto text-muted-foreground leading-relaxed animate-fade-in-up [animation-delay:400ms]">
-          Experience the simple, resonant joy of group singing in <span className="text-foreground font-bold">Armadale & Melbourne</span>. From Broadway hits to soulful jazz—no auditions, no pressure.
+          Join Melbourne's most joyful pop-up choir. <span className="text-foreground font-bold">No auditions, no experience needed</span>—just the simple, resonant joy of group singing in Armadale.
         </p>
 
         <div className="flex items-center justify-center gap-2 text-primary font-bold mb-10 animate-fade-in-up [animation-delay:600ms]">
