@@ -17,6 +17,7 @@ import {
   Loader2,
   Settings,
   LogIn,
+  BookOpen,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -72,7 +73,7 @@ const MobileNav: React.FC = () => {
       </SheetTrigger>
       <SheetContent side="left" className="w-[280px] sm:w-[320px] bg-card flex flex-col">
         <SheetHeader className="mb-6">
-          <SheetTitle className="text-2xl font-bold font-lora text-primary">Resonance with Daniele</SheetTitle>
+          <SheetTitle className="text-2xl font-bold font-lora text-primary">Resonance</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-2 flex-grow">
           <Link to="/" className={getNavLinkClass("/")} onClick={() => setIsOpen(false)}>
@@ -110,6 +111,10 @@ const MobileNav: React.FC = () => {
 
           {user && (
             <>
+              <Link to="/sessions" className={getNavLinkClass("/sessions")} onClick={() => setIsOpen(false)}>
+                <BookOpen className="h-5 w-5" />
+                <span>Session Hub</span>
+              </Link>
               <Link to="/resources" className={getNavLinkClass("/resources")} onClick={() => setIsOpen(false)}>
                 <FileText className="h-5 w-5" />
                 <span>Resources</span>
