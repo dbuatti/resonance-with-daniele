@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom"; // Added useNavigate
 import { Button } from "@/components/ui/button";
 import { CalendarDays, PlusCircle, Search, AlertCircle, MapPin, Clock, Share2, Sparkles, Calendar as CalendarIcon, ArrowRight, ExternalLink, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ interface Event {
 }
 
 const Events: React.FC = () => {
+  const navigate = useNavigate(); // Initialize navigate
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -106,8 +108,14 @@ const Events: React.FC = () => {
   };
 
   const handleFeedback = (event: Event) => {
-    setSelectedEventForFeedback(event);
-    setIsFeedbackModalOpen(true);
+    if (user?.is_admin) {
+      // Admins see the feedback request template modal
+      setSelectedEventForFeedback(event);
+      setIsFeedbackModalOpen(true);
+    } else {
+      // Regular users go straight to the feedback form
+      navigate(`/feedback?eventId=${event.id}`);
+    }
   };
 
   return (
