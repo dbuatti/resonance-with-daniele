@@ -293,9 +293,11 @@ const SongVotingList: React.FC = () => {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1.5 cursor-help text-primary hover:opacity-80 transition-opacity">
-                              <MessageSquare className="h-4 w-4" />
-                              <span className="text-[10px] font-black uppercase tracking-widest">Reason</span>
+                            <div className="flex items-center gap-1.5 cursor-help text-primary hover:opacity-80 transition-opacity max-w-[200px]">
+                              <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                              <span className="text-[10px] font-bold truncate italic">
+                                "{song.reason}"
+                              </span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs p-4 rounded-2xl shadow-2xl border-none bg-card">
