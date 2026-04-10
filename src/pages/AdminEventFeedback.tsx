@@ -615,7 +615,7 @@ const AdminEventFeedback: React.FC = () => {
                       <p className="text-sm font-bold text-primary bg-primary/5 p-4 rounded-2xl border border-primary/10">{selectedResponse.time_slot_rating}</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-black">Price Point ($35)</p>
+                      <p className="text-sm font-black">Price Point ($30)</p>
                       <p className="text-sm font-bold text-primary bg-primary/5 p-4 rounded-2xl border border-primary/10">{selectedResponse.price_point}</p>
                     </div>
                   </div>

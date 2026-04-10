@@ -79,7 +79,7 @@ const EventFeedback: React.FC = () => {
     const nextMonth = addMonths(eventDate, 1);
     const monthName = format(nextMonth, "MMMM");
     const start = startOfMonth(nextMonth);
-    const end = endOfMonth(nextMonth);
+    const end = endOfMonth(start);
     const allDays = eachDayOfInterval({ start, end });
     const weekends = allDays
       .filter(day => isSaturday(day) || isSunday(day))
@@ -305,7 +305,7 @@ const EventFeedback: React.FC = () => {
                     name="price_point"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-lg font-bold">Price Point ($35)</FormLabel>
+                        <FormLabel className="text-lg font-bold">Price Point ($30)</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl><SelectTrigger className="rounded-xl h-12"><SelectValue placeholder="Does the price feel right?" /></SelectTrigger></FormControl>
                           <SelectContent>{["Perfect", "A bit high", "A bit low", "Other"].map(opt => (<SelectItem key={opt} value={opt}>{opt}</SelectItem>))}</SelectContent>

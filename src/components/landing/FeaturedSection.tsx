@@ -90,7 +90,7 @@ const FeaturedSection: React.FC = () => {
                   </Link>
                 </Button>
                 <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">
-                  Tickets $35 via Humanitix
+                  Tickets $30 via Humanitix
                 </p>
               </div>
             </div>
