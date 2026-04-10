@@ -75,6 +75,18 @@ const AppSidebar: React.FC = () => {
       </SidebarHeader>
 
       <SidebarContent>
+        {/* Admin View Toggle at the top for Admins */}
+        {isActualAdmin && (
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50">
+              View Mode
+            </SidebarGroupLabel>
+            <div className="px-4 py-2">
+              <AdminViewToggle />
+            </div>
+          </SidebarGroup>
+        )}
+
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
             Member Hub
@@ -140,7 +152,10 @@ const AppSidebar: React.FC = () => {
 
       <SidebarFooter className="p-4 border-t border-border/50 space-y-4">
         <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-4">
-          {isActualAdmin && <AdminViewToggle />}
+          {/* Only show AdminViewToggle in footer when collapsed (as icon) */}
+          <div className="hidden group-data-[collapsible=icon]:block">
+            {isActualAdmin && <AdminViewToggle />}
+          </div>
           <ThemeToggle />
         </div>
         
