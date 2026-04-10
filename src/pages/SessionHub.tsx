@@ -111,18 +111,22 @@ const SessionHub: React.FC = () => {
     // Separate resources into videos and files/links
     const videoResources = event.resources.filter(r => r.type === 'youtube' || r.youtube_url);
     const fileResources = event.resources.filter(r => r.type !== 'youtube');
+    const hasNotes = !!event.lesson_notes?.trim();
 
     return (
       <div className="space-y-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Resources Column */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className={cn("space-y-6", hasNotes ? "lg:col-span-7" : "lg:col-span-12")}>
             <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
               <Mic2 className="h-4 w-4" /> Practice Materials
             </h3>
             
             {fileResources.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className={cn(
+                "grid gap-4",
+                hasNotes ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+              )}>
                 {fileResources.map((res) => (
                   <a 
                     key={res.id}
@@ -159,28 +163,23 @@ const SessionHub: React.FC = () => {
           </div>
 
           {/* Notes Column */}
-          <div className="lg:col-span-5 space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-              <StickyNote className="h-4 w-4" /> Daniele's Notes
-            </h3>
-            <Card className="border-none shadow-xl bg-yellow-50/50 dark:bg-yellow-950/10 rounded-[2rem] overflow-hidden relative min-h-[200px]">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-              <CardContent className="p-8 relative z-10">
-                {event.lesson_notes ? (
+          {hasNotes && (
+            <div className="lg:col-span-5 space-y-6">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
+                <StickyNote className="h-4 w-4" /> Daniele's Notes
+              </h3>
+              <Card className="border-none shadow-xl bg-yellow-50/50 dark:bg-yellow-950/10 rounded-[2rem] overflow-hidden relative min-h-[200px]">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+                <CardContent className="p-8 relative z-10">
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     <p className="text-lg font-medium font-lora italic leading-relaxed text-yellow-900 dark:text-yellow-200/80 whitespace-pre-wrap">
                       {event.lesson_notes}
                     </p>
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-3">
-                    <StickyNote className="h-8 w-8 text-yellow-600/20" />
-                    <p className="text-sm font-medium text-yellow-800/40 italic">No notes added for this session.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
         {/* Video Embeds Section */}
