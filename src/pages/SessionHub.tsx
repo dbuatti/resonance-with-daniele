@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart } from "lucide-react";
+import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart, History, ArrowRight } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isAfter, startOfToday } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
@@ -26,10 +26,9 @@ const SessionHub: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const { hash } = useLocation();
 
-  const { data: eventsData, isLoading } = useQuery({
+  const { data: allEvents, isLoading } = useQuery({
     queryKey: ['sessionHubData'],
     queryFn: async () => {
-      // 1. Fetch all events
       const { data: events, error: eventsError } = await supabase
         .from("events")
         .select("*")
@@ -37,18 +36,15 @@ const SessionHub: React.FC = () => {
       
       if (eventsError) throw eventsError;
 
-      // 2. Fetch all folders linked to events
       const { data: folders } = await supabase
         .from("resource_folders")
         .select("id, event_id");
 
-      // 3. Fetch all resources
       const { data: resources } = await supabase
         .from("resources")
         .select("*")
         .eq("is_published", true);
 
-      // 4. Map resources to events via folders
       return events.map(event => {
         const eventFolderIds = folders?.filter(f => f.event_id === event.id).map(f => f.id) || [];
         const eventResources = resources?.filter(r => eventFolderIds.includes(r.folder_id)) || [];
@@ -62,7 +58,25 @@ const SessionHub: React.FC = () => {
     enabled: !loadingSession
   });
 
-  // Handle scrolling to hash on load
+  const { currentEvent, pastEvents } = useMemo(() => {
+    if (!allEvents || allEvents.length === 0) return { currentEvent: null, pastEvents: [] };
+    
+    const today = startOfToday();
+    // Find the soonest upcoming event
+    const upcoming = allEvents
+      .filter(e => !isAfter(today, parseISO(e.date)))
+      .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+    
+    if (upcoming.length > 0) {
+      const current = upcoming[0];
+      const others = allEvents.filter(e => e.id !== current.id);
+      return { currentEvent: current, pastEvents: others };
+    }
+
+    // If no upcoming, the most recent past one is "current"
+    return { currentEvent: allEvents[0], pastEvents: allEvents.slice(1) };
+  }, [allEvents]);
+
   useEffect(() => {
     if (!isLoading && hash) {
       const id = hash.replace('#', '');
@@ -84,8 +98,83 @@ const SessionHub: React.FC = () => {
     );
   }
 
+  const renderEventContent = (event: EventWithResources, isFeatured: boolean = false) => (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* Resources Column */}
+      <div className="lg:col-span-7 space-y-6">
+        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
+          <Mic2 className="h-4 w-4" /> Practice Materials
+        </h3>
+        
+        {event.resources.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {event.resources.map((res) => (
+              <a 
+                key={res.id} 
+                href={res.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group block"
+              >
+                <Card className="h-full border-2 border-primary/5 hover:border-primary/20 transition-all duration-300 hover:shadow-lg rounded-2xl overflow-hidden bg-card">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className={cn(
+                      "p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110",
+                      res.type === 'youtube' ? "bg-red-50 text-red-600" : 
+                      res.type === 'lyrics' ? "bg-orange-50 text-orange-600" :
+                      "bg-blue-50 text-blue-600"
+                    )}>
+                      {res.type === 'youtube' ? <Video className="h-5 w-5" /> : 
+                       res.type === 'lyrics' ? <Mic2 className="h-5 w-5" /> : 
+                       <FileText className="h-5 w-5" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm truncate">{res.title}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">
+                        {res.voice_part || res.type}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="p-10 text-center bg-muted/20 rounded-[2rem] border-2 border-dashed border-border">
+            <Music className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
+            <p className="text-sm font-medium text-muted-foreground">No specific resources uploaded for this session yet.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Notes Column */}
+      <div className="lg:col-span-5 space-y-6">
+        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
+          <StickyNote className="h-4 w-4" /> Daniele's Notes
+        </h3>
+        <Card className="border-none shadow-xl bg-yellow-50/50 dark:bg-yellow-950/10 rounded-[2rem] overflow-hidden relative min-h-[200px]">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+          <CardContent className="p-8 relative z-10">
+            {event.lesson_notes ? (
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <p className="text-lg font-medium font-lora italic leading-relaxed text-yellow-900 dark:text-yellow-200/80 whitespace-pre-wrap">
+                  {event.lesson_notes}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-3">
+                <StickyNote className="h-8 w-8 text-yellow-600/20" />
+                <p className="text-sm font-medium text-yellow-800/40 italic">No notes added for this session.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="py-8 space-y-12 max-w-6xl mx-auto px-4">
+    <div className="py-8 space-y-16 max-w-6xl mx-auto px-4">
       <BackButton to="/" />
       
       <header className="space-y-4">
@@ -95,108 +184,103 @@ const SessionHub: React.FC = () => {
         </div>
         <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">Session Hub</h1>
         <p className="text-xl text-muted-foreground max-w-2xl font-medium">
-          Everything we've learned, organized by session. Access your tracks, lyrics, and my personal notes here.
+          Access your tracks, lyrics, and my personal notes for our current and past sessions.
         </p>
       </header>
 
-      <div className="space-y-20">
-        {eventsData?.map((event) => (
-          <section key={event.id} id={`event-${event.id}`} className="space-y-8 animate-fade-in-up scroll-mt-24">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-4 border-primary/10 pb-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest border-primary/20">
-                    {format(parseISO(event.date), "MMMM yyyy")}
+      {/* Featured Current Session */}
+      {currentEvent ? (
+        <section id={`event-${currentEvent.id}`} className="space-y-10 animate-fade-in-up scroll-mt-24">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-4 border-primary pb-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Badge className="bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest">
+                  Current Session
+                </Badge>
+                {currentEvent.main_song && (
+                  <Badge className="bg-accent text-accent-foreground font-black text-[10px] uppercase tracking-widest">
+                    {currentEvent.main_song}
                   </Badge>
-                  {event.main_song && (
-                    <Badge className="bg-accent text-accent-foreground font-black text-[10px] uppercase tracking-widest">
-                      {event.main_song}
-                    </Badge>
-                  )}
-                </div>
-                <h2 className="text-3xl md:text-5xl font-black font-lora tracking-tight">{event.title}</h2>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground font-bold">
-                <Calendar className="h-5 w-5" />
-                {format(parseISO(event.date), "EEEE, do")}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Resources Column */}
-              <div className="lg:col-span-7 space-y-6">
-                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-                  <Mic2 className="h-4 w-4" /> Practice Materials
-                </h3>
-                
-                {event.resources.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {event.resources.map((res) => (
-                      <a 
-                        key={res.id} 
-                        href={res.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="group block"
-                      >
-                        <Card className="h-full border-2 border-primary/5 hover:border-primary/20 transition-all duration-300 hover:shadow-lg rounded-2xl overflow-hidden bg-card">
-                          <CardContent className="p-5 flex items-center gap-4">
-                            <div className={cn(
-                              "p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110",
-                              res.type === 'youtube' ? "bg-red-50 text-red-600" : 
-                              res.type === 'lyrics' ? "bg-orange-50 text-orange-600" :
-                              "bg-blue-50 text-blue-600"
-                            )}>
-                              {res.type === 'youtube' ? <Video className="h-5 w-5" /> : 
-                               res.type === 'lyrics' ? <Mic2 className="h-5 w-5" /> : 
-                               <FileText className="h-5 w-5" />}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-sm truncate">{res.title}</p>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">
-                                {res.voice_part || res.type}
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-10 text-center bg-muted/20 rounded-[2rem] border-2 border-dashed border-border">
-                    <Music className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
-                    <p className="text-sm font-medium text-muted-foreground">No specific resources uploaded for this session yet.</p>
-                  </div>
                 )}
               </div>
+              <h2 className="text-4xl md:text-6xl font-black font-lora tracking-tight">{currentEvent.title}</h2>
+            </div>
+            <div className="flex items-center gap-2 text-primary font-black text-xl">
+              <Calendar className="h-6 w-6" />
+              {format(parseISO(currentEvent.date), "EEEE, MMMM do")}
+            </div>
+          </div>
 
-              {/* Notes Column */}
-              <div className="lg:col-span-5 space-y-6">
-                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-                  <StickyNote className="h-4 w-4" /> Daniele's Notes
-                </h3>
-                <Card className="border-none shadow-xl bg-yellow-50/50 dark:bg-yellow-950/10 rounded-[2rem] overflow-hidden relative min-h-[200px]">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-                  <CardContent className="p-8 relative z-10">
-                    {event.lesson_notes ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <p className="text-lg font-medium font-lora italic leading-relaxed text-yellow-900 dark:text-yellow-200/80 whitespace-pre-wrap">
-                          {event.lesson_notes}
-                        </p>
+          {renderEventContent(currentEvent, true)}
+        </section>
+      ) : (
+        <div className="text-center py-20 bg-muted/20 rounded-[3rem] border-4 border-dashed border-border">
+          <Music className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-20" />
+          <h2 className="text-3xl font-black font-lora text-muted-foreground">No sessions found</h2>
+        </div>
+      )}
+
+      {/* Past Sessions Section */}
+      {pastEvents.length > 0 && (
+        <section className="space-y-10 pt-16 border-t border-border/50">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black font-lora flex items-center gap-3">
+                <History className="h-6 w-6 text-muted-foreground" /> Session History
+              </h2>
+              <p className="text-muted-foreground font-medium">Catch up on what we've learned in previous months.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            {pastEvents.map((event) => (
+              <Card key={event.id} id={`event-${event.id}`} className="rounded-2xl border-none shadow-sm hover:shadow-md transition-all bg-muted/30 overflow-hidden scroll-mt-24">
+                <CardHeader className="p-6 pb-0">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                          {format(parseISO(event.date), "MMMM yyyy")}
+                        </span>
+                        {event.main_song && (
+                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-primary/20 text-primary">
+                            {event.main_song}
+                          </Badge>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-3">
-                        <StickyNote className="h-8 w-8 text-yellow-600/20" />
-                        <p className="text-sm font-medium text-yellow-800/40 italic">No notes added for this session.</p>
+                      <CardTitle className="text-2xl font-black font-lora">{event.title}</CardTitle>
+                    </div>
+                    <Button variant="ghost" className="font-bold text-primary hover:bg-primary/5 group" asChild>
+                      <a href={`#event-${event.id}`}>
+                        View Materials <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </a>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {/* Compact view of resources for past events */}
+                  <div className="flex flex-wrap gap-3">
+                    {event.resources.slice(0, 4).map((res) => (
+                      <div key={res.id} className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border border-border/50 text-xs font-bold">
+                        {res.type === 'youtube' ? <Video className="h-3 w-3 text-red-500" /> : <FileText className="h-3 w-3 text-blue-500" />}
+                        <span className="truncate max-w-[120px]">{res.title}</span>
+                      </div>
+                    ))}
+                    {event.resources.length > 4 && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border border-border/50 text-[10px] font-black text-muted-foreground uppercase">
+                        +{event.resources.length - 4} more
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </section>
-        ))}
-      </div>
+                    {event.resources.length === 0 && (
+                      <span className="text-xs italic text-muted-foreground">No resources recorded.</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       <footer className="text-center pt-20 pb-10 border-t border-border/50">
         <Heart className="h-6 w-6 text-primary mx-auto mb-4 opacity-20" />
