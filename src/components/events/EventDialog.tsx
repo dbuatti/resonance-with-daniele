@@ -56,10 +56,10 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
     defaultValues: {
       title: "",
       date: undefined,
-      location: "",
+      location: "Armadale Baptist Church",
       description: "",
       main_song: "",
-      humanitix_link: "https://events.humanitix.com/resonance-choir",
+      humanitix_link: "https://events.humanitix.com/resonance-melbourne-s-pop-up-choir-april-2026",
       ai_chat_link: "",
     },
   });
@@ -69,7 +69,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       form.reset({
         title: editingEvent.title,
         date: new Date(editingEvent.date),
-        location: editingEvent.location || "",
+        location: editingEvent.location || "Armadale Baptist Church",
         description: editingEvent.description || "",
         main_song: editingEvent.main_song || "",
         humanitix_link: editingEvent.humanitix_link || "",
@@ -79,10 +79,10 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       form.reset({
         title: "",
         date: undefined,
-        location: "",
+        location: "Armadale Baptist Church",
         description: "",
         main_song: "",
-        humanitix_link: "https://events.humanitix.com/resonance-choir",
+        humanitix_link: "https://events.humanitix.com/resonance-melbourne-s-pop-up-choir-april-2026",
         ai_chat_link: "",
       });
     }

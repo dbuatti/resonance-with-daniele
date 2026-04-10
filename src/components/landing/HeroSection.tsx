@@ -42,7 +42,7 @@ const HeroSection: React.FC = () => {
           
           <div className="space-y-4">
             <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-widest">
-              Tickets $35 via Humanitix — Pay what you can options available
+              Tickets $30 via Humanitix — Pay what you can options available
             </p>
             
             <Link 
