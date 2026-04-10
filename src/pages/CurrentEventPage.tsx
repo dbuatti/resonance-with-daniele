@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo } from "react";
-import { ExternalLink, CalendarDays, MapPin, Clock, Info, Loader2, Calendar } from "lucide-react";
+import { ExternalLink, CalendarDays, MapPin, Clock, Info, Loader2, Calendar, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -31,19 +31,28 @@ const CurrentEventPage: React.FC = () => {
   const eventSlug = useMemo(() => {
     if (!event?.humanitix_link) return null;
     try {
-      if (!event.humanitix_link.startsWith('http')) return event.humanitix_link;
-      const url = new URL(event.humanitix_link);
-      // Get the first part of the path (the slug)
-      return url.pathname.split('/').filter(Boolean)[0];
+      const urlStr = event.humanitix_link.trim();
+      if (!urlStr.startsWith('http')) return urlStr;
+      
+      const url = new URL(urlStr);
+      // Get the last part of the path which is usually the slug
+      const parts = url.pathname.split('/').filter(Boolean);
+      return parts[parts.length - 1];
     } catch (e) {
       return null;
     }
   }, [event]);
 
+  // Construct the direct widget URL as a fallback/primary source
+  const widgetUrl = useMemo(() => {
+    if (!eventSlug) return null;
+    return `https://events.humanitix.com/${eventSlug}/tickets?widget=checkout`;
+  }, [eventSlug]);
+
   const humanitixUrl = event?.humanitix_link || "#";
 
   useEffect(() => {
-    // Inject the Humanitix widget script if it's not already there
+    // Inject the Humanitix widget script
     if (typeof window !== 'undefined' && !document.querySelector('script[src*="humanitix.com/scripts/widgets/inline.js"]')) {
       const script = document.createElement('script');
       script.src = "https://events.humanitix.com/scripts/widgets/inline.js";
@@ -52,6 +61,10 @@ const CurrentEventPage: React.FC = () => {
       console.log("[CurrentEventPage] Injected Humanitix inline script.");
     }
   }, []);
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
 
   if (isLoading) {
     return (
@@ -79,7 +92,12 @@ const CurrentEventPage: React.FC = () => {
 
   return (
     <div className="py-12 md:py-20 space-y-16 max-w-6xl mx-auto px-4">
-      <BackButton to="/" className="mb-4" />
+      <div className="flex justify-between items-center mb-4">
+        <BackButton to="/" />
+        <Button variant="ghost" size="sm" onClick={handleRefresh} className="text-muted-foreground">
+          <RefreshCw className="h-4 w-4 mr-2" /> Reload Widget
+        </Button>
+      </div>
       
       {/* Event Header Section */}
       <header className="text-center space-y-8">
@@ -116,12 +134,13 @@ const CurrentEventPage: React.FC = () => {
       <div className="relative">
         <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-[4rem] -z-10" />
         
-        <div className="w-full rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white dark:border-gray-900 min-h-[900px] bg-muted/20">
+        <div className="w-full rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white dark:border-gray-900 min-h-[800px] bg-muted/20">
           {eventSlug ? (
             <iframe
+              src={widgetUrl || undefined}
               data-checkout={eventSlug}
               title={event.title}
-              className="w-full min-h-[900px] border-0"
+              className="w-full min-h-[800px] border-0"
               allowFullScreen
               allow="payment"
             ></iframe>
