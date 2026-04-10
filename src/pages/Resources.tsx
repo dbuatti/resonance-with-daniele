@@ -5,7 +5,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Loader2, UploadCloud, LayoutGrid, ListFilter } from "lucide-react";
+import { Loader2, UploadCloud, LayoutGrid, ListFilter, Library as LibraryIcon } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ResourceCard from "@/components/ResourceCard";
@@ -26,6 +26,7 @@ import ResourceControls from "@/components/resources/ResourceControls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PdfListView from "@/components/resources/PdfListView";
 import BackButton from "@/components/ui/BackButton";
+import { Badge } from "@/components/ui/badge";
 
 type FilterType = 'all' | 'pdf' | 'audio' | 'link' | 'youtube' | 'lyrics';
 type SortBy = 'title' | 'created_at' | 'sort_order';
@@ -308,19 +309,23 @@ const Resources: React.FC = () => {
   if (loadingSession) return <div className="py-8"><Skeleton className="h-12 w-full rounded-xl" /></div>;
 
   return (
-    <div className="py-8 space-y-12">
-      <BackButton to="/" />
-      
+    <div className="py-4 space-y-12">
       <header className="space-y-4">
-        <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter">Member Resources</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl font-medium">Access sheet music, audio tracks, and important links.</p>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
+          <LibraryIcon className="h-4 w-4" />
+          <span>Community Archive</span>
+        </div>
+        <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">The Library</h1>
+        <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl font-medium leading-relaxed">
+          A searchable archive of every song, track, and lyric sheet we've ever used.
+        </p>
       </header>
 
       <Tabs defaultValue="browse" className="space-y-12">
         <div className="flex justify-center">
           <TabsList className="grid w-full max-w-md grid-cols-2 rounded-2xl h-14 p-1 bg-muted/50">
             <TabsTrigger value="browse" className="rounded-xl font-black flex items-center gap-2">
-              <LayoutGrid className="h-4 w-4" /> Browse All
+              <LayoutGrid className="h-4 w-4" /> Browse Folders
             </TabsTrigger>
             <TabsTrigger value="pdfs" className="rounded-xl font-black flex items-center gap-2">
               <ListFilter className="h-4 w-4" /> PDF Library

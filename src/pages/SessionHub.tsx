@@ -4,7 +4,26 @@ import React, { useEffect, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Music, BookOpen, Video, Mic2, FileText, StickyNote, Calendar, Heart, History, ArrowRight, Youtube, Play, Download, ExternalLink, ChevronRight, ListMusic } from "lucide-react";
+import { 
+  Loader2, 
+  Music, 
+  BookOpen, 
+  Mic2, 
+  FileText, 
+  StickyNote, 
+  Calendar, 
+  Heart, 
+  History, 
+  ArrowRight, 
+  Youtube, 
+  ChevronRight, 
+  ListMusic,
+  MapPin,
+  Clock,
+  ExternalLink,
+  Ticket,
+  Sparkles
+} from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO, isAfter, startOfToday } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +37,9 @@ interface EventWithResources {
   id: string;
   title: string;
   date: string;
+  location: string | null;
+  description: string | null;
+  humanitix_link: string | null;
   lesson_notes: string | null;
   main_song: string | null;
   resources: any[];
@@ -118,8 +140,8 @@ const SessionHub: React.FC = () => {
     const videoResources = event.resources.filter(r => r.type === 'youtube' || r.youtube_url);
     const fileResources = event.resources.filter(r => r.type !== 'youtube');
     const hasNotes = !!event.lesson_notes?.trim();
+    const isPast = isAfter(startOfToday(), parseISO(event.date));
 
-    // Group resources by voice part with explicit typing
     const groupedResources: Record<string, any[]> = fileResources.reduce((acc: Record<string, any[]>, res) => {
       const part = res.voice_part || "General / Full Choir";
       if (!acc[part]) acc[part] = [];
@@ -137,7 +159,34 @@ const SessionHub: React.FC = () => {
     });
 
     return (
-      <div className="space-y-16">
+      <div className="space-y-12">
+        {/* Event Logistics Card (The "Risky" Merge) */}
+        {!isPast && (
+          <Card className="border-none shadow-xl bg-primary text-primary-foreground rounded-[2.5rem] overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+            <CardContent className="p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
+              <div className="flex-1 space-y-6 text-center md:text-left">
+                <div className="space-y-2">
+                  <h3 className="text-3xl md:text-5xl font-black font-lora tracking-tighter">Join the Circle</h3>
+                  <p className="text-lg opacity-80 font-medium">{event.description || "A morning of harmony and connection in Armadale."}</p>
+                </div>
+                <div className="flex flex-wrap justify-center md:justify-start gap-6">
+                  <div className="flex items-center gap-2 font-bold"><MapPin className="h-5 w-5 text-accent" /> {event.location || "Armadale Baptist Church"}</div>
+                  <div className="flex items-center gap-2 font-bold"><Clock className="h-5 w-5 text-accent" /> 10:00am — 1:00pm</div>
+                </div>
+                <Button asChild size="lg" className="h-14 px-8 text-lg font-black rounded-2xl bg-white text-primary hover:bg-white/90 shadow-2xl group">
+                  <a href={event.humanitix_link || "#"} target="_blank" rel="noopener noreferrer">
+                    Book Your Spot <Ticket className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
+                  </a>
+                </Button>
+              </div>
+              <div className="hidden lg:block w-48 h-48 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 rotate-3">
+                <img src="/images/choir-session-2.jpg" alt="Session" className="w-full h-full object-cover" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Resources Column */}
           <div className={cn("space-y-10", hasNotes ? "lg:col-span-7" : "lg:col-span-12")}>
@@ -151,11 +200,10 @@ const SessionHub: React.FC = () => {
             </div>
             
             {sortedGroups.length > 0 ? (
-              <div className="space-y-12">
+              <div className="space-y-10">
                 {sortedGroups.map(([part, resources]) => (
                   <div key={part} className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <div className="h-px flex-1 bg-border/50" />
                       <Badge variant="outline" className="bg-muted/50 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border-border/50">
                         {part}
                       </Badge>
@@ -273,9 +321,7 @@ const SessionHub: React.FC = () => {
   };
 
   return (
-    <div className="py-8 space-y-16 max-w-6xl mx-auto px-4">
-      <BackButton to="/" />
-      
+    <div className="py-4 space-y-16">
       <header className="space-y-8">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
@@ -284,7 +330,7 @@ const SessionHub: React.FC = () => {
           </div>
           <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Session Hub</h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl font-medium leading-relaxed">
-            Access your tracks, lyrics, and my personal notes for our current and past sessions.
+            Everything you need for our sessions—booking, location, and practice materials—all in one place.
           </p>
         </div>
 
