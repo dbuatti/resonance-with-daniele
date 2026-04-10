@@ -165,9 +165,18 @@ const Events: React.FC = () => {
                       Book Your Spot <ArrowRight className="ml-2 h-6 w-6 transition-transform group-hover/btn:translate-x-2" />
                     </a>
                   </Button>
-                  <Button variant="ghost" className="text-white hover:bg-white/10 font-bold" onClick={() => handleShare(featuredEvent)}>
-                    <Share2 className="h-5 w-5 mr-2" /> Share Event
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" className="text-white hover:bg-white/10 font-bold" onClick={() => handleShare(featuredEvent)}>
+                      <Share2 className="h-5 w-5 mr-2" /> Share Event
+                    </Button>
+                    {user?.is_admin && featuredEvent.ai_chat_link && (
+                      <Button variant="ghost" className="text-accent hover:bg-accent/10 font-bold" asChild>
+                        <a href={featuredEvent.ai_chat_link} target="_blank" rel="noopener noreferrer">
+                          <Sparkles className="h-5 w-5 mr-2" /> AI Chat
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 

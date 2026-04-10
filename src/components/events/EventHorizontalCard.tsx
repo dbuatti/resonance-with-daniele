@@ -2,11 +2,12 @@
 
 import React from "react";
 import { format, parseISO } from "date-fns";
-import { CalendarDays, MapPin, MessageSquareQuote, Share2, Edit, Trash2, ExternalLink, ChevronRight } from "lucide-react";
+import { CalendarDays, MapPin, MessageSquareQuote, Share2, Edit, Trash2, ExternalLink, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface Event {
   id: string;
@@ -16,6 +17,7 @@ interface Event {
   location?: string;
   description?: string;
   humanitix_link?: string;
+  ai_chat_link?: string; // Added field
 }
 
 interface EventHorizontalCardProps {
@@ -93,6 +95,20 @@ const EventHorizontalCard: React.FC<EventHorizontalCardProps> = ({
 
         {isAdmin && (
           <div className="flex items-center gap-1 border-l pl-2 ml-1 border-border/50">
+            {event.ai_chat_link && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-primary hover:bg-primary/10" asChild>
+                      <a href={event.ai_chat_link} target="_blank" rel="noopener noreferrer">
+                        <Sparkles className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Open AI Chat</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg" onClick={() => onEdit(event)}>
               <Edit className="h-4 w-4" />
             </Button>
