@@ -37,29 +37,10 @@ const AdminZone: React.FC = () => {
 
   const adminTools = [
     {
-      title: "Marketing V4",
-      description: "The new high-octane command center. Optimized for speed, outreach, and strategy execution.",
-      icon: <Zap className="h-6 w-6 text-primary" />,
-      link: "/admin/marketing-plan-4",
-      label: "Launch V4",
-      highlight: true,
-      badge: "New"
-    },
-    {
-      title: "Marketing V3",
-      description: "Prototype Strategy Map. A visual blueprint focusing on Awareness, Engagement, and Conversion.",
-      icon: <Compass className="h-6 w-6 text-primary" />,
-      link: "/admin/marketing-plan-3",
-      label: "Explore V3",
-      highlight: true,
-      badge: "Prototype"
-    },
-    {
       title: "Growth Strategy",
       description: "High-impact missions to scale Resonance. Track your 1-year vision and local SEO progress.",
       icon: <Rocket className="h-6 w-6 text-primary" />,
       link: "/admin/growth",
-      label: "View Missions",
       highlight: true,
       badge: "Priority"
     },
@@ -165,7 +146,7 @@ const AdminZone: React.FC = () => {
               </p>
               <Button asChild size="lg" className="mt-auto w-full h-14 font-black rounded-xl shadow-lg" variant={tool.highlight ? "default" : "secondary"}>
                 <Link to={tool.link}>
-                  {tool.label} <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  {tool.label || "Open Tool"} <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>

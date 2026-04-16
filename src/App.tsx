@@ -15,8 +15,6 @@ import AdminAnnouncementsPage from "./pages/AdminAnnouncementsPage";
 import AdminIssueReportsPage from "./pages/AdminIssueReportsPage";
 import AdminMarketingDashboard from "./pages/AdminMarketingDashboard";
 import AdminMarketingPlanPage from "./pages/AdminMarketingPlanPage";
-import AdminMarketingPlanV3 from "./pages/AdminMarketingPlanV3"; // New Import
-import AdminMarketingPlanV4 from "./pages/AdminMarketingPlanV4";
 import AdminGrowthStrategy from "./pages/AdminGrowthStrategy";
 import AdminEventFeedback from "./pages/AdminEventFeedback";
 import AdminSessionHubGuide from "./pages/AdminSessionHubGuide";
@@ -68,8 +66,6 @@ const App = () => (
               <Route path="/admin/issue-reports" element={<Layout><AdminIssueReportsPage /></Layout>} />
               <Route path="/admin/marketing" element={<Layout><AdminMarketingDashboard /></Layout>} />
               <Route path="/admin/marketing-plan" element={<Layout><AdminMarketingPlanPage /></Layout>} />
-              <Route path="/admin/marketing-plan-3" element={<Layout><AdminMarketingPlanV3 /></Layout>} /> {/* New Route */}
-              <Route path="/admin/marketing-plan-4" element={<Layout><AdminMarketingPlanV4 /></Layout>} />
               <Route path="/admin/growth" element={<Layout><AdminGrowthStrategy /></Layout>} />
               <Route path="/admin/feedback" element={<Layout><AdminEventFeedback /></Layout>} />
               <Route path="/admin/session-hub-guide" element={<Layout><AdminSessionHubGuide /></Layout>} />
