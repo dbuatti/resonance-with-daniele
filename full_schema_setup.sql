@@ -1,5 +1,5 @@
--- RESONANCE WITH DANIELE - FULL SCHEMA SETUP
--- This script sets up all tables, functions, triggers, and RLS policies.
+-- RESONANCE WITH DANIELE - FULL SCHEMA SETUP (IDEMPOTENT)
+-- This script sets up all tables, functions, triggers, and RLS policies safely.
 
 -- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -32,7 +32,8 @@ BEGIN
     new.raw_user_meta_data ->> 'last_name',
     new.email IN ('daniele.buatti@gmail.com', 'resonancewithdaniele@gmail.com'),
     new.email
-  );
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;
 $$;
@@ -60,7 +61,6 @@ $function$;
 
 -- 3. TABLES
 
--- Profiles
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   first_name TEXT,
@@ -82,7 +82,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Events
 CREATE TABLE IF NOT EXISTS public.events (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -98,7 +97,6 @@ CREATE TABLE IF NOT EXISTS public.events (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Resources & Folders
 CREATE TABLE IF NOT EXISTS public.resource_folders (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
@@ -128,7 +126,6 @@ CREATE TABLE IF NOT EXISTS public.resources (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Community Features
 CREATE TABLE IF NOT EXISTS public.announcements (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -157,7 +154,6 @@ CREATE TABLE IF NOT EXISTS public.user_song_votes (
   UNIQUE(user_id, suggestion_id)
 );
 
--- Feedback & Reports
 CREATE TABLE IF NOT EXISTS public.event_feedback (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
@@ -194,7 +190,6 @@ CREATE TABLE IF NOT EXISTS public.issue_reports (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Marketing & Finance
 CREATE TABLE IF NOT EXISTS public.event_expenses (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
@@ -268,16 +263,28 @@ ALTER TABLE public.marketing_task_status ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.outreach_targets ENABLE ROW LEVEL SECURITY;
 
 -- 5. POLICIES
+DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
 CREATE POLICY "profiles_select_policy" ON public.profiles FOR SELECT TO authenticated USING ((auth.uid() = id) OR is_user_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "profiles_update_policy" ON public.profiles;
 CREATE POLICY "profiles_update_policy" ON public.profiles FOR UPDATE TO authenticated USING ((auth.uid() = id) OR is_user_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "events_read_policy" ON public.events;
 CREATE POLICY "events_read_policy" ON public.events FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "events_admin_policy" ON public.events;
 CREATE POLICY "events_admin_policy" ON public.events FOR ALL TO authenticated USING (is_user_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "resources_read_policy" ON public.resources;
 CREATE POLICY "resources_read_policy" ON public.resources FOR SELECT USING (is_published OR is_user_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "resources_admin_policy" ON public.resources;
 CREATE POLICY "resources_admin_policy" ON public.resources FOR ALL TO authenticated USING (is_user_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "folders_read_policy" ON public.resource_folders;
 CREATE POLICY "folders_read_policy" ON public.resource_folders FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "folders_admin_policy" ON public.resource_folders;
 CREATE POLICY "folders_admin_policy" ON public.resource_folders FOR ALL TO authenticated USING (is_user_admin(auth.uid()));
 
 -- 6. TRIGGERS
