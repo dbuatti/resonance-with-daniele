@@ -32,7 +32,6 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
   const { user } = useSession();
   const queryClient = useQueryClient();
 
-  // Fetch task definitions from the database
   const { data: tasks, isLoading: loadingTasks } = useQuery<MarketingTask[]>({
     queryKey: ["marketingTasks"],
     queryFn: async () => {
@@ -45,7 +44,6 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
     },
   });
 
-  // Fetch completion status for the current event
   const { data: completedTaskKeys, isLoading: loadingStatus } = useQuery<string[]>({
     queryKey: ["marketingTaskStatus", eventId],
     queryFn: async () => {
@@ -76,36 +74,35 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus", eventId] }),
   });
 
-  if (loadingTasks || loadingStatus) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
+  if (loadingTasks || loadingStatus) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
 
   const totalTasks = tasks?.length || 0;
   const completedCount = completedTaskKeys?.length || 0;
   const progress = totalTasks > 0 ? (completedCount / totalTasks) * 100 : 0;
 
-  // Get unique categories in order
   const categories = Array.from(new Set(tasks?.map(t => t.category) || []));
 
   return (
-    <Card className="shadow-2xl border-none overflow-hidden rounded-[3rem] bg-[#1a233a] text-white">
-      <CardHeader className="p-12 pb-8">
-        <div className="flex items-center justify-between mb-6">
-          <CardTitle className="text-3xl font-black font-lora flex items-center gap-4">
-            <ListTodo className="h-8 w-8 text-primary" /> Execution Checklist
+    <Card className="shadow-sm border border-border/50 overflow-hidden rounded-2xl bg-card">
+      <CardHeader className="p-6 border-b border-border/50">
+        <div className="flex items-center justify-between mb-4">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            Progress
           </CardTitle>
-          <span className="text-lg font-black bg-white/10 px-5 py-2 rounded-full">
-            {completedCount} / {totalTasks}
+          <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+            {completedCount} / {totalTasks} Tasks
           </span>
         </div>
-        <Progress value={progress} className="h-4 bg-white/10" />
+        <Progress value={progress} className="h-2 bg-muted" />
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y divide-white/5">
+        <div className="divide-y divide-border/50">
           {categories.map((category) => (
-            <div key={category} className="p-10">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40 mb-8">
+            <div key={category} className="p-6">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4">
                 {category}
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {tasks
                   ?.filter((t) => t.category === category)
                   .map((task) => {
@@ -114,46 +111,46 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
                       <div
                         key={task.id}
                         className={cn(
-                          "flex items-center justify-between p-5 rounded-2xl transition-all border-2 border-transparent group",
-                          isDone ? "bg-white/5 opacity-40" : "bg-white/5 hover:border-white/10"
+                          "flex items-center justify-between p-3 rounded-xl transition-all border border-transparent group",
+                          isDone ? "bg-muted/30 opacity-60" : "hover:bg-muted/50"
                         )}
                       >
                         <div 
-                          className="flex items-start gap-5 flex-1 cursor-pointer"
+                          className="flex items-center gap-4 flex-1 cursor-pointer"
                           onClick={() => toggleMutation.mutate(task.task_key)}
                         >
                           <div>
                             {isDone ? (
-                              <CheckCircle2 className="h-6 w-6 text-green-400" />
+                              <CheckCircle2 className="h-5 w-5 text-green-500" />
                             ) : (
-                              <Circle className="h-6 w-6 text-white/20 group-hover:text-white/40" />
+                              <Circle className="h-5 w-5 text-muted-foreground/30 group-hover:text-muted-foreground/50" />
                             )}
                           </div>
                           <span className={cn(
-                            "text-lg font-bold leading-tight",
-                            isDone && "line-through font-medium text-white/40"
+                            "text-sm font-bold leading-tight",
+                            isDone && "line-through text-muted-foreground"
                           )}>
                             {task.label}
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                           {task.has_action && onActionClick && (
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-10 w-10 text-white/60 hover:bg-white/10 hover:text-white"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onActionClick(task.task_key);
                               }}
                             >
-                              <Mail className="h-5 w-5" />
+                              <Mail className="h-4 w-4" />
                             </Button>
                           )}
-                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-3 py-1 h-7 border-white/10 bg-white/5 text-white/60">
-                            {task.energy === "high" ? <Zap className="h-3 w-3 text-yellow-400 mr-2" /> : <Coffee className="h-3 w-3 text-blue-400 mr-2" />}
-                            {task.energy === "high" ? "High" : "Low"}
+                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0 h-6 border-border/50 bg-muted/20 text-muted-foreground">
+                            {task.energy === "high" ? <Zap className="h-3 w-3 text-yellow-500 mr-1" /> : <Coffee className="h-3 w-3 text-blue-500 mr-1" />}
+                            {task.energy}
                           </Badge>
                         </div>
                       </div>
