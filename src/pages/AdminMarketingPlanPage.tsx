@@ -415,7 +415,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                     </div>
                     
                     <div className="flex-1 w-full">
-                      <OutreachTracker eventId={selectedEventId} />
+                      < OutreachTracker eventId={selectedEventId} />
                     </div>
                   </CardContent>
                 </Card>
