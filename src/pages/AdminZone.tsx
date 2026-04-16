@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote, BookOpen, Zap } from "lucide-react";
+import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote, BookOpen, Zap, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -37,13 +37,22 @@ const AdminZone: React.FC = () => {
 
   const adminTools = [
     {
-      title: "Marketing V2",
-      description: "The new high-fidelity command center prototype. Dark mode, real-time velocity, and streamlined execution.",
+      title: "Marketing V4",
+      description: "The new high-octane command center. Optimized for speed, outreach, and strategy execution.",
       icon: <Zap className="h-6 w-6 text-primary" />,
-      link: "/admin/marketing-plan-v2",
-      label: "Open V2 Prototype",
+      link: "/admin/marketing-plan-4",
+      label: "Launch V4",
       highlight: true,
-      badge: "New Prototype"
+      badge: "New"
+    },
+    {
+      title: "Marketing V3",
+      description: "Prototype Strategy Map. A visual blueprint focusing on Awareness, Engagement, and Conversion.",
+      icon: <Compass className="h-6 w-6 text-primary" />,
+      link: "/admin/marketing-plan-3",
+      label: "Explore V3",
+      highlight: true,
+      badge: "Prototype"
     },
     {
       title: "Growth Strategy",
@@ -59,9 +68,7 @@ const AdminZone: React.FC = () => {
       description: "Learn how to link resources to events and manage your personal lesson notes for members.",
       icon: <BookOpen className="h-6 w-6 text-primary" />,
       link: "/admin/session-hub-guide",
-      label: "Read Guide",
-      highlight: true,
-      badge: "New"
+      label: "Read Guide"
     },
     {
       title: "Feedback Analysis",
