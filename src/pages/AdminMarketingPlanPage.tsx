@@ -42,6 +42,7 @@ import { Badge } from "@/components/ui/badge";
 import MarketingChecklist from "@/components/admin/MarketingChecklist";
 import { Textarea } from "@/components/ui/textarea";
 import OutreachTracker from "@/components/admin/OutreachTracker";
+import FacebookGroupTracker from "@/components/admin/FacebookGroupTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
@@ -247,24 +248,6 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
     if (taskId === "email-regulars") {
       setIsEmailModalOpen(true);
     }
-    if (taskId === "fb-malvern-noticeboard") {
-      window.open("https://www.facebook.com/groups/301509297978154", "_blank");
-    }
-    if (taskId === "fb-malvern-community") {
-      window.open("https://www.facebook.com/groups/497354361728412/", "_blank");
-    }
-    if (taskId === "fb-malvern-notice-board-public") {
-      window.open("https://www.facebook.com/groups/1124143148868314/", "_blank");
-    }
-    if (taskId === "fb-australian-choral-collective") {
-      window.open("https://www.facebook.com/groups/408800682884399/", "_blank");
-    }
-    if (taskId === "fb-choirs-of-melbourne") {
-      window.open("https://www.facebook.com/groups/1173481763392463/", "_blank");
-    }
-    if (taskId === "fb-community-choir-network") {
-      window.open("https://www.facebook.com/groups/303437066726860/", "_blank");
-    }
   };
 
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
@@ -415,30 +398,22 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                 </Card>
               </section>
 
-              <section>
-                <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden rounded-[3rem]">
-                  <CardContent className="p-10 flex flex-col lg:flex-row items-start gap-12">
-                    <div className="lg:w-1/3 space-y-6">
-                      <div className="bg-primary text-primary-foreground p-6 rounded-3xl shadow-xl inline-block">
-                        <Target className="h-12 w-12" />
-                      </div>
-                      <div className="space-y-2">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Relational Outreach</h2>
-                        <p className="text-4xl font-black font-lora leading-tight">The 10 People Rule.</p>
-                        <p className="text-muted-foreground leading-relaxed">Identify 10 specific people who would love this session. Message them personally. This is your highest ROI activity.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1 w-full">
-                      < OutreachTracker eventId={selectedEventId} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
-
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-7 space-y-12">
-                  {/* AI Strategy Assistant */}
+                  <section className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-black font-lora flex items-center gap-3">
+                        <Facebook className="h-8 w-8 text-primary" /> Facebook Outreach
+                      </h2>
+                      <Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">Monthly Checklist</Badge>
+                    </div>
+                    <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden">
+                      <CardContent className="p-6">
+                        <FacebookGroupTracker eventId={selectedEventId} />
+                      </CardContent>
+                    </Card>
+                  </section>
+
                   <section className="space-y-6">
                     <h2 className="text-3xl font-black font-lora flex items-center gap-3">
                       <Bot className="h-8 w-8 text-primary" /> AI Strategy Assistant
@@ -543,39 +518,25 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                   </section>
                 </div>
 
-                <div className="lg:col-span-5">
-                  <div className="sticky top-24 space-y-10">
-                    {/* Live Intelligence Feed */}
-                    <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden">
-                      <CardHeader className="bg-muted/30 pb-4">
-                        <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                          <Activity className="h-4 w-4 text-primary" /> Live Intelligence
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <div className="divide-y divide-border">
-                          {stats?.recentOrders.length === 0 ? (
-                            <div className="p-8 text-center text-sm text-muted-foreground italic">No recent activity.</div>
-                          ) : (
-                            stats?.recentOrders.map((order: any, i: number) => (
-                              <div key={i} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                                <div className="flex items-center gap-3">
-                                  <div className="bg-primary/10 p-2 rounded-lg">
-                                    <UserPlus className="h-4 w-4 text-primary" />
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-bold">{order.first_name} {order.last_name}</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-black">{format(new Date(order.order_date), "MMM d, h:mm a")}</p>
-                                  </div>
-                                </div>
-                                <Badge variant="outline" className="font-black text-[10px]">{order.valid_tickets} TIX</Badge>
-                              </div>
-                            ))
-                          )}
+                <div className="lg:col-span-5 space-y-12">
+                  <section>
+                    <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden rounded-[3rem]">
+                      <CardContent className="p-10 space-y-8">
+                        <div className="flex items-center gap-6">
+                          <div className="bg-primary text-primary-foreground p-4 rounded-2xl shadow-xl">
+                            <Target className="h-8 w-8" />
+                          </div>
+                          <div className="space-y-1">
+                            <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Relational Outreach</h2>
+                            <p className="text-2xl font-black font-lora">The 10 People Rule.</p>
+                          </div>
                         </div>
+                        <OutreachTracker eventId={selectedEventId} />
                       </CardContent>
                     </Card>
+                  </section>
 
+                  <div className="sticky top-24 space-y-10">
                     <Card className="border-none shadow-2xl bg-yellow-50 dark:bg-yellow-950/20 border-l-[12px] border-yellow-400 rounded-[2.5rem]">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-xl font-black flex items-center gap-3 text-yellow-800 dark:text-yellow-400">
