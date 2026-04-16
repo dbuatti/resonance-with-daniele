@@ -36,8 +36,7 @@ import {
   LayoutDashboard,
   FileText,
   AlertTriangle,
-  Building2,
-  Trophy
+  Building2
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -260,7 +259,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
   const netProfit = stats ? stats.totalEarnings - stats.totalExpenses : 0;
 
   return (
-    <div className="space-y-12 py-8 md:py-12 bg-background/50 min-h-screen">
+    <div className="space-y-8 py-8 md:py-12 bg-background/50 min-h-screen">
       <div className="max-w-[1600px] mx-auto px-4 md:px-12">
         <BackButton className="mb-8" to="/admin" />
         
@@ -269,8 +268,8 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[120px]" />
           
           <div className="flex flex-col lg:flex-row justify-between items-start gap-16 relative z-10">
-            <div className="space-y-10 flex-1">
-              <div className="flex flex-wrap items-center gap-4">
+            <div className="space-y-10 flex-1 text-center lg:text-left">
+              <div className="flex flex-wrap justify-center lg:justify-start items-center gap-4">
                 <Badge className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-black uppercase tracking-widest text-[11px]">Command Center</Badge>
                 <div className={cn("flex items-center gap-2 px-5 py-2 rounded-full bg-background border-2 font-black uppercase tracking-widest text-[11px] shadow-sm", eventHealth.color)}>
                   {eventHealth.icon} {eventHealth.label}
@@ -279,13 +278,13 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
               
               <div className="space-y-4">
                 <h1 className="text-7xl md:text-9xl font-black font-lora tracking-tighter leading-none">Operation Hub</h1>
-                <div className="w-full md:w-[500px] space-y-3">
-                  <label className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground ml-4">Active Session</label>
+                <div className="w-full md:w-[500px] mx-auto lg:mx-0 space-y-2">
+                  <label className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-4">Active Session</label>
                   <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
                     <SelectTrigger className="h-24 rounded-[2.5rem] shadow-2xl bg-background border-4 border-primary/10 text-3xl font-black px-10">
                       <SelectValue placeholder="Choose an event..." />
                     </SelectTrigger>
-                    <SelectContent className="rounded-[2.5rem] p-3">
+                    <SelectContent className="rounded-[2.5rem] p-2">
                       {events?.map((event) => (
                         <SelectItem key={event.id} value={event.id} className="py-5 font-bold rounded-2xl text-lg">
                           {event.title} ({format(new Date(event.date), "MMM d")})
@@ -298,7 +297,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full lg:w-auto">
-              <Card className="bg-background p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-3 min-w-[240px] hover:scale-105 transition-transform">
+              <Card className="bg-background p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-2 min-w-[240px] hover:scale-105 transition-transform">
                 <div className="bg-primary/10 p-5 rounded-3xl mb-2">
                   <Clock className="h-10 w-10 text-primary" />
                 </div>
@@ -306,7 +305,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                 <p className="text-4xl font-black text-primary tracking-tighter">{timeLeft}</p>
               </Card>
               
-              <Card className="bg-background p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-3 min-w-[240px] hover:scale-105 transition-transform">
+              <Card className="bg-background p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-2 min-w-[240px] hover:scale-105 transition-transform">
                 <div className="bg-green-500/10 p-5 rounded-3xl mb-2">
                   <Ticket className="h-10 w-10 text-green-600" />
                 </div>
@@ -314,12 +313,12 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                 <p className="text-4xl font-black text-green-600 tracking-tighter">{stats?.totalTickets || 0} / {targetTickets}</p>
               </Card>
 
-              <Card className="bg-primary text-primary-foreground p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-3 min-w-[240px] hover:scale-105 transition-transform">
+              <Card className="bg-primary text-primary-foreground p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-2 min-w-[240px] hover:scale-105 transition-transform">
                 <div className="bg-white/20 p-5 rounded-3xl mb-2">
-                  <DollarSign className="h-10 w-10 text-white" />
+                  <DollarSign className="h-8 w-8 text-white" />
                 </div>
                 <p className="text-[11px] font-black uppercase tracking-widest opacity-70">Net Profit</p>
-                <p className="text-4xl font-black tracking-tighter">${netProfit.toFixed(0)}</p>
+                <p className="text-3xl font-black tracking-tighter">${netProfit.toFixed(0)}</p>
               </Card>
             </div>
           </div>
@@ -327,7 +326,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
 
         {!selectedEventId ? (
           <Card className="p-32 text-center border-dashed border-4 rounded-[5rem] bg-muted/10">
-            <Calendar className="h-24 w-24 text-muted-foreground mx-auto mb-8 opacity-10" />
+            <Calendar className="h-24 w-24 text-muted-foreground mx-auto mb-6 opacity-10" />
             <p className="text-3xl font-bold text-muted-foreground font-lora">Select an operation to begin.</p>
           </Card>
         ) : (
@@ -372,7 +371,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
 
                   <section className="space-y-8">
                     <div className="flex items-center gap-4 px-4">
-                      <div className="h-10 w-2 bg-primary rounded-full" />
+                      <div className="h-10 w-1.5 bg-primary rounded-full" />
                       <h2 className="text-3xl font-black font-lora tracking-tight">Facebook Groups</h2>
                     </div>
                     <Card className="border-none shadow-2xl bg-card rounded-[3rem] overflow-hidden">
@@ -393,7 +392,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                           {React.cloneElement(dailyMission.icon as React.ReactElement, { className: "h-10 w-10" })}
                         </div>
                         <div className="space-y-3">
-                          <h3 className="text-[11px] font-black uppercase tracking-[0.5em] opacity-70">Today's Mission</h3>
+                          <h3 className="text-[11px] font-black uppercase tracking-[0.4em] opacity-70">Today's Mission</h3>
                           <p className="text-4xl font-black font-lora leading-tight">{dailyMission.title}</p>
                           <p className="text-xl font-medium opacity-90 leading-relaxed">{dailyMission.task}</p>
                         </div>
@@ -407,16 +406,16 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                       <h2 className="text-3xl font-black font-lora tracking-tight">AI Strategy</h2>
                     </div>
                     <Card className="border-none shadow-2xl bg-gradient-to-br from-primary/5 to-accent/5 rounded-[4rem] overflow-hidden">
-                      <CardHeader className="p-10 pb-4">
-                        <CardTitle className="text-2xl font-black flex items-center gap-3"><Bot className="h-7 w-7 text-primary" /> Prompt Generator</CardTitle>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-bold flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> Prompt Generator</CardTitle>
                         <CardDescription className="text-lg font-medium">Copy this into Claude or Gemini for fresh copy.</CardDescription>
                       </CardHeader>
-                      <CardContent className="p-10 pt-0 space-y-6">
-                        <div className="bg-background/80 p-8 rounded-3xl border-2 border-primary/10 text-base font-medium text-muted-foreground italic leading-relaxed line-clamp-5">
+                      <CardContent className="space-y-4">
+                        <div className="bg-background/80 p-6 rounded-3xl border-2 border-primary/10 text-sm font-medium text-muted-foreground italic leading-relaxed line-clamp-4">
                           "{aiPrompt}"
                         </div>
                         <Button className="w-full h-16 font-black text-lg rounded-2xl shadow-xl" onClick={() => copyToClipboard(aiPrompt, "AI Prompt")}>
-                          <Copy className="h-6 w-6 mr-3" /> Copy Full AI Prompt
+                          <Copy className="h-5 w-5 mr-2" /> Copy Full AI Prompt
                         </Button>
                       </CardContent>
                     </Card>
@@ -465,13 +464,13 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                 {/* COLUMN 3: WORKSPACE (3/12) */}
                 <div className="lg:col-span-3 space-y-12">
                   <section className="space-y-8">
-                    <div className="flex items-center gap-4 px-4">
+                    <div className="flex items-center gap-3 px-4">
                       <div className="h-10 w-2 bg-primary rounded-full" />
                       <h2 className="text-3xl font-black font-lora tracking-tight">Workspace</h2>
                     </div>
                     <Card className="border-none shadow-2xl bg-yellow-50 dark:bg-yellow-950/20 border-l-[16px] border-yellow-400 rounded-[4rem] min-h-[500px] flex flex-col hover:rotate-1 transition-transform">
                       <CardHeader className="p-10 pb-4">
-                        <CardTitle className="text-2xl font-black flex items-center gap-4 text-yellow-800 dark:text-yellow-400">
+                        <CardTitle className="text-xl font-black flex items-center gap-3 text-yellow-800 dark:text-yellow-400">
                           <Brain className="h-8 w-8" /> Brain Dump
                         </CardTitle>
                         <CardDescription className="text-lg text-yellow-700/70 dark:text-yellow-400/60 font-medium">Ideas for {selectedEvent?.title}. Auto-saves.</CardDescription>
@@ -479,11 +478,11 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                       <CardContent className="flex-1 flex flex-col p-10 pt-0">
                         <Textarea 
                           placeholder="Random ideas for this specific event..." 
-                          className="flex-1 min-h-[350px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400 rounded-[2rem] text-lg resize-none p-8"
+                          className="flex-1 min-h-[350px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400 rounded-[2rem] text-base resize-none"
                           value={localBrainDump}
                           onChange={(e) => setLocalBrainDump(e.target.value)}
                         />
-                        {saveNoteMutation.isPending && <p className="text-[11px] text-yellow-600 mt-5 font-black animate-pulse uppercase tracking-[0.3em]">Syncing to cloud...</p>}
+                        {saveNoteMutation.isPending && <p className="text-[10px] text-yellow-600 mt-3 font-bold animate-pulse uppercase tracking-[0.3em]">Syncing to cloud...</p>}
                       </CardContent>
                     </Card>
                   </section>
@@ -503,7 +502,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                           { label: "FB: Malvern Notice", url: "https://www.facebook.com/groups/301509297978154", icon: <Facebook className="text-blue-600" /> },
                           { label: "FB: Choirs Melb", url: "https://www.facebook.com/groups/1173481763392463/", icon: <Facebook className="text-blue-600" /> }
                         ].map((link, i) => (
-                          <Button key={i} variant="outline" className="rounded-2xl h-16 font-black text-base justify-start px-8 border-primary/5 hover:bg-primary/5 shadow-sm" asChild>
+                          <Button key={i} variant="outline" className="rounded-2xl h-14 font-black text-base justify-start px-8 border-primary/5 hover:bg-primary/5 shadow-sm" asChild>
                             <a href={link.url} target="_blank" rel="noopener noreferrer">
                               <div className="mr-5">{link.icon}</div>
                               {link.label}

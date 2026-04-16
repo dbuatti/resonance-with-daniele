@@ -122,7 +122,7 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
                           className="flex items-start gap-5 flex-1 cursor-pointer"
                           onClick={() => toggleMutation.mutate(task.task_key)}
                         >
-                          <div className="mt-1">
+                          <div>
                             {isDone ? (
                               <CheckCircle2 className="h-6 w-6 text-green-400" />
                             ) : (
