@@ -250,6 +250,9 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
     if (taskId === "fb-malvern-noticeboard") {
       window.open("https://www.facebook.com/groups/301509297978154", "_blank");
     }
+    if (taskId === "fb-malvern-community") {
+      window.open("https://www.facebook.com/groups/497354361728412/", "_blank");
+    }
   };
 
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
@@ -588,7 +591,8 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-4 grid grid-cols-2 gap-3">
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/301509297978154" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern FB</a></Button>
+                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/301509297978154" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern Notice</a></Button>
+                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/497354361728412/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern Comm</a></Button>
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://ads.google.com/aw/campaigns?ocid=8144309883&euid=6471693261&__u=3594183589&uscid=8144309883&__c=6279405667&authuser=0&workspaceId=0&subid=au-en-awhp-g-aw-c-home-signin-bgc!o2-%7Cib:none%7Cib:6653296821%7Cib:9279461727%7Cib:7966379274%7C-ahpm-0000000200-0000000000%7C-ahpm-0000000179-0000000001" target="_blank" rel="noopener noreferrer">Google Ads</a></Button>
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.stonnington.vic.gov.au/MyCity/Dashboard" target="_blank" rel="noopener noreferrer">Stonnington Hub</a></Button>
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://humanitix.com" target="_blank" rel="noopener noreferrer">Humanitix</a></Button>
