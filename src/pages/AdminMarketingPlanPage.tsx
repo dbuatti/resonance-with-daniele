@@ -192,7 +192,7 @@ const AdminMarketingPlanPage: React.FC = () => {
   const focusSong = nominatedFolder?.name || "new harmonies";
   const eventLink = selectedEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
 
-  const authenticCaption = `We're back for ${selectedEvent?.title || "our next session"}. \n\nWe'll be diving into "${focusSong}" — the harmonies are sounding beautiful already.\n\n📍 ${selectedEvent?.location || "Armadale"}\n⏰ ${eventDateFormatted}, 10am\n\nGrab your spot here: ${eventLink}\n\nCome sing with us. 🌿`;
+  const authenticCaption = `Resonance is a monthly pop-up choir in Armadale where everyone is welcome. No auditions, no experience needed—just joyful singing in harmony.\n\nWe're back on ${eventDateFormatted} for our next session!\n\nWe'll be diving into "${focusSong}" — the harmonies are sounding beautiful already.\n\n📍 ${selectedEvent?.location || "Armadale"}\n⏰ ${eventDateFormatted}, 10am\n\nGrab your spot here: ${eventLink}\n\nCome sing with us. 🌿`;
 
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
 
