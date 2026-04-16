@@ -8,8 +8,6 @@ import { DollarSign, Ticket, TrendingUp, Zap, ChartLine } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -18,7 +16,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { format, parseISO, startOfDay } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 interface MarketingOverviewProps {
   eventId: string;
@@ -55,24 +53,19 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
   const totalTickets = orders?.reduce((sum, o) => sum + (o.valid_tickets || 0), 0) || 0;
   const netProfit = totalEarnings - totalExpenses;
 
-  // Process chart data: Cumulative ticket sales over time
+  // Process chart data: Cumulative ticket sales over time with minute-level granularity
   const chartData = useMemo(() => {
     if (!orders || orders.length === 0) return [];
 
-    const salesByDate: Record<string, number> = {};
-    
-    orders.forEach(order => {
-      const date = format(parseISO(order.order_date), "MMM d");
-      salesByDate[date] = (salesByDate[date] || 0) + (order.valid_tickets || 0);
-    });
-
     let cumulative = 0;
-    return Object.entries(salesByDate).map(([date, count]) => {
-      cumulative += count;
+    return orders.map(order => {
+      cumulative += (order.valid_tickets || 0);
+      const date = parseISO(order.order_date);
       return {
-        date,
+        time: format(date, "MMM d, h:mm a"),
+        displayDate: format(date, "MMM d"),
         tickets: cumulative,
-        daily: count
+        orderId: order.order_id
       };
     });
   }, [orders]);
@@ -110,7 +103,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
             </div>
             <div>
               <CardTitle className="text-2xl font-black font-lora">Sales Momentum</CardTitle>
-              <CardDescription className="font-medium">Cumulative ticket sales leading up to the event.</CardDescription>
+              <CardDescription className="font-medium">Cumulative ticket sales tracked by order time.</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -127,11 +120,12 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                   <XAxis 
-                    dataKey="date" 
+                    dataKey="displayDate" 
                     axisLine={false} 
                     tickLine={false} 
                     tick={{ fontSize: 12, fontWeight: 'bold', fill: 'hsl(var(--muted-foreground))' }}
                     dy={10}
+                    minTickGap={30}
                   />
                   <YAxis 
                     axisLine={false} 
@@ -146,6 +140,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
                       padding: '12px'
                     }}
                     labelStyle={{ fontWeight: 'black', marginBottom: '4px' }}
+                    labelFormatter={(value, payload) => payload[0]?.payload?.time || value}
                   />
                   <Area 
                     type="monotone" 
@@ -155,6 +150,8 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
                     strokeWidth={4}
                     fillOpacity={1} 
                     fill="url(#colorTickets)" 
+                    dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: '#fff' }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
