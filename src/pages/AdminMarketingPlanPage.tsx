@@ -192,7 +192,7 @@ const AdminMarketingPlanPage: React.FC = () => {
   const focusSong = nominatedFolder?.name || "new harmonies";
   const eventLink = selectedEvent?.humanitix_link || "https://events.humanitix.com/resonance-choir";
 
-  const authenticCaption = `We're back for ${selectedEvent?.title || "our next session"}. \n\nWe'll be diving into "${focusSong}" — the harmonies are sounding beautiful already.\n\n📍 ${selectedEvent?.location || "Armadale"}\n⏰ ${eventDateFormatted}, 10am\n\nLink in bio. Come sing with us. 🌿`;
+  const authenticCaption = `We're back for ${selectedEvent?.title || "our next session"}. \n\nWe'll be diving into "${focusSong}" — the harmonies are sounding beautiful already.\n\n📍 ${selectedEvent?.location || "Armadale"}\n⏰ ${eventDateFormatted}, 10am\n\nGrab your spot here: ${eventLink}\n\nCome sing with us. 🌿`;
 
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
 
@@ -385,7 +385,7 @@ const AdminMarketingPlanPage: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="preparation" className="animate-fade-in-up">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl auto">
               <EventPrepChecklist eventId={selectedEventId} />
             </div>
           </TabsContent>
