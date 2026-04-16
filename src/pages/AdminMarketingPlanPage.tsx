@@ -256,6 +256,15 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
     if (taskId === "fb-malvern-notice-board-public") {
       window.open("https://www.facebook.com/groups/1124143148868314/", "_blank");
     }
+    if (taskId === "fb-australian-choral-collective") {
+      window.open("https://www.facebook.com/groups/408800682884399/", "_blank");
+    }
+    if (taskId === "fb-choirs-of-melbourne") {
+      window.open("https://www.facebook.com/groups/1173481763392463/", "_blank");
+    }
+    if (taskId === "fb-community-choir-network") {
+      window.open("https://www.facebook.com/groups/303437066726860/", "_blank");
+    }
   };
 
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
@@ -597,6 +606,9 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/301509297978154" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern Notice</a></Button>
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/497354361728412/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern Comm</a></Button>
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/1124143148868314/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern Public</a></Button>
+                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/408800682884399/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Choral Coll</a></Button>
+                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/1173481763392463/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Choirs Melb</a></Button>
+                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/303437066726860/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Choir Network</a></Button>
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://ads.google.com/aw/campaigns?ocid=8144309883&euid=6471693261&__u=3594183589&uscid=8144309883&__c=6279405667&authuser=0&workspaceId=0&subid=au-en-awhp-g-aw-c-home-signin-bgc!o2-%7Cib:none%7Cib:6653296821%7Cib:9279461727%7Cib:7966379274%7C-ahpm-0000000200-0000000000%7C-ahpm-0000000179-0000000001" target="_blank" rel="noopener noreferrer">Google Ads</a></Button>
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.stonnington.vic.gov.au/MyCity/Dashboard" target="_blank" rel="noopener noreferrer">Stonnington Hub</a></Button>
                         <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://humanitix.com" target="_blank" rel="noopener noreferrer">Humanitix</a></Button>
