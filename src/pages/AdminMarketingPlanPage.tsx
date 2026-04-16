@@ -26,7 +26,8 @@ import {
   ExternalLink,
   Facebook,
   Building2,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 
 import { showSuccess } from "@/utils/toast";
