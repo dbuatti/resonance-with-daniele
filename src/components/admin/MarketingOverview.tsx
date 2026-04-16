@@ -16,7 +16,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfDay, addDays, startOfToday, isBefore, isEqual } from "date-fns";
 
 interface MarketingOverviewProps {
   eventId: string;
@@ -53,21 +53,44 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
   const totalTickets = orders?.reduce((sum, o) => sum + (o.valid_tickets || 0), 0) || 0;
   const netProfit = totalEarnings - totalExpenses;
 
-  // Process chart data: Cumulative ticket sales over time
+  // Process chart data: Daily ticket sales with zero-filling
   const chartData = useMemo(() => {
     if (!orders || orders.length === 0) return [];
 
-    let cumulative = 0;
-    return orders.map(order => {
-      cumulative += (order.valid_tickets || 0);
+    // 1. Group tickets by day
+    const salesByDay: Record<string, number> = {};
+    let minDate = new Date();
+    let maxDate = new Date(0);
+
+    orders.forEach(order => {
       const date = parseISO(order.order_date);
-      return {
-        time: format(date, "MMM d, h:mm a"),
-        displayDate: format(date, "MMM d"),
-        tickets: cumulative,
-        orderId: order.order_id
-      };
+      const dateKey = format(date, "yyyy-MM-dd");
+      salesByDay[dateKey] = (salesByDay[dateKey] || 0) + (order.valid_tickets || 0);
+      
+      if (date < minDate) minDate = date;
+      if (date > maxDate) maxDate = date;
     });
+
+    // Ensure maxDate is at least today to show current status
+    const today = startOfToday();
+    if (isBefore(maxDate, today)) maxDate = today;
+
+    // 2. Fill in the gaps from first sale to today
+    const data = [];
+    let current = startOfDay(minDate);
+    const end = startOfDay(maxDate);
+
+    while (isBefore(current, end) || isEqual(current, end)) {
+      const dateKey = format(current, "yyyy-MM-dd");
+      data.push({
+        displayDate: format(current, "MMM d"),
+        fullDate: format(current, "EEEE, MMMM do"),
+        tickets: salesByDay[dateKey] || 0,
+      });
+      current = addDays(current, 1);
+    }
+
+    return data;
   }, [orders]);
 
   if (loadingExpenses || loadingOrders) return <Skeleton className="h-64 w-full rounded-2xl" />;
@@ -102,8 +125,8 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
               <ChartLine className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-black font-lora">Sales Momentum</CardTitle>
-              <CardDescription className="font-medium">Cumulative ticket sales tracked by order time.</CardDescription>
+              <CardTitle className="text-2xl font-black font-lora">Daily Sales Momentum</CardTitle>
+              <CardDescription className="font-medium">Tracking daily ticket volume to identify peaks and troughs.</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -125,12 +148,13 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
                     tickLine={false} 
                     tick={{ fontSize: 12, fontWeight: 'bold', fill: 'hsl(var(--muted-foreground))' }}
                     dy={10}
-                    minTickGap={50}
+                    minTickGap={30}
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
                     tick={{ fontSize: 12, fontWeight: 'bold', fill: 'hsl(var(--muted-foreground))' }}
+                    allowDecimals={false}
                   />
                   <Tooltip 
                     contentStyle={{ 
@@ -140,12 +164,12 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
                       padding: '12px'
                     }}
                     labelStyle={{ fontWeight: 'black', marginBottom: '4px' }}
-                    labelFormatter={(value, payload) => payload[0]?.payload?.time || value}
+                    labelFormatter={(value, payload) => payload[0]?.payload?.fullDate || value}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="tickets" 
-                    name="Total Tickets"
+                    name="Tickets Sold"
                     stroke="hsl(var(--primary))" 
                     strokeWidth={4}
                     fillOpacity={1} 
