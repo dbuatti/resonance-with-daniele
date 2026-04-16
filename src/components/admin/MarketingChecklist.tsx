@@ -4,33 +4,24 @@ import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, ListTodo, Zap, Coffee, Loader2, Mail, ArrowRight } from "lucide-react";
+import { CheckCircle2, Circle, ListTodo, Zap, Coffee, Loader2, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { Button } from "@/components/ui/button";
 
-interface Task {
+interface MarketingTask {
   id: string;
+  task_key: string;
   label: string;
   category: string;
   energy: "high" | "low";
-  hasAction?: boolean;
+  has_action: boolean;
+  action_type: string | null;
+  days_before: number;
+  sort_order: number;
 }
-
-const tasks: Task[] = [
-  { id: "personal-10", label: "Message 10 specific people personally", category: "3 Days Before", energy: "high" },
-  { id: "email-regulars", label: "Email the regular member list", category: "3 Days Before", energy: "low", hasAction: true },
-  { id: "insta-story-why", label: "Story: 30s video on why these songs", category: "3 Days Before", energy: "high" },
-  { id: "community-outreach", label: "Reach out to local community nodes", category: "2 Days Before", energy: "high" },
-  { id: "insta-story-chords", label: "Story: Play chords from the repertoire", category: "2 Days Before", energy: "low" },
-  { id: "helper-outreach", label: "DM 3 potential 'Helpers' personally", category: "2 Days Before", energy: "high" },
-  { id: "fb-groups-invite", label: "Post in community groups", category: "1 Day Before", energy: "low" },
-  { id: "insta-story-final", label: "Story: Final personal invitation", category: "1 Day Before", energy: "high" },
-  { id: "print-lyrics", label: "Print extra lyric sheets/scores", category: "Day Of", energy: "low" },
-  { id: "inhabit-room", label: "Focus on inhabiting the room", category: "Day Of", energy: "high" },
-];
 
 interface MarketingChecklistProps {
   eventId: string;
@@ -41,7 +32,21 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
   const { user } = useSession();
   const queryClient = useQueryClient();
 
-  const { data: completedTaskIds, isLoading } = useQuery<string[]>({
+  // Fetch task definitions from the database
+  const { data: tasks, isLoading: loadingTasks } = useQuery<MarketingTask[]>({
+    queryKey: ["marketingTasks"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("marketing_tasks")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data as MarketingTask[];
+    },
+  });
+
+  // Fetch completion status for the current event
+  const { data: completedTaskKeys, isLoading: loadingStatus } = useQuery<string[]>({
     queryKey: ["marketingTaskStatus", eventId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -56,13 +61,13 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async (taskId: string) => {
-      const isCurrentlyCompleted = completedTaskIds?.includes(taskId);
+    mutationFn: async (taskKey: string) => {
+      const isCurrentlyCompleted = completedTaskKeys?.includes(taskKey);
       const { error } = await supabase
         .from("marketing_task_status")
         .upsert({ 
           admin_id: user?.id, 
-          task_id: taskId, 
+          task_id: taskKey, 
           event_id: eventId,
           is_completed: !isCurrentlyCompleted 
         }, { onConflict: 'admin_id,task_id,event_id' });
@@ -71,12 +76,14 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus", eventId] }),
   });
 
-  if (isLoading) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
+  if (loadingTasks || loadingStatus) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
 
-  const completedCount = completedTaskIds?.length || 0;
-  const progress = (completedCount / tasks.length) * 100;
+  const totalTasks = tasks?.length || 0;
+  const completedCount = completedTaskKeys?.length || 0;
+  const progress = totalTasks > 0 ? (completedCount / totalTasks) * 100 : 0;
 
-  const categories = ["3 Days Before", "2 Days Before", "1 Day Before", "Day Of"];
+  // Get unique categories in order
+  const categories = Array.from(new Set(tasks?.map(t => t.category) || []));
 
   return (
     <Card className="shadow-xl border-none overflow-hidden">
@@ -86,7 +93,7 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
             <ListTodo className="h-6 w-6" /> Execution Checklist
           </CardTitle>
           <span className="text-sm font-bold bg-white/20 px-3 py-1 rounded-full">
-            {completedCount} / {tasks.length}
+            {completedCount} / {totalTasks}
           </span>
         </div>
         <Progress value={progress} className="h-2 bg-white/20" />
@@ -100,9 +107,9 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
               </h3>
               <div className="space-y-3">
                 {tasks
-                  .filter((t) => t.category === category)
+                  ?.filter((t) => t.category === category)
                   .map((task) => {
-                    const isDone = completedTaskIds?.includes(task.id);
+                    const isDone = completedTaskKeys?.includes(task.task_key);
                     return (
                       <div
                         key={task.id}
@@ -113,7 +120,7 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
                       >
                         <div 
                           className="flex items-start gap-3 flex-1 cursor-pointer"
-                          onClick={() => toggleMutation.mutate(task.id)}
+                          onClick={() => toggleMutation.mutate(task.task_key)}
                         >
                           <div className="mt-0.5">
                             {isDone ? (
@@ -131,14 +138,14 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          {task.hasAction && onActionClick && (
+                          {task.has_action && onActionClick && (
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               className="h-8 w-8 text-primary hover:bg-primary/10"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onActionClick(task.id);
+                                onActionClick(task.task_key);
                               }}
                             >
                               <Mail className="h-4 w-4" />

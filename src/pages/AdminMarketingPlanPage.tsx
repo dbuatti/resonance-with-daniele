@@ -232,6 +232,10 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
   const authenticEmail = `Subject: Let's sing together this ${eventDayName}! 🎶\n\nHi there,\n\nI’d love to see you back in the circle for ${selectedEvent?.title || "our next session"} this ${eventDateFormatted} (10am–1pm) at ${eventLocation}.\n\nWe're going to be working on "${focusSong}", and I can't wait to hear how it sounds with a full room.\n\nI’m opening up a 20% discount for my past singers to help get the room full of familiar voices.\n\nUse code SING20 at checkout.\n(Valid until ${promoExpiryFormatted})\n\nGrab your spot here: ${eventLink}\n\nI'd love to see you there.\n\n— Daniele`;
   const fullCommunityPost = `Any local singers (or shower-singers) in Armadale? 🎶\n\nHi everyone! I’m Daniele, a local music director. I’m hosting a pop-up choir session at ${eventLocation} on ${eventDateFormatted}.\n\nWe're learning "${focusSong}" this month. It’s a low-pressure morning. There are no auditions and no experience is needed. We just get together to learn some great harmonies and meet some new people in the neighborhood.\n\n📍 Where: ${eventLocation}\n⏰ When: ${eventDateFormatted}, 10am to 1pm\n🎟️ Link: ${eventLink}\n\nHope to see some local faces there!`;
 
+  const songRevealCaption = `The repertoire for ${selectedEvent?.title || "our next session"} is officially here. 🕊️\n\nWe’re diving into:\n✨ Billie Eilish - "What Was I Made For?"\n✨ The Wailin' Jennys - "The Parting Glass"\n\nTwo songs that explore what it means to be human, to lose, and to find ourselves again. The harmonies are hauntingly beautiful.\n\n📍 ${eventLocation}\n⏰ ${eventDateFormatted}, 10am\n\nCome and inhabit these songs with us. Link in bio for the last few spots.`;
+  
+  const flashSaleEmail = `Subject: 24-Hour Flash Sale: 15% off Resonance ⚡\n\nHi there,\n\nI wanted to send a quick note because we’re just a few days away from ${selectedEvent?.title || "our next session"} and the energy is already building.\n\nIf you’ve been sitting on the fence, I’d love to make it a little easier for you to join us.\n\nFor the next 24 hours, you can grab a ticket for 15% off using the code: FLASH15\n\nGrab your spot here: ${eventLink}\n\nWe’re learning some incredible arrangements of Billie Eilish and The Wailin' Jennys. It’s going to be a special morning.\n\nHope to see you in the circle.\n\n— Daniele`;
+
   const handleOpenMail = () => {
     const subject = encodeURIComponent(`Let's sing together for ${selectedEvent?.title}! 🎶`);
     const body = encodeURIComponent(authenticEmail.split('\n\n').slice(1).join('\n\n'));
@@ -486,6 +490,34 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                         </div>
                         <CardContent className="p-8">
                           <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{authenticEmail}</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
+                        <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
+                          <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                            <Music className="h-4 w-4" /> Song Reveal (IG/FB)
+                          </span>
+                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(songRevealCaption, "Song Reveal Caption")}>
+                            <Copy className="h-4 w-4 mr-2" /> COPY
+                          </Button>
+                        </div>
+                        <CardContent className="p-8">
+                          <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{songRevealCaption}</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
+                        <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
+                          <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                            <Zap className="h-4 w-4" /> Flash Sale Newsletter (Kit.com)
+                          </span>
+                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(flashSaleEmail, "Flash Sale Email")}>
+                            <Copy className="h-4 w-4 mr-2" /> COPY
+                          </Button>
+                        </div>
+                        <CardContent className="p-8">
+                          <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{flashSaleEmail}</p>
                         </CardContent>
                       </Card>
                     </div>
