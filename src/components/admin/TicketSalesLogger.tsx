@@ -41,12 +41,14 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
 
   const parseHumanitixDate = (dateStr: string) => {
     if (!dateStr) return null;
-    const cleanStr = dateStr.trim().replace(/^"|"$/g, "");
+    // Clean quotes and extra spaces, then normalize AM/PM to lowercase for consistency
+    const cleanStr = dateStr.trim().replace(/^"|"$/g, "").toLowerCase();
     
-    // Try common Humanitix/Excel formats
     const formats = [
       "dd/MM/yyyy h:mm a",
       "d/MM/yyyy h:mm a",
+      "dd/MM/yyyy hh:mm a",
+      "d/M/yyyy hh:mm a",
       "dd/MM/yyyy HH:mm",
       "d/M/yyyy HH:mm",
       "yyyy-MM-dd HH:mm:ss",
@@ -68,6 +70,27 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
     return isValid(fallback) ? fallback.toISOString() : null;
   };
 
+  // Robust CSV/TSV line splitter that handles quotes and empty fields
+  const splitLine = (line: string, delimiter: string) => {
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === delimiter && !inQuotes) {
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
@@ -81,15 +104,13 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
         const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
         if (lines.length < 2) throw new Error("File is empty or invalid.");
 
-        // Detect delimiter
         const firstLine = lines[0];
         const delimiter = firstLine.includes('\t') ? '\t' : ',';
         
-        const headers = firstLine.split(delimiter).map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
+        const headers = splitLine(firstLine, delimiter).map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
         
-        // Fuzzy header matching
         const findIdx = (possibleNames: string[]) => 
-          headers.findIndex(h => possibleNames.some(name => h.includes(name.toLowerCase())));
+          headers.findIndex(h => possibleNames.some(name => h === name.toLowerCase() || h.includes(name.toLowerCase())));
 
         const h = {
           id: findIdx(["order id"]),
@@ -106,23 +127,13 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
           type: findIdx(["type"]),
         };
 
-        console.log("[TicketSalesLogger] Detected headers:", headers);
-        console.log("[TicketSalesLogger] Header mapping:", h);
-
         if (h.id === -1 || h.date === -1) {
           throw new Error("Required columns (Order id, Order date) not found. Please ensure your file has the correct headers.");
         }
 
         const ordersToUpsert = lines.slice(1)
           .map((line, lineIdx) => {
-            let values: string[];
-            if (delimiter === '\t') {
-              values = line.split('\t');
-            } else {
-              // Handle quoted values in CSV
-              const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-              values = matches ? matches : line.split(",");
-            }
+            const values = splitLine(line, delimiter);
             
             const clean = (idx: number) => {
               const val = values[idx];
@@ -133,7 +144,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
             const orderDate = parseHumanitixDate(clean(h.date));
 
             if (!orderId || !orderDate) {
-              console.warn(`[TicketSalesLogger] Skipping line ${lineIdx + 2}: Missing ID or Date`, { orderId, orderDate });
+              console.warn(`[TicketSalesLogger] Skipping line ${lineIdx + 2}: Missing ID or Date`, { orderId, orderDate, rawDate: clean(h.date) });
               return null;
             }
 
