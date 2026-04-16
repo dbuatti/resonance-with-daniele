@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Plus, Trash2, UserPlus, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Trash2, UserPlus, CheckCircle2, RefreshCw } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,7 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [newName, setNewName] = useState("");
+  const [isRollingOver, setIsRollingOver] = useState(false);
 
   const { data: targets, isLoading } = useQuery<OutreachTarget[]>({
     queryKey: ["outreachTargets", eventId],
@@ -40,6 +41,73 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
     },
     enabled: !!user && !!eventId,
   });
+
+  // Automatic Rollover Logic
+  useEffect(() => {
+    const performRollover = async () => {
+      // Only trigger if we have loaded the current targets and the list is empty
+      if (!isLoading && targets && targets.length === 0 && eventId && !isRollingOver) {
+        setIsRollingOver(true);
+        try {
+          console.log("[OutreachTracker] No targets for current event. Looking for previous targets to roll over...");
+          
+          // 1. Find the most recent event (by date) that had targets
+          // First, get all events to find the "previous" one relative to current event date
+          const { data: currentEvent } = await supabase
+            .from("events")
+            .select("date")
+            .eq("id", eventId)
+            .single();
+
+          if (!currentEvent) return;
+
+          const { data: prevEventWithTargets } = await supabase
+            .from("outreach_targets")
+            .select("event_id, events!inner(date)")
+            .lt("events.date", currentEvent.date)
+            .order("events.date", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const sourceEventId = prevEventWithTargets?.event_id;
+
+          if (sourceEventId) {
+            // 2. Fetch those targets
+            const { data: prevTargets } = await supabase
+              .from("outreach_targets")
+              .select("name")
+              .eq("event_id", sourceEventId);
+
+            if (prevTargets && prevTargets.length > 0) {
+              console.log(`[OutreachTracker] Rolling over ${prevTargets.length} targets from event ${sourceEventId}`);
+              
+              // 3. Insert them for the current event (resetting is_messaged to false)
+              const newTargets = prevTargets.map(t => ({
+                name: t.name,
+                admin_id: user?.id,
+                event_id: eventId,
+                is_messaged: false
+              }));
+
+              const { error: insertError } = await supabase.from("outreach_targets").insert(newTargets);
+              
+              if (insertError) throw insertError;
+
+              showSuccess(`Rolled over ${prevTargets.length} people from your previous list!`);
+              queryClient.invalidateQueries({ queryKey: ["outreachTargets", eventId] });
+            }
+          }
+        } catch (err: any) {
+          console.error("[OutreachTracker] Rollover failed:", err);
+          // Don't show error toast for automatic background tasks unless critical
+        } finally {
+          setIsRollingOver(false);
+        }
+      }
+    };
+
+    performRollover();
+  }, [targets, isLoading, eventId, user?.id, queryClient]);
 
   const addMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -76,32 +144,42 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || (targets?.length || 0) >= 10) return;
+    if (!newName.trim()) return;
     addMutation.mutate(newName.trim());
   };
 
   if (isLoading) return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
-  const remainingSlots = 10 - (targets?.length || 0);
+  const messagedCount = targets?.filter(t => t.is_messaged).length || 0;
+  const totalCount = targets?.length || 0;
 
   return (
     <div className="space-y-6 w-full">
-      {remainingSlots > 0 && (
-        <form onSubmit={handleAdd} className="flex gap-2">
-          <Input
-            placeholder={`Add person ${11 - remainingSlots}...`}
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            className="h-12 rounded-xl bg-background border-primary/20 focus-visible:ring-primary"
-            disabled={addMutation.isPending}
-          />
-          <Button type="submit" size="icon" className="h-12 w-12 rounded-xl" disabled={addMutation.isPending}>
-            {addMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-5 w-5" />}
-          </Button>
-        </form>
-      )}
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+          {messagedCount} / {totalCount} Messaged
+        </p>
+        {isRollingOver && (
+          <div className="flex items-center gap-2 text-[10px] font-black text-primary animate-pulse uppercase tracking-widest">
+            <RefreshCw className="h-3 w-3 animate-spin" /> Rolling over list...
+          </div>
+        )}
+      </div>
 
-      <div className="space-y-3">
+      <form onSubmit={handleAdd} className="flex gap-2">
+        <Input
+          placeholder="Add someone new to the list..."
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          className="h-12 rounded-xl bg-background border-primary/20 focus-visible:ring-primary"
+          disabled={addMutation.isPending}
+        />
+        <Button type="submit" size="icon" className="h-12 w-12 rounded-xl" disabled={addMutation.isPending}>
+          {addMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-5 w-5" />}
+        </Button>
+      </form>
+
+      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
         {targets?.map((target) => (
           <div
             key={target.id}
@@ -138,17 +216,19 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
           </div>
         ))}
 
-        {[...Array(remainingSlots)].map((_, i) => (
-          <div key={i} className="h-16 rounded-2xl border-2 border-dashed border-muted-foreground/10 flex items-center justify-center text-muted-foreground/20">
-            <UserPlus className="h-5 w-5" />
+        {totalCount === 0 && !isRollingOver && (
+          <div className="text-center py-12 bg-muted/10 rounded-[2rem] border-2 border-dashed border-border">
+            <UserPlus className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
+            <p className="text-sm font-medium text-muted-foreground">Your outreach list is empty.</p>
+            <p className="text-[10px] uppercase font-black tracking-widest mt-1 opacity-50">Add your first person above</p>
           </div>
-        ))}
+        )}
       </div>
 
-      {targets && targets.length === 10 && targets.every(t => t.is_messaged) && (
+      {totalCount > 0 && messagedCount === totalCount && (
         <div className="p-6 bg-green-500 text-white rounded-2xl shadow-xl text-center animate-bounce">
           <p className="text-xl font-black flex items-center justify-center gap-2">
-            <CheckCircle2 className="h-6 w-6" /> ALL 10 MESSAGED!
+            <CheckCircle2 className="h-6 w-6" /> ALL {totalCount} MESSAGED!
           </p>
         </div>
       )}
