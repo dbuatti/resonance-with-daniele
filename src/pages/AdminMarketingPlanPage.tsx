@@ -16,7 +16,6 @@ import {
   Brain,
   ArrowRight,
   Sparkles,
-  Leaf,
   Loader2,
   ExternalLink,
   Users,
@@ -27,14 +26,17 @@ import {
   Globe,
   Zap,
   DollarSign,
-  AlertTriangle,
   Activity,
   Bot,
   CheckCircle2,
   ShieldAlert,
-  Building2,
   ListTodo,
-  Facebook
+  Facebook,
+  MessageSquare,
+  LayoutDashboard,
+  FileText,
+  AlertTriangle,
+  Building2
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -44,8 +46,8 @@ import { Textarea } from "@/components/ui/textarea";
 import OutreachTracker from "@/components/admin/OutreachTracker";
 import FacebookGroupTracker from "@/components/admin/FacebookGroupTracker";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, subDays, differenceInDays, startOfDay } from "date-fns";
@@ -54,6 +56,7 @@ import { cn } from "@/lib/utils";
 import EmailMembersModal from "@/components/admin/EmailMembersModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventPrepChecklist from "@/components/admin/EventPrepChecklist";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const AdminMarketingPlanPage: React.FC = () => {
   const { user } = useSession();
@@ -258,56 +261,65 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
 
   return (
     <div className="space-y-8 py-8 md:py-12 bg-background/50 min-h-screen">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-8">
         <BackButton className="mb-6" to="/admin" />
         
-        <header className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-12">
-          <div className="space-y-6 flex-1">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-primary text-primary-foreground px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px]">War Room</Badge>
-              <div className={cn("flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border-2 font-black uppercase tracking-widest text-[10px]", eventHealth.color)}>
-                {eventHealth.icon} {eventHealth.label}
+        {/* --- NEW UNIFIED HEADER --- */}
+        <header className="bg-card border-2 border-primary/5 rounded-[3rem] p-8 md:p-12 shadow-2xl mb-12 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-12 relative z-10">
+            <div className="space-y-6 flex-1 text-center lg:text-left">
+              <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3">
+                <Badge className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px]">Command Center</Badge>
+                <div className={cn("flex items-center gap-2 px-4 py-1.5 rounded-full bg-background border-2 font-black uppercase tracking-widest text-[10px]", eventHealth.color)}>
+                  {eventHealth.icon} {eventHealth.label}
+                </div>
+              </div>
+              <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Operation Hub</h1>
+              
+              <div className="w-full md:w-[450px] mx-auto lg:mx-0 space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-2">Active Session</label>
+                <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
+                  <SelectTrigger className="h-20 rounded-[2rem] shadow-2xl bg-background border-4 border-primary/10 text-2xl font-black px-8">
+                    <SelectValue placeholder="Choose an event..." />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-[2rem] p-2">
+                    {events?.map((event) => (
+                      <SelectItem key={event.id} value={event.id} className="py-4 font-bold rounded-xl">
+                        {event.title} ({format(new Date(event.date), "MMM d")})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Command Center</h1>
-            
-            <div className="w-full md:w-96 space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Active Operation</label>
-              <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-                <SelectTrigger className="h-16 rounded-[1.5rem] shadow-xl bg-card border-4 border-primary/10 text-xl font-black">
-                  <SelectValue placeholder="Choose an event..." />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl">
-                  {events?.map((event) => (
-                    <SelectItem key={event.id} value={event.id} className="py-4 font-bold">
-                      {event.title} ({format(new Date(event.date), "MMM d")})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:w-auto">
-            <Card className="bg-card p-6 rounded-[2.5rem] shadow-2xl border-none flex items-center gap-4 min-w-[220px]">
-              <div className="bg-primary/10 p-4 rounded-2xl">
-                <Clock className="h-8 w-8 text-primary" />
-              </div>
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full lg:w-auto">
+              <Card className="bg-background p-8 rounded-[2.5rem] shadow-xl border-none flex flex-col items-center text-center gap-2 min-w-[200px]">
+                <div className="bg-primary/10 p-4 rounded-2xl mb-2">
+                  <Clock className="h-8 w-8 text-primary" />
+                </div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">T-Minus</p>
                 <p className="text-3xl font-black text-primary tracking-tighter">{timeLeft}</p>
-              </div>
-            </Card>
-            
-            <Card className="bg-primary text-primary-foreground p-6 rounded-[2.5rem] shadow-2xl border-none flex items-center gap-4 min-w-[220px]">
-              <div className="bg-white/20 p-4 rounded-2xl">
-                <DollarSign className="h-8 w-8 text-white" />
-              </div>
-              <div>
+              </Card>
+              
+              <Card className="bg-background p-8 rounded-[2.5rem] shadow-xl border-none flex flex-col items-center text-center gap-2 min-w-[200px]">
+                <div className="bg-green-500/10 p-4 rounded-2xl mb-2">
+                  <Ticket className="h-8 w-8 text-green-600" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tickets</p>
+                <p className="text-3xl font-black text-green-600 tracking-tighter">{stats?.totalTickets || 0} / {targetTickets}</p>
+              </Card>
+
+              <Card className="bg-primary text-primary-foreground p-8 rounded-[2.5rem] shadow-xl border-none flex flex-col items-center text-center gap-2 min-w-[200px]">
+                <div className="bg-white/20 p-4 rounded-2xl mb-2">
+                  <DollarSign className="h-8 w-8 text-white" />
+                </div>
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Net Profit</p>
                 <p className="text-3xl font-black tracking-tighter">${netProfit.toFixed(0)}</p>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
         </header>
 
@@ -319,270 +331,194 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
         ) : (
           <Tabs defaultValue="execution" className="space-y-12">
             <div className="flex justify-center">
-              <TabsList className="grid w-full max-w-md grid-cols-2 rounded-2xl h-14 p-1 bg-muted/50">
-                <TabsTrigger value="execution" className="rounded-xl font-black flex items-center gap-2">
-                  <Zap className="h-4 w-4" /> Execution
+              <TabsList className="grid w-full max-w-md grid-cols-2 rounded-[2rem] h-16 p-1.5 bg-muted/50 shadow-inner">
+                <TabsTrigger value="execution" className="rounded-[1.5rem] font-black text-lg flex items-center gap-2 data-[state=active]:shadow-xl">
+                  <Zap className="h-5 w-5" /> Execution
                 </TabsTrigger>
-                <TabsTrigger value="preparation" className="rounded-xl font-black flex items-center gap-2">
-                  <ListTodo className="h-4 w-4" /> Preparation
+                <TabsTrigger value="preparation" className="rounded-[1.5rem] font-black text-lg flex items-center gap-2 data-[state=active]:shadow-xl">
+                  <ListTodo className="h-5 w-5" /> Preparation
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="execution" className="space-y-12">
-              {/* Daily Mission Banner */}
-              {dailyMission && (
-                <section className="animate-fade-in-up">
-                  <Card className="bg-accent text-accent-foreground border-none shadow-2xl rounded-[3rem] overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-                    <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 relative z-10">
-                      <div className="bg-white/20 p-6 rounded-[2rem] shadow-inner">
-                        {React.cloneElement(dailyMission.icon as React.ReactElement, { className: "h-12 w-12" })}
-                      </div>
-                      <div className="flex-1 text-center md:text-left space-y-2">
-                        <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">Today's High-Impact Mission</h3>
-                        <p className="text-4xl font-black font-lora leading-tight">{dailyMission.title}: {dailyMission.task}</p>
-                      </div>
-                      <Button size="lg" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => {}}>
-                        Execute Mission <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </section>
-              )}
-
-              {/* Stats Grid */}
-              <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <Card className="border-none bg-muted/30 p-8 rounded-[2.5rem] shadow-inner flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                      <Ticket className="h-4 w-4" /> Ticket Momentum
-                    </h3>
-                    <p className="text-4xl font-black text-primary">{stats?.totalTickets || 0} / {targetTickets}</p>
-                  </div>
-                  <div className="mt-6 space-y-2">
-                    <Progress value={ticketProgress} className="h-3 bg-primary/10" />
-                    <p className="text-[10px] font-bold text-muted-foreground text-right">{Math.round(ticketProgress)}% of target reached</p>
-                  </div>
-                </Card>
-
-                <Card className="border-none bg-muted/30 p-8 rounded-[2.5rem] shadow-inner flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-green-600 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" /> Revenue Intel
-                    </h3>
-                    <p className="text-4xl font-black text-green-600">${(stats?.totalEarnings || 0).toFixed(0)}</p>
-                  </div>
-                  <div className="mt-6 flex justify-between items-end">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Expenses</p>
-                      <p className="text-lg font-bold text-red-500">-${(stats?.totalExpenses || 0).toFixed(0)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Break Even</p>
-                      <p className="text-lg font-bold text-foreground">{stats && stats.totalEarnings >= stats.totalExpenses ? "✅ SECURED" : "PENDING"}</p>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card className="border-none bg-muted/30 p-8 rounded-[2.5rem] shadow-inner flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-accent-foreground flex items-center gap-2">
-                      <Music className="h-4 w-4" /> Repertoire Focus
-                    </h3>
-                    <p className="text-2xl font-black font-lora leading-tight line-clamp-2">"{focusSong}"</p>
-                  </div>
-                  <Button variant="outline" className="mt-6 rounded-xl font-bold border-primary/20 text-primary" asChild>
-                    <a href={`/resources?folderId=${nominatedFolder?.name}`} target="_blank" rel="noopener noreferrer">View Materials</a>
-                  </Button>
-                </Card>
-              </section>
-
+            <TabsContent value="execution" className="space-y-12 animate-fade-in-up">
+              {/* --- NEW 3-COLUMN DASHBOARD LAYOUT --- */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                <div className="lg:col-span-7 space-y-12">
+                
+                {/* COLUMN 1: OUTREACH & TASKS (4/12) */}
+                <div className="lg:col-span-4 space-y-10">
                   <section className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-3xl font-black font-lora flex items-center gap-3">
-                        <Facebook className="h-8 w-8 text-primary" /> Facebook Outreach
-                      </h2>
-                      <Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">Monthly Checklist</Badge>
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="h-6 w-1.5 bg-primary rounded-full" />
+                      <h2 className="text-2xl font-black font-lora tracking-tight">Relational Outreach</h2>
                     </div>
-                    <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden">
-                      <CardContent className="p-6">
-                        <FacebookGroupTracker eventId={selectedEventId} />
-                      </CardContent>
-                    </Card>
-                  </section>
-
-                  <section className="space-y-6">
-                    <h2 className="text-3xl font-black font-lora flex items-center gap-3">
-                      <Bot className="h-8 w-8 text-primary" /> AI Strategy Assistant
-                    </h2>
-                    <Card className="border-none shadow-xl bg-gradient-to-br from-primary/5 to-accent/5 rounded-[2rem] overflow-hidden">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-bold">Generate Fresh Marketing Copy</CardTitle>
-                        <CardDescription>Copy this prompt and paste it into Claude or Gemini for custom variations.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="bg-background/80 p-6 rounded-2xl border-2 border-primary/10 text-sm font-medium text-muted-foreground italic leading-relaxed">
-                          "{aiPrompt.substring(0, 200)}..."
-                        </div>
-                        <Button className="w-full h-12 font-black rounded-xl" onClick={() => copyToClipboard(aiPrompt, "AI Prompt")}>
-                          <Copy className="h-4 w-4 mr-2" /> Copy Full AI Prompt
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </section>
-
-                  <section className="space-y-6">
-                    <h2 className="text-3xl font-black font-lora flex items-center gap-3">
-                      <Mic2 className="h-8 w-8 text-primary" /> Marketing Assets
-                    </h2>
-                    
-                    <div className="space-y-6">
-                      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
-                        <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
-                          <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                            <Users className="h-4 w-4" /> Community Post (FB Groups)
-                          </span>
-                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(fullCommunityPost, "Community Post")}>
-                            <Copy className="h-4 w-4 mr-2" /> COPY
-                          </Button>
-                        </div>
-                        <CardContent className="p-8">
-                          <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{fullCommunityPost}</p>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
-                        <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
-                          <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                            <Instagram className="h-4 w-4" /> Instagram Caption
-                          </span>
-                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(authenticCaption, "Instagram Caption")}>
-                            <Copy className="h-4 w-4 mr-2" /> COPY
-                          </Button>
-                        </div>
-                        <CardContent className="p-8">
-                          <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{authenticCaption}</p>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
-                        <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
-                          <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                            <Mail className="h-4 w-4" /> Email Template
-                          </span>
-                          <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(authenticEmail, "Email Template")}>
-                              <Copy className="h-4 w-4 mr-2" /> COPY
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black text-primary hover:bg-primary/10" onClick={handleOpenMail}>
-                              <ExternalLink className="h-4 w-4 mr-2" /> OPEN MAIL
-                            </Button>
-                          </div>
-                        </div>
-                        <CardContent className="p-8">
-                          <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{authenticEmail}</p>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
-                        <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
-                          <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                            <Music className="h-4 w-4" /> Song Reveal (IG/FB)
-                          </span>
-                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(songRevealCaption, "Song Reveal Caption")}>
-                            <Copy className="h-4 w-4 mr-2" /> COPY
-                          </Button>
-                        </div>
-                        <CardContent className="p-8">
-                          <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{songRevealCaption}</p>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-none shadow-xl bg-card overflow-hidden rounded-[2rem]">
-                        <div className="bg-muted/50 px-8 py-4 flex justify-between items-center border-b">
-                          <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                            <Zap className="h-4 w-4" /> Flash Sale Newsletter (Kit.com)
-                          </span>
-                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10 hover:text-primary" onClick={() => copyToClipboard(flashSaleEmail, "Flash Sale Email")}>
-                            <Copy className="h-4 w-4 mr-2" /> COPY
-                          </Button>
-                        </div>
-                        <CardContent className="p-8">
-                          <p className="text-base italic text-muted-foreground leading-relaxed whitespace-pre-wrap">{flashSaleEmail}</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </section>
-                </div>
-
-                <div className="lg:col-span-5 space-y-12">
-                  <section>
                     <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden rounded-[3rem]">
-                      <CardContent className="p-10 space-y-8">
-                        <div className="flex items-center gap-6">
-                          <div className="bg-primary text-primary-foreground p-4 rounded-2xl shadow-xl">
-                            <Target className="h-8 w-8" />
+                      <CardContent className="p-8 space-y-8">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-primary text-primary-foreground p-3 rounded-xl shadow-lg">
+                            <Target className="h-6 w-6" />
                           </div>
-                          <div className="space-y-1">
-                            <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Relational Outreach</h2>
-                            <p className="text-2xl font-black font-lora">The 10 People Rule.</p>
-                          </div>
+                          <p className="text-lg font-black font-lora">The 10 People Rule</p>
                         </div>
                         <OutreachTracker eventId={selectedEventId} />
                       </CardContent>
                     </Card>
                   </section>
 
-                  <div className="sticky top-24 space-y-10">
-                    <Card className="border-none shadow-2xl bg-yellow-50 dark:bg-yellow-950/20 border-l-[12px] border-yellow-400 rounded-[2.5rem]">
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="h-6 w-1.5 bg-primary rounded-full" />
+                      <h2 className="text-2xl font-black font-lora tracking-tight">Facebook Groups</h2>
+                    </div>
+                    <Card className="border-none shadow-xl bg-card rounded-[2.5rem] overflow-hidden">
+                      <CardContent className="p-6">
+                        <FacebookGroupTracker eventId={selectedEventId} />
+                      </CardContent>
+                    </Card>
+                  </section>
+
+                  <MarketingChecklist eventId={selectedEventId} onActionClick={handleTaskAction} />
+                </div>
+
+                {/* COLUMN 2: STRATEGY & ASSETS (5/12) */}
+                <div className="lg:col-span-5 space-y-10">
+                  {dailyMission && (
+                    <Card className="bg-accent text-accent-foreground border-none shadow-2xl rounded-[3rem] overflow-hidden relative">
+                      <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+                      <CardContent className="p-8 flex items-start gap-6 relative z-10">
+                        <div className="bg-white/20 p-4 rounded-2xl shadow-inner shrink-0">
+                          {React.cloneElement(dailyMission.icon as React.ReactElement, { className: "h-8 w-8" })}
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-70">Today's Mission</h3>
+                          <p className="text-2xl font-black font-lora leading-tight">{dailyMission.title}</p>
+                          <p className="text-lg font-medium opacity-90">{dailyMission.task}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="h-6 w-1.5 bg-primary rounded-full" />
+                      <h2 className="text-2xl font-black font-lora tracking-tight">AI Strategy</h2>
+                    </div>
+                    <Card className="border-none shadow-xl bg-gradient-to-br from-primary/5 to-accent/5 rounded-[3rem] overflow-hidden">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-bold flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> Prompt Generator</CardTitle>
+                        <CardDescription>Copy this into Claude or Gemini for fresh copy.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="bg-background/80 p-6 rounded-2xl border-2 border-primary/10 text-sm font-medium text-muted-foreground italic leading-relaxed line-clamp-4">
+                          "{aiPrompt}"
+                        </div>
+                        <Button className="w-full h-14 font-black rounded-2xl shadow-lg" onClick={() => copyToClipboard(aiPrompt, "AI Prompt")}>
+                          <Copy className="h-5 w-5 mr-2" /> Copy Full AI Prompt
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </section>
+
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="h-6 w-1.5 bg-primary rounded-full" />
+                      <h2 className="text-2xl font-black font-lora tracking-tight">Marketing Assets</h2>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-4">
+                      {[
+                        { label: "Community Post", icon: <Users />, text: fullCommunityPost, color: "bg-blue-50 text-blue-600" },
+                        { label: "Instagram Caption", icon: <Instagram />, text: authenticCaption, color: "bg-rose-50 text-rose-600" },
+                        { label: "Email Template", icon: <Mail />, text: authenticEmail, color: "bg-primary/5 text-primary", action: handleOpenMail },
+                        { label: "Song Reveal", icon: <Music />, text: songRevealCaption, color: "bg-accent/10 text-accent-foreground" },
+                        { label: "Flash Sale", icon: <Zap />, text: flashSaleEmail, color: "bg-yellow-50 text-yellow-600" }
+                      ].map((asset, i) => (
+                        <Card key={i} className="border-none shadow-md bg-card overflow-hidden rounded-2xl group/asset">
+                          <div className="px-6 py-4 flex justify-between items-center border-b border-border/50">
+                            <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                              <div className={cn("p-1.5 rounded-lg", asset.color)}>{asset.icon}</div>
+                              {asset.label}
+                            </span>
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10" onClick={() => copyToClipboard(asset.text, asset.label)}>
+                                <Copy className="h-3.5 w-3.5 mr-1.5" /> COPY
+                              </Button>
+                              {asset.action && (
+                                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black text-primary hover:bg-primary/10" onClick={asset.action}>
+                                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> OPEN
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          <CardContent className="p-6">
+                            <p className="text-xs italic text-muted-foreground leading-relaxed line-clamp-2">{asset.text}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
+                {/* COLUMN 3: WORKSPACE (3/12) */}
+                <div className="lg:col-span-3 space-y-10">
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="h-6 w-1.5 bg-primary rounded-full" />
+                      <h2 className="text-2xl font-black font-lora tracking-tight">Workspace</h2>
+                    </div>
+                    <Card className="border-none shadow-2xl bg-yellow-50 dark:bg-yellow-950/20 border-l-[12px] border-yellow-400 rounded-[2.5rem] min-h-[400px] flex flex-col">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-xl font-black flex items-center gap-3 text-yellow-800 dark:text-yellow-400">
                           <Brain className="h-6 w-6" /> Brain Dump
                         </CardTitle>
                         <CardDescription className="text-yellow-700/70 dark:text-yellow-400/60 font-medium">Ideas for {selectedEvent?.title}. Auto-saves.</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="flex-1 flex flex-col">
                         <Textarea 
                           placeholder="Random ideas for this specific event..." 
-                          className="min-h-[200px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400 rounded-2xl text-base"
+                          className="flex-1 min-h-[300px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400 rounded-2xl text-base resize-none"
                           value={localBrainDump}
                           onChange={(e) => setLocalBrainDump(e.target.value)}
                         />
                         {saveNoteMutation.isPending && <p className="text-[10px] text-yellow-600 mt-3 font-bold animate-pulse uppercase tracking-widest">Syncing to cloud...</p>}
                       </CardContent>
                     </Card>
+                  </section>
 
-                    <MarketingChecklist eventId={selectedEventId} onActionClick={handleTaskAction} />
-                    
-                    <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden">
-                      <CardHeader className="bg-muted/30">
-                        <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                          <Globe className="h-4 w-4" /> Quick Links
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 grid grid-cols-2 gap-3">
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/301509297978154" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern Notice</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/497354361728412/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern Comm</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/1124143148868314/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Malvern Public</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/408800682884399/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Choral Coll</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/1173481763392463/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Choirs Melb</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.facebook.com/groups/303437066726860/" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4 mr-2 text-blue-600" /> Choir Network</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://ads.google.com/aw/campaigns?ocid=8144309883&euid=6471693261&__u=3594183589&uscid=8144309883&__c=6279405667&authuser=0&workspaceId=0&subid=au-en-awhp-g-aw-c-home-signin-bgc!o2-%7Cib:none%7Cib:6653296821%7Cib:9279461727%7Cib:7966379274%7C-ahpm-0000000200-0000000000%7C-ahpm-0000000179-0000000001" target="_blank" rel="noopener noreferrer">Google Ads</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://www.stonnington.vic.gov.au/MyCity/Dashboard" target="_blank" rel="noopener noreferrer">Stonnington Hub</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://humanitix.com" target="_blank" rel="noopener noreferrer">Humanitix</a></Button>
-                        <Button variant="outline" className="rounded-xl h-12 font-bold" asChild><a href="https://kit.com" target="_blank" rel="noopener noreferrer">Kit (Email)</a></Button>
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="h-6 w-1.5 bg-primary rounded-full" />
+                      <h2 className="text-2xl font-black font-lora tracking-tight">Quick Links</h2>
+                    </div>
+                    <Card className="border-none shadow-xl bg-card rounded-[2.5rem] overflow-hidden">
+                      <CardContent className="p-6 grid grid-cols-1 gap-3">
+                        {[
+                          { label: "Humanitix", url: "https://humanitix.com", icon: <Ticket className="text-primary" /> },
+                          { label: "Kit (Email)", url: "https://kit.com", icon: <Mail className="text-primary" /> },
+                          { label: "Google Ads", url: "https://ads.google.com", icon: <TrendingUp className="text-primary" /> },
+                          { label: "Stonnington Hub", url: "https://www.stonnington.vic.gov.au/MyCity/Dashboard", icon: <Building2 className="text-primary" /> },
+                          { label: "FB: Malvern Notice", url: "https://www.facebook.com/groups/301509297978154", icon: <Facebook className="text-blue-600" /> },
+                          { label: "FB: Choirs Melb", url: "https://www.facebook.com/groups/1173481763392463/", icon: <Facebook className="text-blue-600" /> }
+                        ].map((link, i) => (
+                          <Button key={i} variant="outline" className="rounded-xl h-14 font-bold justify-start px-6 border-primary/5 hover:bg-primary/5" asChild>
+                            <a href={link.url} target="_blank" rel="noopener noreferrer">
+                              <div className="mr-4">{link.icon}</div>
+                              {link.label}
+                            </a>
+                          </Button>
+                        ))}
                       </CardContent>
                     </Card>
-                  </div>
+                  </section>
                 </div>
+
               </div>
             </TabsContent>
 
-            <TabsContent value="preparation">
-              <EventPrepChecklist eventId={selectedEventId} />
+            <TabsContent value="preparation" className="animate-fade-in-up">
+              <div className="max-w-4xl mx-auto">
+                <EventPrepChecklist eventId={selectedEventId} />
+              </div>
             </TabsContent>
           </Tabs>
         )}
