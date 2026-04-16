@@ -37,13 +37,13 @@ const AdminZone: React.FC = () => {
 
   const adminTools = [
     {
-      title: "Marketing V4",
-      description: "The new high-octane command center. Optimized for speed, outreach, and strategy execution.",
+      title: "Marketing V2",
+      description: "The new high-fidelity command center prototype. Dark mode, real-time velocity, and streamlined execution.",
       icon: <Zap className="h-6 w-6 text-primary" />,
-      link: "/admin/marketing-plan-4",
-      label: "Launch V4",
+      link: "/admin/marketing-plan-v2",
+      label: "Open V2 Prototype",
       highlight: true,
-      badge: "New"
+      badge: "New Prototype"
     },
     {
       title: "Growth Strategy",
@@ -59,7 +59,9 @@ const AdminZone: React.FC = () => {
       description: "Learn how to link resources to events and manage your personal lesson notes for members.",
       icon: <BookOpen className="h-6 w-6 text-primary" />,
       link: "/admin/session-hub-guide",
-      label: "Read Guide"
+      label: "Read Guide",
+      highlight: true,
+      badge: "New"
     },
     {
       title: "Feedback Analysis",

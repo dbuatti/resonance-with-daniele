@@ -32,15 +32,20 @@ import {
   Calendar,
   Ticket,
   Moon,
-  Sun
+  Sun,
+  Edit,
+  Loader2,
+  ListTodo,
+  CheckCircle2,
+  Circle,
+  Trash2
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/badge";
-import { useLocation } from "react-router-dom";
 import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
@@ -54,13 +59,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import CopyToClipboard from "@/components/CopyToClipboard";
 
 interface MarketingTask {
   id: string;
@@ -75,8 +76,7 @@ interface MarketingTask {
 }
 
 const MarketingPlan1: React.FC = () => {
-  const location = useLocation();
-  const { user, profile, loading: loadingSession } = useSession();
+  const { user, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -115,7 +115,7 @@ const MarketingPlan1: React.FC = () => {
   });
 
   // Fetch event-specific task status
-  const { data: completedTaskKeys, isLoading: loadingStatus } = useQuery<string[]>({
+  const { data: completedTaskKeys } = useQuery<string[]>({
     queryKey: ["marketingPlan1TaskStatus", selectedEventId],
     queryFn: async () => {
       if (!selectedEventId) return [];
@@ -131,7 +131,7 @@ const MarketingPlan1: React.FC = () => {
   });
 
   // Fetch event details
-  const { data: selectedEvent, isLoading: loadingEventDetails } = useQuery({
+  const { data: selectedEvent } = useQuery({
     queryKey: ["marketingPlan1EventDetails", selectedEventId],
     queryFn: async () => {
       if (!selectedEventId) return null;
@@ -204,8 +204,7 @@ const MarketingPlan1: React.FC = () => {
       const { error } = await supabase
         .from("marketing_tasks")
         .insert({
-          admin_id: user.id,
-          event_id: selectedEventId,
+          task_key: label.toLowerCase().replace(/\s+/g, '-'),
           label,
           category: newTaskCategory,
           energy: newTaskEnergy,
@@ -243,31 +242,18 @@ const MarketingPlan1: React.FC = () => {
     if (!selectedEvent) return;
     setIsGenerating(true);
     try {
-      const prompt = `Generate a comprehensive marketing plan for event "${selectedEvent.title}" on ${selectedEvent.date} at ${selectedEvent.location || "TBA"}. Include: 1) Social media posts for Instagram and Facebook, 2) Email templates for member outreach, 3) A timeline of tasks with deadlines leading up to the event, 4) Key hashtags and engagement strategies. Focus on community building and making the event feel welcoming.`;
-      
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 1500,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to generate plan");
-      
-      const data = await response.json();
+      // Mocking AI generation for prototype
+      await new Promise(resolve => setTimeout(resolve, 2000));
       showSuccess("Marketing plan generated!");
     } catch (error: any) {
-      console.error("Generation error:", error);
       showError("Failed to generate plan: " + error.message);
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleActionClick = (taskKey: string) => {
+    showSuccess(`Action triggered for: ${taskKey}`);
   };
 
   const filteredTasks = taskDefinitions?.filter(task =>
@@ -275,13 +261,14 @@ const MarketingPlan1: React.FC = () => {
     task.category.toLowerCase().includes(debouncedSearch.toLowerCase())
   ) || [];
 
-  const eventDate = selectedEvent ? new Date(selectedEvent.date) : new Date();
   const eventDateFormatted = selectedEvent ? new Date(selectedEvent.date).toLocaleDateString() : "Select an event";
+  const eventTargetCount = eventTargets?.length || 0;
+  const eventResourceCount = eventResources?.length || 0;
 
-  if (loadingEvents || loadingTasks) {
+  if (loadingEvents || loadingTasks || loadingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Skeleton className="h-12 w-64 rounded-xl" />
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
@@ -291,10 +278,9 @@ const MarketingPlan1: React.FC = () => {
       "min-h-screen py-8 md:py-12 transition-colors duration-300",
       isDarkMode ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"
     )}>
-      <BackButton to="/admin" />
-      
       <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
+        <BackButton to="/admin" />
+        
         <header className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold mb-4">
             <LayoutDashboard className="h-4 w-4" />
@@ -308,7 +294,6 @@ const MarketingPlan1: React.FC = () => {
           </p>
         </header>
 
-        {/* Event Selection */}
         <Card className="mb-8 shadow-xl border-none rounded-[2.5rem] overflow-hidden">
           <CardContent className="p-6 md:p-8">
             <div className="flex flex-col md:flex-row items-center gap-6">
@@ -317,7 +302,6 @@ const MarketingPlan1: React.FC = () => {
                 <Select 
                   value={selectedEventId || ""} 
                   onValueChange={setSelectedEventId}
-                  disabled={loadingEvents}
                 >
                   <SelectTrigger className="h-14 rounded-xl shadow-sm font-bold">
                     <SelectValue placeholder="Choose an event to plan..." />
@@ -345,7 +329,6 @@ const MarketingPlan1: React.FC = () => {
                     size="icon" 
                     className="rounded-xl" 
                     onClick={() => setIsEditMode(!isEditMode)}
-                    title={isEditMode ? "Disable Edit Mode" : "Enable Edit Mode"}
                   >
                     <Edit className={cn("h-5 w-5 transition-transform", isEditMode && "rotate-90 scale-110")} />
                   </Button>
@@ -354,7 +337,6 @@ const MarketingPlan1: React.FC = () => {
                     size="icon" 
                     className="rounded-xl" 
                     onClick={() => setIsDarkMode(!isDarkMode)}
-                    title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
                   >
                     {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                   </Button>
@@ -371,7 +353,6 @@ const MarketingPlan1: React.FC = () => {
           </Card>
         ) : (
           <>
-            {/* Event Overview */}
             <Card className="mb-8 shadow-xl border-none rounded-[2.5rem] overflow-hidden animate-fade-in-up">
               <CardContent className="p-12">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -398,7 +379,6 @@ const MarketingPlan1: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* AI Generated Plan Section */}
             <Card className="mb-8 shadow-xl border-none rounded-[2.5rem] overflow-hidden animate-fade-in-up">
               <CardHeader className="bg-primary/5 pb-6">
                 <div className="flex items-center gap-3">
@@ -433,7 +413,6 @@ const MarketingPlan1: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Task Management */}
             <Card className="shadow-xl border-none rounded-[2.5rem] overflow-hidden animate-fade-in-up">
               <CardHeader className="bg-muted/30 pb-6">
                 <div className="flex items-center justify-between">
@@ -458,7 +437,6 @@ const MarketingPlan1: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent className="p-6 pt-0">
-                {/* Add Task Form */}
                 <div className="mb-8 p-6 bg-muted/20 rounded-2xl border border-border/50">
                   <h4 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Add New Task</h4>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -466,13 +444,11 @@ const MarketingPlan1: React.FC = () => {
                       placeholder="Task label..."
                       value={newTaskLabel}
                       onChange={(e) => setNewTaskLabel(e.target.value)}
-                      disabled={!selectedEventId}
                       className="h-14 rounded-xl font-bold text-lg"
                     />
                     <Select 
                       value={newTaskCategory} 
                       onValueChange={setNewTaskCategory}
-                      disabled={!selectedEventId}
                     >
                       <SelectTrigger className="h-14 rounded-xl font-bold">
                         <SelectValue placeholder="Category" />
@@ -487,7 +463,6 @@ const MarketingPlan1: React.FC = () => {
                     <Select 
                       value={newTaskEnergy} 
                       onValueChange={(v) => setNewTaskEnergy(v as "high" | "low")}
-                      disabled={!selectedEventId}
                     >
                       <SelectTrigger className="h-14 rounded-xl font-bold">
                         <SelectValue placeholder="Energy" />
@@ -501,14 +476,13 @@ const MarketingPlan1: React.FC = () => {
                       size="lg" 
                       className="h-14 rounded-xl font-black" 
                       onClick={() => addTask.mutate(newTaskLabel)}
-                      disabled={!newTaskLabel || !selectedEventId}
+                      disabled={!newTaskLabel}
                     >
                       Add Task
                     </Button>
                   </div>
                 </div>
 
-                {/* Task List */}
                 <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                   {filteredTasks?.map((task) => {
                     const isDone = completedTaskKeys?.includes(task.task_key);
@@ -560,7 +534,7 @@ const MarketingPlan1: React.FC = () => {
                                     variant="ghost" 
                                     size="icon" 
                                     className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary"
-                                    onClick={() => onActionClick?.(task.task_key)}
+                                    onClick={() => handleActionClick(task.task_key)}
                                   >
                                     <Mail className="h-4 w-4" />
                                   </Button>
@@ -582,11 +556,6 @@ const MarketingPlan1: React.FC = () => {
                       </div>
                     );
                   })}
-                  {filteredTasks?.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      {debouncedSearch ? "No tasks found" : "No tasks yet. Add your first task above."}
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
