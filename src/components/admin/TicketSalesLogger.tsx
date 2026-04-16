@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { format, parse } from "date-fns";
+import { format, parse, isValid } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
@@ -41,13 +41,29 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   };
 
   const parseHumanitixDate = (dateStr: string) => {
-    try {
-      // Format: 08/03/2026 6:45 pm
-      return parse(dateStr, "dd/MM/yyyy h:mm a", new Date()).toISOString();
-    } catch (e) {
-      console.error("Date parsing error:", dateStr, e);
-      return new Date().toISOString();
+    if (!dateStr) return new Date().toISOString();
+    const cleanStr = dateStr.trim().replace(/^"|"$/g, "");
+    
+    // Try multiple common Humanitix formats to be safe
+    const formats = [
+      "dd/MM/yyyy h:mm a",
+      "d/MM/yyyy h:mm a",
+      "dd/MM/yyyy HH:mm",
+      "yyyy-MM-dd HH:mm:ss"
+    ];
+
+    for (const fmt of formats) {
+      try {
+        const parsed = parse(cleanStr, fmt, new Date());
+        if (isValid(parsed)) return parsed.toISOString();
+      } catch (e) {
+        continue;
+      }
     }
+
+    // Fallback to native Date parsing if date-fns fails
+    const fallback = new Date(cleanStr);
+    return isValid(fallback) ? fallback.toISOString() : new Date().toISOString();
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -75,6 +91,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
         earnings: headers.indexOf("Your earnings"),
         discount: headers.indexOf("Discount code used"),
         status: headers.indexOf("Status"),
+        type: headers.indexOf("Type"), // Capture the 'Type' column
       };
 
       const ordersToUpsert = lines.slice(1)
@@ -97,6 +114,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
             your_earnings: parseCurrency(clean(values[h.earnings])),
             discount_code: clean(values[h.discount]),
             status: clean(values[h.status]),
+            order_type: h.type !== -1 ? clean(values[h.type]) : null,
           };
         })
         .filter(o => o.order_id); // Remove empty rows
