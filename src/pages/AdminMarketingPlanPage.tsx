@@ -256,7 +256,6 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>;
 
   const targetTickets = 125;
-  const ticketProgress = stats ? (stats.totalTickets / targetTickets) * 100 : 0;
   const netProfit = stats ? stats.totalEarnings - stats.totalExpenses : 0;
 
   return (
@@ -264,7 +263,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
       <div className="max-w-[1600px] mx-auto px-4 md:px-8">
         <BackButton className="mb-6" to="/admin" />
         
-        {/* --- NEW UNIFIED HEADER --- */}
+        {/* --- UNIFIED HEADER --- */}
         <header className="bg-card border-2 border-primary/5 rounded-[3rem] p-8 md:p-12 shadow-2xl mb-12 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
           
@@ -342,10 +341,10 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
             </div>
 
             <TabsContent value="execution" className="space-y-12 animate-fade-in-up">
-              {/* --- NEW 3-COLUMN DASHBOARD LAYOUT --- */}
+              {/* --- 3-COLUMN DASHBOARD LAYOUT --- */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 
-                {/* COLUMN 1: OUTREACH & TASKS (4/12) */}
+                {/* COLUMN 1: OUTREACH & FB (4/12) */}
                 <div className="lg:col-span-4 space-y-10">
                   <section className="space-y-6">
                     <div className="flex items-center gap-3 px-2">
@@ -376,8 +375,6 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                       </CardContent>
                     </Card>
                   </section>
-
-                  <MarketingChecklist eventId={selectedEventId} onActionClick={handleTaskAction} />
                 </div>
 
                 {/* COLUMN 2: STRATEGY & ASSETS (5/12) */}
@@ -511,8 +508,16 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                     </Card>
                   </section>
                 </div>
-
               </div>
+
+              {/* FULL WIDTH CHECKLIST SECTION */}
+              <section className="space-y-6 pt-12 border-t border-border/50">
+                <div className="flex items-center gap-3 px-2">
+                  <div className="h-6 w-1.5 bg-primary rounded-full" />
+                  <h2 className="text-2xl font-black font-lora tracking-tight">Execution Checklist</h2>
+                </div>
+                <MarketingChecklist eventId={selectedEventId} onActionClick={handleTaskAction} />
+              </section>
             </TabsContent>
 
             <TabsContent value="preparation" className="animate-fade-in-up">
