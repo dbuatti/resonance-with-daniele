@@ -36,7 +36,8 @@ import {
   LayoutDashboard,
   FileText,
   AlertTriangle,
-  Building2
+  Building2,
+  Trophy
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -259,118 +260,123 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
   const netProfit = stats ? stats.totalEarnings - stats.totalExpenses : 0;
 
   return (
-    <div className="space-y-8 py-8 md:py-12 bg-background/50 min-h-screen">
-      <div className="max-w-[1600px] mx-auto px-4 md:px-8">
-        <BackButton className="mb-6" to="/admin" />
+    <div className="space-y-12 py-8 md:py-12 bg-background/50 min-h-screen">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-12">
+        <BackButton className="mb-8" to="/admin" />
         
-        {/* --- UNIFIED HEADER --- */}
-        <header className="bg-card border-2 border-primary/5 rounded-[3rem] p-8 md:p-12 shadow-2xl mb-12 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+        {/* --- RADICAL HEADER --- */}
+        <header className="bg-card border-2 border-primary/5 rounded-[4rem] p-12 md:p-20 shadow-2xl mb-20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[120px]" />
           
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-12 relative z-10">
-            <div className="space-y-6 flex-1 text-center lg:text-left">
-              <div className="flex flex-wrap justify-center lg:justify-start items-center gap-3">
-                <Badge className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px]">Command Center</Badge>
-                <div className={cn("flex items-center gap-2 px-4 py-1.5 rounded-full bg-background border-2 font-black uppercase tracking-widest text-[10px]", eventHealth.color)}>
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-16 relative z-10">
+            <div className="space-y-10 flex-1">
+              <div className="flex flex-wrap items-center gap-4">
+                <Badge className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-black uppercase tracking-widest text-[11px]">Command Center</Badge>
+                <div className={cn("flex items-center gap-2 px-5 py-2 rounded-full bg-background border-2 font-black uppercase tracking-widest text-[11px] shadow-sm", eventHealth.color)}>
                   {eventHealth.icon} {eventHealth.label}
                 </div>
               </div>
-              <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">Operation Hub</h1>
               
-              <div className="w-full md:w-[450px] mx-auto lg:mx-0 space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-2">Active Session</label>
-                <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
-                  <SelectTrigger className="h-20 rounded-[2rem] shadow-2xl bg-background border-4 border-primary/10 text-2xl font-black px-8">
-                    <SelectValue placeholder="Choose an event..." />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-[2rem] p-2">
-                    {events?.map((event) => (
-                      <SelectItem key={event.id} value={event.id} className="py-4 font-bold rounded-xl">
-                        {event.title} ({format(new Date(event.date), "MMM d")})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4">
+                <h1 className="text-7xl md:text-9xl font-black font-lora tracking-tighter leading-none">Operation Hub</h1>
+                <div className="w-full md:w-[500px] space-y-3">
+                  <label className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground ml-4">Active Session</label>
+                  <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
+                    <SelectTrigger className="h-24 rounded-[2.5rem] shadow-2xl bg-background border-4 border-primary/10 text-3xl font-black px-10">
+                      <SelectValue placeholder="Choose an event..." />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-[2.5rem] p-3">
+                      {events?.map((event) => (
+                        <SelectItem key={event.id} value={event.id} className="py-5 font-bold rounded-2xl text-lg">
+                          {event.title} ({format(new Date(event.date), "MMM d")})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full lg:w-auto">
-              <Card className="bg-background p-8 rounded-[2.5rem] shadow-xl border-none flex flex-col items-center text-center gap-2 min-w-[200px]">
-                <div className="bg-primary/10 p-4 rounded-2xl mb-2">
-                  <Clock className="h-8 w-8 text-primary" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full lg:w-auto">
+              <Card className="bg-background p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-3 min-w-[240px] hover:scale-105 transition-transform">
+                <div className="bg-primary/10 p-5 rounded-3xl mb-2">
+                  <Clock className="h-10 w-10 text-primary" />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">T-Minus</p>
-                <p className="text-3xl font-black text-primary tracking-tighter">{timeLeft}</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">T-Minus</p>
+                <p className="text-4xl font-black text-primary tracking-tighter">{timeLeft}</p>
               </Card>
               
-              <Card className="bg-background p-8 rounded-[2.5rem] shadow-xl border-none flex flex-col items-center text-center gap-2 min-w-[200px]">
-                <div className="bg-green-500/10 p-4 rounded-2xl mb-2">
-                  <Ticket className="h-8 w-8 text-green-600" />
+              <Card className="bg-background p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-3 min-w-[240px] hover:scale-105 transition-transform">
+                <div className="bg-green-500/10 p-5 rounded-3xl mb-2">
+                  <Ticket className="h-10 w-10 text-green-600" />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tickets</p>
-                <p className="text-3xl font-black text-green-600 tracking-tighter">{stats?.totalTickets || 0} / {targetTickets}</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Tickets</p>
+                <p className="text-4xl font-black text-green-600 tracking-tighter">{stats?.totalTickets || 0} / {targetTickets}</p>
               </Card>
 
-              <Card className="bg-primary text-primary-foreground p-8 rounded-[2.5rem] shadow-xl border-none flex flex-col items-center text-center gap-2 min-w-[200px]">
-                <div className="bg-white/20 p-4 rounded-2xl mb-2">
-                  <DollarSign className="h-8 w-8 text-white" />
+              <Card className="bg-primary text-primary-foreground p-10 rounded-[3rem] shadow-2xl border-none flex flex-col items-center text-center gap-3 min-w-[240px] hover:scale-105 transition-transform">
+                <div className="bg-white/20 p-5 rounded-3xl mb-2">
+                  <DollarSign className="h-10 w-10 text-white" />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Net Profit</p>
-                <p className="text-3xl font-black tracking-tighter">${netProfit.toFixed(0)}</p>
+                <p className="text-[11px] font-black uppercase tracking-widest opacity-70">Net Profit</p>
+                <p className="text-4xl font-black tracking-tighter">${netProfit.toFixed(0)}</p>
               </Card>
             </div>
           </div>
         </header>
 
         {!selectedEventId ? (
-          <Card className="p-24 text-center border-dashed border-4 rounded-[4rem]">
-            <Calendar className="h-20 w-20 text-muted-foreground mx-auto mb-6 opacity-10" />
-            <p className="text-2xl font-bold text-muted-foreground font-lora">Select an operation to begin.</p>
+          <Card className="p-32 text-center border-dashed border-4 rounded-[5rem] bg-muted/10">
+            <Calendar className="h-24 w-24 text-muted-foreground mx-auto mb-8 opacity-10" />
+            <p className="text-3xl font-bold text-muted-foreground font-lora">Select an operation to begin.</p>
           </Card>
         ) : (
-          <Tabs defaultValue="execution" className="space-y-12">
+          <Tabs defaultValue="execution" className="space-y-20">
             <div className="flex justify-center">
-              <TabsList className="grid w-full max-w-md grid-cols-2 rounded-[2rem] h-16 p-1.5 bg-muted/50 shadow-inner">
-                <TabsTrigger value="execution" className="rounded-[1.5rem] font-black text-lg flex items-center gap-2 data-[state=active]:shadow-xl">
-                  <Zap className="h-5 w-5" /> Execution
+              <TabsList className="grid w-full max-w-lg grid-cols-2 rounded-[2.5rem] h-20 p-2 bg-muted/50 shadow-inner">
+                <TabsTrigger value="execution" className="rounded-[2rem] font-black text-xl flex items-center gap-3 data-[state=active]:shadow-2xl">
+                  <Zap className="h-6 w-6" /> Execution
                 </TabsTrigger>
-                <TabsTrigger value="preparation" className="rounded-[1.5rem] font-black text-lg flex items-center gap-2 data-[state=active]:shadow-xl">
-                  <ListTodo className="h-5 w-5" /> Preparation
+                <TabsTrigger value="preparation" className="rounded-[2rem] font-black text-xl flex items-center gap-3 data-[state=active]:shadow-2xl">
+                  <ListTodo className="h-6 w-6" /> Preparation
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="execution" className="space-y-12 animate-fade-in-up">
-              {/* --- 3-COLUMN DASHBOARD LAYOUT --- */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <TabsContent value="execution" className="space-y-24 animate-fade-in-up">
+              {/* --- 3-COLUMN DASHBOARD GRID --- */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                 
                 {/* COLUMN 1: OUTREACH & FB (4/12) */}
-                <div className="lg:col-span-4 space-y-10">
-                  <section className="space-y-6">
-                    <div className="flex items-center gap-3 px-2">
-                      <div className="h-6 w-1.5 bg-primary rounded-full" />
-                      <h2 className="text-2xl font-black font-lora tracking-tight">Relational Outreach</h2>
+                <div className="lg:col-span-4 space-y-12">
+                  <section className="space-y-8">
+                    <div className="flex items-center gap-4 px-4">
+                      <div className="h-10 w-2 bg-primary rounded-full" />
+                      <h2 className="text-3xl font-black font-lora tracking-tight">Relational Outreach</h2>
                     </div>
-                    <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden rounded-[3rem]">
-                      <CardContent className="p-8 space-y-8">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-primary text-primary-foreground p-3 rounded-xl shadow-lg">
-                            <Target className="h-6 w-6" />
+                    <Card className="border-4 border-primary bg-primary/5 shadow-2xl overflow-hidden rounded-[4rem]">
+                      <CardContent className="p-10 space-y-10">
+                        <div className="flex items-center gap-5">
+                          <div className="bg-primary text-primary-foreground p-4 rounded-2xl shadow-xl">
+                            <Target className="h-8 w-8" />
                           </div>
-                          <p className="text-lg font-black font-lora">The 10 People Rule</p>
+                          <div className="space-y-1">
+                            <p className="text-2xl font-black font-lora">The 10 People Rule</p>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Personal connection is king.</p>
+                          </div>
                         </div>
                         <OutreachTracker eventId={selectedEventId} />
                       </CardContent>
                     </Card>
                   </section>
 
-                  <section className="space-y-6">
-                    <div className="flex items-center gap-3 px-2">
-                      <div className="h-6 w-1.5 bg-primary rounded-full" />
-                      <h2 className="text-2xl font-black font-lora tracking-tight">Facebook Groups</h2>
+                  <section className="space-y-8">
+                    <div className="flex items-center gap-4 px-4">
+                      <div className="h-10 w-2 bg-primary rounded-full" />
+                      <h2 className="text-3xl font-black font-lora tracking-tight">Facebook Groups</h2>
                     </div>
-                    <Card className="border-none shadow-xl bg-card rounded-[2.5rem] overflow-hidden">
-                      <CardContent className="p-6">
+                    <Card className="border-none shadow-2xl bg-card rounded-[3rem] overflow-hidden">
+                      <CardContent className="p-8">
                         <FacebookGroupTracker eventId={selectedEventId} postText={fullCommunityPost} />
                       </CardContent>
                     </Card>
@@ -378,51 +384,51 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                 </div>
 
                 {/* COLUMN 2: STRATEGY & ASSETS (5/12) */}
-                <div className="lg:col-span-5 space-y-10">
+                <div className="lg:col-span-5 space-y-12">
                   {dailyMission && (
-                    <Card className="bg-accent text-accent-foreground border-none shadow-2xl rounded-[3rem] overflow-hidden relative">
-                      <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-                      <CardContent className="p-8 flex items-start gap-6 relative z-10">
-                        <div className="bg-white/20 p-4 rounded-2xl shadow-inner shrink-0">
-                          {React.cloneElement(dailyMission.icon as React.ReactElement, { className: "h-8 w-8" })}
+                    <Card className="bg-accent text-accent-foreground border-none shadow-2xl rounded-[4rem] overflow-hidden relative hover:scale-[1.02] transition-transform">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+                      <CardContent className="p-10 flex items-start gap-8 relative z-10">
+                        <div className="bg-white/20 p-6 rounded-3xl shadow-inner shrink-0">
+                          {React.cloneElement(dailyMission.icon as React.ReactElement, { className: "h-10 w-10" })}
                         </div>
-                        <div className="space-y-2">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-70">Today's Mission</h3>
-                          <p className="text-2xl font-black font-lora leading-tight">{dailyMission.title}</p>
-                          <p className="text-lg font-medium opacity-90">{dailyMission.task}</p>
+                        <div className="space-y-3">
+                          <h3 className="text-[11px] font-black uppercase tracking-[0.5em] opacity-70">Today's Mission</h3>
+                          <p className="text-4xl font-black font-lora leading-tight">{dailyMission.title}</p>
+                          <p className="text-xl font-medium opacity-90 leading-relaxed">{dailyMission.task}</p>
                         </div>
                       </CardContent>
                     </Card>
                   )}
 
-                  <section className="space-y-6">
-                    <div className="flex items-center gap-3 px-2">
-                      <div className="h-6 w-1.5 bg-primary rounded-full" />
-                      <h2 className="text-2xl font-black font-lora tracking-tight">AI Strategy</h2>
+                  <section className="space-y-8">
+                    <div className="flex items-center gap-4 px-4">
+                      <div className="h-10 w-2 bg-primary rounded-full" />
+                      <h2 className="text-3xl font-black font-lora tracking-tight">AI Strategy</h2>
                     </div>
-                    <Card className="border-none shadow-xl bg-gradient-to-br from-primary/5 to-accent/5 rounded-[3rem] overflow-hidden">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-bold flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> Prompt Generator</CardTitle>
-                        <CardDescription>Copy this into Claude or Gemini for fresh copy.</CardDescription>
+                    <Card className="border-none shadow-2xl bg-gradient-to-br from-primary/5 to-accent/5 rounded-[4rem] overflow-hidden">
+                      <CardHeader className="p-10 pb-4">
+                        <CardTitle className="text-2xl font-black flex items-center gap-3"><Bot className="h-7 w-7 text-primary" /> Prompt Generator</CardTitle>
+                        <CardDescription className="text-lg font-medium">Copy this into Claude or Gemini for fresh copy.</CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="bg-background/80 p-6 rounded-2xl border-2 border-primary/10 text-sm font-medium text-muted-foreground italic leading-relaxed line-clamp-4">
+                      <CardContent className="p-10 pt-0 space-y-6">
+                        <div className="bg-background/80 p-8 rounded-3xl border-2 border-primary/10 text-base font-medium text-muted-foreground italic leading-relaxed line-clamp-5">
                           "{aiPrompt}"
                         </div>
-                        <Button className="w-full h-14 font-black rounded-2xl shadow-lg" onClick={() => copyToClipboard(aiPrompt, "AI Prompt")}>
-                          <Copy className="h-5 w-5 mr-2" /> Copy Full AI Prompt
+                        <Button className="w-full h-16 font-black text-lg rounded-2xl shadow-xl" onClick={() => copyToClipboard(aiPrompt, "AI Prompt")}>
+                          <Copy className="h-6 w-6 mr-3" /> Copy Full AI Prompt
                         </Button>
                       </CardContent>
                     </Card>
                   </section>
 
-                  <section className="space-y-6">
-                    <div className="flex items-center gap-3 px-2">
-                      <div className="h-6 w-1.5 bg-primary rounded-full" />
-                      <h2 className="text-2xl font-black font-lora tracking-tight">Marketing Assets</h2>
+                  <section className="space-y-8">
+                    <div className="flex items-center gap-4 px-4">
+                      <div className="h-10 w-2 bg-primary rounded-full" />
+                      <h2 className="text-3xl font-black font-lora tracking-tight">Marketing Assets</h2>
                     </div>
                     
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-6">
                       {[
                         { label: "Community Post", icon: <Users />, text: fullCommunityPost, color: "bg-blue-50 text-blue-600" },
                         { label: "Instagram Caption", icon: <Instagram />, text: authenticCaption, color: "bg-rose-50 text-rose-600" },
@@ -430,25 +436,25 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                         { label: "Song Reveal", icon: <Music />, text: songRevealCaption, color: "bg-accent/10 text-accent-foreground" },
                         { label: "Flash Sale", icon: <Zap />, text: flashSaleEmail, color: "bg-yellow-50 text-yellow-600" }
                       ].map((asset, i) => (
-                        <Card key={i} className="border-none shadow-md bg-card overflow-hidden rounded-2xl group/asset">
-                          <div className="px-6 py-4 flex justify-between items-center border-b border-border/50">
-                            <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                              <div className={cn("p-1.5 rounded-lg", asset.color)}>{asset.icon}</div>
+                        <Card key={i} className="border-none shadow-lg bg-card overflow-hidden rounded-3xl group/asset hover:shadow-xl transition-all">
+                          <div className="px-8 py-5 flex justify-between items-center border-b border-border/50">
+                            <span className="text-[11px] font-black uppercase tracking-widest flex items-center gap-3">
+                              <div className={cn("p-2 rounded-xl", asset.color)}>{asset.icon}</div>
                               {asset.label}
                             </span>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black hover:bg-primary/10" onClick={() => copyToClipboard(asset.text, asset.label)}>
-                                <Copy className="h-3.5 w-3.5 mr-1.5" /> COPY
+                            <div className="flex gap-3">
+                              <Button variant="ghost" size="sm" className="h-10 px-4 text-[11px] font-black hover:bg-primary/10" onClick={() => copyToClipboard(asset.text, asset.label)}>
+                                <Copy className="h-4 w-4 mr-2" /> COPY
                               </Button>
                               {asset.action && (
-                                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black text-primary hover:bg-primary/10" onClick={asset.action}>
-                                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> OPEN
+                                <Button variant="ghost" size="sm" className="h-10 px-4 text-[11px] font-black text-primary hover:bg-primary/10" onClick={asset.action}>
+                                  <ExternalLink className="h-4 w-4 mr-2" /> OPEN
                                 </Button>
                               )}
                             </div>
                           </div>
-                          <CardContent className="p-6">
-                            <p className="text-xs italic text-muted-foreground leading-relaxed line-clamp-2">{asset.text}</p>
+                          <CardContent className="p-8">
+                            <p className="text-sm italic text-muted-foreground leading-relaxed line-clamp-2">{asset.text}</p>
                           </CardContent>
                         </Card>
                       ))}
@@ -457,38 +463,38 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                 </div>
 
                 {/* COLUMN 3: WORKSPACE (3/12) */}
-                <div className="lg:col-span-3 space-y-10">
-                  <section className="space-y-6">
-                    <div className="flex items-center gap-3 px-2">
-                      <div className="h-6 w-1.5 bg-primary rounded-full" />
-                      <h2 className="text-2xl font-black font-lora tracking-tight">Workspace</h2>
+                <div className="lg:col-span-3 space-y-12">
+                  <section className="space-y-8">
+                    <div className="flex items-center gap-4 px-4">
+                      <div className="h-10 w-2 bg-primary rounded-full" />
+                      <h2 className="text-3xl font-black font-lora tracking-tight">Workspace</h2>
                     </div>
-                    <Card className="border-none shadow-2xl bg-yellow-50 dark:bg-yellow-950/20 border-l-[12px] border-yellow-400 rounded-[2.5rem] min-h-[400px] flex flex-col">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-xl font-black flex items-center gap-3 text-yellow-800 dark:text-yellow-400">
-                          <Brain className="h-6 w-6" /> Brain Dump
+                    <Card className="border-none shadow-2xl bg-yellow-50 dark:bg-yellow-950/20 border-l-[16px] border-yellow-400 rounded-[4rem] min-h-[500px] flex flex-col hover:rotate-1 transition-transform">
+                      <CardHeader className="p-10 pb-4">
+                        <CardTitle className="text-2xl font-black flex items-center gap-4 text-yellow-800 dark:text-yellow-400">
+                          <Brain className="h-8 w-8" /> Brain Dump
                         </CardTitle>
-                        <CardDescription className="text-yellow-700/70 dark:text-yellow-400/60 font-medium">Ideas for {selectedEvent?.title}. Auto-saves.</CardDescription>
+                        <CardDescription className="text-lg text-yellow-700/70 dark:text-yellow-400/60 font-medium">Ideas for {selectedEvent?.title}. Auto-saves.</CardDescription>
                       </CardHeader>
-                      <CardContent className="flex-1 flex flex-col">
+                      <CardContent className="flex-1 flex flex-col p-10 pt-0">
                         <Textarea 
                           placeholder="Random ideas for this specific event..." 
-                          className="flex-1 min-h-[300px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400 rounded-2xl text-base resize-none"
+                          className="flex-1 min-h-[350px] bg-background/50 border-yellow-200 focus-visible:ring-yellow-400 rounded-[2rem] text-lg resize-none p-8"
                           value={localBrainDump}
                           onChange={(e) => setLocalBrainDump(e.target.value)}
                         />
-                        {saveNoteMutation.isPending && <p className="text-[10px] text-yellow-600 mt-3 font-bold animate-pulse uppercase tracking-widest">Syncing to cloud...</p>}
+                        {saveNoteMutation.isPending && <p className="text-[11px] text-yellow-600 mt-5 font-black animate-pulse uppercase tracking-[0.3em]">Syncing to cloud...</p>}
                       </CardContent>
                     </Card>
                   </section>
 
-                  <section className="space-y-6">
-                    <div className="flex items-center gap-3 px-2">
-                      <div className="h-6 w-1.5 bg-primary rounded-full" />
-                      <h2 className="text-2xl font-black font-lora tracking-tight">Quick Links</h2>
+                  <section className="space-y-8">
+                    <div className="flex items-center gap-4 px-4">
+                      <div className="h-10 w-2 bg-primary rounded-full" />
+                      <h2 className="text-3xl font-black font-lora tracking-tight">Quick Links</h2>
                     </div>
-                    <Card className="border-none shadow-xl bg-card rounded-[2.5rem] overflow-hidden">
-                      <CardContent className="p-6 grid grid-cols-1 gap-3">
+                    <Card className="border-none shadow-2xl bg-card rounded-[3rem] overflow-hidden">
+                      <CardContent className="p-8 grid grid-cols-1 gap-4">
                         {[
                           { label: "Humanitix", url: "https://humanitix.com", icon: <Ticket className="text-primary" /> },
                           { label: "Kit (Email)", url: "https://kit.com", icon: <Mail className="text-primary" /> },
@@ -497,9 +503,9 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                           { label: "FB: Malvern Notice", url: "https://www.facebook.com/groups/301509297978154", icon: <Facebook className="text-blue-600" /> },
                           { label: "FB: Choirs Melb", url: "https://www.facebook.com/groups/1173481763392463/", icon: <Facebook className="text-blue-600" /> }
                         ].map((link, i) => (
-                          <Button key={i} variant="outline" className="rounded-xl h-14 font-bold justify-start px-6 border-primary/5 hover:bg-primary/5" asChild>
+                          <Button key={i} variant="outline" className="rounded-2xl h-16 font-black text-base justify-start px-8 border-primary/5 hover:bg-primary/5 shadow-sm" asChild>
                             <a href={link.url} target="_blank" rel="noopener noreferrer">
-                              <div className="mr-4">{link.icon}</div>
+                              <div className="mr-5">{link.icon}</div>
                               {link.label}
                             </a>
                           </Button>
@@ -511,17 +517,17 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
               </div>
 
               {/* FULL WIDTH CHECKLIST SECTION */}
-              <section className="space-y-6 pt-12 border-t border-border/50">
-                <div className="flex items-center gap-3 px-2">
-                  <div className="h-6 w-1.5 bg-primary rounded-full" />
-                  <h2 className="text-2xl font-black font-lora tracking-tight">Execution Checklist</h2>
+              <section className="space-y-10 pt-20 border-t-4 border-border/50">
+                <div className="flex items-center gap-5 px-4">
+                  <div className="h-12 w-2.5 bg-primary rounded-full" />
+                  <h2 className="text-4xl font-black font-lora tracking-tight">Execution Checklist</h2>
                 </div>
                 <MarketingChecklist eventId={selectedEventId} onActionClick={handleTaskAction} />
               </section>
             </TabsContent>
 
             <TabsContent value="preparation" className="animate-fade-in-up">
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-5xl mx-auto">
                 <EventPrepChecklist eventId={selectedEventId} />
               </div>
             </TabsContent>

@@ -86,26 +86,26 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
   const categories = Array.from(new Set(tasks?.map(t => t.category) || []));
 
   return (
-    <Card className="shadow-xl border-none overflow-hidden">
-      <CardHeader className="bg-primary text-primary-foreground pb-6">
-        <div className="flex items-center justify-between mb-4">
-          <CardTitle className="flex items-center gap-2">
-            <ListTodo className="h-6 w-6" /> Execution Checklist
+    <Card className="shadow-2xl border-none overflow-hidden rounded-[3rem] bg-[#1a233a] text-white">
+      <CardHeader className="p-12 pb-8">
+        <div className="flex items-center justify-between mb-6">
+          <CardTitle className="text-3xl font-black font-lora flex items-center gap-4">
+            <ListTodo className="h-8 w-8 text-primary" /> Execution Checklist
           </CardTitle>
-          <span className="text-sm font-bold bg-white/20 px-3 py-1 rounded-full">
+          <span className="text-lg font-black bg-white/10 px-5 py-2 rounded-full">
             {completedCount} / {totalTasks}
           </span>
         </div>
-        <Progress value={progress} className="h-2 bg-white/20" />
+        <Progress value={progress} className="h-4 bg-white/10" />
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-white/5">
           {categories.map((category) => (
-            <div key={category} className="p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            <div key={category} className="p-10">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40 mb-8">
                 {category}
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {tasks
                   ?.filter((t) => t.category === category)
                   .map((task) => {
@@ -114,45 +114,45 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
                       <div
                         key={task.id}
                         className={cn(
-                          "flex items-center justify-between p-3 rounded-xl transition-all border border-transparent group",
-                          isDone ? "bg-muted/30 opacity-50" : "bg-background shadow-sm hover:border-primary/20"
+                          "flex items-center justify-between p-5 rounded-2xl transition-all border-2 border-transparent group",
+                          isDone ? "bg-white/5 opacity-40" : "bg-white/5 hover:border-white/10"
                         )}
                       >
                         <div 
-                          className="flex items-start gap-3 flex-1 cursor-pointer"
+                          className="flex items-start gap-5 flex-1 cursor-pointer"
                           onClick={() => toggleMutation.mutate(task.task_key)}
                         >
-                          <div className="mt-0.5">
+                          <div className="mt-1">
                             {isDone ? (
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                              <CheckCircle2 className="h-6 w-6 text-green-400" />
                             ) : (
-                              <Circle className="h-5 w-5 text-muted-foreground" />
+                              <Circle className="h-6 w-6 text-white/20 group-hover:text-white/40" />
                             )}
                           </div>
                           <span className={cn(
-                            "text-sm font-bold leading-tight",
-                            isDone && "line-through font-normal"
+                            "text-lg font-bold leading-tight",
+                            isDone && "line-through font-medium text-white/40"
                           )}>
                             {task.label}
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-4">
                           {task.has_action && onActionClick && (
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-primary hover:bg-primary/10"
+                              className="h-10 w-10 text-white/60 hover:bg-white/10 hover:text-white"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onActionClick(task.task_key);
                               }}
                             >
-                              <Mail className="h-4 w-4" />
+                              <Mail className="h-5 w-5" />
                             </Button>
                           )}
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-none bg-muted/50">
-                            {task.energy === "high" ? <Zap className="h-3 w-3 text-yellow-600 mr-1" /> : <Coffee className="h-3 w-3 text-blue-600 mr-1" />}
+                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-3 py-1 h-7 border-white/10 bg-white/5 text-white/60">
+                            {task.energy === "high" ? <Zap className="h-3 w-3 text-yellow-400 mr-2" /> : <Coffee className="h-3 w-3 text-blue-400 mr-2" />}
                             {task.energy === "high" ? "High" : "Low"}
                           </Badge>
                         </div>
