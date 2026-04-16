@@ -372,7 +372,7 @@ Keep the tone grounded, resonant, and inviting. Avoid corporate or "hype" langua
                     </div>
                     <Card className="border-none shadow-xl bg-card rounded-[2.5rem] overflow-hidden">
                       <CardContent className="p-6">
-                        <FacebookGroupTracker eventId={selectedEventId} />
+                        <FacebookGroupTracker eventId={selectedEventId} postText={fullCommunityPost} />
                       </CardContent>
                     </Card>
                   </section>

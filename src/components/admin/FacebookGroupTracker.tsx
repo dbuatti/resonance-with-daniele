@@ -6,12 +6,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Facebook, ExternalLink, CheckCircle2 } from "lucide-react";
-import { showError } from "@/utils/toast";
+import { Loader2, Facebook, ExternalLink, CheckCircle2, Copy } from "lucide-react";
+import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface FacebookGroupTrackerProps {
   eventId: string;
+  postText: string; // New prop for the text to copy
 }
 
 const groupLinks: Record<string, string> = {
@@ -23,7 +25,7 @@ const groupLinks: Record<string, string> = {
   "fb-community-choir-network": "https://www.facebook.com/groups/303437066726860/"
 };
 
-const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId }) => {
+const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, postText }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
 
@@ -72,6 +74,11 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId }) 
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus", eventId] }),
   });
 
+  const handleCopyPost = () => {
+    navigator.clipboard.writeText(postText);
+    showSuccess("Post content copied to clipboard!");
+  };
+
   if (loadingTasks || loadingStatus) return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
@@ -111,18 +118,36 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId }) 
               </div>
             </div>
 
-            {link && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-xl font-bold text-primary hover:bg-primary/10"
-                asChild
-              >
-                <a href={link} target="_blank" rel="noopener noreferrer">
-                  Post Now <ExternalLink className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      onClick={handleCopyPost}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy Post Text</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {link && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-xl font-bold text-primary hover:bg-primary/10"
+                  asChild
+                >
+                  <a href={link} target="_blank" rel="noopener noreferrer">
+                    Post <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
         );
       })}
