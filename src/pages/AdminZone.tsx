@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote, BookOpen } from "lucide-react";
+import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote, BookOpen, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,15 @@ const AdminZone: React.FC = () => {
 
   const adminTools = [
     {
+      title: "Marketing V4",
+      description: "The new high-octane command center. Optimized for speed, outreach, and strategy execution.",
+      icon: <Zap className="h-6 w-6 text-primary" />,
+      link: "/admin/marketing-plan-4",
+      label: "Launch V4",
+      highlight: true,
+      badge: "New"
+    },
+    {
       title: "Growth Strategy",
       description: "High-impact missions to scale Resonance. Track your 1-year vision and local SEO progress.",
       icon: <Rocket className="h-6 w-6 text-primary" />,
@@ -50,9 +59,7 @@ const AdminZone: React.FC = () => {
       description: "Learn how to link resources to events and manage your personal lesson notes for members.",
       icon: <BookOpen className="h-6 w-6 text-primary" />,
       link: "/admin/session-hub-guide",
-      label: "Read Guide",
-      highlight: true,
-      badge: "New"
+      label: "Read Guide"
     },
     {
       title: "Feedback Analysis",
