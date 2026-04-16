@@ -53,7 +53,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
   const totalTickets = orders?.reduce((sum, o) => sum + (o.valid_tickets || 0), 0) || 0;
   const netProfit = totalEarnings - totalExpenses;
 
-  // Process chart data: Cumulative ticket sales over time with minute-level granularity
+  // Process chart data: Cumulative ticket sales over time
   const chartData = useMemo(() => {
     if (!orders || orders.length === 0) return [];
 
@@ -125,7 +125,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
                     tickLine={false} 
                     tick={{ fontSize: 12, fontWeight: 'bold', fill: 'hsl(var(--muted-foreground))' }}
                     dy={10}
-                    minTickGap={30}
+                    minTickGap={50}
                   />
                   <YAxis 
                     axisLine={false} 
@@ -159,7 +159,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
               <div className="h-full flex flex-col items-center justify-center text-center bg-muted/20 rounded-[2rem] border-4 border-dashed border-border/50">
                 <Ticket className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
                 <p className="text-lg font-bold text-muted-foreground font-lora">No sales data to visualize yet.</p>
-                <p className="text-sm text-muted-foreground">Import your Humanitix CSV in the Tickets tab.</p>
+                <p className="text-sm text-muted-foreground">Import your Humanitix file in the Tickets tab.</p>
               </div>
             )}
           </div>

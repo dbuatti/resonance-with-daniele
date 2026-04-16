@@ -12,7 +12,6 @@ import { format, parse, isValid } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface TicketSalesLoggerProps {
   eventId: string;
@@ -41,14 +40,14 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   };
 
   const parseHumanitixDate = (dateStr: string) => {
-    if (!dateStr) return new Date().toISOString();
+    if (!dateStr) return null;
     const cleanStr = dateStr.trim().replace(/^"|"$/g, "");
     
-    // Try multiple common Humanitix formats to be safe
     const formats = [
       "dd/MM/yyyy h:mm a",
       "d/MM/yyyy h:mm a",
       "dd/MM/yyyy HH:mm",
+      "d/M/yyyy HH:mm",
       "yyyy-MM-dd HH:mm:ss"
     ];
 
@@ -61,9 +60,8 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
       }
     }
 
-    // Fallback to native Date parsing if date-fns fails
     const fallback = new Date(cleanStr);
-    return isValid(fallback) ? fallback.toISOString() : new Date().toISOString();
+    return isValid(fallback) ? fallback.toISOString() : null;
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -74,52 +72,73 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
     const reader = new FileReader();
 
     reader.onload = async (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split(/\r?\n/);
-      const headers = lines[0].split(",");
-      
-      // Map headers to indices
-      const h = {
-        id: headers.indexOf("Order id"),
-        firstName: headers.indexOf("First name"),
-        lastName: headers.indexOf("Last name"),
-        email: headers.indexOf("Email"),
-        mobile: headers.indexOf("Mobile"),
-        date: headers.indexOf("Order date"),
-        tickets: headers.indexOf("Valid tickets"),
-        sales: headers.indexOf("Ticket sales"),
-        earnings: headers.indexOf("Your earnings"),
-        discount: headers.indexOf("Discount code used"),
-        status: headers.indexOf("Status"),
-        type: headers.indexOf("Type"), // Capture the 'Type' column
-      };
-
-      const ordersToUpsert = lines.slice(1)
-        .filter(line => line.trim() !== "")
-        .map(line => {
-          // Handle commas inside quotes (standard CSV behavior)
-          const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
-          const clean = (val: string) => val?.replace(/^"|"$/g, "").trim();
-
-          return {
-            order_id: clean(values[h.id]),
-            event_id: eventId,
-            first_name: clean(values[h.firstName]),
-            last_name: clean(values[h.lastName]),
-            email: clean(values[h.email]),
-            mobile: clean(values[h.mobile]),
-            order_date: parseHumanitixDate(clean(values[h.date])),
-            valid_tickets: parseInt(clean(values[h.tickets])) || 0,
-            ticket_sales: parseCurrency(clean(values[h.sales])),
-            your_earnings: parseCurrency(clean(values[h.earnings])),
-            discount_code: clean(values[h.discount]),
-            status: clean(values[h.status]),
-            order_type: h.type !== -1 ? clean(values[h.type]) : null,
-          };
-        })
-        .filter(o => o.order_id); // Remove empty rows
-
       try {
+        const text = e.target?.result as string;
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+        if (lines.length < 2) throw new Error("File is empty or invalid.");
+
+        // Detect delimiter: check first line for tabs vs commas
+        const firstLine = lines[0];
+        const delimiter = firstLine.includes('\t') ? '\t' : ',';
+        
+        const headers = firstLine.split(delimiter).map(h => h.replace(/^"|"$/g, "").trim());
+        
+        const h = {
+          id: headers.indexOf("Order id"),
+          firstName: headers.indexOf("First name"),
+          lastName: headers.indexOf("Last name"),
+          email: headers.indexOf("Email"),
+          mobile: headers.indexOf("Mobile"),
+          date: headers.indexOf("Order date"),
+          tickets: headers.indexOf("Valid tickets"),
+          sales: headers.indexOf("Ticket sales"),
+          earnings: headers.indexOf("Your earnings"),
+          discount: headers.indexOf("Discount code used"),
+          status: headers.indexOf("Status"),
+          type: headers.indexOf("Type"),
+        };
+
+        if (h.id === -1 || h.date === -1) {
+          throw new Error("Required columns (Order id, Order date) not found. Please check the CSV headers.");
+        }
+
+        const ordersToUpsert = lines.slice(1)
+          .map(line => {
+            let values: string[];
+            if (delimiter === '\t') {
+              values = line.split('\t');
+            } else {
+              // Robust CSV split handling quotes
+              values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
+            }
+            
+            const clean = (val: string) => val?.replace(/^"|"$/g, "").trim() || "";
+            const orderDate = parseHumanitixDate(clean(values[h.date]));
+
+            if (!orderDate) return null;
+
+            return {
+              order_id: clean(values[h.id]),
+              event_id: eventId,
+              first_name: clean(values[h.firstName]),
+              last_name: clean(values[h.lastName]),
+              email: clean(values[h.email]),
+              mobile: clean(values[h.mobile]),
+              order_date: orderDate,
+              valid_tickets: parseInt(clean(values[h.tickets])) || 0,
+              ticket_sales: parseCurrency(clean(values[h.sales])),
+              your_earnings: parseCurrency(clean(values[h.earnings])),
+              discount_code: clean(values[h.discount]),
+              status: clean(values[h.status]),
+              order_type: h.type !== -1 ? clean(values[h.type]) : null,
+            };
+          })
+          .filter(o => o !== null && o.order_id);
+
+        if (ordersToUpsert.length === 0) {
+          throw new Error("No valid orders could be parsed from the file.");
+        }
+
         const { error } = await supabase
           .from("event_orders")
           .upsert(ordersToUpsert, { onConflict: "order_id" });
@@ -131,7 +150,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
         queryClient.invalidateQueries({ queryKey: ["eventExpenses", eventId] });
       } catch (err: any) {
         console.error("Import error:", err);
-        showError("Failed to import CSV: " + err.message);
+        showError(err.message || "Failed to import file.");
       } finally {
         setIsImporting(false);
       }
@@ -142,7 +161,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "text/csv": [".csv"] },
+    accept: { "text/csv": [".csv"], "text/tab-separated-values": [".tsv", ".txt"] },
     multiple: false,
   });
 
@@ -159,7 +178,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5 text-primary" /> Import Orders
             </CardTitle>
-            <CardDescription>Upload your Humanitix Order Report CSV</CardDescription>
+            <CardDescription>Upload your Humanitix Order Report (CSV or TSV)</CardDescription>
           </CardHeader>
           <CardContent>
             <div
@@ -177,9 +196,9 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
                 <FileSpreadsheet className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
               )}
               <p className="text-sm font-medium">
-                {isDragActive ? "Drop the CSV here" : "Drag & drop Humanitix CSV, or click to select"}
+                {isDragActive ? "Drop the file here" : "Drag & drop Humanitix file, or click to select"}
               </p>
-              <p className="text-xs text-muted-foreground mt-2">Only .csv files are supported</p>
+              <p className="text-xs text-muted-foreground mt-2">Supports .csv, .tsv, and .txt</p>
             </div>
           </CardContent>
         </Card>
