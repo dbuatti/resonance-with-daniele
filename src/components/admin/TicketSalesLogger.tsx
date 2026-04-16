@@ -43,12 +43,16 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
     if (!dateStr) return null;
     const cleanStr = dateStr.trim().replace(/^"|"$/g, "");
     
+    // Try common Humanitix/Excel formats
     const formats = [
       "dd/MM/yyyy h:mm a",
       "d/MM/yyyy h:mm a",
       "dd/MM/yyyy HH:mm",
       "d/M/yyyy HH:mm",
-      "yyyy-MM-dd HH:mm:ss"
+      "yyyy-MM-dd HH:mm:ss",
+      "MM/dd/yyyy h:mm a",
+      "dd/MM/yyyy",
+      "d/M/yyyy"
     ];
 
     for (const fmt of formats) {
@@ -77,66 +81,82 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
         const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
         if (lines.length < 2) throw new Error("File is empty or invalid.");
 
-        // Detect delimiter: check first line for tabs vs commas
+        // Detect delimiter
         const firstLine = lines[0];
         const delimiter = firstLine.includes('\t') ? '\t' : ',';
         
-        const headers = firstLine.split(delimiter).map(h => h.replace(/^"|"$/g, "").trim());
+        const headers = firstLine.split(delimiter).map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
         
+        // Fuzzy header matching
+        const findIdx = (possibleNames: string[]) => 
+          headers.findIndex(h => possibleNames.some(name => h.includes(name.toLowerCase())));
+
         const h = {
-          id: headers.indexOf("Order id"),
-          firstName: headers.indexOf("First name"),
-          lastName: headers.indexOf("Last name"),
-          email: headers.indexOf("Email"),
-          mobile: headers.indexOf("Mobile"),
-          date: headers.indexOf("Order date"),
-          tickets: headers.indexOf("Valid tickets"),
-          sales: headers.indexOf("Ticket sales"),
-          earnings: headers.indexOf("Your earnings"),
-          discount: headers.indexOf("Discount code used"),
-          status: headers.indexOf("Status"),
-          type: headers.indexOf("Type"),
+          id: findIdx(["order id"]),
+          firstName: findIdx(["first name"]),
+          lastName: findIdx(["last name"]),
+          email: findIdx(["email"]),
+          mobile: findIdx(["mobile"]),
+          date: findIdx(["order date"]),
+          tickets: findIdx(["valid tickets"]),
+          sales: findIdx(["ticket sales"]),
+          earnings: findIdx(["your earnings"]),
+          discount: findIdx(["discount code"]),
+          status: findIdx(["status"]),
+          type: findIdx(["type"]),
         };
 
+        console.log("[TicketSalesLogger] Detected headers:", headers);
+        console.log("[TicketSalesLogger] Header mapping:", h);
+
         if (h.id === -1 || h.date === -1) {
-          throw new Error("Required columns (Order id, Order date) not found. Please check the CSV headers.");
+          throw new Error("Required columns (Order id, Order date) not found. Please ensure your file has the correct headers.");
         }
 
         const ordersToUpsert = lines.slice(1)
-          .map(line => {
+          .map((line, lineIdx) => {
             let values: string[];
             if (delimiter === '\t') {
               values = line.split('\t');
             } else {
-              // Robust CSV split handling quotes
-              values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
+              // Handle quoted values in CSV
+              const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+              values = matches ? matches : line.split(",");
             }
             
-            const clean = (val: string) => val?.replace(/^"|"$/g, "").trim() || "";
-            const orderDate = parseHumanitixDate(clean(values[h.date]));
+            const clean = (idx: number) => {
+              const val = values[idx];
+              return val?.replace(/^"|"$/g, "").trim() || "";
+            };
 
-            if (!orderDate) return null;
+            const orderId = clean(h.id);
+            const orderDate = parseHumanitixDate(clean(h.date));
+
+            if (!orderId || !orderDate) {
+              console.warn(`[TicketSalesLogger] Skipping line ${lineIdx + 2}: Missing ID or Date`, { orderId, orderDate });
+              return null;
+            }
 
             return {
-              order_id: clean(values[h.id]),
+              order_id: orderId,
               event_id: eventId,
-              first_name: clean(values[h.firstName]),
-              last_name: clean(values[h.lastName]),
-              email: clean(values[h.email]),
-              mobile: clean(values[h.mobile]),
+              first_name: clean(h.firstName),
+              last_name: clean(h.lastName),
+              email: clean(h.email),
+              mobile: clean(h.mobile),
               order_date: orderDate,
-              valid_tickets: parseInt(clean(values[h.tickets])) || 0,
-              ticket_sales: parseCurrency(clean(values[h.sales])),
-              your_earnings: parseCurrency(clean(values[h.earnings])),
-              discount_code: clean(values[h.discount]),
-              status: clean(values[h.status]),
-              order_type: h.type !== -1 ? clean(values[h.type]) : null,
+              valid_tickets: parseInt(clean(h.tickets)) || 0,
+              ticket_sales: parseCurrency(clean(h.sales)),
+              your_earnings: parseCurrency(clean(h.earnings)),
+              discount_code: clean(h.discount),
+              status: clean(h.status),
+              order_type: h.type !== -1 ? clean(h.type) : null,
             };
           })
-          .filter(o => o !== null && o.order_id);
+          .filter(o => o !== null);
 
         if (ordersToUpsert.length === 0) {
-          throw new Error("No valid orders could be parsed from the file.");
+          throw new Error("No valid orders could be parsed. Please check that your file matches the expected format.");
         }
 
         const { error } = await supabase
