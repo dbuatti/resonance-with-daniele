@@ -2,10 +2,11 @@
 
 import React from "react";
 import { format, parseISO } from "date-fns";
-import { CalendarDays, MapPin, MessageSquareQuote, Share2, Edit, Trash2, ExternalLink, ChevronRight, Sparkles } from "lucide-react";
+import { CalendarDays, MapPin, MessageSquareQuote, Share2, Edit, Trash2, ExternalLink, ChevronRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
@@ -95,6 +96,19 @@ const EventHorizontalCard: React.FC<EventHorizontalCardProps> = ({
 
         {isAdmin && (
           <div className="flex items-center gap-1 border-l pl-2 ml-1 border-border/50">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-primary hover:bg-primary/10" asChild>
+                    <Link to={`/admin/events/${event.id}`}>
+                      <LayoutDashboard className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Command Center</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             {event.ai_chat_link && (
               <TooltipProvider>
                 <Tooltip>

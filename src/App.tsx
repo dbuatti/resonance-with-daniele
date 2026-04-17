@@ -19,6 +19,7 @@ import AdminGrowthStrategy from "./pages/AdminGrowthStrategy";
 import AdminEventFeedback from "./pages/AdminEventFeedback";
 import AdminSessionHubGuide from "./pages/AdminSessionHubGuide";
 import AdminEventWizard from "./pages/AdminEventWizard";
+import AdminEventCommandCenter from "./pages/AdminEventCommandCenter";
 import CurrentEventPage from "./pages/CurrentEventPage";
 import EventFeedback from "./pages/EventFeedback";
 import SessionHub from "./pages/SessionHub";
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/admin/feedback" element={<Layout><AdminEventFeedback /></Layout>} />
               <Route path="/admin/session-hub-guide" element={<Layout><AdminSessionHubGuide /></Layout>} />
               <Route path="/admin/events/new" element={<Layout><AdminEventWizard /></Layout>} />
+              <Route path="/admin/events/:id" element={<Layout><AdminEventCommandCenter /></Layout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SessionContextProvider>
