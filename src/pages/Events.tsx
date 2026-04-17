@@ -151,7 +151,7 @@ const Events: React.FC = () => {
 
         <div className="space-y-4">
           {isLoading ? (
-            [...Array(3)].map((_, i) => <Skeleton className="h-24 w-full rounded-2xl" />)
+            [...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
           ) : events?.length === 0 ? (
             <div className="text-center py-20 bg-muted/10 rounded-[2rem] border-4 border-dashed border-border/50">
               <CalendarDays className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" />
