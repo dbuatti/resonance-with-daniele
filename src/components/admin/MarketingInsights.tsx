@@ -15,11 +15,14 @@ import {
   Percent,
   Target,
   Loader2,
-  Globe
+  Globe,
+  Info,
+  Tag
 } from "lucide-react";
 import { differenceInDays, parseISO, startOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MarketingInsightsProps {
   eventId: string;
@@ -93,7 +96,6 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     let newCount = 0;
 
     if (isGlobal) {
-      // Global Retention: % of unique emails that have attended > 1 event
       const emailCounts: Record<string, Set<string>> = {};
       allOrders.forEach(o => {
         if (!o.email) return;
@@ -108,7 +110,6 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       returningCount = multiEventAttendees;
       newCount = uniqueEmails.length - multiEventAttendees;
     } else {
-      // Event-specific Retention
       const currentEmails = new Set(orders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
       const otherEventsOrders = allOrders.filter(o => o.event_id !== eventId);
       const previousEmails = new Set(otherEventsOrders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
@@ -127,15 +128,15 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
         return differenceInDays(eventDate, orderDate);
       });
       avgLeadTime = leadTimes.length > 0 ? leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length : 0;
-    } else {
-      // Global average lead time (requires joining with event dates, but we can approximate or skip for now)
-      // For simplicity in global mode, let's show average tickets per event
-      avgLeadTime = 0; 
     }
 
     // Financial Efficiency
     const costPerHead = totalTickets > 0 ? totalExpenses / totalTickets : 0;
     const revenuePerHead = totalTickets > 0 ? totalEarnings / totalTickets : 0;
+
+    // Suggested Price Logic:
+    // Aim for a $20 profit margin per head after expenses
+    const suggestedPrice = Math.ceil(costPerHead + 20);
 
     // Discount Impact
     const discountedOrders = orders.filter(o => o.discount_code && o.discount_code !== "");
@@ -151,6 +152,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       avgLeadTime,
       costPerHead,
       revenuePerHead,
+      suggestedPrice,
       discountUsageRate,
       discountedCount: discountedOrders.length
     };
@@ -165,10 +167,25 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
         {/* Retention Card */}
         <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <UserCheck className="h-3.5 w-3.5 text-primary" /> 
-              {isGlobal ? "Community Stickiness" : "Community Loyalty"}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <UserCheck className="h-3.5 w-3.5 text-primary" /> 
+                {isGlobal ? "Community Stickiness" : "Community Loyalty"}
+              </CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs p-4 rounded-xl">
+                    <p className="text-xs leading-relaxed">
+                      <strong>Legends</strong>: People who have attended at least one other session.<br/><br/>
+                      <strong>New</strong>: People whose email address has never appeared in your Humanitix imports before.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-end">
@@ -179,36 +196,33 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             </div>
             <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
               <div className="flex items-center gap-1">
-                <UserCheck className="h-3 w-3" /> 
-                {isGlobal ? `${insights.returningCount} Multi-Session` : `${insights.returningCount} Legends`}
+                <UserCheck className="h-3 w-3 text-primary" /> 
+                {insights.returningCount} Legends
+              </div>
+              <div className="flex items-center gap-1">
+                <UserPlus className="h-3 w-3 text-blue-500" /> 
+                {insights.newCount} New
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Lead Time / Volume Card */}
+        {/* Pricing Strategy Card */}
         <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              {isGlobal ? <TrendingUp className="h-3.5 w-3.5 text-primary" /> : <Clock className="h-3.5 w-3.5 text-primary" />}
-              {isGlobal ? "Average Attendance" : "Booking Behavior"}
+              <Tag className="h-3.5 w-3.5 text-primary" /> Pricing Strategy
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-end">
-              <div className="text-3xl font-black">
-                {isGlobal 
-                  ? (insights.totalTickets / (allOrders.reduce((acc, o) => acc.add(o.event_id), new Set()).size || 1)).toFixed(0)
-                  : `${insights.avgLeadTime.toFixed(1)} Days`}
-              </div>
-              <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-none font-bold">
-                {isGlobal ? "Per Event" : "Lead Time"}
+              <div className="text-3xl font-black">${insights.suggestedPrice}</div>
+              <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-none font-bold">
+                Suggested
               </Badge>
             </div>
             <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              {isGlobal 
-                ? "On average, you host this many singers per session."
-                : `On average, people book their spot ${insights.avgLeadTime.toFixed(0)} days before the session.`}
+              Based on your current expenses, this price maintains a healthy $20 profit margin per singer.
             </p>
           </CardContent>
         </Card>
