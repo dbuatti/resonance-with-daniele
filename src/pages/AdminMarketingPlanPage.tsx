@@ -333,7 +333,11 @@ const AdminMarketingPlanPage: React.FC = () => {
                     <ListTodo className="h-5 w-5 text-primary" />
                     <h2 className="text-xl font-black font-lora">Execution Checklist</h2>
                   </div>
-                  <MarketingChecklist eventId={selectedEventId} onActionClick={(id) => id === "email-regulars" && setIsEmailModalOpen(true)} />
+                  <MarketingChecklist 
+                    eventId={selectedEventId} 
+                    eventDate={selectedEvent?.date} 
+                    onActionClick={(id) => id === "email-regulars" && setIsEmailModalOpen(true)} 
+                  />
                 </section>
 
                 <section className="space-y-4">

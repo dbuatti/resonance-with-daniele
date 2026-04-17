@@ -1,15 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, ListTodo, Zap, Coffee, Loader2, Mail } from "lucide-react";
+import { CheckCircle2, Circle, ListTodo, Zap, Coffee, Loader2, Mail, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { Button } from "@/components/ui/button";
+import { format, subDays, parseISO, isToday, isPast, startOfDay } from "date-fns";
 
 interface MarketingTask {
   id: string;
@@ -25,10 +26,11 @@ interface MarketingTask {
 
 interface MarketingChecklistProps {
   eventId: string;
+  eventDate?: string; // New prop
   onActionClick?: (taskId: string) => void;
 }
 
-const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActionClick }) => {
+const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventDate, onActionClick }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
 
@@ -38,6 +40,7 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
       const { data, error } = await supabase
         .from("marketing_tasks")
         .select("*")
+        .order("days_before", { ascending: false }) // Order by timeline
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data as MarketingTask[];
@@ -74,20 +77,39 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus", eventId] }),
   });
 
+  // Group tasks by their calculated date
+  const groupedTasks = useMemo(() => {
+    if (!tasks || !eventDate) return {};
+    
+    const groups: Record<string, MarketingTask[]> = {};
+    const baseDate = parseISO(eventDate);
+
+    tasks.forEach(task => {
+      const targetDate = subDays(baseDate, task.days_before);
+      const dateKey = format(targetDate, "yyyy-MM-dd");
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(task);
+    });
+
+    return groups;
+  }, [tasks, eventDate]);
+
+  const sortedDateKeys = useMemo(() => {
+    return Object.keys(groupedTasks).sort();
+  }, [groupedTasks]);
+
   if (loadingTasks || loadingStatus) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
 
   const totalTasks = tasks?.length || 0;
   const completedCount = completedTaskKeys?.length || 0;
   const progress = totalTasks > 0 ? (completedCount / totalTasks) * 100 : 0;
 
-  const categories = Array.from(new Set(tasks?.map(t => t.category) || []));
-
   return (
     <Card className="shadow-sm border border-border/50 overflow-hidden rounded-2xl bg-card">
       <CardHeader className="p-6 border-b border-border/50">
         <div className="flex items-center justify-between mb-4">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
-            Progress
+            Marketing Timeline
           </CardTitle>
           <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">
             {completedCount} / {totalTasks} Tasks
@@ -97,15 +119,29 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border/50">
-          {categories.map((category) => (
-            <div key={category} className="p-6">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4">
-                {category}
-              </h3>
-              <div className="space-y-2">
-                {tasks
-                  ?.filter((t) => t.category === category)
-                  .map((task) => {
+          {sortedDateKeys.map((dateKey) => {
+            const date = parseISO(dateKey);
+            const isTodayDate = isToday(date);
+            const isPastDate = isPast(date) && !isTodayDate;
+            
+            return (
+              <div key={dateKey} className={cn("p-6", isTodayDate && "bg-primary/5")}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className={cn("h-3.5 w-3.5", isTodayDate ? "text-primary" : "text-muted-foreground")} />
+                    <h3 className={cn(
+                      "text-[10px] font-black uppercase tracking-widest",
+                      isTodayDate ? "text-primary" : "text-muted-foreground/60"
+                    )}>
+                      {format(date, "EEEE, MMM do")} 
+                      {isTodayDate && " — TODAY"}
+                      {isPastDate && " — OVERDUE"}
+                    </h3>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  {groupedTasks[dateKey].map((task) => {
                     const isDone = completedTaskKeys?.includes(task.task_key);
                     return (
                       <div
@@ -126,12 +162,17 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
                               <Circle className="h-5 w-5 text-muted-foreground/30 group-hover:text-muted-foreground/50" />
                             )}
                           </div>
-                          <span className={cn(
-                            "text-sm font-bold leading-tight",
-                            isDone && "line-through text-muted-foreground"
-                          )}>
-                            {task.label}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className={cn(
+                              "text-sm font-bold leading-tight",
+                              isDone && "line-through text-muted-foreground"
+                            )}>
+                              {task.label}
+                            </span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                              {task.category}
+                            </span>
+                          </div>
                         </div>
                         
                         <div className="flex items-center gap-3">
@@ -156,9 +197,10 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, onActi
                       </div>
                     );
                   })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
