@@ -118,7 +118,7 @@ const CurrentEventPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-3 text-lg font-bold text-primary">
             <Clock className="h-6 w-6" />
-            <span>10:00 am – 1:00 pm</span>
+            <span>{event.start_time || "10:00 am"} – {event.end_time || "1:00 pm"}</span>
           </div>
           <div className="flex items-center gap-3 text-lg font-bold text-primary">
             <MapPin className="h-6 w-6" />

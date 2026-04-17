@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarDays, Loader2, Sparkles, Music, StickyNote, Link as LinkIcon } from "lucide-react";
+import { CalendarDays, Loader2, Sparkles, Music, StickyNote, Link as LinkIcon, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +21,8 @@ import { useQueryClient } from "@tanstack/react-query";
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
   date: z.date({ required_error: "Date is required" }),
+  start_time: z.string().min(1, "Start time is required"),
+  end_time: z.string().min(1, "End time is required"),
   location: z.string().optional(),
   description: z.string().optional(),
   main_song: z.string().optional(),
@@ -36,6 +38,8 @@ interface Event {
   user_id: string;
   title: string;
   date: string;
+  start_time?: string;
+  end_time?: string;
   location?: string;
   description?: string;
   main_song?: string;
@@ -58,6 +62,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
     defaultValues: {
       title: "",
       date: undefined,
+      start_time: "10:00am",
+      end_time: "1:00pm",
       location: "Armadale Baptist Church",
       description: "",
       main_song: "",
@@ -72,6 +78,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       form.reset({
         title: editingEvent.title,
         date: new Date(editingEvent.date),
+        start_time: editingEvent.start_time || "10:00am",
+        end_time: editingEvent.end_time || "1:00pm",
         location: editingEvent.location || "Armadale Baptist Church",
         description: editingEvent.description || "",
         main_song: editingEvent.main_song || "",
@@ -83,6 +91,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       form.reset({
         title: "",
         date: undefined,
+        start_time: "10:00am",
+        end_time: "1:00pm",
         location: "Armadale Baptist Church",
         description: "",
         main_song: "",
@@ -99,6 +109,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
         user_id: userId,
         title: data.title,
         date: format(data.date, "yyyy-MM-dd"),
+        start_time: data.start_time,
+        end_time: data.end_time,
         location: data.location || null,
         description: data.description || null,
         main_song: data.main_song || null,
@@ -202,6 +214,40 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. You Will Be Found" {...field} className="rounded-xl font-bold" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="start_time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <Clock className="h-3 w-3 text-primary" /> Start Time
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="10:00am" {...field} className="rounded-xl font-bold" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="end_time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <Clock className="h-3 w-3 text-primary" /> End Time
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="1:00pm" {...field} className="rounded-xl font-bold" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

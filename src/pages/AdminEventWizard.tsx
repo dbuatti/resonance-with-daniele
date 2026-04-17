@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Trash2, ChevronRight, ChevronLeft, CheckCircle2, Sparkles, DollarSign, Tag } from "lucide-react";
+import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Trash2, ChevronRight, ChevronLeft, CheckCircle2, Sparkles, DollarSign, Tag, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -43,6 +43,8 @@ const AdminEventWizard = () => {
   const [formData, setFormData] = useState({
     title: "",
     date: undefined as Date | undefined,
+    start_time: "10:00am",
+    end_time: "1:00pm",
     humanitixLink: "",
     expenses: [] as { description: string; amount: number; category: string }[],
     tasks: PHASE_1_TASKS.map(t => ({ ...t, completed: false }))
@@ -106,6 +108,8 @@ const AdminEventWizard = () => {
           user_id: user.id,
           title: formData.title || "Untitled Event",
           date: formData.date ? format(formData.date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+          start_time: formData.start_time,
+          end_time: formData.end_time,
           humanitix_link: formData.humanitixLink || null,
         })
         .select()
@@ -210,6 +214,35 @@ const AdminEventWizard = () => {
                         />
                       </PopoverContent>
                     </Popover>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="start_time" className="font-bold">Start Time</Label>
+                      <div className="relative">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="start_time" 
+                          placeholder="10:00am" 
+                          value={formData.start_time}
+                          onChange={e => setFormData(f => ({ ...f, start_time: e.target.value }))}
+                          className="h-12 pl-10 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="end_time" className="font-bold">End Time</Label>
+                      <div className="relative">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="end_time" 
+                          placeholder="1:00pm" 
+                          value={formData.end_time}
+                          onChange={e => setFormData(f => ({ ...f, end_time: e.target.value }))}
+                          className="h-12 pl-10 rounded-xl"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2">

@@ -37,6 +37,8 @@ interface EventWithResources {
   id: string;
   title: string;
   date: string;
+  start_time: string | null;
+  end_time: string | null;
   location: string | null;
   description: string | null;
   humanitix_link: string | null;
@@ -171,7 +173,7 @@ const SessionHub: React.FC = () => {
                 </div>
                 <div className="flex flex-wrap justify-center md:justify-start gap-6">
                   <div className="flex items-center gap-2 font-bold"><MapPin className="h-5 w-5 text-accent" /> {event.location || "Armadale Baptist Church"}</div>
-                  <div className="flex items-center gap-2 font-bold"><Clock className="h-5 w-5 text-accent" /> 10:00am — 1:00pm</div>
+                  <div className="flex items-center gap-2 font-bold"><Clock className="h-5 w-5 text-accent" /> {event.start_time || "10:00am"} — {event.end_time || "1:00pm"}</div>
                 </div>
                 <Button asChild size="lg" className="h-14 px-8 text-lg font-black rounded-2xl bg-white text-primary hover:bg-white/90 shadow-2xl group">
                   <a href={event.humanitix_link || "#"} target="_blank" rel="noopener noreferrer">

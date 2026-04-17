@@ -25,6 +25,8 @@ interface EmailMembersModalProps {
   eventDate?: string;
   eventLink?: string;
   eventLocation?: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
 }
 
 const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
@@ -34,6 +36,8 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
   eventDate,
   eventLink,
   eventLocation,
+  eventStartTime,
+  eventEndTime,
 }) => {
   const [copiedEmails, setCopiedEmails] = useState(false);
   const [copiedBody, setCopiedBody] = useState(false);
@@ -55,8 +59,9 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
   });
 
   const sampleBody = useMemo(() => {
-    return `Hi everyone,\n\nI’d love to see you back in the circle for ${eventTitle || "our next session"} on ${eventDate || "the upcoming date"}. 10:00am - 1:00pm at ${eventLocation || "Armadale Baptist Church"}.\n\nYou can grab your spot and see all the details here: ${eventLink || "https://events.humanitix.com/resonance-choir"}\n\nHope to see you there!\n\n— Daniele`;
-  }, [eventTitle, eventDate, eventLink, eventLocation]);
+    const timeStr = eventStartTime && eventEndTime ? `${eventStartTime} - ${eventEndTime}` : "10:00am - 1:00pm";
+    return `Hi everyone,\n\nI’d love to see you back in the circle for ${eventTitle || "our next session"} on ${eventDate || "the upcoming date"}. ${timeStr} at ${eventLocation || "Armadale Baptist Church"}.\n\nYou can grab your spot and see all the details here: ${eventLink || "https://events.humanitix.com/resonance-choir"}\n\nHope to see you there!\n\n— Daniele`;
+  }, [eventTitle, eventDate, eventLink, eventLocation, eventStartTime, eventEndTime]);
 
   const copyToClipboard = (text: string, setter: (v: boolean) => void) => {
     navigator.clipboard.writeText(text);
