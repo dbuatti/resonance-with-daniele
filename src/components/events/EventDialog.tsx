@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarDays, Loader2, Sparkles, Music, StickyNote } from "lucide-react";
+import { CalendarDays, Loader2, Sparkles, Music, StickyNote, Link as LinkIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,7 +24,7 @@ const eventSchema = z.object({
   location: z.string().optional(),
   description: z.string().optional(),
   main_song: z.string().optional(),
-  lesson_notes: z.string().optional(), // New field
+  lesson_notes: z.string().optional(),
   humanitix_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   ai_chat_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
@@ -124,7 +124,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       showSuccess(`Event ${editingEvent ? "updated" : "added"} successfully!`);
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["upcomingEvent"] });
-      queryClient.invalidateQueries({ queryKey: ["sessionHubData"] }); // Updated key
+      queryClient.invalidateQueries({ queryKey: ["sessionHubData"] });
       onClose();
     } catch (error: any) {
       showError(`Failed to save event: ${error.message}`);
@@ -260,19 +260,39 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="humanitix_link"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Humanitix Link</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://events.humanitix.com/..." {...field} className="rounded-xl font-bold" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="humanitix_link"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <LinkIcon className="h-3 w-3" /> Humanitix Link
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://events.humanitix.com/..." {...field} className="rounded-xl font-bold" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ai_chat_link"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <Sparkles className="h-3 w-3 text-primary" /> Gemini AI Link
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://gemini.google.com/..." {...field} className="rounded-xl font-bold" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <DialogFooter>
               <Button type="submit" className="w-full h-12 font-black rounded-xl shadow-lg" disabled={form.formState.isSubmitting}>
