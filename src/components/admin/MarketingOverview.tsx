@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, Ticket, TrendingUp, Zap, ChartLine } from "lucide-react";
+import { DollarSign, Ticket, TrendingUp, Zap, ChartLine, Globe } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
@@ -16,17 +16,20 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { format, parseISO, startOfDay, addDays, startOfToday, isBefore, isEqual } from "date-fns";
+import { format, parseISO, startOfDay, addDays, startOfToday, isBefore, isEqual, startOfMonth } from "date-fns";
 
 interface MarketingOverviewProps {
   eventId: string;
 }
 
 const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
-  // Fetch event details to get the event date
+  const isGlobal = eventId === "all";
+
+  // Fetch event details (only if not global)
   const { data: event } = useQuery({
     queryKey: ["eventDetailsForChart", eventId],
     queryFn: async () => {
+      if (isGlobal) return null;
       const { data, error } = await supabase
         .from("events")
         .select("date")
@@ -35,15 +38,15 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
       if (error) throw error;
       return data;
     },
+    enabled: !isGlobal,
   });
 
   const { data: expenses, isLoading: loadingExpenses } = useQuery({
     queryKey: ["eventExpenses", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("event_expenses")
-        .select("*")
-        .eq("event_id", eventId);
+      let query = supabase.from("event_expenses").select("*");
+      if (!isGlobal) query = query.eq("event_id", eventId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -52,11 +55,9 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
   const { data: orders, isLoading: loadingOrders } = useQuery({
     queryKey: ["eventOrders", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("event_orders")
-        .select("*")
-        .eq("event_id", eventId)
-        .order("order_date", { ascending: true });
+      let query = supabase.from("event_orders").select("*").order("order_date", { ascending: true });
+      if (!isGlobal) query = query.eq("event_id", eventId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -67,11 +68,10 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
   const totalTickets = orders?.reduce((sum, o) => sum + (o.valid_tickets || 0), 0) || 0;
   const netProfit = totalEarnings - totalExpenses;
 
-  // Process chart data: Daily ticket sales with zero-filling
+  // Process chart data
   const chartData = useMemo(() => {
     if (!orders || orders.length === 0) return [];
 
-    // 1. Group tickets by day
     const salesByDay: Record<string, number> = {};
     let minDate = new Date();
     
@@ -79,19 +79,17 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
       const date = parseISO(order.order_date);
       const dateKey = format(date, "yyyy-MM-dd");
       salesByDay[dateKey] = (salesByDay[dateKey] || 0) + (order.valid_tickets || 0);
-      
       if (date < minDate) minDate = date;
     });
 
-    // 2. Determine the end date for the chart
     const today = startOfToday();
-    const eventDate = event?.date ? startOfDay(parseISO(event.date)) : today;
-    
-    // If the event is in the past, stop at the event date.
-    // If the event is in the future, stop at today.
-    const maxDate = isBefore(eventDate, today) ? eventDate : today;
+    let maxDate = today;
 
-    // 3. Fill in the gaps from first sale to maxDate
+    if (!isGlobal && event?.date) {
+      const eventDate = startOfDay(parseISO(event.date));
+      maxDate = isBefore(eventDate, today) ? eventDate : today;
+    }
+
     const data = [];
     let current = startOfDay(minDate);
     const end = startOfDay(maxDate);
@@ -107,15 +105,15 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
     }
 
     return data;
-  }, [orders, event]);
+  }, [orders, event, isGlobal]);
 
   if (loadingExpenses || loadingOrders) return <Skeleton className="h-64 w-full rounded-2xl" />;
 
   const metrics = [
-    { title: "Total Earnings", value: `$${totalEarnings.toFixed(2)}`, icon: <DollarSign className="h-5 w-5" />, color: "text-green-600" },
-    { title: "Total Expenses", value: `$${totalExpenses.toFixed(2)}`, icon: <TrendingUp className="h-5 w-5" />, color: "text-red-600" },
-    { title: "Net Profit/Loss", value: `$${netProfit.toFixed(2)}`, icon: <Zap className="h-5 w-5" />, color: netProfit >= 0 ? "text-primary" : "text-destructive" },
-    { title: "Tickets Sold", value: totalTickets, icon: <Ticket className="h-5 w-5" />, color: "text-blue-600" },
+    { title: isGlobal ? "Lifetime Earnings" : "Total Earnings", value: `$${totalEarnings.toFixed(2)}`, icon: <DollarSign className="h-5 w-5" />, color: "text-green-600" },
+    { title: isGlobal ? "Lifetime Expenses" : "Total Expenses", value: `$${totalExpenses.toFixed(2)}`, icon: <TrendingUp className="h-5 w-5" />, color: "text-red-600" },
+    { title: isGlobal ? "Lifetime Profit" : "Net Profit/Loss", value: `$${netProfit.toFixed(2)}`, icon: <Zap className="h-5 w-5" />, color: netProfit >= 0 ? "text-primary" : "text-destructive" },
+    { title: isGlobal ? "Lifetime Tickets" : "Tickets Sold", value: totalTickets, icon: <Ticket className="h-5 w-5" />, color: "text-blue-600" },
   ];
 
   return (
@@ -138,11 +136,17 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
         <CardHeader className="p-8 pb-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
-              <ChartLine className="h-5 w-5 text-primary" />
+              {isGlobal ? <Globe className="h-5 w-5 text-primary" /> : <ChartLine className="h-5 w-5 text-primary" />}
             </div>
             <div>
-              <CardTitle className="text-2xl font-black font-lora">Daily Sales Momentum</CardTitle>
-              <CardDescription className="font-medium">Tracking daily ticket volume to identify peaks and troughs.</CardDescription>
+              <CardTitle className="text-2xl font-black font-lora">
+                {isGlobal ? "Lifetime Sales Momentum" : "Daily Sales Momentum"}
+              </CardTitle>
+              <CardDescription className="font-medium">
+                {isGlobal 
+                  ? "Tracking ticket volume across all sessions to identify long-term growth." 
+                  : "Tracking daily ticket volume to identify peaks and troughs."}
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -164,7 +168,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
                     tickLine={false} 
                     tick={{ fontSize: 12, fontWeight: 'bold', fill: 'hsl(var(--muted-foreground))' }}
                     dy={10}
-                    minTickGap={30}
+                    minTickGap={isGlobal ? 60 : 30}
                   />
                   <YAxis 
                     axisLine={false} 
@@ -190,7 +194,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
                     strokeWidth={4}
                     fillOpacity={1} 
                     fill="url(#colorTickets)" 
-                    dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: '#fff' }}
+                    dot={isGlobal ? false : { r: 4, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: '#fff' }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                   />
                 </AreaChart>
@@ -199,7 +203,6 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
               <div className="h-full flex flex-col items-center justify-center text-center bg-muted/20 rounded-[2rem] border-4 border-dashed border-border/50">
                 <Ticket className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
                 <p className="text-lg font-bold text-muted-foreground font-lora">No sales data to visualize yet.</p>
-                <p className="text-sm text-muted-foreground">Import your Humanitix file in the Tickets tab.</p>
               </div>
             )}
           </div>

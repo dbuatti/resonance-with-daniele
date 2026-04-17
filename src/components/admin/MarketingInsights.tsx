@@ -13,10 +13,9 @@ import {
   UserCheck, 
   UserPlus, 
   Percent,
-  ArrowUpRight,
-  ArrowDownRight,
   Target,
-  Loader2
+  Loader2,
+  Globe
 } from "lucide-react";
 import { differenceInDays, parseISO, startOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -27,10 +26,13 @@ interface MarketingInsightsProps {
 }
 
 const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
-  // 1. Fetch Event Details
+  const isGlobal = eventId === "all";
+
+  // 1. Fetch Event Details (if not global)
   const { data: event } = useQuery({
     queryKey: ["eventDetailsForInsights", eventId],
     queryFn: async () => {
+      if (isGlobal) return null;
       const { data, error } = await supabase
         .from("events")
         .select("*")
@@ -39,28 +41,28 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       if (error) throw error;
       return data;
     },
+    enabled: !isGlobal,
   });
 
-  // 2. Fetch Orders for this event
+  // 2. Fetch Orders
   const { data: orders, isLoading: loadingOrders } = useQuery({
     queryKey: ["eventOrdersForInsights", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("event_orders")
-        .select("*")
-        .eq("event_id", eventId);
+      let query = supabase.from("event_orders").select("*");
+      if (!isGlobal) query = query.eq("event_id", eventId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
   });
 
-  // 3. Fetch ALL orders ever (to calculate retention)
+  // 3. Fetch ALL orders ever (needed for both modes)
   const { data: allOrders } = useQuery({
     queryKey: ["allOrdersForRetention"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_orders")
-        .select("email, event_id");
+        .select("email, event_id, order_date, valid_tickets, your_earnings, discount_code");
       if (error) throw error;
       return data || [];
     },
@@ -70,38 +72,66 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
   const { data: expenses } = useQuery({
     queryKey: ["eventExpensesForInsights", eventId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("event_expenses")
-        .select("*")
-        .eq("event_id", eventId);
+      let query = supabase.from("event_expenses").select("*");
+      if (!isGlobal) query = query.eq("event_id", eventId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
   });
 
   const insights = useMemo(() => {
-    if (!orders || !event || !allOrders) return null;
+    if (!orders || !allOrders || ( !isGlobal && !event)) return null;
 
     const totalTickets = orders.reduce((sum, o) => sum + (o.valid_tickets || 0), 0);
     const totalEarnings = orders.reduce((sum, o) => sum + Number(o.your_earnings || 0), 0);
     const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
     // Retention Logic
-    const currentEmails = new Set(orders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
-    const otherEventsOrders = allOrders.filter(o => o.event_id !== eventId);
-    const previousEmails = new Set(otherEventsOrders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
-    
-    const returningCount = Array.from(currentEmails).filter(email => previousEmails.has(email!)).length;
-    const newCount = currentEmails.size - returningCount;
-    const retentionRate = currentEmails.size > 0 ? (returningCount / currentEmails.size) * 100 : 0;
+    let retentionRate = 0;
+    let returningCount = 0;
+    let newCount = 0;
+
+    if (isGlobal) {
+      // Global Retention: % of unique emails that have attended > 1 event
+      const emailCounts: Record<string, Set<string>> = {};
+      allOrders.forEach(o => {
+        if (!o.email) return;
+        const email = o.email.toLowerCase().trim();
+        if (!emailCounts[email]) emailCounts[email] = new Set();
+        emailCounts[email].add(o.event_id);
+      });
+      
+      const uniqueEmails = Object.keys(emailCounts);
+      const multiEventAttendees = uniqueEmails.filter(email => emailCounts[email].size > 1).length;
+      retentionRate = uniqueEmails.length > 0 ? (multiEventAttendees / uniqueEmails.length) * 100 : 0;
+      returningCount = multiEventAttendees;
+      newCount = uniqueEmails.length - multiEventAttendees;
+    } else {
+      // Event-specific Retention
+      const currentEmails = new Set(orders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
+      const otherEventsOrders = allOrders.filter(o => o.event_id !== eventId);
+      const previousEmails = new Set(otherEventsOrders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
+      
+      returningCount = Array.from(currentEmails).filter(email => previousEmails.has(email!)).length;
+      newCount = currentEmails.size - returningCount;
+      retentionRate = currentEmails.size > 0 ? (returningCount / currentEmails.size) * 100 : 0;
+    }
 
     // Booking Lead Time
-    const eventDate = startOfDay(parseISO(event.date));
-    const leadTimes = orders.map(o => {
-      const orderDate = startOfDay(parseISO(o.order_date));
-      return differenceInDays(eventDate, orderDate);
-    });
-    const avgLeadTime = leadTimes.length > 0 ? leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length : 0;
+    let avgLeadTime = 0;
+    if (!isGlobal && event) {
+      const eventDate = startOfDay(parseISO(event.date));
+      const leadTimes = orders.map(o => {
+        const orderDate = startOfDay(parseISO(o.order_date));
+        return differenceInDays(eventDate, orderDate);
+      });
+      avgLeadTime = leadTimes.length > 0 ? leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length : 0;
+    } else {
+      // Global average lead time (requires joining with event dates, but we can approximate or skip for now)
+      // For simplicity in global mode, let's show average tickets per event
+      avgLeadTime = 0; 
+    }
 
     // Financial Efficiency
     const costPerHead = totalTickets > 0 ? totalExpenses / totalTickets : 0;
@@ -124,7 +154,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       discountUsageRate,
       discountedCount: discountedOrders.length
     };
-  }, [orders, event, allOrders, expenses, eventId]);
+  }, [orders, event, allOrders, expenses, eventId, isGlobal]);
 
   if (loadingOrders) return <div className="p-12 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /></div>;
   if (!insights) return null;
@@ -136,39 +166,49 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
         <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <UserCheck className="h-3.5 w-3.5 text-primary" /> Community Loyalty
+              <UserCheck className="h-3.5 w-3.5 text-primary" /> 
+              {isGlobal ? "Community Stickiness" : "Community Loyalty"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-end">
               <div className="text-3xl font-black">{insights.retentionRate.toFixed(0)}%</div>
               <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none font-bold">
-                Returning
+                {isGlobal ? "Loyal Base" : "Returning"}
               </Badge>
             </div>
             <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
-              <div className="flex items-center gap-1"><UserCheck className="h-3 w-3" /> {insights.returningCount} Legends</div>
-              <div className="flex items-center gap-1"><UserPlus className="h-3 w-3" /> {insights.newCount} New</div>
+              <div className="flex items-center gap-1">
+                <UserCheck className="h-3 w-3" /> 
+                {isGlobal ? `${insights.returningCount} Multi-Session` : `${insights.returningCount} Legends`}
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Lead Time Card */}
+        {/* Lead Time / Volume Card */}
         <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5 text-primary" /> Booking Behavior
+              {isGlobal ? <TrendingUp className="h-3.5 w-3.5 text-primary" /> : <Clock className="h-3.5 w-3.5 text-primary" />}
+              {isGlobal ? "Average Attendance" : "Booking Behavior"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-end">
-              <div className="text-3xl font-black">{insights.avgLeadTime.toFixed(1)} Days</div>
+              <div className="text-3xl font-black">
+                {isGlobal 
+                  ? (insights.totalTickets / (allOrders.reduce((acc, o) => acc.add(o.event_id), new Set()).size || 1)).toFixed(0)
+                  : `${insights.avgLeadTime.toFixed(1)} Days`}
+              </div>
               <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-none font-bold">
-                Lead Time
+                {isGlobal ? "Per Event" : "Lead Time"}
               </Badge>
             </div>
             <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              On average, people book their spot {insights.avgLeadTime.toFixed(0)} days before the session.
+              {isGlobal 
+                ? "On average, you host this many singers per session."
+                : `On average, people book their spot ${insights.avgLeadTime.toFixed(0)} days before the session.`}
             </p>
           </CardContent>
         </Card>
@@ -177,7 +217,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
         <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Target className="h-3.5 w-3.5 text-primary" /> Cost Efficiency
+              <Target className="h-3.5 w-3.5 text-primary" /> {isGlobal ? "Lifetime Efficiency" : "Cost Efficiency"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -188,7 +228,9 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
               </Badge>
             </div>
             <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              It costs you ${insights.costPerHead.toFixed(2)} in expenses for every singer in the room.
+              {isGlobal 
+                ? "Your historical average cost to host one singer."
+                : `It costs you $${insights.costPerHead.toFixed(2)} in expenses for every singer in the room.`}
             </p>
           </CardContent>
         </Card>
@@ -197,7 +239,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
         <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Percent className="h-3.5 w-3.5 text-primary" /> Discount Impact
+              <Percent className="h-3.5 w-3.5 text-primary" /> {isGlobal ? "Lifetime Discounts" : "Discount Impact"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -208,7 +250,9 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
               </Badge>
             </div>
             <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              {insights.discountedCount} orders used a promo code for this event.
+              {isGlobal 
+                ? "Percentage of all historical orders that used a promo code."
+                : `${insights.discountedCount} orders used a promo code for this event.`}
             </p>
           </CardContent>
         </Card>
@@ -222,7 +266,9 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             <Zap className="h-12 w-12 text-accent" />
           </div>
           <div className="flex-1 space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">Strategic Learning</h3>
+            <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">
+              {isGlobal ? "Lifetime Strategic Learning" : "Strategic Learning"}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <p className="text-xl font-black font-lora">Revenue vs. Cost</p>
@@ -234,7 +280,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
               <div className="space-y-2">
                 <p className="text-xl font-black font-lora">Growth Opportunity</p>
                 <p className="text-sm opacity-80 leading-relaxed">
-                  {insights.retentionRate > 60 
+                  {insights.retentionRate > 50 
                     ? "You have a very loyal core community! Focus on 'Bring a Friend' incentives to reach new people." 
                     : "You're attracting a lot of new faces. Focus on post-event follow-ups to turn them into regulars."}
                 </p>
