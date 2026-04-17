@@ -4,13 +4,14 @@ import React, { useMemo } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, ListTodo, Zap, Coffee, Loader2, Mail, Calendar } from "lucide-react";
+import { CheckCircle2, Circle, ListTodo, Zap, Coffee, Loader2, Mail, Calendar, Facebook, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { Button } from "@/components/ui/button";
 import { format, subDays, parseISO, isToday, isPast, startOfDay } from "date-fns";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface MarketingTask {
   id: string;
@@ -29,6 +30,17 @@ interface MarketingChecklistProps {
   eventDate?: string;
   onActionClick?: (taskId: string) => void;
 }
+
+const groupLinks: Record<string, string> = {
+  "fb-armadale-community": "https://www.facebook.com/groups/143836535646535/",
+  "fb-glen-iris-malvern-armadale": "https://www.facebook.com/groups/1648484808715845/",
+  "fb-stonnington-noticeboard": "https://www.facebook.com/groups/stonningtoncommunity/",
+  "fb-melbourne-singers": "https://www.facebook.com/groups/melbournesingersandmusicians/",
+  "fb-melbourne-musicians": "https://www.facebook.com/groups/melbournemusiciansandartists/",
+  "fb-gig-guide-melbourne": "https://www.facebook.com/groups/melbournegigguide/",
+  "fb-malvern-armadale-monday": "https://www.facebook.com/groups/301509297978154",
+  "fb-melbourne-choir-groups": "https://www.facebook.com/groups/1173481763392463/",
+};
 
 const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventDate, onActionClick }) => {
   const { user } = useSession();
@@ -133,6 +145,9 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventD
                 <div className="space-y-1">
                   {groupedTasks[dateKey].map((task) => {
                     const isDone = completedTaskKeys?.includes(task.task_key);
+                    const isFbGroup = task.category === "Facebook Groups";
+                    const fbLink = groupLinks[task.task_key];
+
                     return (
                       <div
                         key={task.id}
@@ -150,7 +165,8 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventD
                           ) : (
                             <Circle className="h-4 w-4 text-muted-foreground/20 group-hover:text-muted-foreground/40" />
                           )}
-                          <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            {isFbGroup && <Facebook className="h-3.5 w-3.5 text-[#1877F2] shrink-0" />}
                             <span className={cn(
                               "text-xs font-bold leading-tight",
                               isDone && "line-through text-muted-foreground"
@@ -161,7 +177,26 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventD
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          {task.has_action && onActionClick && (
+                          {isFbGroup && fbLink && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-7 w-7 text-primary hover:bg-primary/10"
+                                    asChild
+                                  >
+                                    <a href={fbLink} target="_blank" rel="noopener noreferrer">
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Open Facebook Group</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {task.has_action && onActionClick && !isFbGroup && (
                             <Button 
                               variant="ghost" 
                               size="icon" 
