@@ -89,7 +89,19 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     }
   });
 
-  // 5. Fetch Engagement Data (Suggestions & Votes)
+  // 5. Fetch Expenses
+  const { data: expenses } = useQuery({
+    queryKey: ["eventExpensesForInsights", eventId],
+    queryFn: async () => {
+      let query = supabase.from("event_expenses").select("*");
+      if (!isGlobal) query = query.eq("event_id", eventId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // 6. Fetch Engagement Data
   const { data: suggestions } = useQuery({
     queryKey: ["allSuggestionsForEngagement"],
     queryFn: async () => {
@@ -106,7 +118,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     }
   });
 
-  // 6. Fetch All Events
+  // 7. Fetch All Events
   const { data: allEvents } = useQuery({
     queryKey: ["allEventsForLeadTime"],
     queryFn: async () => {
@@ -126,6 +138,16 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
 
     const totalTickets = orders.reduce((sum, o) => sum + (o.valid_tickets || 0), 0);
     const totalEarnings = orders.reduce((sum, o) => sum + Number(o.your_earnings || 0), 0);
+    const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+
+    // Financial Efficiency
+    const costPerHead = totalTickets > 0 ? totalExpenses / totalTickets : 0;
+    const revenuePerHead = totalTickets > 0 ? totalEarnings / totalTickets : 0;
+    const suggestedPrice = Math.ceil(costPerHead + 20);
+
+    // Discount Impact
+    const discountedOrders = orders.filter(o => o.discount_code && o.discount_code !== "");
+    const discountUsageRate = orders.length > 0 ? (discountedOrders.length / orders.length) * 100 : 0;
 
     // Retention & Churn Logic
     const peopleMap: Record<string, { name: string, events: Set<string>, email: string, ltv: number }> = {};
@@ -154,7 +176,6 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       returningPeople = Array.from(currentEmails).filter(e => previousEmails.has(e!)).map(e => ({ ...peopleMap[e!], member: profileMap[e!] }));
       newPeople = Array.from(currentEmails).filter(e => !previousEmails.has(e!)).map(e => ({ ...peopleMap[e!], member: profileMap[e!] }));
       
-      // Churn Risk: People who attended 2+ sessions in the past but NOT this one
       churnRisk = Array.from(previousEmails)
         .filter(e => !currentEmails.has(e!) && peopleMap[e!].events.size >= 2)
         .map(e => ({ ...peopleMap[e!], member: profileMap[e!] }))
@@ -179,10 +200,10 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     const engagementScores = Object.keys(peopleMap).map(email => {
       const p = peopleMap[email];
       const member = profileMap[email];
-      let score = p.events.size * 10; // 10 pts per session
+      let score = p.events.size * 10;
       if (member) {
-        score += (suggestions?.filter(s => s.user_id === member.id).length || 0) * 5; // 5 pts per suggestion
-        score += (votes?.filter(v => v.user_id === member.id).length || 0) * 2; // 2 pts per vote
+        score += (suggestions?.filter(s => s.user_id === member.id).length || 0) * 5;
+        score += (votes?.filter(v => v.user_id === member.id).length || 0) * 2;
       }
       return { ...p, score, member };
     }).sort((a, b) => b.score - a.score).slice(0, 10);
@@ -203,90 +224,177 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       lastMinute,
       engagementScores,
       repertoireImpact,
+      costPerHead,
+      revenuePerHead,
+      suggestedPrice,
+      discountUsageRate,
+      discountedCount: discountedOrders.length,
       retentionRate: isGlobal ? (returningPeople.length / Object.keys(peopleMap).length) * 100 : (returningPeople.length / (returningPeople.length + newPeople.length)) * 100
     };
-  }, [orders, allOrders, event, isGlobal, profileMap, allEvents, suggestions, votes]);
+  }, [orders, allOrders, event, isGlobal, profileMap, allEvents, suggestions, votes, expenses, eventId]);
 
   if (loadingOrders) return <div className="p-12 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /></div>;
   if (!insights) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
-      {/* Top Row: Behavioral Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <UserCheck className="h-3.5 w-3.5 text-primary" /> Community Loyalty
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-end">
-              <div className="text-3xl font-black">{insights.retentionRate.toFixed(0)}%</div>
-              <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none font-bold">Retention</Badge>
-            </div>
-            <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
-              <div className="flex items-center gap-1"><UserCheck className="h-3 w-3 text-primary" /> {insights.returningPeople.length} Legends</div>
-              <div className="flex items-center gap-1"><UserPlus className="h-3 w-3 text-blue-500" /> {insights.newPeople.length} New</div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-12 animate-fade-in-up">
+      {/* Row 1: Community Health */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 px-1">
+          <div className="h-6 w-1 bg-primary rounded-full" />
+          <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Community Health</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <UserCheck className="h-3.5 w-3.5 text-primary" /> Loyalty
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-black">{insights.retentionRate.toFixed(0)}%</div>
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none font-bold">Retention</Badge>
+              </div>
+              <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
+                <div className="flex items-center gap-1"><UserCheck className="h-3 w-3 text-primary" /> {insights.returningPeople.length} Legends</div>
+                <div className="flex items-center gap-1"><UserPlus className="h-3 w-3 text-blue-500" /> {insights.newPeople.length} New</div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5 text-primary" /> Booking Speed
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-end">
-              <div className="text-3xl font-black">{((insights.earlyBirds / (insights.earlyBirds + insights.lastMinute)) * 100).toFixed(0)}%</div>
-              <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-none font-bold">Early Birds</Badge>
-            </div>
-            <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              {insights.earlyBirds} people booked 7+ days out. {insights.lastMinute} booked in the final week.
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Clock className="h-3.5 w-3.5 text-primary" /> Booking Speed
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-black">{((insights.earlyBirds / (insights.earlyBirds + insights.lastMinute)) * 100).toFixed(0)}%</div>
+                <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-none font-bold">Early Birds</Badge>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                {insights.earlyBirds} people booked 7+ days out.
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Activity className="h-3.5 w-3.5 text-primary" /> Engagement
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-end">
-              <div className="text-3xl font-black">{insights.engagementScores[0]?.score || 0}</div>
-              <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-none font-bold">Top Score</Badge>
-            </div>
-            <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              Based on attendance, song suggestions, and community voting.
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Activity className="h-3.5 w-3.5 text-primary" /> Engagement
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-black">{insights.engagementScores[0]?.score || 0}</div>
+                <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-none font-bold">Top Score</Badge>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                Based on attendance and community activity.
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Churn Risk
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-end">
-              <div className="text-3xl font-black">{isGlobal ? "N/A" : insights.churnRisk.length}</div>
-              <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-none font-bold">Missing</Badge>
-            </div>
-            <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              {isGlobal ? "Select an event to see missing regulars." : "Regulars who haven't booked for this session yet."}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Churn Risk
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-black">{isGlobal ? "N/A" : insights.churnRisk.length}</div>
+                <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-none font-bold">Missing</Badge>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                Regulars who haven't booked for this session yet.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Row 2: Financial Intelligence */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 px-1">
+          <div className="h-6 w-1 bg-primary rounded-full" />
+          <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Financial Intelligence</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Tag className="h-3.5 w-3.5 text-primary" /> Suggested Price
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-black">${insights.suggestedPrice}</div>
+                <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-none font-bold">Target</Badge>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                Maintains a healthy $20 profit margin per singer based on current costs.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Target className="h-3.5 w-3.5 text-primary" /> Cost Per Head
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-black">${insights.costPerHead.toFixed(2)}</div>
+                <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-none font-bold">Efficiency</Badge>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                Your average expense to host one singer in the room.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <DollarSign className="h-3.5 w-3.5 text-primary" /> Revenue Per Head
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-black">${insights.revenuePerHead.toFixed(2)}</div>
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none font-bold">Gross</Badge>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                Average earnings per attendee before expenses.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Percent className="h-3.5 w-3.5 text-primary" /> Discount Impact
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="text-3xl font-black">{insights.discountUsageRate.toFixed(0)}%</div>
+                <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 border-none font-bold">Usage</Badge>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                {insights.discountedCount} orders used a promo code for this timeframe.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       {/* Main Insights Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Churn Risk / Missing Regulars */}
         {!isGlobal && (
           <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-card">
             <CardHeader className="bg-red-500/5 border-b border-border/50">
@@ -333,7 +441,6 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
           </Card>
         )}
 
-        {/* Engagement Leaderboard */}
         <Card className={cn("rounded-[2rem] border-none shadow-xl overflow-hidden bg-card", isGlobal ? "lg:col-span-2" : "")}>
           <CardHeader className="bg-primary/5 border-b border-border/50">
             <div className="flex items-center justify-between">
@@ -368,7 +475,6 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
           </CardContent>
         </Card>
 
-        {/* Repertoire Impact */}
         <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-card">
           <CardHeader className="bg-accent/10 border-b border-border/50">
             <div className="space-y-1">
@@ -415,11 +521,10 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             <h3 className="text-xs font-black uppercase tracking-[0.4em] opacity-70">Strategic Learning</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <p className="text-xl font-black font-lora">Booking Momentum</p>
+                <p className="text-xl font-black font-lora">Revenue vs. Cost</p>
                 <p className="text-sm opacity-80 leading-relaxed">
-                  {insights.earlyBirds > insights.lastMinute 
-                    ? "Your community plans ahead! You can afford to announce songs earlier to lock in those Early Birds." 
-                    : "You have a high 'Last Minute' culture. Focus your heaviest marketing spend in the final 72 hours."}
+                  Your average revenue per head is <span className="font-bold text-accent">${insights.revenuePerHead.toFixed(2)}</span>. 
+                  After expenses, you are making <span className="font-bold text-accent">${(insights.revenuePerHead - insights.costPerHead).toFixed(2)}</span> profit per attendee.
                 </p>
               </div>
               <div className="space-y-2">
