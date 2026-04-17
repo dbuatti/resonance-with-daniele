@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Facebook, ExternalLink, CheckCircle2, Copy, Link as LinkIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Facebook, ExternalLink, Copy, Link as LinkIcon, Plus, Trash2, Edit2, Save, X } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -16,26 +17,17 @@ interface FacebookGroupTrackerProps {
   postText: string;
 }
 
-// Mapping task keys to their actual Facebook group URLs
-const groupLinks: Record<string, string> = {
-  "fb-armadale-community": "https://www.facebook.com/groups/143836535646535/",
-  "fb-glen-iris-malvern-armadale": "https://www.facebook.com/groups/1648484808715845/",
-  "fb-stonnington-noticeboard": "https://www.facebook.com/groups/stonningtoncommunity/",
-  "fb-melbourne-singers": "https://www.facebook.com/groups/melbournesingersandmusicians/",
-  "fb-melbourne-musicians": "https://www.facebook.com/groups/melbournemusiciansandartists/",
-  "fb-gig-guide-melbourne": "https://www.facebook.com/groups/melbournegigguide/",
-  "fb-malvern-armadale-monday": "https://www.facebook.com/groups/301509297978154",
-  "fb-melbourne-choir-groups": "https://www.facebook.com/groups/1173481763392463/",
-  "fb-malvern-noticeboard": "https://www.facebook.com/groups/301509297978154",
-  "fb-malvern-community": "https://www.facebook.com/groups/497354361728412/",
-  "fb-malvern-notice-board-public": "https://www.facebook.com/groups/1124143148868314/",
-  "fb-australian-choral-collective": "https://www.facebook.com/groups/408800682884399/",
-  "fb-community-choir-network": "https://www.facebook.com/groups/303437066726860/"
-};
-
 const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, postText }) => {
   const { user } = useSession();
   const queryClient = useQueryClient();
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  // Form states
+  const [newName, setNewName] = useState("");
+  const [newUrl, setNewUrl] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editUrl, setEditUrl] = useState("");
 
   const { data: tasks, isLoading: loadingTasks } = useQuery({
     queryKey: ["facebookTasks"],
@@ -80,85 +72,195 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus", eventId] }),
   });
 
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const taskKey = `fb-${newName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+      const { error } = await supabase.from("marketing_tasks").insert({
+        task_key: taskKey,
+        label: newName,
+        url: newUrl,
+        category: "Facebook Groups",
+        energy: "low",
+        days_before: 7,
+        sort_order: (tasks?.length || 0) + 1
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facebookTasks"] });
+      setNewName("");
+      setNewUrl("");
+      setIsAdding(false);
+      showSuccess("Facebook group added!");
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("marketing_tasks")
+        .update({ label: editName, url: editUrl })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facebookTasks"] });
+      setEditingId(null);
+      showSuccess("Group updated!");
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("marketing_tasks").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facebookTasks"] });
+      showSuccess("Group removed.");
+    }
+  });
+
   const handleCopyPost = () => {
     navigator.clipboard.writeText(postText);
     showSuccess("Post content copied!");
   };
 
+  const startEditing = (task: any) => {
+    setEditingId(task.id);
+    setEditName(task.label);
+    setEditUrl(task.url || "");
+  };
+
   if (loadingTasks || loadingStatus) return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-1.5">
-      {tasks?.map((task) => {
-        const isDone = completedTaskKeys?.includes(task.task_key);
-        const link = groupLinks[task.task_key];
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+          Target Groups ({tasks?.length || 0})
+        </p>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setIsAdding(!isAdding)}
+          className="h-7 px-2 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5"
+        >
+          {isAdding ? <X className="mr-1 h-3 w-3" /> : <Plus className="mr-1 h-3 w-3" />}
+          {isAdding ? "Cancel" : "Add Group"}
+        </Button>
+      </div>
 
-        return (
-          <div
-            key={task.id}
-            className={cn(
-              "flex items-center justify-between p-2.5 rounded-xl border transition-all group",
-              isDone 
-                ? "bg-green-500/5 border-green-500/10 opacity-60" 
-                : "bg-card border-primary/5 shadow-sm hover:border-primary/20"
-            )}
+      {isAdding && (
+        <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 space-y-3 animate-in fade-in slide-in-from-top-2">
+          <Input 
+            placeholder="Group Name (e.g. Armadale Community)" 
+            value={newName} 
+            onChange={e => setNewName(e.target.value)}
+            className="h-9 text-sm font-bold"
+          />
+          <Input 
+            placeholder="Facebook URL" 
+            value={newUrl} 
+            onChange={e => setNewUrl(e.target.value)}
+            className="h-9 text-sm"
+          />
+          <Button 
+            className="w-full h-9 font-black text-xs uppercase tracking-widest" 
+            onClick={() => addMutation.mutate()}
+            disabled={!newName || !newUrl || addMutation.isPending}
           >
-            <div className="flex items-center gap-3 flex-1">
-              <Checkbox
-                checked={isDone}
-                onCheckedChange={() => toggleMutation.mutate(task.task_key)}
-                className="h-4 w-4 rounded border-2"
-              />
-              <div className="flex flex-col">
-                <span className={cn(
-                  "text-sm font-bold font-lora",
-                  isDone && "line-through text-muted-foreground"
-                )}>
-                  {task.label}
-                </span>
-              </div>
-            </div>
+            {addMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save New Group"}
+          </Button>
+        </div>
+      )}
 
-            <div className="flex items-center gap-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5"
-                      onClick={handleCopyPost}
-                    >
-                      <Copy className="h-3.5 w-3.5" />
+      <div className="space-y-1.5">
+        {tasks?.map((task) => {
+          const isDone = completedTaskKeys?.includes(task.task_key);
+          const isEditing = editingId === task.id;
+
+          return (
+            <div
+              key={task.id}
+              className={cn(
+                "flex flex-col p-2.5 rounded-xl border transition-all group",
+                isDone 
+                  ? "bg-green-500/5 border-green-500/10 opacity-60" 
+                  : "bg-card border-primary/5 shadow-sm hover:border-primary/20"
+              )}
+            >
+              {isEditing ? (
+                <div className="space-y-2">
+                  <Input value={editName} onChange={e => setEditName(e.target.value)} className="h-8 text-xs font-bold" />
+                  <Input value={editUrl} onChange={e => setEditUrl(e.target.value)} className="h-8 text-xs" />
+                  <div className="flex gap-2">
+                    <Button size="sm" className="h-7 flex-1 text-[10px] font-black" onClick={() => updateMutation.mutate(task.id)}>
+                      <Save className="mr-1 h-3 w-3" /> SAVE
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Copy Post</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                    <Button size="sm" variant="ghost" className="h-7 flex-1 text-[10px] font-black" onClick={() => setEditingId(null)}>
+                      CANCEL
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Checkbox
+                      checked={isDone}
+                      onCheckedChange={() => toggleMutation.mutate(task.task_key)}
+                      className="h-4 w-4 rounded border-2"
+                    />
+                    <span className={cn(
+                      "text-sm font-bold font-lora",
+                      isDone && "line-through text-muted-foreground"
+                    )}>
+                      {task.label}
+                    </span>
+                  </div>
 
-              {link && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 rounded-lg text-primary hover:bg-primary/10"
-                        asChild
-                      >
-                        <a href={link} target="_blank" rel="noopener noreferrer">
-                          <LinkIcon className="h-3.5 w-3.5" />
-                        </a>
+                  <div className="flex items-center gap-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={handleCopyPost}>
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Copy Post</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    {task.url && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" asChild>
+                              <a href={task.url} target="_blank" rel="noopener noreferrer">
+                                <LinkIcon className="h-3.5 w-3.5" />
+                              </a>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Open Group</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
+                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-1 border-l pl-1 border-border">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => startEditing(task)}>
+                        <Edit2 className="h-3 w-3" />
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Open Group</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteMutation.mutate(task.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };

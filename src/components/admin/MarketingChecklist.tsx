@@ -23,6 +23,7 @@ interface MarketingTask {
   action_type: string | null;
   days_before: number;
   sort_order: number;
+  url?: string | null;
 }
 
 interface MarketingChecklistProps {
@@ -30,17 +31,6 @@ interface MarketingChecklistProps {
   eventDate?: string;
   onActionClick?: (taskId: string) => void;
 }
-
-const groupLinks: Record<string, string> = {
-  "fb-armadale-community": "https://www.facebook.com/groups/143836535646535/",
-  "fb-glen-iris-malvern-armadale": "https://www.facebook.com/groups/1648484808715845/",
-  "fb-stonnington-noticeboard": "https://www.facebook.com/groups/stonningtoncommunity/",
-  "fb-melbourne-singers": "https://www.facebook.com/groups/melbournesingersandmusicians/",
-  "fb-melbourne-musicians": "https://www.facebook.com/groups/melbournemusiciansandartists/",
-  "fb-gig-guide-melbourne": "https://www.facebook.com/groups/melbournegigguide/",
-  "fb-malvern-armadale-monday": "https://www.facebook.com/groups/301509297978154",
-  "fb-melbourne-choir-groups": "https://www.facebook.com/groups/1173481763392463/",
-};
 
 const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventDate, onActionClick }) => {
   const { user } = useSession();
@@ -146,7 +136,7 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventD
                   {groupedTasks[dateKey].map((task) => {
                     const isDone = completedTaskKeys?.includes(task.task_key);
                     const isFbGroup = task.category === "Facebook Groups";
-                    const fbLink = groupLinks[task.task_key];
+                    const fbLink = task.url;
 
                     return (
                       <div
