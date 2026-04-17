@@ -16,19 +16,21 @@ interface FacebookGroupTrackerProps {
   postText: string;
 }
 
+// Mapping task keys to their actual Facebook group URLs
 const groupLinks: Record<string, string> = {
-  "fb-malvern-noticeboard": "https://www.facebook.com/groups/301509297978154",
-  "fb-malvern-community": "https://www.facebook.com/groups/497354361728412/",
-  "fb-malvern-notice-board-public": "https://www.facebook.com/groups/1124143148868314/",
-  "fb-australian-choral-collective": "https://www.facebook.com/groups/408800682884399/",
-  "fb-choirs-of-melbourne": "https://www.facebook.com/groups/1173481763392463/",
-  "fb-community-choir-network": "https://www.facebook.com/groups/303437066726860/",
   "fb-armadale-community": "https://www.facebook.com/groups/143836535646535/",
   "fb-glen-iris-malvern-armadale": "https://www.facebook.com/groups/1648484808715845/",
   "fb-stonnington-noticeboard": "https://www.facebook.com/groups/stonningtoncommunity/",
   "fb-melbourne-singers": "https://www.facebook.com/groups/melbournesingersandmusicians/",
   "fb-melbourne-musicians": "https://www.facebook.com/groups/melbournemusiciansandartists/",
-  "fb-gig-guide-melbourne": "https://www.facebook.com/groups/melbournegigguide/"
+  "fb-gig-guide-melbourne": "https://www.facebook.com/groups/melbournegigguide/",
+  "fb-malvern-armadale-monday": "https://www.facebook.com/groups/301509297978154",
+  "fb-melbourne-choir-groups": "https://www.facebook.com/groups/1173481763392463/",
+  "fb-malvern-noticeboard": "https://www.facebook.com/groups/301509297978154",
+  "fb-malvern-community": "https://www.facebook.com/groups/497354361728412/",
+  "fb-malvern-notice-board-public": "https://www.facebook.com/groups/1124143148868314/",
+  "fb-australian-choral-collective": "https://www.facebook.com/groups/408800682884399/",
+  "fb-community-choir-network": "https://www.facebook.com/groups/303437066726860/"
 };
 
 const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, postText }) => {
