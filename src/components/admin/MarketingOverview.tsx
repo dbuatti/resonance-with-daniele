@@ -23,6 +23,20 @@ interface MarketingOverviewProps {
 }
 
 const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
+  // Fetch event details to get the event date
+  const { data: event } = useQuery({
+    queryKey: ["eventDetailsForChart", eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("date")
+        .eq("id", eventId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: expenses, isLoading: loadingExpenses } = useQuery({
     queryKey: ["eventExpenses", eventId],
     queryFn: async () => {
@@ -60,22 +74,24 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
     // 1. Group tickets by day
     const salesByDay: Record<string, number> = {};
     let minDate = new Date();
-    let maxDate = new Date(0);
-
+    
     orders.forEach(order => {
       const date = parseISO(order.order_date);
       const dateKey = format(date, "yyyy-MM-dd");
       salesByDay[dateKey] = (salesByDay[dateKey] || 0) + (order.valid_tickets || 0);
       
       if (date < minDate) minDate = date;
-      if (date > maxDate) maxDate = date;
     });
 
-    // Ensure maxDate is at least today to show current status
+    // 2. Determine the end date for the chart
     const today = startOfToday();
-    if (isBefore(maxDate, today)) maxDate = today;
+    const eventDate = event?.date ? startOfDay(parseISO(event.date)) : today;
+    
+    // If the event is in the past, stop at the event date.
+    // If the event is in the future, stop at today.
+    const maxDate = isBefore(eventDate, today) ? eventDate : today;
 
-    // 2. Fill in the gaps from first sale to today
+    // 3. Fill in the gaps from first sale to maxDate
     const data = [];
     let current = startOfDay(minDate);
     const end = startOfDay(maxDate);
@@ -91,7 +107,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
     }
 
     return data;
-  }, [orders]);
+  }, [orders, event]);
 
   if (loadingExpenses || loadingOrders) return <Skeleton className="h-64 w-full rounded-2xl" />;
 
