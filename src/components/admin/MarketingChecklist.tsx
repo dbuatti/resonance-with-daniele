@@ -26,7 +26,7 @@ interface MarketingTask {
 
 interface MarketingChecklistProps {
   eventId: string;
-  eventDate?: string; // New prop
+  eventDate?: string;
   onActionClick?: (taskId: string) => void;
 }
 
@@ -40,7 +40,7 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventD
       const { data, error } = await supabase
         .from("marketing_tasks")
         .select("*")
-        .order("days_before", { ascending: false }) // Order by timeline
+        .order("days_before", { ascending: false })
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data as MarketingTask[];
@@ -77,28 +77,22 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventD
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus", eventId] }),
   });
 
-  // Group tasks by their calculated date
   const groupedTasks = useMemo(() => {
     if (!tasks || !eventDate) return {};
-    
     const groups: Record<string, MarketingTask[]> = {};
     const baseDate = parseISO(eventDate);
-
     tasks.forEach(task => {
       const targetDate = subDays(baseDate, task.days_before);
       const dateKey = format(targetDate, "yyyy-MM-dd");
       if (!groups[dateKey]) groups[dateKey] = [];
       groups[dateKey].push(task);
     });
-
     return groups;
   }, [tasks, eventDate]);
 
-  const sortedDateKeys = useMemo(() => {
-    return Object.keys(groupedTasks).sort();
-  }, [groupedTasks]);
+  const sortedDateKeys = useMemo(() => Object.keys(groupedTasks).sort(), [groupedTasks]);
 
-  if (loadingTasks || loadingStatus) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
+  if (loadingTasks || loadingStatus) return <div className="p-4 text-center"><Loader2 className="animate-spin h-6 w-6 mx-auto text-primary" /></div>;
 
   const totalTasks = tasks?.length || 0;
   const completedCount = completedTaskKeys?.length || 0;
@@ -106,16 +100,14 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventD
 
   return (
     <Card className="shadow-sm border border-border/50 overflow-hidden rounded-2xl bg-card">
-      <CardHeader className="p-6 border-b border-border/50">
-        <div className="flex items-center justify-between mb-4">
-          <CardTitle className="text-lg font-bold flex items-center gap-2">
-            Marketing Timeline
-          </CardTitle>
-          <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-            {completedCount} / {totalTasks} Tasks
+      <CardHeader className="p-4 border-b border-border/50">
+        <div className="flex items-center justify-between mb-2">
+          <CardTitle className="text-base font-bold">Marketing Timeline</CardTitle>
+          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+            {completedCount}/{totalTasks}
           </span>
         </div>
-        <Progress value={progress} className="h-2 bg-muted" />
+        <Progress value={progress} className="h-1.5 bg-muted" />
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border/50">
@@ -125,72 +117,65 @@ const MarketingChecklist: React.FC<MarketingChecklistProps> = ({ eventId, eventD
             const isPastDate = isPast(date) && !isTodayDate;
             
             return (
-              <div key={dateKey} className={cn("p-6", isTodayDate && "bg-primary/5")}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar className={cn("h-3.5 w-3.5", isTodayDate ? "text-primary" : "text-muted-foreground")} />
-                    <h3 className={cn(
-                      "text-[10px] font-black uppercase tracking-widest",
-                      isTodayDate ? "text-primary" : "text-muted-foreground/60"
-                    )}>
-                      {format(date, "EEEE, MMM do")} 
-                      {isTodayDate && " — TODAY"}
-                      {isPastDate && " — OVERDUE"}
-                    </h3>
-                  </div>
+              <div key={dateKey} className={cn("p-4", isTodayDate && "bg-primary/5")}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className={cn("h-3 w-3", isTodayDate ? "text-primary" : "text-muted-foreground")} />
+                  <h3 className={cn(
+                    "text-[9px] font-black uppercase tracking-widest",
+                    isTodayDate ? "text-primary" : "text-muted-foreground/60"
+                  )}>
+                    {format(date, "EEE, MMM do")} 
+                    {isTodayDate && " — TODAY"}
+                    {isPastDate && " — OVERDUE"}
+                  </h3>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {groupedTasks[dateKey].map((task) => {
                     const isDone = completedTaskKeys?.includes(task.task_key);
                     return (
                       <div
                         key={task.id}
                         className={cn(
-                          "flex items-center justify-between p-3 rounded-xl transition-all border border-transparent group",
-                          isDone ? "bg-muted/30 opacity-60" : "hover:bg-muted/50"
+                          "flex items-center justify-between p-2 rounded-lg transition-all border border-transparent group",
+                          isDone ? "bg-muted/20 opacity-60" : "hover:bg-muted/40"
                         )}
                       >
                         <div 
-                          className="flex items-center gap-4 flex-1 cursor-pointer"
+                          className="flex items-center gap-3 flex-1 cursor-pointer"
                           onClick={() => toggleMutation.mutate(task.task_key)}
                         >
-                          <div>
-                            {isDone ? (
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
-                            ) : (
-                              <Circle className="h-5 w-5 text-muted-foreground/30 group-hover:text-muted-foreground/50" />
-                            )}
-                          </div>
+                          {isDone ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-muted-foreground/20 group-hover:text-muted-foreground/40" />
+                          )}
                           <div className="flex flex-col">
                             <span className={cn(
-                              "text-sm font-bold leading-tight",
+                              "text-xs font-bold leading-tight",
                               isDone && "line-through text-muted-foreground"
                             )}>
                               {task.label}
                             </span>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
-                              {task.category}
-                            </span>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           {task.has_action && onActionClick && (
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onActionClick(task.task_key);
                               }}
                             >
-                              <Mail className="h-4 w-4" />
+                              <Mail className="h-3.5 w-3.5" />
                             </Button>
                           )}
-                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0 h-6 border-border/50 bg-muted/20 text-muted-foreground">
-                            {task.energy === "high" ? <Zap className="h-3 w-3 text-yellow-500 mr-1" /> : <Coffee className="h-3 w-3 text-blue-500 mr-1" />}
+                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0 h-5 border-border/50 bg-muted/10 text-muted-foreground">
+                            {task.energy === "high" ? <Zap className="h-2.5 w-2.5 text-yellow-500 mr-1" /> : <Coffee className="h-2.5 w-2.5 text-blue-500 mr-1" />}
                             {task.energy}
                           </Badge>
                         </div>

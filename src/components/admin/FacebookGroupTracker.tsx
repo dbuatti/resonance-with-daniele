@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 
 interface FacebookGroupTrackerProps {
   eventId: string;
-  postText: string; // New prop for the text to copy
+  postText: string;
 }
 
 const groupLinks: Record<string, string> = {
@@ -29,7 +29,6 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
   const { user } = useSession();
   const queryClient = useQueryClient();
 
-  // 1. Fetch FB tasks
   const { data: tasks, isLoading: loadingTasks } = useQuery({
     queryKey: ["facebookTasks"],
     queryFn: async () => {
@@ -43,7 +42,6 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
     },
   });
 
-  // 2. Fetch completion status
   const { data: completedTaskKeys, isLoading: loadingStatus } = useQuery<string[]>({
     queryKey: ["marketingTaskStatus", eventId],
     queryFn: async () => {
@@ -76,13 +74,13 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
 
   const handleCopyPost = () => {
     navigator.clipboard.writeText(postText);
-    showSuccess("Post content copied to clipboard!");
+    showSuccess("Post content copied!");
   };
 
-  if (loadingTasks || loadingStatus) return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loadingTasks || loadingStatus) return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-1.5">
       {tasks?.map((task) => {
         const isDone = completedTaskKeys?.includes(task.task_key);
         const link = groupLinks[task.task_key];
@@ -91,47 +89,42 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
           <div
             key={task.id}
             className={cn(
-              "flex items-center justify-between p-4 rounded-2xl border transition-all group",
+              "flex items-center justify-between p-2.5 rounded-xl border transition-all group",
               isDone 
-                ? "bg-green-500/5 border-green-500/20 opacity-60" 
-                : "bg-card border-primary/10 shadow-sm hover:border-primary/30"
+                ? "bg-green-500/5 border-green-500/10 opacity-60" 
+                : "bg-card border-primary/5 shadow-sm hover:border-primary/20"
             )}
           >
-            <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-center gap-3 flex-1">
               <Checkbox
                 checked={isDone}
                 onCheckedChange={() => toggleMutation.mutate(task.task_key)}
-                className="h-6 w-6 rounded-lg border-2"
+                className="h-4 w-4 rounded border-2"
               />
               <div className="flex flex-col">
                 <span className={cn(
-                  "text-base font-bold font-lora",
+                  "text-sm font-bold font-lora",
                   isDone && "line-through text-muted-foreground"
                 )}>
                   {task.label}
                 </span>
-                {isDone && (
-                  <span className="text-[10px] font-black uppercase tracking-widest text-green-600 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" /> Posted
-                  </span>
-                )}
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      className="h-7 w-7 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5"
                       onClick={handleCopyPost}
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Copy Post Text</TooltipContent>
+                  <TooltipContent>Copy Post</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
@@ -139,11 +132,11 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="rounded-xl font-bold text-primary hover:bg-primary/10"
+                  className="h-7 px-2 rounded-lg font-bold text-[10px] uppercase tracking-widest text-primary hover:bg-primary/5"
                   asChild
                 >
                   <a href={link} target="_blank" rel="noopener noreferrer">
-                    Post <ExternalLink className="ml-2 h-4 w-4" />
+                    Post <ExternalLink className="ml-1 h-3 w-3" />
                   </a>
                 </Button>
               )}
