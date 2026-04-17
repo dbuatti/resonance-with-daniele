@@ -7,7 +7,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Plus, Trash2, UserPlus, CheckCircle2, RefreshCw } from "lucide-react";
+import { Loader2, Plus, Trash2, UserPlus, CheckCircle2, RefreshCw, ArrowDownToLine } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
@@ -42,72 +42,73 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
     enabled: !!user && !!eventId,
   });
 
-  // Automatic Rollover Logic
-  useEffect(() => {
-    const performRollover = async () => {
-      // Only trigger if we have loaded the current targets and the list is empty
-      if (!isLoading && targets && targets.length === 0 && eventId && !isRollingOver) {
-        setIsRollingOver(true);
-        try {
-          console.log("[OutreachTracker] No targets for current event. Looking for previous targets to roll over...");
-          
-          // 1. Find the most recent event (by date) that had targets
-          // First, get all events to find the "previous" one relative to current event date
-          const { data: currentEvent } = await supabase
-            .from("events")
-            .select("date")
-            .eq("id", eventId)
-            .single();
+  const handleRollover = async () => {
+    if (!user || !eventId || isRollingOver) return;
+    
+    setIsRollingOver(true);
+    try {
+      // 1. Get current event date
+      const { data: currentEvent } = await supabase
+        .from("events")
+        .select("date")
+        .eq("id", eventId)
+        .single();
 
-          if (!currentEvent) return;
+      if (!currentEvent) throw new Error("Current event not found");
 
-          const { data: prevEventWithTargets } = await supabase
-            .from("outreach_targets")
-            .select("event_id, events!inner(date)")
-            .lt("events.date", currentEvent.date)
-            .order("events.date", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      // 2. Find the most recent event before this one that has targets
+      const { data: prevEvents } = await supabase
+        .from("events")
+        .select("id, date")
+        .lt("date", currentEvent.date)
+        .order("date", { ascending: false });
 
-          const sourceEventId = prevEventWithTargets?.event_id;
+      if (!prevEvents || prevEvents.length === 0) {
+        showError("No previous events found to roll over from.");
+        return;
+      }
 
-          if (sourceEventId) {
-            // 2. Fetch those targets
-            const { data: prevTargets } = await supabase
-              .from("outreach_targets")
-              .select("name")
-              .eq("event_id", sourceEventId);
+      // 3. Check each previous event for targets until we find some
+      let sourceTargets: any[] = [];
+      let sourceEventTitle = "";
 
-            if (prevTargets && prevTargets.length > 0) {
-              console.log(`[OutreachTracker] Rolling over ${prevTargets.length} targets from event ${sourceEventId}`);
-              
-              // 3. Insert them for the current event (resetting is_messaged to false)
-              const newTargets = prevTargets.map(t => ({
-                name: t.name,
-                admin_id: user?.id,
-                event_id: eventId,
-                is_messaged: false
-              }));
-
-              const { error: insertError } = await supabase.from("outreach_targets").insert(newTargets);
-              
-              if (insertError) throw insertError;
-
-              showSuccess(`Rolled over ${prevTargets.length} people from your previous list!`);
-              queryClient.invalidateQueries({ queryKey: ["outreachTargets", eventId] });
-            }
-          }
-        } catch (err: any) {
-          console.error("[OutreachTracker] Rollover failed:", err);
-          // Don't show error toast for automatic background tasks unless critical
-        } finally {
-          setIsRollingOver(false);
+      for (const prevEvent of prevEvents) {
+        const { data: foundTargets } = await supabase
+          .from("outreach_targets")
+          .select("name")
+          .eq("event_id", prevEvent.id);
+        
+        if (foundTargets && foundTargets.length > 0) {
+          sourceTargets = foundTargets;
+          break;
         }
       }
-    };
 
-    performRollover();
-  }, [targets, isLoading, eventId, user?.id, queryClient]);
+      if (sourceTargets.length === 0) {
+        showError("No previous outreach lists found.");
+        return;
+      }
+
+      // 4. Insert them for the current event
+      const newTargets = sourceTargets.map(t => ({
+        name: t.name,
+        admin_id: user.id,
+        event_id: eventId,
+        is_messaged: false
+      }));
+
+      const { error: insertError } = await supabase.from("outreach_targets").insert(newTargets);
+      if (insertError) throw insertError;
+
+      showSuccess(`Successfully rolled over ${sourceTargets.length} people!`);
+      queryClient.invalidateQueries({ queryKey: ["outreachTargets", eventId] });
+    } catch (err: any) {
+      console.error("[OutreachTracker] Rollover failed:", err);
+      showError("Failed to roll over list: " + err.message);
+    } finally {
+      setIsRollingOver(false);
+    }
+  };
 
   const addMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -159,22 +160,17 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
           {messagedCount} / {totalCount} Messaged
         </p>
-        {isRollingOver && (
-          <div className="flex items-center gap-2 text-[10px] font-black text-primary animate-pulse uppercase tracking-widest">
-            <RefreshCw className="h-3 w-3 animate-spin" /> Rolling over list...
-          </div>
-        )}
       </div>
 
       <form onSubmit={handleAdd} className="flex gap-2">
         <Input
-          placeholder="Add someone new to the list..."
+          placeholder="Add someone new..."
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           className="h-12 rounded-xl bg-background border-primary/20 focus-visible:ring-primary"
-          disabled={addMutation.isPending}
+          disabled={addMutation.isPending || isRollingOver}
         />
-        <Button type="submit" size="icon" className="h-12 w-12 rounded-xl" disabled={addMutation.isPending}>
+        <Button type="submit" size="icon" className="h-12 w-12 rounded-xl" disabled={addMutation.isPending || isRollingOver}>
           {addMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-5 w-5" />}
         </Button>
       </form>
@@ -216,11 +212,26 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
           </div>
         ))}
 
-        {totalCount === 0 && !isRollingOver && (
-          <div className="text-center py-12 bg-muted/10 rounded-[2rem] border-2 border-dashed border-border">
-            <UserPlus className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
-            <p className="text-sm font-medium text-muted-foreground">Your outreach list is empty.</p>
-            <p className="text-[10px] uppercase font-black tracking-widest mt-1 opacity-50">Add your first person above</p>
+        {totalCount === 0 && (
+          <div className="text-center py-12 bg-muted/10 rounded-[2rem] border-2 border-dashed border-border space-y-4">
+            <div className="space-y-2">
+              <UserPlus className="h-10 w-10 text-muted-foreground mx-auto opacity-20" />
+              <p className="text-sm font-medium text-muted-foreground">Your outreach list is empty.</p>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRollover}
+              disabled={isRollingOver}
+              className="rounded-xl font-bold border-primary/20 text-primary hover:bg-primary/5"
+            >
+              {isRollingOver ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rolling over...</>
+              ) : (
+                <><ArrowDownToLine className="mr-2 h-4 w-4" /> Roll Over Previous List</>
+              )}
+            </Button>
           </div>
         )}
       </div>
