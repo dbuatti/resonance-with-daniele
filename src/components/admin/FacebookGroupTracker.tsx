@@ -88,11 +88,13 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facebookTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["marketingTasks"] });
       setNewName("");
       setNewUrl("");
       setIsAdding(false);
       showSuccess("Facebook group added!");
-    }
+    },
+    onError: (error: any) => showError("Failed to add group: " + error.message)
   });
 
   const updateMutation = useMutation({
@@ -105,9 +107,11 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facebookTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["marketingTasks"] });
       setEditingId(null);
       showSuccess("Group updated!");
-    }
+    },
+    onError: (error: any) => showError("Failed to update group: " + error.message)
   });
 
   const deleteMutation = useMutation({
@@ -117,8 +121,10 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facebookTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["marketingTasks"] });
       showSuccess("Group removed.");
-    }
+    },
+    onError: (error: any) => showError("Failed to remove group: " + error.message)
   });
 
   const handleCopyPost = () => {
