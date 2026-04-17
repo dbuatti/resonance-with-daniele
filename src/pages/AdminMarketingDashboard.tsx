@@ -7,8 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target, Lightbulb, Globe } from "lucide-react";
+import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target, Lightbulb, Globe, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import BackButton from "@/components/ui/BackButton";
 import ExpenseLogger from "@/components/admin/ExpenseLogger";
 import TicketSalesLogger from "@/components/admin/TicketSalesLogger";
@@ -55,6 +57,11 @@ const AdminMarketingDashboard: React.FC = () => {
               <h1 className="text-4xl font-bold font-lora">
                 {isGlobal ? "Global Marketing Hub" : "Event Marketing Hub"}
               </h1>
+              <Button asChild className="font-black rounded-xl shadow-md">
+                <Link to="/admin/events/new">
+                  <Plus className="mr-2 h-4 w-4" /> New Event
+                </Link>
+              </Button>
               <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-mono">
                 Ads ID: 775-287-8796
               </Badge>
