@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Trash2, ChevronRight, ChevronLeft, CheckCircle2, Sparkles } from "lucide-react";
+import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Trash2, ChevronRight, ChevronLeft, CheckCircle2, Sparkles, DollarSign, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -48,14 +48,37 @@ const AdminEventWizard = () => {
     tasks: PHASE_1_TASKS.map(t => ({ ...t, completed: false }))
   });
 
+  // Custom Expense Form State
+  const [customExpense, setCustomExpense] = useState({
+    description: "",
+    amount: "",
+    category: "General"
+  });
+
   const nextStep = () => setStep(s => Math.min(s + 1, 3));
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
-  const addExpense = (desc: string, amt: number, cat: string) => {
+  const handleAddCustomExpense = () => {
+    if (!customExpense.description || !customExpense.amount) return;
+    
     setFormData(prev => ({
       ...prev,
-      expenses: [...prev.expenses, { description: desc, amount: amt, category: cat }]
+      expenses: [...prev.expenses, { 
+        description: customExpense.description, 
+        amount: parseFloat(customExpense.amount), 
+        category: customExpense.category 
+      }]
     }));
+
+    setCustomExpense({ description: "", amount: "", category: "General" });
+  };
+
+  const applyTemplate = (template: typeof VENUE_TEMPLATES[0]) => {
+    setCustomExpense({
+      description: template.label,
+      amount: template.amount.toString(),
+      category: template.category
+    });
   };
 
   const removeExpense = (index: number) => {
@@ -77,7 +100,6 @@ const AdminEventWizard = () => {
     setIsCreating(true);
 
     try {
-      // 1. Create Event
       const { data: event, error: eventError } = await supabase
         .from("events")
         .insert({
@@ -91,7 +113,6 @@ const AdminEventWizard = () => {
 
       if (eventError) throw eventError;
 
-      // 2. Add Expenses
       if (formData.expenses.length > 0) {
         const { error: expError } = await supabase
           .from("event_expenses")
@@ -99,7 +120,6 @@ const AdminEventWizard = () => {
         if (expError) throw expError;
       }
 
-      // 3. Add Task Statuses
       const taskStatuses = formData.tasks.map(t => ({
         admin_id: user.id,
         event_id: event.id,
@@ -216,23 +236,75 @@ const AdminEventWizard = () => {
                 <Card className="border-none shadow-xl rounded-[2rem]">
                   <CardHeader>
                     <CardTitle className="font-lora text-2xl">Venue & Costs</CardTitle>
-                    <CardDescription>Select from templates or add custom expenses.</CardDescription>
+                    <CardDescription>Click a template to edit, or enter custom values below.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-8">
+                    {/* Templates Grid */}
                     <div className="grid grid-cols-2 gap-3">
                       {VENUE_TEMPLATES.map(template => (
                         <Button
                           key={template.id}
                           variant="outline"
-                          className="h-auto py-4 flex flex-col items-start gap-1 rounded-xl border-primary/10 hover:border-primary/30 hover:bg-primary/5"
-                          onClick={() => addExpense(template.label, template.amount, template.category)}
+                          className="h-auto py-4 flex flex-col items-start gap-1 rounded-xl border-primary/10 hover:border-primary/30 hover:bg-primary/5 transition-all"
+                          onClick={() => applyTemplate(template)}
                         >
-                          <span className="text-xs font-black uppercase tracking-widest text-primary">{template.label}</span>
-                          <span className="text-lg font-bold">${template.amount}</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{template.category}</span>
+                          <span className="text-sm font-bold text-primary">{template.label}</span>
+                          <span className="text-lg font-black">${template.amount}</span>
                         </Button>
                       ))}
                     </div>
 
+                    {/* Manual Entry Form */}
+                    <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                        <Plus className="h-3 w-3" /> Add / Edit Expense
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase">Description</Label>
+                          <Input 
+                            placeholder="e.g. Custom Hall Hire" 
+                            value={customExpense.description}
+                            onChange={e => setCustomExpense(prev => ({ ...prev, description: e.target.value }))}
+                            className="h-10 rounded-lg bg-background"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase">Amount ($)</Label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                              type="number"
+                              placeholder="0.00" 
+                              value={customExpense.amount}
+                              onChange={e => setCustomExpense(prev => ({ ...prev, amount: e.target.value }))}
+                              className="h-10 pl-9 rounded-lg bg-background"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-1 space-y-2">
+                          <Label className="text-[10px] font-bold uppercase">Category</Label>
+                          <Input 
+                            placeholder="e.g. Venue" 
+                            value={customExpense.category}
+                            onChange={e => setCustomExpense(prev => ({ ...prev, category: e.target.value }))}
+                            className="h-10 rounded-lg bg-background"
+                          />
+                        </div>
+                        <Button 
+                          className="self-end h-10 px-6 font-black rounded-lg"
+                          onClick={handleAddCustomExpense}
+                          disabled={!customExpense.description || !customExpense.amount}
+                        >
+                          Add to List
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Current List */}
                     <div className="space-y-4 pt-4 border-t">
                       <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Current Expenses</h4>
                       {formData.expenses.length === 0 ? (
