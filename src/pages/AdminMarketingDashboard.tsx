@@ -7,13 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target } from "lucide-react";
+import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target, Lightbulb } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BackButton from "@/components/ui/BackButton";
 import ExpenseLogger from "@/components/admin/ExpenseLogger";
 import TicketSalesLogger from "@/components/admin/TicketSalesLogger";
 import FlashSaleManager from "@/components/admin/FlashSaleManager";
 import MarketingOverview from "@/components/admin/MarketingOverview";
+import MarketingInsights from "@/components/admin/MarketingInsights";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
@@ -91,11 +92,14 @@ const AdminMarketingDashboard: React.FC = () => {
         ) : (
           <Tabs defaultValue="overview" className="space-y-8">
             <div className="flex justify-center">
-              <TabsList className="grid w-full max-w-2xl grid-cols-4 rounded-xl">
+              <TabsList className="grid w-full max-w-3xl grid-cols-5 rounded-xl">
                 <TabsTrigger value="overview" className="rounded-lg">Overview</TabsTrigger>
                 <TabsTrigger value="tickets" className="rounded-lg">Tickets</TabsTrigger>
                 <TabsTrigger value="expenses" className="rounded-lg">Expenses</TabsTrigger>
                 <TabsTrigger value="promos" className="rounded-lg">Promos</TabsTrigger>
+                <TabsTrigger value="insights" className="rounded-lg flex items-center gap-2">
+                  <Lightbulb className="h-3.5 w-3.5" /> Insights
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -113,6 +117,10 @@ const AdminMarketingDashboard: React.FC = () => {
 
             <TabsContent value="promos">
               <FlashSaleManager eventId={selectedEventId} />
+            </TabsContent>
+
+            <TabsContent value="insights">
+              <MarketingInsights eventId={selectedEventId} />
             </TabsContent>
           </Tabs>
         )}
