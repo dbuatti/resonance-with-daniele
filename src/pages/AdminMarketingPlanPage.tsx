@@ -30,7 +30,8 @@ import {
   Building2,
   ChevronRight,
   Brain,
-  ListTodo
+  ListTodo,
+  Tag
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -293,6 +294,38 @@ const AdminMarketingPlanPage: React.FC = () => {
                     eventDate="Sunday, May 24th" 
                     eventLink="https://events.humanitix.com/resonance-choir-may" 
                   />
+                )}
+
+                {/* Public Launch Reference Card - Only show for May event */}
+                {selectedEvent?.title.includes("May") && (
+                  <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden border-t-4 border-primary">
+                    <CardHeader className="bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <Ticket className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-xl font-black font-lora">Public Launch Reference</CardTitle>
+                      </div>
+                      <CardDescription className="font-medium">Enable these tiers in Humanitix 7 days after the April event.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[
+                          { label: "General Admission", price: "$30.00", qty: 30 },
+                          { label: "Early Bird", price: "$25.00", qty: 30 },
+                          { label: "Concession / Community", price: "$20.00", qty: 30 },
+                          { label: "Donations", price: "Any Amount", qty: 30 },
+                          { label: "Helpers!", price: "$0.00", qty: 5 },
+                        ].map((tier, i) => (
+                          <div key={i} className="flex items-center justify-between p-4 bg-muted/20 rounded-xl border border-border/50">
+                            <div>
+                              <p className="font-bold text-sm">{tier.label}</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Qty: {tier.qty}</p>
+                            </div>
+                            <Badge className="bg-primary/10 text-primary border-none font-black">{tier.price}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
 
                 <section className="space-y-4">
