@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/integrations/supabase/auth";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Facebook, ExternalLink, CheckCircle2, Copy } from "lucide-react";
+import { Loader2, Facebook, ExternalLink, CheckCircle2, Copy, Link as LinkIcon } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +22,13 @@ const groupLinks: Record<string, string> = {
   "fb-malvern-notice-board-public": "https://www.facebook.com/groups/1124143148868314/",
   "fb-australian-choral-collective": "https://www.facebook.com/groups/408800682884399/",
   "fb-choirs-of-melbourne": "https://www.facebook.com/groups/1173481763392463/",
-  "fb-community-choir-network": "https://www.facebook.com/groups/303437066726860/"
+  "fb-community-choir-network": "https://www.facebook.com/groups/303437066726860/",
+  "fb-armadale-community": "https://www.facebook.com/groups/143836535646535/",
+  "fb-glen-iris-malvern-armadale": "https://www.facebook.com/groups/1648484808715845/",
+  "fb-stonnington-noticeboard": "https://www.facebook.com/groups/stonningtoncommunity/",
+  "fb-melbourne-singers": "https://www.facebook.com/groups/melbournesingersandmusicians/",
+  "fb-melbourne-musicians": "https://www.facebook.com/groups/melbournemusiciansandartists/",
+  "fb-gig-guide-melbourne": "https://www.facebook.com/groups/melbournegigguide/"
 };
 
 const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, postText }) => {
@@ -129,16 +135,23 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
               </TooltipProvider>
 
               {link && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 rounded-lg font-bold text-[10px] uppercase tracking-widest text-primary hover:bg-primary/5"
-                  asChild
-                >
-                  <a href={link} target="_blank" rel="noopener noreferrer">
-                    Post <ExternalLink className="ml-1 h-3 w-3" />
-                  </a>
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 rounded-lg text-primary hover:bg-primary/10"
+                        asChild
+                      >
+                        <a href={link} target="_blank" rel="noopener noreferrer">
+                          <LinkIcon className="h-3.5 w-3.5" />
+                        </a>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Open Group</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           </div>
