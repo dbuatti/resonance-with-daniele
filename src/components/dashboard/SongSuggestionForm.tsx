@@ -91,35 +91,31 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
 
   if (loadingSession) {
     return (
-      <Card className="p-6 shadow-lg rounded-xl bg-muted/50 dark:bg-muted/30">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
-          <Skeleton className="h-6 w-1/2" />
-        </CardHeader>
-        <CardContent className="p-0 space-y-4">
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-10 w-full mb-4" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-10 w-full mb-4" />
-          <Skeleton className="h-24 w-full mb-4" />
+      <Card className="p-4 shadow-sm rounded-xl bg-muted/50">
+        <Skeleton className="h-5 w-1/2 mb-4" />
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-16 w-full" />
           <Skeleton className="h-10 w-full" />
-        </CardContent>
+        </div>
       </Card>
     );
   }
 
   if (!user) {
     return (
-      <Card className="p-6 shadow-lg rounded-xl text-center border-l-4 border-primary bg-muted/50 dark:bg-muted/30">
-        <CardHeader className="flex flex-row items-center justify-center space-y-0 p-0 mb-4">
-          <CardTitle className="text-xl font-lora flex items-center gap-2">
-            <Music className="h-6 w-6 text-primary" /> Suggest a Song
+      <Card className="p-4 shadow-sm rounded-xl text-center border-l-4 border-primary bg-muted/50">
+        <CardHeader className="p-0 mb-3">
+          <CardTitle className="text-lg font-lora flex items-center justify-center gap-2">
+            <Music className="h-5 w-5 text-primary" /> Suggest a Song
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <CardDescription className="mb-4">
-            You must be logged in to suggest new songs for the choir.
+          <CardDescription className="mb-3 text-xs">
+            Log in to suggest new songs for the choir.
           </CardDescription>
-          <Button asChild className="w-full">
+          <Button asChild size="sm" className="w-full rounded-lg font-bold">
             <Link to="/login">Log In to Suggest</Link>
           </Button>
         </CardContent>
@@ -128,26 +124,23 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
   }
 
   return (
-    <Card className="p-6 shadow-lg rounded-xl bg-muted/50 dark:bg-muted/30">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 mb-4">
-        <CardTitle className="text-xl font-lora flex items-center gap-2">
-          <Music className="h-6 w-6 text-primary" /> Suggest a Song
+    <Card className="p-4 md:p-6 shadow-sm rounded-2xl bg-muted/50">
+      <CardHeader className="p-0 mb-4">
+        <CardTitle className="text-lg font-lora flex items-center gap-2">
+          <Music className="h-5 w-5 text-primary" /> Suggest a Song
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <CardDescription className="mb-4">
-          Have a song in mind you'd love the choir to sing? Suggest it here!
-        </CardDescription>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Song Title</FormLabel>
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Song Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Bohemian Rhapsody" {...field} disabled={isSubmittedSuccessfully} />
+                    <Input placeholder="Bohemian Rhapsody" {...field} disabled={isSubmittedSuccessfully} className="h-9 rounded-lg text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,10 +150,10 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
               control={form.control}
               name="artist"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Artist</FormLabel>
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Artist</FormLabel>
                   <FormControl>
-                    <Input placeholder="Queen" {...field} disabled={isSubmittedSuccessfully} />
+                    <Input placeholder="Queen" {...field} disabled={isSubmittedSuccessfully} className="h-9 rounded-lg text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -170,12 +163,12 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
               control={form.control}
               name="reason"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Why this song? (Optional)</FormLabel>
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Why this song? (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="I love the harmonies in this song, and it would be a fun challenge for the choir!"
-                      className="resize-y min-h-[80px]"
+                      placeholder="I love the harmonies..."
+                      className="resize-none min-h-[60px] rounded-lg text-sm"
                       {...field}
                       disabled={isSubmittedSuccessfully}
                     />
@@ -189,7 +182,7 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
               control={form.control}
               name="submit_anonymously"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
+                <FormItem className="flex flex-row items-start space-x-2 space-y-0 rounded-lg border p-2 bg-background/50">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -197,13 +190,10 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
                       disabled={isSubmittedSuccessfully}
                     />
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
+                  <div className="space-y-0.5 leading-none">
+                    <FormLabel className="text-[10px] font-bold">
                       Submit Anonymously
                     </FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      If checked, your name will not be displayed next to the suggestion.
-                    </p>
                   </div>
                 </FormItem>
               )}
@@ -211,7 +201,8 @@ const SongSuggestionForm: React.FC<SongSuggestionFormProps> = ({ onSuggestionAdd
 
             <Button 
               type="submit" 
-              className={cn("w-full transition-all duration-300 font-bold", isSubmittedSuccessfully && "bg-green-600 hover:bg-green-700")}
+              size="sm"
+              className={cn("w-full transition-all duration-300 font-bold h-10 rounded-xl", isSubmittedSuccessfully && "bg-green-600 hover:bg-green-700")}
               disabled={form.formState.isSubmitting || isSubmittedSuccessfully}
             >
               {isSubmittedSuccessfully ? (
