@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail, Search, Filter, X, Copy, RefreshCw, Send, ShieldCheck } from "lucide-react";
+import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail, Search, Filter, X, Copy, RefreshCw, Send, ShieldCheck, CalendarCheck } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -67,6 +67,29 @@ const AdminMembers: React.FC = () => {
     queryFn: fetchProfiles,
     enabled: !loadingSession && !!user?.is_admin,
   });
+
+  // CRM Link: Fetch all orders to calculate attendance
+  const { data: allOrders } = useQuery({
+    queryKey: ["allOrdersForMemberDirectory"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("event_orders").select("email, event_id");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.is_admin
+  });
+
+  const attendanceMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    allOrders?.forEach(o => {
+      if (!o.email) return;
+      const email = o.email.toLowerCase().trim();
+      // We count unique events attended
+      if (!map[email]) map[email] = 0;
+      map[email]++;
+    });
+    return map;
+  }, [allOrders]);
 
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
@@ -162,50 +185,65 @@ const AdminMembers: React.FC = () => {
               <TableHeader className="bg-muted/30">
                 <TableRow>
                   <TableHead className="pl-10 py-6 text-[10px] font-black uppercase tracking-widest">Member</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Attendance</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest">Role</TableHead>
                   <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-widest">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProfiles.map((profile) => (
-                  <TableRow key={profile.id} className="hover:bg-muted/10 transition-colors">
-                    <TableCell className="pl-10 py-6">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12 border-2 border-background shadow-md">
-                          <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
-                          <AvatarFallback className="bg-primary/10 text-primary font-black">{(profile.first_name || "U")[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="text-lg font-black font-lora leading-tight">{profile.first_name} {profile.last_name}</span>
-                          <span className="text-sm font-medium text-muted-foreground">{profile.email}</span>
+                {filteredProfiles.map((profile) => {
+                  const attendanceCount = profile.email ? (attendanceMap[profile.email.toLowerCase().trim()] || 0) : 0;
+                  return (
+                    <TableRow key={profile.id} className="hover:bg-muted/10 transition-colors">
+                      <TableCell className="pl-10 py-6">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12 border-2 border-background shadow-md">
+                            <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
+                            <AvatarFallback className="bg-primary/10 text-primary font-black">{(profile.first_name || "U")[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="text-lg font-black font-lora leading-tight">{profile.first_name} {profile.last_name}</span>
+                            <span className="text-sm font-medium text-muted-foreground">{profile.email}</span>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={profile.is_admin ? "admin" : "user"}
-                        onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
-                        disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id}
-                      >
-                        <SelectTrigger className={cn(
-                          "w-[120px] h-9 text-[10px] font-black uppercase tracking-widest rounded-full border-2 transition-all",
-                          profile.is_admin ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-transparent"
-                        )}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="admin" className="font-bold">Admin</SelectItem>
-                          <SelectItem value="user" className="font-bold">User</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="text-right pr-10">
-                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all" onClick={() => { setEditingMember(profile); setIsEditProfileDialogOpen(true); }}>
-                        <EditIcon className="h-5 w-5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            "flex items-center justify-center h-8 w-8 rounded-lg font-black text-xs shadow-inner",
+                            attendanceCount > 0 ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"
+                          )}>
+                            {attendanceCount}
+                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sessions</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={profile.is_admin ? "admin" : "user"}
+                          onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
+                          disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id}
+                        >
+                          <SelectTrigger className={cn(
+                            "w-[120px] h-9 text-[10px] font-black uppercase tracking-widest rounded-full border-2 transition-all",
+                            profile.is_admin ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-transparent"
+                          )}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="admin" className="font-bold">Admin</SelectItem>
+                            <SelectItem value="user" className="font-bold">User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="text-right pr-10">
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all" onClick={() => { setEditingMember(profile); setIsEditProfileDialogOpen(true); }}>
+                          <EditIcon className="h-5 w-5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

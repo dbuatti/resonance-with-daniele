@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface MarketingInsightsProps {
   eventId: string;
@@ -75,7 +76,25 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     },
   });
 
-  // 4. Fetch Expenses
+  // 4. Fetch Profiles for CRM Link
+  const { data: profiles } = useQuery({
+    queryKey: ["allProfilesForCRM"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("email, avatar_url, first_name, last_name");
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const profileMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    profiles?.forEach(p => {
+      if (p.email) map[p.email.toLowerCase().trim()] = p;
+    });
+    return map;
+  }, [profiles]);
+
+  // 5. Fetch Expenses
   const { data: expenses } = useQuery({
     queryKey: ["eventExpensesForInsights", eventId],
     queryFn: async () => {
@@ -100,12 +119,13 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     let newPeople: any[] = [];
 
     if (isGlobal) {
-      const peopleMap: Record<string, { name: string, events: Set<string> }> = {};
+      const peopleMap: Record<string, { name: string, events: Set<string>, email: string }> = {};
       allOrders.forEach(o => {
         if (!o.email) return;
         const email = o.email.toLowerCase().trim();
         if (!peopleMap[email]) {
           peopleMap[email] = { 
+            email,
             name: `${o.first_name || ''} ${o.last_name || ''}`.trim() || email, 
             events: new Set() 
           };
@@ -116,12 +136,21 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       const uniqueEmails = Object.keys(peopleMap);
       returningPeople = uniqueEmails
         .filter(email => peopleMap[email].events.size > 1)
-        .map(email => ({ email, name: peopleMap[email].name, count: peopleMap[email].events.size }))
+        .map(email => ({ 
+          email, 
+          name: peopleMap[email].name, 
+          count: peopleMap[email].events.size,
+          member: profileMap[email]
+        }))
         .sort((a, b) => b.count - a.count);
         
       newPeople = uniqueEmails
         .filter(email => peopleMap[email].events.size === 1)
-        .map(email => ({ email, name: peopleMap[email].name }));
+        .map(email => ({ 
+          email, 
+          name: peopleMap[email].name,
+          member: profileMap[email]
+        }));
 
       retentionRate = uniqueEmails.length > 0 ? (returningPeople.length / uniqueEmails.length) * 100 : 0;
     } else {
@@ -133,8 +162,14 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       const otherEventsOrders = allOrders.filter(o => o.event_id !== eventId);
       const previousEmails = new Set(otherEventsOrders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
       
-      returningPeople = currentAttendees.filter(p => previousEmails.has(p.email!));
-      newPeople = currentAttendees.filter(p => !previousEmails.has(p.email!));
+      returningPeople = currentAttendees
+        .filter(p => previousEmails.has(p.email!))
+        .map(p => ({ ...p, member: profileMap[p.email!] }));
+        
+      newPeople = currentAttendees
+        .filter(p => !previousEmails.has(p.email!))
+        .map(p => ({ ...p, member: profileMap[p.email!] }));
+        
       retentionRate = currentAttendees.length > 0 ? (returningPeople.length / currentAttendees.length) * 100 : 0;
     }
 
@@ -172,7 +207,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       discountUsageRate,
       discountedCount: discountedOrders.length
     };
-  }, [orders, event, allOrders, expenses, eventId, isGlobal]);
+  }, [orders, event, allOrders, expenses, eventId, isGlobal, profileMap]);
 
   if (loadingOrders) return <div className="p-12 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /></div>;
   if (!insights) return null;
@@ -312,16 +347,24 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
                   insights.returningPeople.map((person, i) => (
                     <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                       <div className="flex items-center gap-3">
-                        <div className="bg-primary/10 p-2 rounded-lg">
-                          <Heart className="h-4 w-4 text-primary fill-current" />
+                        <Avatar className="h-8 w-8 border border-background shadow-sm">
+                          <AvatarImage src={person.member?.avatar_url || ""} />
+                          <AvatarFallback className="text-[10px] font-bold">{(person.name || "U")[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-sm">{person.name}</span>
+                          {person.member && (
+                            <span className="text-[8px] font-black uppercase tracking-widest text-primary">Registered Member</span>
+                          )}
                         </div>
-                        <span className="font-bold text-sm">{person.name}</span>
                       </div>
-                      {isGlobal && (
-                        <Badge variant="outline" className="text-[10px] font-black border-primary/20 text-primary">
-                          {person.count} Sessions
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isGlobal && (
+                          <Badge variant="outline" className="text-[10px] font-black border-primary/20 text-primary">
+                            {person.count} Sessions
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -352,11 +395,19 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
               <div className="p-6 space-y-3">
                 {insights.newPeople.length > 0 ? (
                   insights.newPeople.map((person, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
-                      <div className="bg-blue-500/10 p-2 rounded-lg">
-                        <Sparkles className="h-4 w-4 text-blue-500" />
+                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8 border border-background shadow-sm">
+                          <AvatarImage src={person.member?.avatar_url || ""} />
+                          <AvatarFallback className="text-[10px] font-bold">{(person.name || "U")[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-sm">{person.name}</span>
+                          {person.member && (
+                            <span className="text-[8px] font-black uppercase tracking-widest text-blue-500">Registered Member</span>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-bold text-sm">{person.name}</span>
                     </div>
                   ))
                 ) : (
