@@ -41,6 +41,21 @@ interface Mission {
 
 const missions: Mission[] = [
   {
+    id: "founder-advantage",
+    title: "The Founder Advantage",
+    description: "Reward your April pioneers and build a 'partially full' room for May before the public even sees it.",
+    icon: Trophy,
+    color: "bg-purple-600 border-purple-400",
+    badge: "Retention",
+    steps: [
+      "Run SQL to create FOUNDER20 promo in database",
+      "Create FOUNDER20 discount code in Humanitix",
+      "Deliver the 'In-Room Pitch' at the end of tomorrow's session",
+      "Send the 'April Legend' follow-up email tomorrow afternoon"
+    ],
+    futureVision: "1 Year Goal: 40% of every session is pre-booked by 'Legends' before public launch."
+  },
+  {
     id: "google-maps",
     title: "Claim Your Spot on Google Maps",
     description: "Competitors are appearing in 'choir near me' searches. Let's get Resonance on the map.",

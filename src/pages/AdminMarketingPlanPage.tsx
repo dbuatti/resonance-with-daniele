@@ -48,6 +48,7 @@ import { format, subDays, differenceInDays, startOfDay } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventPrepChecklist from "@/components/admin/EventPrepChecklist";
 import EmailMembersModal from "@/components/admin/EmailMembersModal";
+import FounderStrategyCard from "@/components/admin/FounderStrategyCard";
 import { cn } from "@/lib/utils";
 
 const AdminMarketingPlanPage: React.FC = () => {
@@ -286,6 +287,14 @@ const AdminMarketingPlanPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               {/* Main Column */}
               <div className="lg:col-span-2 space-y-8">
+                {/* Founder Strategy Card - Only show if it's the current session (April) */}
+                {selectedEvent?.title.includes("Session #12") && (
+                  <FounderStrategyCard 
+                    eventDate="Sunday, May 24th" 
+                    eventLink="https://events.humanitix.com/resonance-choir-may" 
+                  />
+                )}
+
                 <section className="space-y-4">
                   <div className="flex items-center gap-2 px-1">
                     <ListTodo className="h-5 w-5 text-primary" />
