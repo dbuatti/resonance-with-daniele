@@ -100,6 +100,76 @@ const AdminEventCommandCenter = () => {
   }
 
   const eventDate = parseISO(event.date);
+  const eventDateFormatted = format(eventDate, "EEEE, MMMM do");
+  const eventTime = `${event.start_time || "10:00am"} - ${event.end_time || "1:00pm"}`;
+  const eventLocation = event.location || "Armadale Baptist Church";
+  const mainSong = event.main_song || "a beautiful new arrangement";
+  const bookingLink = event.humanitix_link || "https://events.humanitix.com/resonance-choir";
+
+  const copyTemplates = [
+    {
+      platform: "Instagram",
+      icon: <Instagram className="h-4 w-4" />,
+      templates: [
+        {
+          label: "The 'Vibe' Post",
+          value: `Resonance is back! 🌿\n\nJoin us on ${eventDateFormatted} for a morning of harmony and connection in Armadale. We'll be diving into "${mainSong}" — I've just finished the arrangement and it's sounding beautiful.\n\nNo auditions, no experience needed. Just bring your voice and join the circle.\n\n📍 ${eventLocation}\n⏰ ${eventTime}\n\nLink in bio to grab your spot! 🎶`,
+        },
+        {
+          label: "Short & Punchy",
+          value: `Next session: ${eventDateFormatted} 🗓️\nSong: ${mainSong} 🎶\nLocation: ${eventLocation} 📍\n\nCome and find your resonance. Link in bio! ✨`,
+        }
+      ]
+    },
+    {
+      platform: "Facebook",
+      icon: <Facebook className="h-4 w-4" />,
+      templates: [
+        {
+          label: "Community Group Post",
+          value: `Hi neighbors! 👋 I'm running our next Resonance pop-up choir session on ${eventDateFormatted} at ${eventLocation}.\n\nWe're a welcoming, no-audition group that just loves to sing great songs in harmony. This month we're tackling "${mainSong}".\n\nIt's a low-pressure, high-joy morning. Would love to see some new faces in the circle!\n\nDetails and booking here: ${bookingLink}`,
+        }
+      ]
+    },
+    {
+      platform: "Email / Newsletter",
+      icon: <Mail className="h-4 w-4" />,
+      templates: [
+        {
+          label: "Full Announcement",
+          value: `Subject: Ready to sing ${mainSong}? 🎶\n\nHi everyone,\n\nI’d love to see you back in the circle for our next session on ${eventDateFormatted}.\n\nWe’ll be learning "${mainSong}" — a song that I think perfectly captures the energy of this group. As always, we'll meet at ${eventLocation} from ${eventTime}.\n\nNo need to prepare anything, just bring yourself. You can grab your spot here: ${bookingLink}\n\nHope to see you there!\n\n— Daniele`,
+        }
+      ]
+    },
+    {
+      platform: "SMS / WhatsApp",
+      icon: <MessageSquare className="h-4 w-4" />,
+      templates: [
+        {
+          label: "Direct Invite",
+          value: `Hi! Hope you're well. Just a heads up that the next Resonance session is on ${eventDateFormatted}. We're singing ${mainSong}. Would love to see you there! Book here: ${bookingLink}`,
+        }
+      ]
+    }
+  ];
+
+  const postIdeas = [
+    {
+      title: "The 'Behind the Scenes' Reel",
+      description: "Record a 15-second clip of you playing the piano part or humming a harmony line. Caption: 'Arranging the harmonies for our next session...'",
+      icon: <Sparkles className="h-5 w-5 text-accent" />
+    },
+    {
+      title: "The 'Founding Member' Shoutout",
+      description: "Share a photo of the group from a previous session. Caption: 'This is what community sounds like. Join us for the next one.'",
+      icon: <Users className="h-5 w-5 text-primary" />
+    },
+    {
+      title: "The 'Last Call' Story",
+      description: "A simple text-based story 24 hours before. 'Last 5 spots for tomorrow! Who's coming?' with a link sticker.",
+      icon: <Zap className="h-5 w-5 text-yellow-500" />
+    }
+  ];
 
   return (
     <div className="pb-20 space-y-8">
@@ -260,48 +330,110 @@ const AdminEventCommandCenter = () => {
         </TabsContent>
 
         {/* Links & Copy Tab */}
-        <TabsContent value="links" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="rounded-2xl border-border/50 shadow-sm overflow-hidden">
-            <CardHeader className="bg-muted/30 border-b">
-              <CardTitle className="text-xl font-black font-lora">Copy to Clipboard</CardTitle>
-              <CardDescription className="font-medium">Quickly grab event details for emails, social media, or messages.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border/50">
-                {[
-                  { label: "Event Title", value: event.title },
-                  { label: "Date & Time", value: format(eventDate, "EEEE, MMMM do, yyyy") },
-                  { label: "Location", value: event.location || "Armadale" },
-                  { label: "Humanitix Link", value: event.humanitix_link || "" },
-                  { label: "Main Song", value: event.main_song || "" },
-                  { label: "Full Description", value: event.description || "" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between p-6 hover:bg-muted/10 transition-colors group">
-                    <div className="space-y-1 flex-1 mr-4">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.label}</p>
-                      <p className="text-sm font-bold line-clamp-2">{item.value || "Not set"}</p>
+        <TabsContent value="links" className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Basic Info Section */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 px-1">
+              <Info className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-black font-lora">Basic Event Info</h2>
+            </div>
+            <Card className="rounded-2xl border-border/50 shadow-sm overflow-hidden">
+              <CardContent className="p-0">
+                <div className="divide-y divide-border/50">
+                  {[
+                    { label: "Event Title", value: event.title },
+                    { label: "Date & Time", value: `${eventDateFormatted}, ${eventTime}` },
+                    { label: "Location", value: eventLocation },
+                    { label: "Humanitix Link", value: bookingLink },
+                    { label: "Main Song", value: event.main_song || "" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center justify-between p-4 hover:bg-muted/10 transition-colors group">
+                      <div className="space-y-1 flex-1 mr-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.label}</p>
+                        <p className="text-sm font-bold line-clamp-1">{item.value || "Not set"}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "rounded-xl font-bold h-9 px-3 transition-all",
+                          copiedField === item.label ? "bg-green-500 text-white hover:bg-green-600" : "bg-primary/5 text-primary hover:bg-primary/10"
+                        )}
+                        onClick={() => handleCopy(item.value, item.label)}
+                        disabled={!item.value}
+                      >
+                        {copiedField === item.label ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className={cn(
-                        "rounded-xl font-bold h-10 px-4 transition-all",
-                        copiedField === item.label ? "bg-green-500 text-white hover:bg-green-600" : "bg-primary/5 text-primary hover:bg-primary/10"
-                      )}
-                      onClick={() => handleCopy(item.value, item.label)}
-                      disabled={!item.value}
-                    >
-                      {copiedField === item.label ? (
-                        <><Check className="h-4 w-4 mr-2" /> Copied</>
-                      ) : (
-                        <><Copy className="h-4 w-4 mr-2" /> Copy</>
-                      )}
-                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Platform Templates Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 px-1">
+              <Megaphone className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-black font-lora">Social Media Templates</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {copyTemplates.map((group) => (
+                <Card key={group.platform} className="rounded-2xl border-border/50 shadow-sm overflow-hidden flex flex-col">
+                  <CardHeader className="bg-muted/30 py-4 flex flex-row items-center gap-3">
+                    <div className="p-2 bg-background rounded-lg shadow-sm text-primary">
+                      {group.icon}
+                    </div>
+                    <CardTitle className="text-lg font-black font-lora">{group.platform}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-4 flex-grow">
+                    {group.templates.map((template, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{template.label}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-[10px] font-black hover:bg-primary/5 text-primary"
+                            onClick={() => handleCopy(template.value, `${group.platform} ${template.label}`)}
+                          >
+                            {copiedField === `${group.platform} ${template.label}` ? "COPIED" : "COPY TEXT"}
+                          </Button>
+                        </div>
+                        <div className="bg-muted/30 p-4 rounded-xl text-xs font-medium leading-relaxed whitespace-pre-wrap italic text-muted-foreground border border-border/50">
+                          {template.value}
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          {/* Post Ideas Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 px-1">
+              <Lightbulb className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-black font-lora">Strategic Post Ideas</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {postIdeas.map((idea, i) => (
+                <Card key={i} className="rounded-2xl border-none shadow-sm bg-primary/5 p-6 space-y-4">
+                  <div className="bg-background p-3 rounded-xl w-fit shadow-sm">
+                    {idea.icon}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="space-y-2">
+                    <h3 className="font-black text-lg font-lora leading-tight">{idea.title}</h3>
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                      {idea.description}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </section>
         </TabsContent>
       </Tabs>
     </div>
