@@ -17,12 +17,16 @@ import {
   Loader2,
   Globe,
   Info,
-  Tag
+  Tag,
+  ChevronRight,
+  Heart,
+  Sparkles
 } from "lucide-react";
 import { differenceInDays, parseISO, startOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MarketingInsightsProps {
   eventId: string;
@@ -65,7 +69,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_orders")
-        .select("email, event_id, order_date, valid_tickets, your_earnings, discount_code");
+        .select("email, first_name, last_name, event_id, order_date, valid_tickets, your_earnings, discount_code");
       if (error) throw error;
       return data || [];
     },
@@ -90,33 +94,48 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     const totalEarnings = orders.reduce((sum, o) => sum + Number(o.your_earnings || 0), 0);
     const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
-    // Retention Logic
+    // Retention & People Logic
     let retentionRate = 0;
-    let returningCount = 0;
-    let newCount = 0;
+    let returningPeople: any[] = [];
+    let newPeople: any[] = [];
 
     if (isGlobal) {
-      const emailCounts: Record<string, Set<string>> = {};
+      const peopleMap: Record<string, { name: string, events: Set<string> }> = {};
       allOrders.forEach(o => {
         if (!o.email) return;
         const email = o.email.toLowerCase().trim();
-        if (!emailCounts[email]) emailCounts[email] = new Set();
-        emailCounts[email].add(o.event_id);
+        if (!peopleMap[email]) {
+          peopleMap[email] = { 
+            name: `${o.first_name || ''} ${o.last_name || ''}`.trim() || email, 
+            events: new Set() 
+          };
+        }
+        peopleMap[email].events.add(o.event_id);
       });
       
-      const uniqueEmails = Object.keys(emailCounts);
-      const multiEventAttendees = uniqueEmails.filter(email => emailCounts[email].size > 1).length;
-      retentionRate = uniqueEmails.length > 0 ? (multiEventAttendees / uniqueEmails.length) * 100 : 0;
-      returningCount = multiEventAttendees;
-      newCount = uniqueEmails.length - multiEventAttendees;
+      const uniqueEmails = Object.keys(peopleMap);
+      returningPeople = uniqueEmails
+        .filter(email => peopleMap[email].events.size > 1)
+        .map(email => ({ email, name: peopleMap[email].name, count: peopleMap[email].events.size }))
+        .sort((a, b) => b.count - a.count);
+        
+      newPeople = uniqueEmails
+        .filter(email => peopleMap[email].events.size === 1)
+        .map(email => ({ email, name: peopleMap[email].name }));
+
+      retentionRate = uniqueEmails.length > 0 ? (returningPeople.length / uniqueEmails.length) * 100 : 0;
     } else {
-      const currentEmails = new Set(orders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
+      const currentAttendees = orders.map(o => ({
+        email: o.email?.toLowerCase().trim(),
+        name: `${o.first_name || ''} ${o.last_name || ''}`.trim() || o.email
+      })).filter(p => p.email);
+
       const otherEventsOrders = allOrders.filter(o => o.event_id !== eventId);
       const previousEmails = new Set(otherEventsOrders.map(o => o.email?.toLowerCase().trim()).filter(Boolean));
       
-      returningCount = Array.from(currentEmails).filter(email => previousEmails.has(email!)).length;
-      newCount = currentEmails.size - returningCount;
-      retentionRate = currentEmails.size > 0 ? (returningCount / currentEmails.size) * 100 : 0;
+      returningPeople = currentAttendees.filter(p => previousEmails.has(p.email!));
+      newPeople = currentAttendees.filter(p => !previousEmails.has(p.email!));
+      retentionRate = currentAttendees.length > 0 ? (returningPeople.length / currentAttendees.length) * 100 : 0;
     }
 
     // Booking Lead Time
@@ -133,9 +152,6 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     // Financial Efficiency
     const costPerHead = totalTickets > 0 ? totalExpenses / totalTickets : 0;
     const revenuePerHead = totalTickets > 0 ? totalEarnings / totalTickets : 0;
-
-    // Suggested Price Logic:
-    // Aim for a $20 profit margin per head after expenses
     const suggestedPrice = Math.ceil(costPerHead + 20);
 
     // Discount Impact
@@ -146,8 +162,8 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       totalTickets,
       totalEarnings,
       totalExpenses,
-      returningCount,
-      newCount,
+      returningPeople,
+      newPeople,
       retentionRate,
       avgLeadTime,
       costPerHead,
@@ -197,11 +213,11 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
               <div className="flex items-center gap-1">
                 <UserCheck className="h-3 w-3 text-primary" /> 
-                {insights.returningCount} Legends
+                {insights.returningPeople.length} Legends
               </div>
               <div className="flex items-center gap-1">
                 <UserPlus className="h-3 w-3 text-blue-500" /> 
-                {insights.newCount} New
+                {insights.newPeople.length} New
               </div>
             </div>
           </CardContent>
@@ -268,6 +284,86 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
                 ? "Percentage of all historical orders that used a promo code."
                 : `${insights.discountedCount} orders used a promo code for this event.`}
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Community Breakdown Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-card">
+          <CardHeader className="bg-primary/5 border-b border-border/50">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-primary" /> 
+                  {isGlobal ? "Top Legends" : "Returning Legends"}
+                </CardTitle>
+                <CardDescription className="font-medium">
+                  {isGlobal ? "Members who have attended multiple sessions." : "People at this session who have joined us before."}
+                </CardDescription>
+              </div>
+              <Badge className="bg-primary text-primary-foreground font-black">{insights.returningPeople.length}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[300px]">
+              <div className="p-6 space-y-3">
+                {insights.returningPeople.length > 0 ? (
+                  insights.returningPeople.map((person, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 p-2 rounded-lg">
+                          <Heart className="h-4 w-4 text-primary fill-current" />
+                        </div>
+                        <span className="font-bold text-sm">{person.name}</span>
+                      </div>
+                      {isGlobal && (
+                        <Badge variant="outline" className="text-[10px] font-black border-primary/20 text-primary">
+                          {person.count} Sessions
+                        </Badge>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center py-12 text-muted-foreground italic text-sm">No returning members identified yet.</p>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-card">
+          <CardHeader className="bg-blue-500/5 border-b border-border/50">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-blue-500" /> 
+                  {isGlobal ? "One-Time Visitors" : "New Faces"}
+                </CardTitle>
+                <CardDescription className="font-medium">
+                  {isGlobal ? "People who have only attended one session so far." : "People joining the circle for the very first time!"}
+                </CardDescription>
+              </div>
+              <Badge className="bg-blue-500 text-white font-black">{insights.newPeople.length}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[300px]">
+              <div className="p-6 space-y-3">
+                {insights.newPeople.length > 0 ? (
+                  insights.newPeople.map((person, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
+                      <div className="bg-blue-500/10 p-2 rounded-lg">
+                        <Sparkles className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <span className="font-bold text-sm">{person.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center py-12 text-muted-foreground italic text-sm">No new members identified yet.</p>
+                )}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
