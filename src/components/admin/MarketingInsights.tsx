@@ -20,7 +20,10 @@ import {
   Tag,
   ChevronRight,
   Heart,
-  Sparkles
+  Sparkles,
+  Trophy,
+  Ticket,
+  BarChart3
 } from "lucide-react";
 import { differenceInDays, parseISO, startOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -106,6 +109,16 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     },
   });
 
+  // 6. Fetch All Events for Lead Time calculation in Global view
+  const { data: allEvents } = useQuery({
+    queryKey: ["allEventsForLeadTime"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("events").select("id, date");
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   const insights = useMemo(() => {
     if (!orders || !allOrders || ( !isGlobal && !event)) return null;
 
@@ -117,22 +130,25 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     let retentionRate = 0;
     let returningPeople: any[] = [];
     let newPeople: any[] = [];
+    let topSupporters: any[] = [];
+
+    const peopleMap: Record<string, { name: string, events: Set<string>, email: string, ltv: number }> = {};
+    allOrders.forEach(o => {
+      if (!o.email) return;
+      const email = o.email.toLowerCase().trim();
+      if (!peopleMap[email]) {
+        peopleMap[email] = { 
+          email,
+          name: `${o.first_name || ''} ${o.last_name || ''}`.trim() || email, 
+          events: new Set(),
+          ltv: 0
+        };
+      }
+      peopleMap[email].events.add(o.event_id);
+      peopleMap[email].ltv += Number(o.your_earnings || 0);
+    });
 
     if (isGlobal) {
-      const peopleMap: Record<string, { name: string, events: Set<string>, email: string }> = {};
-      allOrders.forEach(o => {
-        if (!o.email) return;
-        const email = o.email.toLowerCase().trim();
-        if (!peopleMap[email]) {
-          peopleMap[email] = { 
-            email,
-            name: `${o.first_name || ''} ${o.last_name || ''}`.trim() || email, 
-            events: new Set() 
-          };
-        }
-        peopleMap[email].events.add(o.event_id);
-      });
-      
       const uniqueEmails = Object.keys(peopleMap);
       returningPeople = uniqueEmails
         .filter(email => peopleMap[email].events.size > 1)
@@ -151,6 +167,16 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
           name: peopleMap[email].name,
           member: profileMap[email]
         }));
+
+      topSupporters = uniqueEmails
+        .map(email => ({
+          email,
+          name: peopleMap[email].name,
+          ltv: peopleMap[email].ltv,
+          member: profileMap[email]
+        }))
+        .sort((a, b) => b.ltv - a.ltv)
+        .slice(0, 10);
 
       retentionRate = uniqueEmails.length > 0 ? (returningPeople.length / uniqueEmails.length) * 100 : 0;
     } else {
@@ -182,6 +208,14 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
         return differenceInDays(eventDate, orderDate);
       });
       avgLeadTime = leadTimes.length > 0 ? leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length : 0;
+    } else if (isGlobal && allEvents) {
+      const eventDateMap = Object.fromEntries(allEvents.map(e => [e.id, startOfDay(parseISO(e.date))]));
+      const leadTimes = allOrders.map(o => {
+        const eventDate = eventDateMap[o.event_id];
+        if (!eventDate) return null;
+        return differenceInDays(eventDate, startOfDay(parseISO(o.order_date)));
+      }).filter(v => v !== null) as number[];
+      avgLeadTime = leadTimes.length > 0 ? leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length : 0;
     }
 
     // Financial Efficiency
@@ -192,6 +226,20 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
     // Discount Impact
     const discountedOrders = orders.filter(o => o.discount_code && o.discount_code !== "");
     const discountUsageRate = orders.length > 0 ? (discountedOrders.length / orders.length) * 100 : 0;
+    
+    const promoPerformance: Record<string, { count: number, revenue: number }> = {};
+    orders.forEach(o => {
+      if (o.discount_code) {
+        const code = o.discount_code.toUpperCase().trim();
+        if (!promoPerformance[code]) promoPerformance[code] = { count: 0, revenue: 0 };
+        promoPerformance[code].count++;
+        promoPerformance[code].revenue += Number(o.your_earnings || 0);
+      }
+    });
+
+    const sortedPromos = Object.entries(promoPerformance)
+      .map(([code, data]) => ({ code, ...data }))
+      .sort((a, b) => b.revenue - a.revenue);
 
     return {
       totalTickets,
@@ -199,15 +247,17 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       totalExpenses,
       returningPeople,
       newPeople,
+      topSupporters,
       retentionRate,
       avgLeadTime,
       costPerHead,
       revenuePerHead,
       suggestedPrice,
       discountUsageRate,
-      discountedCount: discountedOrders.length
+      discountedCount: discountedOrders.length,
+      sortedPromos
     };
-  }, [orders, event, allOrders, expenses, eventId, isGlobal, profileMap]);
+  }, [orders, event, allOrders, expenses, eventId, isGlobal, profileMap, allEvents]);
 
   if (loadingOrders) return <div className="p-12 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /></div>;
   if (!insights) return null;
@@ -258,6 +308,26 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
           </CardContent>
         </Card>
 
+        {/* Booking Behavior Card */}
+        <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 text-primary" /> Booking Behavior
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-end">
+              <div className="text-3xl font-black">{insights.avgLeadTime.toFixed(1)} Days</div>
+              <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-none font-bold">
+                Lead Time
+              </Badge>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+              On average, people book their spot {insights.avgLeadTime.toFixed(0)} days before the session.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Pricing Strategy Card */}
         <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
           <CardHeader className="pb-2">
@@ -274,28 +344,6 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             </div>
             <p className="text-xs font-medium text-muted-foreground leading-relaxed">
               Based on your current expenses, this price maintains a healthy $20 profit margin per singer.
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Efficiency Card */}
-        <Card className="border-none shadow-lg bg-card rounded-2xl overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Target className="h-3.5 w-3.5 text-primary" /> {isGlobal ? "Lifetime Efficiency" : "Cost Efficiency"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-end">
-              <div className="text-3xl font-black">${insights.costPerHead.toFixed(2)}</div>
-              <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-none font-bold">
-                Per Head
-              </Badge>
-            </div>
-            <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              {isGlobal 
-                ? "Your historical average cost to host one singer."
-                : `It costs you $${insights.costPerHead.toFixed(2)} in expenses for every singer in the room.`}
             </p>
           </CardContent>
         </Card>
@@ -324,7 +372,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       </div>
 
       {/* Community Breakdown Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-card">
           <CardHeader className="bg-primary/5 border-b border-border/50">
             <div className="flex items-center justify-between">
@@ -395,23 +443,65 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
               <div className="p-6 space-y-3">
                 {insights.newPeople.length > 0 ? (
                   insights.newPeople.map((person, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
+                      <div className="bg-blue-500/10 p-2 rounded-lg">
+                        <Sparkles className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <span className="font-bold text-sm">{person.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center py-12 text-muted-foreground italic text-sm">No new members identified yet.</p>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-card">
+          <CardHeader className="bg-accent/10 border-b border-border/50">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-accent-foreground" /> 
+                  {isGlobal ? "Top Supporters" : "Promo Performance"}
+                </CardTitle>
+                <CardDescription className="font-medium">
+                  {isGlobal ? "Members with the highest lifetime contribution." : "Which codes are driving the most revenue?"}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[300px]">
+              <div className="p-6 space-y-3">
+                {isGlobal ? (
+                  insights.topSupporters.map((person, i) => (
                     <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 border border-background shadow-sm">
                           <AvatarImage src={person.member?.avatar_url || ""} />
                           <AvatarFallback className="text-[10px] font-bold">{(person.name || "U")[0]}</AvatarFallback>
                         </Avatar>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-sm">{person.name}</span>
-                          {person.member && (
-                            <span className="text-[8px] font-black uppercase tracking-widest text-blue-500">Registered Member</span>
-                          )}
-                        </div>
+                        <span className="font-bold text-sm">{person.name}</span>
                       </div>
+                      <Badge className="bg-accent text-accent-foreground font-black">${person.ltv.toFixed(0)}</Badge>
                     </div>
                   ))
                 ) : (
-                  <p className="text-center py-12 text-muted-foreground italic text-sm">No new members identified yet.</p>
+                  insights.sortedPromos.length > 0 ? (
+                    insights.sortedPromos.map((promo, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
+                        <div className="flex flex-col">
+                          <span className="font-black font-mono text-sm">{promo.code}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">{promo.count} Uses</span>
+                        </div>
+                        <Badge className="bg-green-500/10 text-green-600 border-none font-black">${promo.revenue.toFixed(0)}</Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center py-12 text-muted-foreground italic text-sm">No promo codes used for this event.</p>
+                  )
                 )}
               </div>
             </ScrollArea>
