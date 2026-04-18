@@ -12,12 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Copy, CheckCircle2, Mail, Loader2, ExternalLink, Users, AlertCircle } from "lucide-react";
+import { Copy, CheckCircle2, Mail, Loader2, ExternalLink, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { showSuccess } from "@/utils/toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface FeedbackEmailModalProps {
   isOpen: boolean;
@@ -36,6 +36,16 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
 }) => {
   const [copiedEmails, setCopiedEmails] = useState(false);
   const [copiedBody, setCopiedBody] = useState(false);
+  const [copiedSubject, setCopiedSubject] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(`How was ${eventTitle}? 🎶`);
+
+  const subjectSuggestions = useMemo(() => [
+    `How was ${eventTitle}? 🎶`,
+    "Your thoughts on our last session? ✨",
+    "Help me make Resonance even better! 🌿",
+    `A quick favor? (Feedback for ${eventTitle})`,
+    "Missing the harmony? Share your thoughts! 🎵",
+  ], [eventTitle]);
 
   // Fetch attendees and existing feedback to find who is missing
   const { data: emailData, isLoading } = useQuery({
@@ -98,7 +108,7 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] rounded-[2rem]">
+      <DialogContent className="sm:max-w-[600px] rounded-[2rem] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black font-lora flex items-center gap-2">
             <Mail className="h-6 w-6 text-primary" /> Feedback Request
@@ -159,6 +169,40 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
             </div>
           </div>
 
+          {/* Subject Suggester */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-end">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-primary" /> Suggested Subjects
+              </Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-[10px] font-black"
+                onClick={() => copyToClipboard(selectedSubject, setCopiedSubject)}
+              >
+                {copiedSubject ? <CheckCircle2 className="h-3 w-3 mr-1 text-green-500" /> : <Copy className="h-3 w-3 mr-1" />}
+                COPY SELECTED
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-xl border border-border/50">
+              {subjectSuggestions.map((subject) => (
+                <button
+                  key={subject}
+                  onClick={() => setSelectedSubject(subject)}
+                  className={cn(
+                    "text-left px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border-2",
+                    selectedSubject === subject 
+                      ? "bg-primary border-primary text-white shadow-md scale-105" 
+                      : "bg-background border-transparent text-muted-foreground hover:border-primary/20"
+                  )}
+                >
+                  {subject}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <div className="flex justify-between items-end">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Body</Label>
@@ -185,7 +229,7 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
             Close
           </Button>
           <Button className="rounded-xl font-bold ml-auto" asChild disabled={!emailData?.missing}>
-            <a href={`mailto:?bcc=${emailData?.missing || ""}&subject=${encodeURIComponent(`How was ${eventTitle}? 🎶`)}`}>
+            <a href={`mailto:?bcc=${emailData?.missing || ""}&subject=${encodeURIComponent(selectedSubject)}`}>
               <ExternalLink className="h-4 w-4 mr-2" /> Open in Mail App
             </a>
           </Button>
