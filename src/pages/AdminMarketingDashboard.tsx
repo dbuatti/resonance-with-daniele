@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target, Lightbulb, Globe, Plus } from "lucide-react";
+import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target, Lightbulb, Globe, Plus, Sparkles } from "lucide-react";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -17,10 +18,12 @@ import TicketSalesLogger from "@/components/admin/TicketSalesLogger";
 import FlashSaleManager from "@/components/admin/FlashSaleManager";
 import MarketingOverview from "@/components/admin/MarketingOverview";
 import MarketingInsights from "@/components/admin/MarketingInsights";
+import TaskRolodex from "@/components/admin/TaskRolodex";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
 const AdminMarketingDashboard: React.FC = () => {
+
   const { user, loading } = useSession();
   const navigate = useNavigate();
   const [selectedEventId, setSelectedEventId] = useState<string>("all");
@@ -108,7 +111,20 @@ const AdminMarketingDashboard: React.FC = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="overview">
+          <TabsContent value="overview" className="space-y-8">
+            {isGlobal && (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-black font-lora flex items-center gap-2">
+                      <Sparkles className="h-6 w-6 text-primary" /> Task Rolodex
+                    </h2>
+                    <p className="text-sm text-muted-foreground font-medium">Your ever-evolving timeline across all upcoming concerts.</p>
+                  </div>
+                </div>
+                <TaskRolodex />
+              </section>
+            )}
             <MarketingOverview eventId={selectedEventId} />
           </TabsContent>
 
