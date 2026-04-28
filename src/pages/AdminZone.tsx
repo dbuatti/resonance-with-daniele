@@ -1,9 +1,26 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote, BookOpen, Zap, Compass, Music } from "lucide-react";
+import { 
+  AlertCircle, 
+  BellRing, 
+  Users, 
+  BarChart3, 
+  TrendingUp, 
+  Lightbulb, 
+  Rocket, 
+  ShieldCheck, 
+  ArrowRight, 
+  MessageSquareQuote, 
+  BookOpen, 
+  Zap, 
+  Compass, 
+  Music,
+  Mail,
+  Megaphone
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -11,10 +28,12 @@ import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
 import AiMarketingToolsCard from "@/components/admin/AiMarketingToolsCard";
 import { Badge } from "@/components/ui/badge";
 import BackButton from "@/components/ui/BackButton";
+import EmailMembersModal from "@/components/admin/EmailMembersModal";
 
 const AdminZone: React.FC = () => {
   const { user, loading } = useSession();
   const navigate = useNavigate();
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || !user.is_admin)) {
@@ -37,11 +56,18 @@ const AdminZone: React.FC = () => {
 
   const adminTools = [
     {
+      title: "Global Broadcast",
+      description: "Reach everyone. Get a deduplicated BCC list of all members, interest leads, and every past ticket buyer.",
+      icon: <Megaphone className="h-6 w-6 text-primary" />,
+      onClick: () => setIsEmailModalOpen(true),
+      highlight: true,
+      badge: "Broadcast"
+    },
+    {
       title: "Repertoire Studio",
       description: "Your creative workspace. Brainstorm songs, save research links, and access your custom Repertoire AI.",
       icon: <Music className="h-6 w-6 text-primary" />,
       link: "/admin/repertoire",
-      highlight: true,
       badge: "Creative"
     },
     {
@@ -151,17 +177,34 @@ const AdminZone: React.FC = () => {
               <p className="text-base font-medium text-muted-foreground leading-relaxed mb-10">
                 {tool.description}
               </p>
-              <Button asChild size="lg" className="mt-auto w-full h-14 font-black rounded-xl shadow-lg" variant={tool.highlight ? "default" : "secondary"}>
-                <Link to={tool.link}>
+              
+              {tool.onClick ? (
+                <Button 
+                  onClick={tool.onClick} 
+                  size="lg" 
+                  className="mt-auto w-full h-14 font-black rounded-xl shadow-lg" 
+                  variant={tool.highlight ? "default" : "secondary"}
+                >
                   {tool.label || "Open Tool"} <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
+                </Button>
+              ) : (
+                <Button asChild size="lg" className="mt-auto w-full h-14 font-black rounded-xl shadow-lg" variant={tool.highlight ? "default" : "secondary"}>
+                  <Link to={tool.link || "#"}>
+                    {tool.label || "Open Tool"} <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+              )}
             </div>
           ))}
           
           <AiMarketingToolsCard />
         </div>
       </section>
+
+      <EmailMembersModal 
+        isOpen={isEmailModalOpen} 
+        onClose={() => setIsEmailModalOpen(false)} 
+      />
 
       <footer className="text-center pt-16 border-t border-border/50 pb-8">
         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40">
