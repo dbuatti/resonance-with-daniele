@@ -18,7 +18,8 @@ import {
   ChevronRight,
   Sparkles,
   CalendarDays,
-  Compass
+  Compass,
+  Brain
 } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,7 @@ const AppSidebar: React.FC = () => {
 
   const adminLinks = [
     { title: "Command Center", icon: Shield, url: "/admin" },
+    { title: "Repertoire Studio", icon: Brain, url: "/admin/repertoire" },
     { title: "Manage Events", icon: CalendarDays, url: "/events" },
     { title: "Growth", icon: Rocket, url: "/admin/growth" },
     { title: "Marketing", icon: TrendingUp, url: "/admin/marketing-plan" },

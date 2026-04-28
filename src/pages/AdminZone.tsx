@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote, BookOpen, Zap, Compass } from "lucide-react";
+import { AlertCircle, BellRing, Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck, ArrowRight, MessageSquareQuote, BookOpen, Zap, Compass, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -37,11 +37,18 @@ const AdminZone: React.FC = () => {
 
   const adminTools = [
     {
+      title: "Repertoire Studio",
+      description: "Your creative workspace. Brainstorm songs, save research links, and access your custom Repertoire AI.",
+      icon: <Music className="h-6 w-6 text-primary" />,
+      link: "/admin/repertoire",
+      highlight: true,
+      badge: "Creative"
+    },
+    {
       title: "Growth Strategy",
       description: "High-impact missions to scale Resonance. Track your 1-year vision and local SEO progress.",
       icon: <Rocket className="h-6 w-6 text-primary" />,
       link: "/admin/growth",
-      highlight: true,
       badge: "Priority"
     },
     {
@@ -130,7 +137,7 @@ const AdminZone: React.FC = () => {
               "relative flex flex-col p-10 rounded-[2.5rem] border-2 transition-all duration-500 group",
               tool.highlight ? "bg-primary/5 border-primary/20 shadow-2xl" : "bg-card border-primary/5 hover:border-primary/20 hover:shadow-2xl"
             )}>
-              {tool.highlight && (
+              {tool.badge && (
                 <div className="absolute top-8 right-8">
                   <Badge className="bg-primary text-primary-foreground px-3 py-1 rounded-full font-black uppercase tracking-widest text-[9px]">
                     {tool.badge}
