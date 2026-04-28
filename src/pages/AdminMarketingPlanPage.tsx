@@ -199,7 +199,7 @@ const AdminMarketingPlanPage: React.FC = () => {
   if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 md:py-12 space-y-10">
+    <div className="w-full px-4 py-8 md:py-12 space-y-10">
       <div className="flex items-center justify-between">
         <BackButton to="/admin" />
         <div className={cn("flex items-center gap-2 px-3 py-1 rounded-full bg-background border text-[10px] font-black uppercase tracking-widest shadow-sm", eventHealth.color)}>

@@ -163,7 +163,7 @@ const AdminGrowthStrategy: React.FC = () => {
   const overallProgress = (completedCount / totalSteps) * 100;
 
   return (
-    <div className="space-y-10 py-8 md:py-12 max-w-6xl mx-auto px-4">
+    <div className="space-y-10 py-8 md:py-12 w-full px-4">
       <BackButton to="/admin" />
       
       <header className="space-y-6">

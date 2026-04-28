@@ -37,7 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
       <div className="min-h-screen flex flex-col">
         <header className="glass-header p-4 md:p-6 sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto flex justify-between items-center px-4">
+          <div className="w-full flex justify-between items-center px-4">
             <div className="flex items-center gap-3">
               <div className="bg-primary-foreground text-primary rounded-xl p-2">
                 <Sparkles className="h-5 w-5" />
@@ -54,7 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
         </header>
-        <main className="flex-grow">{children}</main>
+        <main className="flex-grow w-full">{children}</main>
         <BackToTopButton />
       </div>
     );
@@ -77,7 +77,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </header>
 
           <main className="flex-1 p-4 md:p-8 pt-4 md:pt-6 pb-24 md:pb-8">
-            <div className="max-w-6xl mx-auto animate-fade-in-up">
+            <div className="w-full animate-fade-in-up">
               {children}
             </div>
           </main>

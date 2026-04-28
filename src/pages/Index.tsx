@@ -21,7 +21,7 @@ const Index: React.FC = () => {
 
   if (loading && !user) {
     return (
-      <div className="container mx-auto px-4 py-24 md:py-40 text-center">
+      <div className="w-full px-4 py-24 md:py-40 text-center">
         <Skeleton className="h-16 w-3/4 mx-auto mb-4" />
         <Skeleton className="h-8 w-1/2 mx-auto" />
         <div className="flex justify-center gap-4 mt-8">
@@ -35,7 +35,7 @@ const Index: React.FC = () => {
   return (
     <div className="flex flex-col w-full">
       {user ? (
-        <div className="container mx-auto px-4">
+        <div className="w-full px-4">
           <WelcomeHub />
         </div>
       ) : (

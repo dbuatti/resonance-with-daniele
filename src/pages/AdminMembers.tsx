@@ -131,7 +131,7 @@ const AdminMembers: React.FC = () => {
   if (!user || !user.is_admin) return null;
 
   return (
-    <div className="space-y-10 py-8 md:py-12 max-w-6xl mx-auto px-4">
+    <div className="space-y-10 py-8 md:py-12 w-full px-4">
       <BackButton to="/admin" />
       
       <header className="text-center space-y-4 mb-12">
