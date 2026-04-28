@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Upload, FileSpreadsheet, UserCheck, Search } from "lucide-react";
+import { Loader2, Upload, FileSpreadsheet, UserCheck, Search, Mail, Copy, ExternalLink } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { format, parse, isValid } from "date-fns";
 import { useDropzone } from "react-dropzone";
@@ -64,6 +64,21 @@ const EventOrderList: React.FC<EventOrderListProps> = ({ eventId }) => {
       o.email?.toLowerCase().includes(s)
     );
   }, [orders, searchTerm]);
+
+  const attendeeEmails = useMemo(() => {
+    if (!orders) return "";
+    const uniqueEmails = Array.from(new Set(orders.map(o => o.email?.toLowerCase().trim()).filter(Boolean)));
+    return uniqueEmails.join(", ");
+  }, [orders]);
+
+  const handleCopyEmails = () => {
+    if (!attendeeEmails) {
+      showError("No attendee emails found.");
+      return;
+    }
+    navigator.clipboard.writeText(attendeeEmails);
+    showSuccess("Attendee emails copied to clipboard!");
+  };
 
   const parseCurrency = (val: string) => {
     if (!val) return 0;
@@ -146,14 +161,38 @@ const EventOrderList: React.FC<EventOrderListProps> = ({ eventId }) => {
             className="pl-10 h-10 rounded-xl font-bold bg-muted/30 border-none focus-visible:ring-primary"
           />
         </div>
-        <div {...getRootProps()} className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-dashed cursor-pointer transition-all text-sm font-bold",
-          isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/50",
-          isImporting && "opacity-50 pointer-events-none"
-        )}>
-          <input {...getInputProps()} />
-          {isImporting ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Upload className="h-4 w-4 text-muted-foreground" />}
-          <span>{isDragActive ? "Drop CSV here" : "Import Humanitix CSV"}</span>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCopyEmails}
+            disabled={!attendeeEmails}
+            className="h-10 px-4 rounded-xl font-bold border-primary/20 text-primary hover:bg-primary/5"
+          >
+            <Copy className="h-4 w-4 mr-2" /> Copy Emails
+          </Button>
+          
+          <Button 
+            asChild
+            size="sm" 
+            disabled={!attendeeEmails}
+            className="h-10 px-4 rounded-xl font-bold shadow-sm"
+          >
+            <a href={`mailto:?bcc=${attendeeEmails}`}>
+              <Mail className="h-4 w-4 mr-2" /> Email All
+            </a>
+          </Button>
+
+          <div {...getRootProps()} className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-dashed cursor-pointer transition-all text-sm font-bold",
+            isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/50",
+            isImporting && "opacity-50 pointer-events-none"
+          )}>
+            <input {...getInputProps()} />
+            {isImporting ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Upload className="h-4 w-4 text-muted-foreground" />}
+            <span className="hidden sm:inline">{isDragActive ? "Drop CSV here" : "Import Humanitix CSV"}</span>
+          </div>
         </div>
       </div>
 
