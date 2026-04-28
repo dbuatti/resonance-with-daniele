@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail, Search, Filter, X, Copy, RefreshCw, Send, ShieldCheck, CalendarCheck } from "lucide-react";
+import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail, Search, Filter, X, Copy, RefreshCw, Send, ShieldCheck, CalendarCheck, MessageSquare } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,6 +22,7 @@ import BackButton from "@/components/ui/BackButton";
 import { Input } from "@/components/ui/input";
 import { syncMembersToKit } from "@/utils/kit";
 import { Separator } from "@/components/ui/separator";
+import EmailMembersModal from "@/components/admin/EmailMembersModal";
 
 interface Profile {
   id: string;
@@ -40,6 +41,7 @@ const AdminMembers: React.FC = () => {
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
   const [isSyncingToKit, setIsSyncingToKit] = useState(false);
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Profile | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
@@ -68,7 +70,6 @@ const AdminMembers: React.FC = () => {
     enabled: !loadingSession && !!user?.is_admin,
   });
 
-  // CRM Link: Fetch all orders to calculate attendance
   const { data: allOrders } = useQuery({
     queryKey: ["allOrdersForMemberDirectory"],
     queryFn: async () => {
@@ -84,7 +85,6 @@ const AdminMembers: React.FC = () => {
     allOrders?.forEach(o => {
       if (!o.email) return;
       const email = o.email.toLowerCase().trim();
-      // We count unique events attended
       if (!map[email]) map[email] = 0;
       map[email]++;
     });
@@ -156,6 +156,13 @@ const AdminMembers: React.FC = () => {
           />
         </div>
         <div className="flex items-center gap-4 w-full md:w-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsEmailModalOpen(true)}
+            className="h-14 px-6 rounded-2xl font-black border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
+          >
+            <MessageSquare className="mr-3 h-5 w-5" /> Message All
+          </Button>
           <Button 
             variant="outline" 
             onClick={handleSyncToKit} 
@@ -260,6 +267,11 @@ const AdminMembers: React.FC = () => {
         isOpen={isEditProfileDialogOpen} 
         onOpenChange={setIsEditProfileDialogOpen} 
         member={editingMember} 
+      />
+
+      <EmailMembersModal 
+        isOpen={isEmailModalOpen} 
+        onClose={() => setIsEmailModalOpen(false)} 
       />
     </div>
   );

@@ -12,7 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Copy, CheckCircle2, Mail, Loader2, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Copy, CheckCircle2, Mail, Loader2, ExternalLink, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { showSuccess } from "@/utils/toast";
@@ -42,18 +43,30 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
   const [copiedEmails, setCopiedEmails] = useState(false);
   const [copiedBody, setCopiedBody] = useState(false);
 
-  const { data: emails, isLoading } = useQuery({
-    queryKey: ["allMemberEmails"],
+  const { data: emailData, isLoading } = useQuery({
+    queryKey: ["allMemberEmailsGlobal"],
     queryFn: async () => {
+      // 1. Fetch from Profiles
       const { data: profiles } = await supabase.from("profiles").select("email");
+      
+      // 2. Fetch from Interest Submissions
       const { data: interests } = await supabase.from("interest_submissions").select("email");
+      
+      // 3. Fetch from ALL Event Orders (Ticket Buyers)
+      const { data: orders } = await supabase.from("event_orders").select("email");
       
       const all = [
         ...(profiles?.map((p) => p.email) || []),
         ...(interests?.map((i) => i.email) || []),
+        ...(orders?.map((o) => o.email) || []),
       ].filter(Boolean) as string[];
 
-      return Array.from(new Set(all.map(e => e.toLowerCase().trim()))).join(", ");
+      const uniqueEmails = Array.from(new Set(all.map(e => e.toLowerCase().trim())));
+      
+      return {
+        list: uniqueEmails.join(", "),
+        count: uniqueEmails.length
+      };
     },
     enabled: isOpen,
   });
@@ -72,17 +85,27 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] rounded-[2rem]">
+      <DialogContent className="sm:max-w-[600px] rounded-[2rem] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black font-lora flex items-center gap-2">
-            <Mail className="h-6 w-6 text-primary" /> Email Member List
+            <Mail className="h-6 w-6 text-primary" /> Message All Members
           </DialogTitle>
           <DialogDescription className="text-base font-medium">
-            Copy these emails into the <strong>BCC</strong> field of your email client.
+            This list includes everyone: registered members, interest leads, and all past ticket buyers.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          <div className="bg-primary/5 p-4 rounded-2xl flex items-center justify-between border border-primary/10">
+            <div className="flex items-center gap-3">
+              <Users className="h-5 w-5 text-primary" />
+              <span className="font-bold text-sm">Total Unique Contacts</span>
+            </div>
+            <Badge className="bg-primary text-primary-foreground font-black text-lg px-3 py-1 rounded-xl">
+              {isLoading ? "..." : emailData?.count || 0}
+            </Badge>
+          </div>
+
           <div className="space-y-2">
             <div className="flex justify-between items-end">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Recipient Emails (BCC)</Label>
@@ -90,11 +113,11 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
                 variant="ghost" 
                 size="sm" 
                 className="h-7 text-[10px] font-black"
-                onClick={() => copyToClipboard(emails || "", setCopiedEmails)}
-                disabled={!emails}
+                onClick={() => copyToClipboard(emailData?.list || "", setCopiedEmails)}
+                disabled={!emailData?.list}
               >
                 {copiedEmails ? <CheckCircle2 className="h-3 w-3 mr-1 text-green-500" /> : <Copy className="h-3 w-3 mr-1" />}
-                COPY ALL
+                COPY BCC LIST
               </Button>
             </div>
             <div className="relative">
@@ -105,7 +128,7 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
               ) : (
                 <Textarea 
                   readOnly 
-                  value={emails || ""} 
+                  value={emailData?.list || ""} 
                   className="h-24 bg-muted/30 border-none rounded-xl text-xs font-mono resize-none"
                 />
               )}
@@ -125,7 +148,7 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
                 COPY BODY
               </Button>
             </div>
-            <ScrollArea className="h-48 w-full rounded-xl border-2 border-primary/10 bg-card p-4">
+            <ScrollArea className="h-40 w-full rounded-xl border-2 border-primary/10 bg-card p-4">
               <p className="text-sm whitespace-pre-wrap text-muted-foreground italic leading-relaxed">
                 {sampleBody}
               </p>
@@ -137,8 +160,8 @@ const EmailMembersModal: React.FC<EmailMembersModalProps> = ({
           <Button variant="outline" className="rounded-xl font-bold" onClick={onClose}>
             Close
           </Button>
-          <Button className="rounded-xl font-bold ml-auto" asChild>
-            <a href={`mailto:?bcc=${emails || ""}&subject=${encodeURIComponent(`Singing together for ${eventTitle || "Resonance"}`)}`}>
+          <Button className="rounded-xl font-bold ml-auto" asChild disabled={!emailData?.list}>
+            <a href={`mailto:?bcc=${emailData?.list || ""}&subject=${encodeURIComponent(`A message from Resonance with Daniele`)}`}>
               <ExternalLink className="h-4 w-4 mr-2" /> Open in Mail App
             </a>
           </Button>
