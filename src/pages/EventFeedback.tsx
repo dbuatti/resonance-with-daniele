@@ -15,14 +15,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CheckCircle2, MapPin, Music, Sparkles, EyeOff, UserPlus, Search, Calendar } from "lucide-react";
+import { Loader2, CheckCircle2, MapPin, Music, Sparkles, EyeOff, UserPlus, Search, Calendar, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSaturday, isSunday, parseISO } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
@@ -390,6 +389,35 @@ const EventFeedback: React.FC = () => {
                             <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 rounded-xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm">
                               <FormControl><Checkbox checked={field.value?.includes(dateStr)} onCheckedChange={(checked) => checked ? field.onChange([...(field.value || []), dateStr]) : field.onChange(field.value?.filter((value) => value !== dateStr))} /></FormControl>
                               <FormLabel className="font-bold cursor-pointer">{dateStr}</FormLabel>
+                            </FormItem>
+                          )} />
+                        ))}
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="best_times_ongoing"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel className="text-lg font-bold flex items-center gap-2"><Clock className="h-5 w-5 text-primary" /> What times of day work best for you for ongoing sessions? (Select all that apply)</FormLabel>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                        {["Morning (10am - 1pm)", "Afternoon (2pm - 5pm)", "Evening (7pm - 10pm)", "Weekends"].map((timeStr) => (
+                          <FormField key={timeStr} control={form.control} name="best_times_ongoing" render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 rounded-xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm">
+                              <FormControl>
+                                <Checkbox 
+                                  checked={field.value?.includes(timeStr)} 
+                                  onCheckedChange={(checked) => 
+                                    checked 
+                                      ? field.onChange([...(field.value || []), timeStr]) 
+                                      : field.onChange(field.value?.filter((value) => value !== timeStr))
+                                  } 
+                                />
+                              </FormControl>
+                              <FormLabel className="font-bold cursor-pointer">{timeStr}</FormLabel>
                             </FormItem>
                           )} />
                         ))}
