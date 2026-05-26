@@ -284,6 +284,7 @@ const JunePollPage: React.FC = () => {
                         <Checkbox
                           checked={isChecked}
                           onCheckedChange={() => handleToggleOption(option)}
+                          onClick={(e) => e.stopPropagation()}
                           className="h-4 w-4 rounded border-2"
                         />
                         <span className="text-xs font-bold leading-tight flex-1">

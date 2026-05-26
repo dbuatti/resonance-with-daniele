@@ -215,6 +215,7 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
                     <Checkbox
                       checked={isDone}
                       onCheckedChange={() => toggleMutation.mutate(task.task_key)}
+                      onClick={(e) => e.stopPropagation()}
                       className="h-4 w-4 rounded border-2"
                     />
                     <span className={cn(
