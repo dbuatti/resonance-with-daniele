@@ -9,9 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, Calendar, Clock, Users, Sparkles, Heart, LogIn } from "lucide-react";
+import { Loader2, CheckCircle2, Calendar, Clock, Users, Sparkles, Heart, LogIn, Check } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
@@ -281,12 +280,13 @@ const JunePollPage: React.FC = () => {
                             : "bg-background border-border/50 hover:border-primary/20"
                         )}
                       >
-                        <Checkbox
-                          checked={isChecked}
-                          onCheckedChange={() => handleToggleOption(option)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-4 w-4 rounded border-2"
-                        />
+                        {/* Custom Checkbox Icon to avoid nested interactive element conflicts */}
+                        <div className={cn(
+                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all shrink-0",
+                          isChecked ? "bg-primary border-primary text-white" : "border-muted-foreground/30 group-hover:border-primary"
+                        )}>
+                          {isChecked && <Check className="h-3.5 w-3.5 stroke-[3px]" />}
+                        </div>
                         <span className="text-xs font-bold leading-tight flex-1">
                           {option}
                         </span>
