@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/auth";
@@ -10,18 +10,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO } from "date-fns";
 
-const POLL_OPTIONS = [
-  "Sunday 7 June – 1:00–3:15pm",
-  "Saturday 27 June – 10:00am–12:30pm",
-  "Saturday 27 June – 2:00–4:30pm",
-  "Sunday 28 June – 10:00am–12:30pm",
-  "Sunday 28 June – 2:00–4:30pm"
-];
+const DEFAULT_POLL_CONFIG = {
+  title: "June Rehearsal Availability",
+  description: "Help Daniele lock in our June rehearsal schedule. Please vote for ALL slots you can make!",
+  options: [
+    "Sunday 7 June – 1:00–3:15pm",
+    "Saturday 27 June – 10:00am–12:30pm",
+    "Saturday 27 June – 2:00–4:30pm",
+    "Sunday 28 June – 10:00am–12:30pm",
+    "Sunday 28 June – 2:00–4:30pm"
+  ]
+};
 
 interface PollResponse {
   id: string;
@@ -35,6 +42,13 @@ const AdminJunePollResults: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [copiedTemplate, setCopiedTemplate] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
+
+  // Editor States
+  const [pollTitle, setPollTitle] = useState("");
+  const [pollDescription, setPollDescription] = useState("");
+  const [pollOptions, setPollOptions] = useState<string[]>([]);
+  const [newOptionText, setNewOptionText] = useState("");
 
   React.useEffect(() => {
     if (!loading && (!user || !user.is_admin)) {
@@ -43,7 +57,39 @@ const AdminJunePollResults: React.FC = () => {
     }
   }, [user, loading, navigate]);
 
-  const { data: responses, isLoading } = useQuery<PollResponse[]>({
+  // Fetch dynamic poll configuration
+  const { data: pollConfig, isLoading: loadingConfig } = useQuery({
+    queryKey: ["pollConfig"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_notes")
+        .select("content")
+        .eq("note_key", "june_poll_config")
+        .maybeSingle();
+      
+      if (error) return DEFAULT_POLL_CONFIG;
+      
+      if (data?.content) {
+        try {
+          return JSON.parse(data.content);
+        } catch (e) {
+          console.error("Error parsing JSON:", e);
+        }
+      }
+      return DEFAULT_POLL_CONFIG;
+    }
+  });
+
+  // Initialize editor states when config loads
+  useEffect(() => {
+    if (pollConfig) {
+      setPollTitle(pollConfig.title || DEFAULT_POLL_CONFIG.title);
+      setPollDescription(pollConfig.description || DEFAULT_POLL_CONFIG.description);
+      setPollOptions(pollConfig.options || DEFAULT_POLL_CONFIG.options);
+    }
+  }, [pollConfig]);
+
+  const { data: responses, isLoading: loadingResponses } = useQuery<PollResponse[]>({
     queryKey: ["junePollResponses"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -54,6 +100,33 @@ const AdminJunePollResults: React.FC = () => {
       return data || [];
     },
     enabled: !!user?.is_admin
+  });
+
+  // Save configuration mutation
+  const saveConfigMutation = useMutation({
+    mutationFn: async () => {
+      const configJson = JSON.stringify({
+        title: pollTitle,
+        description: pollDescription,
+        options: pollOptions
+      });
+
+      const { error } = await supabase
+        .from("admin_notes")
+        .upsert({
+          admin_id: user?.id,
+          note_key: "june_poll_config",
+          content: configJson
+        }, { onConflict: "note_key" });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      showSuccess("Poll configuration saved successfully!");
+      setShowEditor(false);
+      queryClient.invalidateQueries({ queryKey: ["pollConfig"] });
+    },
+    onError: (err: any) => showError("Failed to save: " + err.message)
   });
 
   const deleteResponse = useMutation({
@@ -71,12 +144,27 @@ const AdminJunePollResults: React.FC = () => {
     onError: (err: any) => showError(err.message)
   });
 
+  const handleAddOption = () => {
+    if (!newOptionText.trim()) return;
+    if (pollOptions.includes(newOptionText.trim())) {
+      showError("This option already exists.");
+      return;
+    }
+    setPollOptions([...pollOptions, newOptionText.trim()]);
+    setNewOptionText("");
+  };
+
+  const handleRemoveOption = (index: number) => {
+    setPollOptions(pollOptions.filter((_, i) => i !== index));
+  };
+
   const stats = React.useMemo(() => {
-    if (!responses) return { counts: {}, votersByOption: {}, totalVoters: 0 };
+    const activeOptions = pollConfig?.options || DEFAULT_POLL_CONFIG.options;
+    if (!responses) return { counts: {}, votersByOption: {}, totalVoters: 0, winner: "", maxVotes: 0 };
     const counts: Record<string, number> = {};
     const votersByOption: Record<string, string[]> = {};
     
-    POLL_OPTIONS.forEach(opt => {
+    activeOptions.forEach(opt => {
       counts[opt] = 0;
       votersByOption[opt] = [];
     });
@@ -93,7 +181,7 @@ const AdminJunePollResults: React.FC = () => {
     // Find winning option
     let winner = "";
     let maxVotes = -1;
-    POLL_OPTIONS.forEach(opt => {
+    activeOptions.forEach(opt => {
       if (counts[opt] > maxVotes) {
         maxVotes = counts[opt];
         winner = opt;
@@ -101,15 +189,15 @@ const AdminJunePollResults: React.FC = () => {
     });
 
     return { counts, votersByOption, totalVoters: responses.length, winner, maxVotes };
-  }, [responses]);
+  }, [responses, pollConfig]);
 
   const pollLink = `${window.location.origin}/polls/june-availability`;
 
-  const emailTemplate = `Subject: Resonance Choir – June Rehearsal Availability
+  const emailTemplate = `Subject: Resonance Choir – Rehearsal Availability
 
 Hi everyone,
 
-I'm working on locking in our June rehearsal schedule and need to know when you're available.
+I'm working on locking in our rehearsal schedule and need to know when you're available.
 
 Sundays at our usual venue are proving tricky this month, but I'm exploring alternatives — so please still vote for any Sunday options that work for you!
 
@@ -117,7 +205,7 @@ Head to the poll link below and vote for ALL the time slots you can make:
 
 ${pollLink}
 
-Please respond by Friday 15 May so I can confirm the date.
+Please respond as soon as possible so I can confirm the date.
 
 Looking forward to singing with you all soon!
 
@@ -131,6 +219,8 @@ Daniele Buatti`;
     setTimeout(() => setCopiedTemplate(false), 2000);
   };
 
+  const isLoading = loadingConfig || loadingResponses;
+
   if (loading || isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -138,6 +228,8 @@ Daniele Buatti`;
       </div>
     );
   }
+
+  const activeOptions = pollConfig?.options || DEFAULT_POLL_CONFIG.options;
 
   return (
     <div className="max-w-5xl mx-auto py-8 md:py-12 px-4 space-y-10">
@@ -150,17 +242,90 @@ Daniele Buatti`;
             <span>Admin Operations</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter leading-none">
-            June Poll Results
+            {pollConfig?.title || DEFAULT_POLL_CONFIG.title}
           </h1>
           <p className="text-lg text-muted-foreground font-medium">
-            Track rehearsal availability and copy the broadcast email.
+            Track rehearsal availability, edit poll options, and copy the broadcast email.
           </p>
         </div>
-        <Button onClick={handleCopyTemplate} className="h-14 px-8 rounded-2xl font-black shadow-lg">
-          {copiedTemplate ? <Check className="mr-2 h-5 w-5" /> : <Mail className="mr-2 h-5 w-5" />}
-          Copy Email Template
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setShowEditor(!showEditor)} className="h-14 px-6 rounded-2xl font-black border-primary/20 text-primary hover:bg-primary/5">
+            <Settings className="mr-2 h-5 w-5" />
+            {showEditor ? "Hide Settings" : "Edit Poll"}
+          </Button>
+          <Button onClick={handleCopyTemplate} className="h-14 px-8 rounded-2xl font-black shadow-lg">
+            {copiedTemplate ? <Check className="mr-2 h-5 w-5" /> : <Mail className="mr-2 h-5 w-5" />}
+            Copy Email Template
+          </Button>
+        </div>
       </header>
+
+      {/* Live Poll Editor Panel */}
+      {showEditor && (
+        <Card className="border-2 border-primary/20 shadow-2xl rounded-[2rem] bg-primary/5 animate-in fade-in slide-in-from-top-4">
+          <CardHeader>
+            <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" /> Edit Poll Settings
+            </CardTitle>
+            <CardDescription>Change the title, description, and options. Changes apply instantly to the public page.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Poll Title</Label>
+              <Input 
+                value={pollTitle} 
+                onChange={e => setPollTitle(e.target.value)} 
+                className="h-12 rounded-xl font-bold bg-background"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Poll Description</Label>
+              <Textarea 
+                value={pollDescription} 
+                onChange={e => setPollDescription(e.target.value)} 
+                className="min-h-[80px] rounded-xl font-medium bg-background"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Poll Options (Dates & Times)</Label>
+              <div className="space-y-2">
+                {pollOptions.map((option, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-background rounded-xl border border-border/50">
+                    <span className="text-sm font-bold">{option}</span>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleRemoveOption(index)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <Input 
+                  placeholder="Add new option (e.g. Saturday 20 June – 10:00am–12:30pm)" 
+                  value={newOptionText} 
+                  onChange={e => setNewOptionText(e.target.value)}
+                  className="h-12 rounded-xl bg-background"
+                />
+                <Button type="button" onClick={handleAddOption} className="h-12 px-6 rounded-xl font-black">
+                  <Plus className="h-5 w-5 mr-2" /> Add
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="ghost" onClick={() => setShowEditor(false)} className="rounded-xl font-bold">
+                Cancel
+              </Button>
+              <Button onClick={() => saveConfigMutation.mutate()} disabled={saveConfigMutation.isPending} className="rounded-xl font-black px-8">
+                {saveConfigMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Save Configuration
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Winning Option Banner */}
       {stats.totalVoters > 0 && (
@@ -186,7 +351,7 @@ Daniele Buatti`;
           <CardDescription>Aggregated votes per rehearsal slot.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {POLL_OPTIONS.map(option => {
+          {activeOptions.map(option => {
             const count = stats.counts?.[option] || 0;
             const pct = stats.totalVoters ? (count / stats.totalVoters) * 100 : 0;
             const voters = stats.votersByOption?.[option] || [];

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,13 +13,17 @@ import { Loader2, CheckCircle2, Calendar, Clock, Users, Sparkles, Heart } from "
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
-const POLL_OPTIONS = [
-  "Sunday 7 June – 1:00–3:15pm",
-  "Saturday 27 June – 10:00am–12:30pm",
-  "Saturday 27 June – 2:00–4:30pm",
-  "Sunday 28 June – 10:00am–12:30pm",
-  "Sunday 28 June – 2:00–4:30pm"
-];
+const DEFAULT_POLL_CONFIG = {
+  title: "June Rehearsal Availability",
+  description: "Help Daniele lock in our June rehearsal schedule. Please vote for ALL slots you can make!",
+  options: [
+    "Sunday 7 June – 1:00–3:15pm",
+    "Saturday 27 June – 10:00am–12:30pm",
+    "Saturday 27 June – 2:00–4:30pm",
+    "Sunday 28 June – 10:00am–12:30pm",
+    "Sunday 28 June – 2:00–4:30pm"
+  ]
+};
 
 interface PollResponse {
   id: string;
@@ -34,8 +38,34 @@ const JunePollPage: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
 
+  // Fetch dynamic poll configuration
+  const { data: pollConfig, isLoading: loadingConfig } = useQuery({
+    queryKey: ["pollConfig"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_notes")
+        .select("content")
+        .eq("note_key", "june_poll_config")
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error fetching poll config:", error);
+        return DEFAULT_POLL_CONFIG;
+      }
+      
+      if (data?.content) {
+        try {
+          return JSON.parse(data.content);
+        } catch (e) {
+          console.error("Error parsing poll config JSON:", e);
+        }
+      }
+      return DEFAULT_POLL_CONFIG;
+    }
+  });
+
   // Fetch existing responses to show live results
-  const { data: responses, isLoading } = useQuery<PollResponse[]>({
+  const { data: responses, isLoading: loadingResponses } = useQuery<PollResponse[]>({
     queryKey: ["junePollResponses"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -90,11 +120,12 @@ const JunePollPage: React.FC = () => {
 
   // Calculate stats
   const stats = React.useMemo(() => {
-    if (!responses) return {};
+    if (!responses || !pollConfig) return {};
     const counts: Record<string, number> = {};
     const votersByOption: Record<string, string[]> = {};
     
-    POLL_OPTIONS.forEach(opt => {
+    const options = pollConfig.options || DEFAULT_POLL_CONFIG.options;
+    options.forEach(opt => {
       counts[opt] = 0;
       votersByOption[opt] = [];
     });
@@ -109,7 +140,9 @@ const JunePollPage: React.FC = () => {
     });
 
     return { counts, votersByOption, totalVoters: responses.length };
-  }, [responses]);
+  }, [responses, pollConfig]);
+
+  const isLoading = loadingConfig || loadingResponses;
 
   if (isLoading) {
     return (
@@ -119,6 +152,9 @@ const JunePollPage: React.FC = () => {
     );
   }
 
+  const activeConfig = pollConfig || DEFAULT_POLL_CONFIG;
+  const optionsList = activeConfig.options || DEFAULT_POLL_CONFIG.options;
+
   return (
     <div className="max-w-2xl mx-auto py-12 px-4 space-y-8">
       <header className="text-center space-y-4">
@@ -127,10 +163,10 @@ const JunePollPage: React.FC = () => {
           <span>Community Poll</span>
         </div>
         <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter leading-none">
-          June Rehearsal Availability
+          {activeConfig.title}
         </h1>
         <p className="text-lg text-muted-foreground font-medium max-w-xl mx-auto">
-          Help Daniele lock in our June rehearsal schedule. Please vote for <strong>ALL</strong> slots you can make!
+          {activeConfig.description}
         </p>
       </header>
 
@@ -138,7 +174,7 @@ const JunePollPage: React.FC = () => {
         <CardContent className="p-8 space-y-4 text-sm md:text-base leading-relaxed text-muted-foreground font-medium">
           <p>Hi everyone,</p>
           <p>
-            I'm working on locking in our June rehearsal schedule and need to know when you're available.
+            I'm working on locking in our rehearsal schedule and need to know when you're available.
           </p>
           <p className="bg-background/50 p-4 rounded-xl border border-primary/10 text-primary font-bold">
             Sundays at our usual venue are proving tricky this month, but I'm exploring alternatives — so please still vote for any Sunday options that work for you!
@@ -159,7 +195,7 @@ const JunePollPage: React.FC = () => {
           </CardHeader>
           <CardContent className="p-8 space-y-6">
             <div className="space-y-4">
-              {POLL_OPTIONS.map(option => {
+              {optionsList.map(option => {
                 const count = stats.counts?.[option] || 0;
                 const pct = stats.totalVoters ? (count / stats.totalVoters) * 100 : 0;
                 const voters = stats.votersByOption?.[option] || [];
@@ -204,7 +240,7 @@ const JunePollPage: React.FC = () => {
               <div className="space-y-4">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select your available times</Label>
                 <div className="space-y-3">
-                  {POLL_OPTIONS.map(option => {
+                  {optionsList.map(option => {
                     const isChecked = selectedOptions.includes(option);
                     return (
                       <div
