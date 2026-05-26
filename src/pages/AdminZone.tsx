@@ -19,7 +19,8 @@ import {
   Compass, 
   Music,
   Mail,
-  Megaphone
+  Megaphone,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -55,6 +56,13 @@ const AdminZone: React.FC = () => {
   if (!user || !user.is_admin) return null;
 
   const adminTools = [
+    {
+      title: "June Rehearsal Poll",
+      description: "Track availability for the June show. View live standings, see who voted for what, and copy the broadcast email.",
+      icon: <Calendar className="h-6 w-6 text-primary" />,
+      link: "/admin/june-poll",
+      badge: "Active Poll"
+    },
     {
       title: "Global Broadcast",
       description: "Reach everyone. Get a deduplicated BCC list of all members, interest leads, and every past ticket buyer.",

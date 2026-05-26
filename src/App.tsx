@@ -21,6 +21,8 @@ import AdminSessionHubGuide from "./pages/AdminSessionHubGuide";
 import AdminEventWizard from "./pages/AdminEventWizard";
 import AdminEventCommandCenter from "./pages/AdminEventCommandCenter";
 import AdminRepertoireZone from "./pages/AdminRepertoireZone";
+import AdminJunePollResults from "./pages/AdminJunePollResults";
+import JunePollPage from "./pages/JunePollPage";
 import CurrentEventPage from "./pages/CurrentEventPage";
 import EventFeedback from "./pages/EventFeedback";
 import SessionHub from "./pages/SessionHub";
@@ -56,6 +58,8 @@ const App = () => (
               <Route path="/song-suggestions" element={<Layout><SongSuggestionsPage /></Layout>} />
               <Route path="/feedback" element={<Layout><EventFeedback /></Layout>} />
               
+              <Route path="/polls/june-availability" element={<Layout><JunePollPage /></Layout>} />
+              
               <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
                 <Route index element={<ProfileDetails />} />
                 <Route path="survey" element={<SurveyPage />} />
@@ -75,6 +79,7 @@ const App = () => (
               <Route path="/admin/events/new" element={<Layout><AdminEventWizard /></Layout>} />
               <Route path="/admin/events/:id" element={<Layout><AdminEventCommandCenter /></Layout>} />
               <Route path="/admin/repertoire" element={<Layout><AdminRepertoireZone /></Layout>} />
+              <Route path="/admin/june-poll" element={<Layout><AdminJunePollResults /></Layout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SessionContextProvider>
