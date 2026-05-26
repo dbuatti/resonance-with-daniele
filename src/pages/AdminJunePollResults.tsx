@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save } from "lucide-react";
+import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save, Link as LinkIcon } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO } from "date-fns";
@@ -42,6 +42,7 @@ const AdminJunePollResults: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [copiedTemplate, setCopiedTemplate] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 
   // Editor States
@@ -219,6 +220,13 @@ Daniele Buatti`;
     setTimeout(() => setCopiedTemplate(false), 2000);
   };
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(pollLink);
+    setCopiedLink(true);
+    showSuccess("Poll link copied to clipboard!");
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
   const isLoading = loadingConfig || loadingResponses;
 
   if (loading || isLoading) {
@@ -248,7 +256,11 @@ Daniele Buatti`;
             Track rehearsal availability, edit poll options, and copy the broadcast email.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={handleCopyLink} className="h-14 px-6 rounded-2xl font-black border-primary/20 text-primary hover:bg-primary/5">
+            {copiedLink ? <Check className="mr-2 h-5 w-5" /> : <LinkIcon className="mr-2 h-5 w-5" />}
+            Copy Poll Link
+          </Button>
           <Button variant="outline" onClick={() => setShowEditor(!showEditor)} className="h-14 px-6 rounded-2xl font-black border-primary/20 text-primary hover:bg-primary/5">
             <Settings className="mr-2 h-5 w-5" />
             {showEditor ? "Hide Settings" : "Edit Poll"}
