@@ -130,7 +130,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (!initialLoading && !isLoggingOut) {
-      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login', '/learn-more', '/song-suggestions'];
+      const publicPaths = ['/', '/events', '/resources', '/current-event', '/login', '/learn-more', '/song-suggestions', '/polls/june-availability'];
       if (!user && !publicPaths.includes(location.pathname)) navigate('/login');
       else if (location.pathname.startsWith('/admin') && user && !user.is_admin) navigate('/');
     }

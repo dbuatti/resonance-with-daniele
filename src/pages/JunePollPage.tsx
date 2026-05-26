@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/integrations/supabase/auth";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, Calendar, Clock, Users, Sparkles, Heart } from "lucide-react";
+import { Loader2, CheckCircle2, Calendar, Clock, Users, Sparkles, Heart, LogIn } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
@@ -33,10 +35,19 @@ interface PollResponse {
 }
 
 const JunePollPage: React.FC = () => {
+  const { user, profile, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
   const [voterName, setVoterName] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
+
+  // Pre-fill name if user is logged in
+  useEffect(() => {
+    if (user && profile) {
+      const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
+      setVoterName(fullName || user.email?.split("@")[0] || "");
+    }
+  }, [user, profile]);
 
   // Fetch dynamic poll configuration
   const { data: pollConfig, isLoading: loadingConfig } = useQuery({
@@ -142,7 +153,7 @@ const JunePollPage: React.FC = () => {
     return { counts, votersByOption, totalVoters: responses.length };
   }, [responses, pollConfig]);
 
-  const isLoading = loadingConfig || loadingResponses;
+  const isLoading = loadingSession || loadingConfig || loadingResponses;
 
   if (isLoading) {
     return (
@@ -169,6 +180,23 @@ const JunePollPage: React.FC = () => {
           {activeConfig.description}
         </p>
       </header>
+
+      {/* Guest Sign-In Banner */}
+      {!user && (
+        <Card className="border-none shadow-md rounded-2xl bg-accent/10 border border-accent/20 p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-5 w-5 text-accent-foreground shrink-0" />
+            <p className="text-xs font-bold text-accent-foreground leading-tight">
+              Already a member? Sign in to automatically pre-fill your name.
+            </p>
+          </div>
+          <Button size="sm" variant="outline" asChild className="shrink-0 font-bold rounded-xl">
+            <Link to="/login">
+              <LogIn className="h-4 w-4 mr-2" /> Sign In
+            </Link>
+          </Button>
+        </Card>
+      )}
 
       <Card className="border-none shadow-xl rounded-[2rem] bg-primary/5 overflow-hidden">
         <CardContent className="p-8 space-y-4 text-sm md:text-base leading-relaxed text-muted-foreground font-medium">
