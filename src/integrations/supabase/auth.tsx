@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -84,11 +84,14 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   }, [queryClient, navigate]);
 
   const toggleAdminView = useCallback(() => {
-    setIsAdminView(prev => !prev);
+    setIsAdminView(prev => {
+      const next = !prev;
+      showSuccess(`Switched to ${next ? 'Admin' : 'User'} View.`);
+      return next;
+    });
     queryClient.invalidateQueries({ queryKey: ['resources'] });
     queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
-    showSuccess(`Switched to ${isAdminView ? 'User' : 'Admin'} View.`);
-  }, [isAdminView, queryClient]);
+  }, [queryClient]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
@@ -122,11 +125,26 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     enabled: !!session?.user?.id,
   });
 
-  const actualIsAdmin = determineAdminStatus(session?.user?.email, profile?.is_admin);
-  const user: CustomUser | null = session?.user ? { ...session.user, is_admin: actualIsAdmin } : null;
-  const isProfileCompleted = !!(profile?.first_name && profile?.last_name);
-  const isSurveyCompleted = !!(profile?.how_heard || profile?.singing_experience);
-  const incompleteTasksCount = (isProfileCompleted ? 0 : 1) + (isSurveyCompleted ? 0 : 1);
+  const actualIsAdmin = useMemo(() => {
+    return determineAdminStatus(session?.user?.email, profile?.is_admin);
+  }, [session?.user?.email, profile?.is_admin, determineAdminStatus]);
+
+  const user = useMemo(() => {
+    if (!session?.user) return null;
+    return { ...session.user, is_admin: actualIsAdmin && isAdminView } as CustomUser;
+  }, [session?.user, actualIsAdmin, isAdminView]);
+
+  const isProfileCompleted = useMemo(() => {
+    return !!(profile?.first_name && profile?.last_name);
+  }, [profile?.first_name, profile?.last_name]);
+
+  const isSurveyCompleted = useMemo(() => {
+    return !!(profile?.how_heard || profile?.singing_experience);
+  }, [profile?.how_heard, profile?.singing_experience]);
+
+  const incompleteTasksCount = useMemo(() => {
+    return (isProfileCompleted ? 0 : 1) + (isSurveyCompleted ? 0 : 1);
+  }, [isProfileCompleted, isSurveyCompleted]);
 
   useEffect(() => {
     if (!initialLoading && !isLoggingOut) {
@@ -136,12 +154,38 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     }
   }, [user, initialLoading, isLoggingOut, location.pathname, navigate]);
 
+  const contextValue = useMemo(() => ({
+    session,
+    user,
+    profile: profile || null,
+    loading: initialLoading || profileLoading,
+    profileLoading,
+    isLoggingOut,
+    isAdminView,
+    isActualAdmin: actualIsAdmin,
+    isProfileCompleted,
+    isSurveyCompleted,
+    incompleteTasksCount,
+    toggleAdminView,
+    logout
+  }), [
+    session,
+    user,
+    profile,
+    initialLoading,
+    profileLoading,
+    isLoggingOut,
+    isAdminView,
+    actualIsAdmin,
+    isProfileCompleted,
+    isSurveyCompleted,
+    incompleteTasksCount,
+    toggleAdminView,
+    logout
+  ]);
+
   return (
-    <SessionContext.Provider value={{
-      session, user: user ? { ...user, is_admin: user.is_admin && isAdminView } : null, profile,
-      loading: initialLoading || profileLoading, profileLoading, isLoggingOut, isAdminView, isActualAdmin: actualIsAdmin,
-      isProfileCompleted, isSurveyCompleted, incompleteTasksCount, toggleAdminView, logout
-    }}>
+    <SessionContext.Provider value={contextValue}>
       {children}
     </SessionContext.Provider>
   );
