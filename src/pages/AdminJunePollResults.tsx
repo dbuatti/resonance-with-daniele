@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save, Link as LinkIcon, UserPlus } from "lucide-react";
@@ -57,8 +56,8 @@ const AdminJunePollResults: React.FC = () => {
   const [newOptionText, setNewOptionText] = useState("");
 
   // Manual Vote States
-  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
-  const [isCustomName, setIsCustomName] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("custom");
+  const [isCustomName, setIsCustomName] = useState(true);
   const [manualVoterName, setManualVoterName] = useState("");
   const [manualSelectedOptions, setManualSelectedOptions] = useState<string[]>([]);
 
@@ -170,8 +169,8 @@ const AdminJunePollResults: React.FC = () => {
       showSuccess(`Logged vote for ${manualVoterName}!`);
       setIsManualDialogOpen(false);
       setManualVoterName("");
-      setSelectedMemberId("");
-      setIsCustomName(false);
+      setSelectedMemberId("custom");
+      setIsCustomName(true);
       setManualSelectedOptions([]);
       queryClient.invalidateQueries({ queryKey: ["junePollResponses"] });
     },
@@ -596,12 +595,13 @@ Daniele Buatti`;
                           : "bg-background border-border/50 hover:border-primary/20"
                       )}
                     >
-                      <Checkbox
-                        checked={isChecked}
-                        onCheckedChange={() => handleToggleManualOption(option)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-4 w-4 rounded border-2"
-                      />
+                      {/* Custom Checkbox Icon to avoid nested interactive element conflicts */}
+                      <div className={cn(
+                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all shrink-0",
+                        isChecked ? "bg-primary border-primary text-white" : "border-muted-foreground/30 group-hover:border-primary"
+                      )}>
+                        {isChecked && <Check className="h-3.5 w-3.5 stroke-[3px]" />}
+                      </div>
                       <span className="text-xs font-bold leading-tight flex-1">
                         {option}
                       </span>
