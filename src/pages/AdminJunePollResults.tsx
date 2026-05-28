@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save, Link as LinkIcon, UserPlus } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
@@ -56,6 +57,8 @@ const AdminJunePollResults: React.FC = () => {
   const [newOptionText, setNewOptionText] = useState("");
 
   // Manual Vote States
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const [isCustomName, setIsCustomName] = useState(false);
   const [manualVoterName, setManualVoterName] = useState("");
   const [manualSelectedOptions, setManualSelectedOptions] = useState<string[]>([]);
 
@@ -87,6 +90,20 @@ const AdminJunePollResults: React.FC = () => {
       }
       return DEFAULT_POLL_CONFIG;
     }
+  });
+
+  // Fetch profiles for manual vote matching
+  const { data: profiles } = useQuery({
+    queryKey: ["allProfilesForPollMatching"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name, email")
+        .order("first_name", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.is_admin && isManualDialogOpen
   });
 
   // Initialize editor states when config loads
@@ -153,6 +170,8 @@ const AdminJunePollResults: React.FC = () => {
       showSuccess(`Logged vote for ${manualVoterName}!`);
       setIsManualDialogOpen(false);
       setManualVoterName("");
+      setSelectedMemberId("");
+      setIsCustomName(false);
       setManualSelectedOptions([]);
       queryClient.invalidateQueries({ queryKey: ["junePollResponses"] });
     },
@@ -201,7 +220,7 @@ const AdminJunePollResults: React.FC = () => {
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualVoterName.trim()) {
-      showError("Please enter the voter's name.");
+      showError("Please select a member or enter a guest name.");
       return;
     }
     if (manualSelectedOptions.length === 0) {
@@ -510,16 +529,56 @@ Daniele Buatti`;
           </DialogHeader>
           <form onSubmit={handleManualSubmit} className="space-y-6 py-4">
             <div className="space-y-2">
-              <Label htmlFor="manual-voter-name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Voter Name</Label>
-              <Input
-                id="manual-voter-name"
-                placeholder="e.g. Elizabeth Goldsmith"
-                value={manualVoterName}
-                onChange={e => setManualVoterName(e.target.value)}
-                className="h-12 rounded-xl font-bold"
-                required
-              />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Member</Label>
+              <Select
+                value={selectedMemberId}
+                onValueChange={(val) => {
+                  setSelectedMemberId(val);
+                  if (val === "custom") {
+                    setIsCustomName(true);
+                    setManualVoterName("");
+                  } else {
+                    setIsCustomName(false);
+                    const member = profiles?.find(p => p.id === val);
+                    if (member) {
+                      const fullName = `${member.first_name || ""} ${member.last_name || ""}`.trim();
+                      setManualVoterName(fullName || member.email?.split("@")[0] || "");
+                    }
+                  }
+                }}
+              >
+                <SelectTrigger className="h-12 rounded-xl font-bold">
+                  <SelectValue placeholder="Choose a member..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl max-h-[200px]">
+                  <SelectItem value="custom" className="font-bold text-primary">
+                    Guest / Not in list (Type Name)
+                  </SelectItem>
+                  {profiles?.map((p) => {
+                    const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || p.email?.split("@")[0] || "Unnamed Member";
+                    return (
+                      <SelectItem key={p.id} value={p.id}>
+                        {name} ({p.email})
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
+
+            {isCustomName && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                <Label htmlFor="manual-voter-name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Guest Name</Label>
+                <Input
+                  id="manual-voter-name"
+                  placeholder="Enter full name..."
+                  value={manualVoterName}
+                  onChange={e => setManualVoterName(e.target.value)}
+                  className="h-12 rounded-xl font-bold"
+                  required
+                />
+              </div>
+            )}
 
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Available Slots</Label>
