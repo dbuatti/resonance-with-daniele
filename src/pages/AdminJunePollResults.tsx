@@ -13,10 +13,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save, Link as LinkIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save, Link as LinkIcon, UserPlus } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const DEFAULT_POLL_CONFIG = {
   title: "June Rehearsal Availability",
@@ -44,12 +47,17 @@ const AdminJunePollResults: React.FC = () => {
   const [copiedTemplate, setCopiedTemplate] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
+  const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
 
   // Editor States
   const [pollTitle, setPollTitle] = useState("");
   const [pollDescription, setPollDescription] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>([]);
   const [newOptionText, setNewOptionText] = useState("");
+
+  // Manual Vote States
+  const [manualVoterName, setManualVoterName] = useState("");
+  const [manualSelectedOptions, setManualSelectedOptions] = useState<string[]>([]);
 
   React.useEffect(() => {
     if (!loading && (!user || !user.is_admin)) {
@@ -130,6 +138,29 @@ const AdminJunePollResults: React.FC = () => {
     onError: (err: any) => showError("Failed to save: " + err.message)
   });
 
+  // Submit manual vote mutation
+  const submitManualVote = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("june_poll_responses")
+        .insert({
+          voter_name: manualVoterName.trim(),
+          selected_options: manualSelectedOptions
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      showSuccess(`Logged vote for ${manualVoterName}!`);
+      setIsManualDialogOpen(false);
+      setManualVoterName("");
+      setManualSelectedOptions([]);
+      queryClient.invalidateQueries({ queryKey: ["junePollResponses"] });
+    },
+    onError: (err: any) => {
+      showError("Failed to log vote: " + err.message);
+    }
+  });
+
   const deleteResponse = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -157,6 +188,27 @@ const AdminJunePollResults: React.FC = () => {
 
   const handleRemoveOption = (index: number) => {
     setPollOptions(pollOptions.filter((_, i) => i !== index));
+  };
+
+  const handleToggleManualOption = (option: string) => {
+    setManualSelectedOptions(prev =>
+      prev.includes(option)
+        ? prev.filter(o => o !== option)
+        : [...prev, option]
+    );
+  };
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualVoterName.trim()) {
+      showError("Please enter the voter's name.");
+      return;
+    }
+    if (manualSelectedOptions.length === 0) {
+      showError("Please select at least one option.");
+      return;
+    }
+    submitManualVote.mutate();
   };
 
   const stats = React.useMemo(() => {
@@ -257,6 +309,10 @@ Daniele Buatti`;
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={() => setIsManualDialogOpen(true)} className="h-14 px-6 rounded-2xl font-black border-primary/20 text-primary hover:bg-primary/5">
+            <UserPlus className="mr-2 h-5 w-5" />
+            Add Manual Vote
+          </Button>
           <Button variant="outline" onClick={handleCopyLink} className="h-14 px-6 rounded-2xl font-black border-primary/20 text-primary hover:bg-primary/5">
             {copiedLink ? <Check className="mr-2 h-5 w-5" /> : <LinkIcon className="mr-2 h-5 w-5" />}
             Copy Poll Link
@@ -444,6 +500,70 @@ Daniele Buatti`;
           </div>
         </CardContent>
       </Card>
+
+      {/* Manual Vote Dialog */}
+      <Dialog open={isManualDialogOpen} onOpenChange={setIsManualDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black font-lora">Log Manual Vote</DialogTitle>
+            <DialogDescription>Log availability on behalf of a member who responded via Facebook, SMS, or email.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleManualSubmit} className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="manual-voter-name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Voter Name</Label>
+              <Input
+                id="manual-voter-name"
+                placeholder="e.g. Elizabeth Goldsmith"
+                value={manualVoterName}
+                onChange={e => setManualVoterName(e.target.value)}
+                className="h-12 rounded-xl font-bold"
+                required
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Available Slots</Label>
+              <div className="space-y-2">
+                {activeOptions.map(option => {
+                  const isChecked = manualSelectedOptions.includes(option);
+                  return (
+                    <div
+                      key={option}
+                      onClick={() => handleToggleManualOption(option)}
+                      className={cn(
+                        "flex items-center space-x-3 p-3 rounded-xl border-2 transition-all cursor-pointer group",
+                        isChecked 
+                          ? "bg-primary/5 border-primary/30 text-primary" 
+                          : "bg-background border-border/50 hover:border-primary/20"
+                      )}
+                    >
+                      <Checkbox
+                        checked={isChecked}
+                        onCheckedChange={() => handleToggleManualOption(option)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-4 w-4 rounded border-2"
+                      />
+                      <span className="text-xs font-bold leading-tight flex-1">
+                        {option}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setIsManualDialogOpen(false)} className="rounded-xl font-bold">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitManualVote.isPending} className="rounded-xl font-black px-8">
+                {submitManualVote.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                Log Vote
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
