@@ -1,24 +1,20 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, Trash2, Edit as EditIcon, Shield, User as UserIcon, Mail, Search, Filter, X, Copy, RefreshCw, Send, ShieldCheck, CalendarCheck, MessageSquare } from "lucide-react";
+import { Trash2, Edit as EditIcon, User as UserIcon, Search, Send, MessageSquare } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import MemberEditDialog from "@/components/admin/MemberEditDialog";
+import AdminPageLayout from "@/components/admin/AdminPageLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import BackButton from "@/components/ui/BackButton";
 import { Input } from "@/components/ui/input";
 import { syncMembersToKit } from "@/utils/kit";
 import { Separator } from "@/components/ui/separator";
@@ -36,8 +32,7 @@ interface Profile {
 }
 
 const AdminMembers: React.FC = () => {
-  const { user, loading: loadingSession } = useSession();
-  const navigate = useNavigate();
+  const { user } = useSession();
   const [isUpdatingAdminStatus, setIsUpdatingAdminStatus] = useState<string | null>(null);
   const [isSyncingToKit, setIsSyncingToKit] = useState(false);
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
@@ -46,13 +41,6 @@ const AdminMembers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!loadingSession && (!user || !user.is_admin)) {
-      navigate("/");
-      showError("Access Denied: You must be an administrator to view this page.");
-    }
-  }, [user, loadingSession, navigate]);
 
   const fetchProfiles = async (): Promise<Profile[]> => {
     const { data, error } = await supabase
@@ -67,7 +55,7 @@ const AdminMembers: React.FC = () => {
   const { data: profiles, isLoading: loadingProfiles } = useQuery<Profile[], Error>({
     queryKey: ['adminMembers'],
     queryFn: fetchProfiles,
-    enabled: !loadingSession && !!user?.is_admin,
+    enabled: !!user?.is_admin,
   });
 
   const { data: allOrders } = useQuery({
@@ -129,64 +117,60 @@ const AdminMembers: React.FC = () => {
     try {
       const result = await syncMembersToKit();
       showSuccess(`Sync complete! ${result.synced} members updated in Kit.`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Sync failed";
       console.error("Sync error:", error);
-      showError(`Failed to sync: ${error.message}`);
+      showError(`Failed to sync: ${message}`);
     } finally {
       setIsSyncingToKit(false);
     }
   };
 
-  if (loadingProfiles) return <div className="p-20 text-center"><Loader2 className="animate-spin h-12 w-12 mx-auto text-primary" /></div>;
-  if (!user || !user.is_admin) return null;
-
   return (
-    <div className="space-y-10 py-8 md:py-12 w-full px-4">
-      <BackButton to="/admin" />
-      
-      <header className="text-center space-y-4 mb-12">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest mb-2">
-          <ShieldCheck className="h-4 w-4" />
-          <span>Member Directory</span>
-        </div>
-        <h1 className="text-5xl md:text-7xl font-black font-lora tracking-tighter leading-none">The Community</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-medium leading-relaxed">
-          Manage your singers, update roles, and keep your mailing list in sync.
-        </p>
-      </header>
-
-      <div className="flex flex-col md:flex-row gap-6 mb-10 items-center justify-between">
-        <div className="relative w-full md:max-w-lg">
+    <AdminPageLayout
+      title="The Community"
+      description="Manage your singers, update roles, and keep your mailing list in sync."
+      badge="Member Directory"
+      backTo="/admin"
+      isLoading={loadingProfiles}
+      loadingMessage="Loading member directory..."
+      actions={
+        <>
+          <Button
+            variant="outline"
+            onClick={() => setIsEmailModalOpen(true)}
+            className="h-12 px-5 rounded-xl font-black border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
+          >
+            <MessageSquare className="mr-2 h-4 w-4" /> Message All
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleSyncToKit}
+            disabled={isSyncingToKit}
+            className="h-12 px-5 rounded-xl font-black border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
+          >
+            <Send className="mr-2 h-4 w-4" /> {isSyncingToKit ? "Syncing..." : "Sync to Kit.com"}
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-8">
+        <div className="relative w-full md:max-w-md">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Search by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-12 h-14 rounded-2xl font-bold shadow-sm border-primary/10 focus-visible:ring-primary"
+            className="pl-12 h-12 rounded-xl font-bold shadow-sm border-primary/10 focus-visible:ring-primary"
           />
         </div>
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsEmailModalOpen(true)}
-            className="h-14 px-6 rounded-2xl font-black border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
-          >
-            <MessageSquare className="mr-3 h-5 w-5" /> Message All
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleSyncToKit} 
-            disabled={isSyncingToKit}
-            className="h-14 px-6 rounded-2xl font-black border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
-          >
-            {isSyncingToKit ? <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Syncing...</> : <><Send className="mr-3 h-5 w-5" /> Sync to Kit.com</>}
-          </Button>
-          <Separator orientation="vertical" className="h-10 hidden md:block" />
-          <Select value={roleFilter} onValueChange={(val: any) => setRoleFilter(val)}>
-            <SelectTrigger className="w-full md:w-[180px] h-14 rounded-2xl font-black shadow-sm border-primary/10">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Separator orientation="vertical" className="h-8 hidden md:block" />
+          <Select value={roleFilter} onValueChange={(val: "all" | "admin" | "user") => setRoleFilter(val)}>
+            <SelectTrigger className="w-full md:w-[160px] h-12 rounded-xl font-black shadow-sm border-primary/10">
               <SelectValue placeholder="Filter Role" />
             </SelectTrigger>
-            <SelectContent className="rounded-2xl">
+            <SelectContent className="rounded-xl">
               <SelectItem value="all" className="font-bold">All Roles</SelectItem>
               <SelectItem value="admin" className="font-bold">Admins</SelectItem>
               <SelectItem value="user" className="font-bold">Users</SelectItem>
@@ -195,7 +179,7 @@ const AdminMembers: React.FC = () => {
         </div>
       </div>
 
-      <Card className="w-full soft-shadow border-none overflow-hidden rounded-[2.5rem] animate-fade-in-up">
+      <Card className="w-full soft-shadow border-none overflow-hidden rounded-[2.5rem]">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -239,7 +223,7 @@ const AdminMembers: React.FC = () => {
                         <Select
                           value={profile.is_admin ? "admin" : "user"}
                           onValueChange={(value) => handleAdminStatusChange(profile.id, value === "admin")}
-                          disabled={profile.id === user.id || isUpdatingAdminStatus === profile.id}
+                          disabled={profile.id === user?.id || isUpdatingAdminStatus === profile.id}
                         >
                           <SelectTrigger className={cn(
                             "w-[120px] h-9 text-[10px] font-black uppercase tracking-widest rounded-full border-2 transition-all",
@@ -295,17 +279,17 @@ const AdminMembers: React.FC = () => {
         </CardContent>
       </Card>
 
-      <MemberEditDialog 
-        isOpen={isEditProfileDialogOpen} 
-        onOpenChange={setIsEditProfileDialogOpen} 
-        member={editingMember} 
+      <MemberEditDialog
+        isOpen={isEditProfileDialogOpen}
+        onOpenChange={setIsEditProfileDialogOpen}
+        member={editingMember}
       />
 
-      <EmailMembersModal 
-        isOpen={isEmailModalOpen} 
-        onClose={() => setIsEmailModalOpen(false)} 
+      <EmailMembersModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
       />
-    </div>
+    </AdminPageLayout>
   );
 };
 

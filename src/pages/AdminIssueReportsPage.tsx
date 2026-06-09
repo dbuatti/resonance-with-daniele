@@ -1,22 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSession } from "@/integrations/supabase/auth";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageSquare, Trash2, AlertCircle, CheckCircle2, EyeOff } from "lucide-react";
+import { Trash2, CheckCircle2, EyeOff, MessageSquare } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import BackButton from "@/components/ui/BackButton";
+import AdminPageLayout from "@/components/admin/AdminPageLayout";
 import { cn } from "@/lib/utils";
 
 interface IssueReport {
@@ -30,162 +28,142 @@ interface IssueReport {
 }
 
 const AdminIssueReportsPage: React.FC = () => {
-  const { user, loading: loadingSession } = useSession();
-  const navigate = useNavigate();
+  const { user } = useSession();
   const queryClient = useQueryClient();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!loadingSession && (!user || !user.is_admin)) {
-      navigate("/");
-      showError("Access Denied: You must be an administrator to view this page.");
-    }
-  }, [user, loadingSession, navigate]);
-
-  const markAllAsRead = async () => {
-    if (!user?.is_admin) return;
-    const { error } = await supabase
-      .from("issue_reports")
-      .update({ is_read: true })
-      .eq("is_read", false);
-    if (error) {
-      console.error("Error marking reports as read:", error);
-    } else {
-      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
-    }
-  };
-
-  useEffect(() => {
-    if (user?.is_admin) {
-      markAllAsRead();
-    }
-  }, [user?.is_admin]);
-
-  const fetchIssueReports = async (): Promise<IssueReport[]> => {
+  const fetchReports = async (): Promise<IssueReport[]> => {
     const { data, error } = await supabase
       .from("issue_reports")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) throw new Error("Failed to load issue reports.");
+    if (error) throw error;
     return data || [];
   };
 
-  const { data: issueReports, isLoading: loadingReports, error: fetchError } = useQuery<IssueReport[], Error>({
+  const { data: reports, isLoading, error: fetchError } = useQuery<IssueReport[]>({
     queryKey: ['adminIssueReports'],
-    queryFn: fetchIssueReports,
-    enabled: !loadingSession && !!user?.is_admin,
-    staleTime: 60 * 1000,
+    queryFn: fetchReports,
+    enabled: !!user?.is_admin,
   });
 
-  const handleDeleteReport = async (reportId: string) => {
-    if (!user || !user.is_admin) return;
-    const { error } = await supabase.from("issue_reports").delete().eq("id", reportId);
-    if (error) {
-      showError(`Failed to delete report: ${error.message}`);
-    } else {
-      showSuccess("Issue report deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] });
-      queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
-      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
-    }
+  const markAsRead = async (id: string) => {
+    const { error } = await supabase.from("issue_reports").update({ is_read: true }).eq("id", id);
+    if (error) showError(error.message);
+    else queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] });
   };
 
-  const handleMarkAsRead = async (reportId: string, currentStatus: boolean) => {
-    if (!user || !user.is_admin) return;
-    const { error } = await supabase.from("issue_reports").update({ is_read: !currentStatus }).eq("id", reportId);
-    if (error) {
-      showError(`Failed to update status: ${error.message}`);
-    } else {
-      showSuccess(`Report marked as ${!currentStatus ? "read" : "unread"}!`);
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    const { error } = await supabase.from("issue_reports").delete().eq("id", id);
+    if (error) showError(error.message);
+    else {
+      showSuccess("Report removed.");
       queryClient.invalidateQueries({ queryKey: ['adminIssueReports'] });
-      queryClient.invalidateQueries({ queryKey: ['unreadIssueReportsCount'] });
     }
+    setDeletingId(null);
   };
 
-  if (loadingReports) return <div className="p-8"><Skeleton className="h-10 w-full" /></div>;
-  if (!user || !user.is_admin) return null;
+  const unreadCount = reports?.filter(r => !r.is_read).length || 0;
 
   return (
-    <div className="space-y-6 py-8 w-full px-4">
-      <BackButton className="mb-6" to="/admin" />
-      
-      <header className="text-center space-y-4 mb-12">
-        <h1 className="text-4xl font-bold text-center font-lora">Issue Reports</h1>
-        <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-          Review and manage all submitted issue reports and complaints from users.
-        </p>
-      </header>
-
-      <Card className="w-full shadow-xl border-none overflow-hidden rounded-2xl">
-        <CardHeader className="bg-muted/30 border-b border-border/50">
-          <CardTitle className="text-2xl font-lora">All Reports</CardTitle>
-        </CardHeader>
+    <AdminPageLayout
+      title="Issue Reports"
+      description="Bug reports and feedback submitted by users."
+      badge="Support"
+      badgeIcon={<MessageSquare className="h-3 w-3" />}
+      backTo="/admin"
+      isLoading={isLoading}
+      error={fetchError}
+      empty={reports?.length === 0}
+      emptyMessage="No issue reports yet."
+      actions={
+        unreadCount > 0 && (
+          <Badge className="bg-primary text-primary-foreground px-4 py-2 rounded-full font-black text-xs">
+            {unreadCount} unread
+          </Badge>
+        )
+      }
+    >
+      <Card className="w-full soft-shadow border-none overflow-hidden rounded-[2.5rem]">
         <CardContent className="p-0">
-          {issueReports && issueReports.length === 0 ? (
-            <div className="text-center text-muted-foreground py-20">
-              <p className="text-xl font-semibold">No issue reports found yet.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-muted/20">
-                  <TableRow>
-                    <TableHead className="pl-6 py-4 w-[80px]">Status</TableHead>
-                    <TableHead className="min-w-[150px]">Reporter</TableHead>
-                    <TableHead className="min-w-[250px]">Description</TableHead>
-                    <TableHead>Page</TableHead>
-                    <TableHead>Submitted On</TableHead>
-                    <TableHead className="text-right pr-6">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {issueReports?.map((report) => (
-                    <TableRow key={report.id} className={cn("hover:bg-muted/10 transition-colors", !report.is_read && "bg-red-50/50 dark:bg-red-950/20")}>
-                      <TableCell className="pl-6 py-4">
-                        <Badge variant={report.is_read ? "secondary" : "destructive"} className="text-[10px] uppercase tracking-widest font-bold">
-                          {report.is_read ? "Read" : "Unread"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-bold">{report.email}</TableCell>
-                      <TableCell className="text-muted-foreground line-clamp-2 max-w-xs">{report.issue_description}</TableCell>
-                      <TableCell>
-                        {report.page_url ? (
-                          <a href={report.page_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[150px] inline-block">{report.page_url}</a>
-                        ) : "N/A"}
-                      </TableCell>
-                      <TableCell>{format(new Date(report.created_at), "PPP")}</TableCell>
-                      <TableCell className="text-right pr-6">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleMarkAsRead(report.id, report.is_read)} className="h-8 px-3 text-xs font-bold uppercase tracking-wider">
-                            {report.is_read ? <EyeOff className="h-3.5 w-3.5 mr-1.5" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />} {report.is_read ? "Unread" : "Read"}
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 px-3 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
-                                <Trash2 className="h-3.5 w-3.5" />
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/30">
+                <TableRow>
+                  <TableHead className="pl-10 py-6 text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Email</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Issue</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Page</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Date</TableHead>
+                  <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-widest">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reports?.map((report) => (
+                  <TableRow key={report.id} className={cn("hover:bg-muted/10 transition-colors", !report.is_read && "bg-primary/[0.02]")}>
+                    <TableCell className="pl-10 py-5">
+                      <Badge variant={report.is_read ? "secondary" : "default"} className="rounded-full text-[9px] font-black uppercase tracking-widest">
+                        {report.is_read ? "Read" : "New"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">{report.email}</TableCell>
+                    <TableCell className="max-w-md">
+                      <p className="line-clamp-2 text-sm font-medium text-muted-foreground">
+                        {report.issue_description}
+                      </p>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium text-muted-foreground">
+                      {report.page_url ? (
+                        <a href={report.page_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                          {new URL(report.page_url).pathname}
+                        </a>
+                      ) : "—"}
+                    </TableCell>
+                    <TableCell className="font-medium text-muted-foreground">
+                      {format(new Date(report.created_at), "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell className="text-right pr-10">
+                      <div className="flex items-center justify-end gap-1">
+                        {!report.is_read && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-green-600 hover:bg-green-500/10" onClick={() => markAsRead(report.id)}>
+                                <EyeOff className="h-4 w-4" />
                               </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Report?</AlertDialogTitle>
-                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteReport(report.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                            </TooltipTrigger>
+                            <TooltipContent>Mark as read</TooltipContent>
+                          </Tooltip>
+                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10" disabled={deletingId === report.id}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-[2.5rem]">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Report?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently remove this report.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(report.id)} className="rounded-xl font-bold bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
-    </div>
+    </AdminPageLayout>
   );
 };
 

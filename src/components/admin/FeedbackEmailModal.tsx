@@ -68,7 +68,7 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
       const feedbackUserIds = (feedback?.map(f => f.user_id) || []).filter(Boolean);
 
       // 3. Get emails for those user IDs
-      let feedbackEmails = new Set<string>();
+      const feedbackEmails = new Set<string>();
       if (feedbackUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")

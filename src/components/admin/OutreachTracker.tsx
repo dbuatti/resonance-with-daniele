@@ -85,9 +85,10 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
 
       showSuccess(`Successfully added ${uniqueHistoricalNames.length} historical contacts!`);
       queryClient.invalidateQueries({ queryKey: ["outreachTargets", eventId] });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
       console.error("[OutreachTracker] Rollover failed:", err);
-      showError("Failed to roll over contacts: " + err.message);
+      showError("Failed to roll over contacts: " + message);
     } finally {
       setIsRollingOver(false);
     }
@@ -104,7 +105,7 @@ const OutreachTracker: React.FC<OutreachTrackerProps> = ({ eventId }) => {
       queryClient.invalidateQueries({ queryKey: ["outreachTargets", eventId] });
       setNewName("");
     },
-    onError: (error: any) => showError(error.message),
+    onError: (error: Error) => showError(error.message),
   });
 
   const toggleMutation = useMutation({

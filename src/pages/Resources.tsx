@@ -246,7 +246,7 @@ const Resources: React.FC = () => {
     }
     if (sortBy !== 'sort_order') {
       filtered.sort((a, b) => {
-        let comp = sortBy === 'title' ? a.title.localeCompare(b.title) : new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        const comp = sortBy === 'title' ? a.title.localeCompare(b.title) : new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         return sortOrder === 'asc' ? comp : -comp;
       });
     } else {

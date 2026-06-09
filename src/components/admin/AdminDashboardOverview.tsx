@@ -12,7 +12,6 @@ import { useQuery } from "@tanstack/react-query";
 
 const AdminDashboardOverview: React.FC = () => {
   const fetchCounts = async () => {
-    console.log("[AdminDashboardOverview] Fetching dashboard counts.");
     const { count: members, error: memberError } = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true });
