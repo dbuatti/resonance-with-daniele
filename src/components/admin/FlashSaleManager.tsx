@@ -69,7 +69,7 @@ const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <Card className="lg:col-span-1 shadow-lg border-none">
+        <Card className="lg:col-span-1 shadow-lg border-none rounded-[2.5rem]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" /> Manage Promo
@@ -101,13 +101,13 @@ const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
 
       <div className="lg:col-span-2 space-y-6">
         {isLoading ? (
-          <Card className="shadow-lg border-none">
+          <Card className="shadow-lg border-none rounded-[2.5rem]">
             <CardContent className="p-12 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </CardContent>
           </Card>
         ) : promos?.length === 0 ? (
-          <Card className="shadow-lg border-none border-dashed border-2 bg-muted/10">
+          <Card className="shadow-lg border-none border-dashed border-2 bg-muted/10 rounded-[2.5rem]">
             <CardContent className="p-12 text-center">
               <Zap className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
               <p className="text-lg font-bold text-muted-foreground font-lora">No promotions yet.</p>
@@ -123,7 +123,7 @@ const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
             const isExpired = isAfter(now, end);
 
             return (
-              <Card key={promo.id} className={cn("shadow-lg border-none overflow-hidden", isActive && "ring-2 ring-primary")}>
+              <Card key={promo.id} className={cn("shadow-lg border-none overflow-hidden rounded-[2.5rem]", isActive && "ring-2 ring-primary")}>
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">
                     <div className="space-y-2">

@@ -76,7 +76,7 @@ const ExpenseLogger: React.FC<ExpenseLoggerProps> = ({ eventId }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <Card className="lg:col-span-1 shadow-lg border-none">
+        <Card className="lg:col-span-1 shadow-lg border-none rounded-[2.5rem]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5 text-primary" /> Log Expense
@@ -102,7 +102,7 @@ const ExpenseLogger: React.FC<ExpenseLoggerProps> = ({ eventId }) => {
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-2 shadow-lg border-none">
+        <Card className="lg:col-span-2 shadow-lg border-none rounded-[2.5rem]">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Expense History</CardTitle>

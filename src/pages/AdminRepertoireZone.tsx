@@ -134,7 +134,7 @@ const AdminRepertoireZone: React.FC = () => {
   const geminiUrl = "https://gemini.google.com/app/e5f79aea81a478f3";
 
   return (
-    <div className="py-2 space-y-10 max-w-6xl mx-auto px-4">
+    <div className="py-8 md:py-12 space-y-10 max-w-7xl mx-auto px-4">
       <BackButton to="/admin" />
       
       <header className="space-y-6">

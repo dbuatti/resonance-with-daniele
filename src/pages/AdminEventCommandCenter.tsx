@@ -178,7 +178,7 @@ const AdminEventCommandCenter = () => {
   ];
 
   return (
-    <div className="pb-20 space-y-8">
+    <div className="pb-20 space-y-8 max-w-7xl mx-auto px-4">
       {/* Header */}
       <header className="space-y-6">
         <div className="flex items-center gap-4">

@@ -439,7 +439,7 @@ const AdminMarketingPlanPage: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="preparation" className="animate-fade-in-up">
-            <div className="max-w-4xl auto">
+            <div className="max-w-4xl mx-auto">
               <EventPrepChecklist eventId={selectedEventId} />
             </div>
           </TabsContent>

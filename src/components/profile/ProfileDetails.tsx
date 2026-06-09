@@ -250,6 +250,7 @@ const ProfileDetails: React.FC = () => {
               
               <Button 
                 variant="ghost" 
+                type="button"
                 onClick={logout} 
                 className="w-full h-14 text-muted-foreground hover:text-destructive hover:bg-destructive/5 font-black uppercase tracking-[0.3em] text-[10px]" 
                 disabled={isLoggingOut}

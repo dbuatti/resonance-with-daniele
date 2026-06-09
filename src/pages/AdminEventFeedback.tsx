@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +45,7 @@ const AdminEventFeedback: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
-  const [aiInsights, setAiInsights] = useState<null>(null);
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
   const [selectedResponse, setSelectedResponse] = useState<null>(null);
 
   // Fetch ALL feedback once to handle filtering and month derivation locally
@@ -112,7 +112,7 @@ const AdminEventFeedback: React.FC = () => {
     enabled: !!selectedFilter,
   });
 
-  useMemo(() => {
+  useEffect(() => {
     if (savedAiSummary) setAiInsights(savedAiSummary);
   }, [savedAiSummary]);
 
@@ -570,7 +570,8 @@ const AdminEventFeedback: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <p className="text-sm font-black">Overall Feeling</p>
-                      <Badge className={cn("px-4 py-1 rounded-xl font-black", SENTIMENT_COLORS[selectedResponse.overall_feeling] ? `bg-[${SENTIMENT_COLORS[selectedResponse.overall_feeling]}]` : "bg-primary")}>
+                      <Badge className={cn("px-4 py-1 rounded-xl font-black", !SENTIMENT_COLORS[selectedResponse.overall_feeling] && "bg-primary")}
+                        style={SENTIMENT_COLORS[selectedResponse.overall_feeling] ? { backgroundColor: SENTIMENT_COLORS[selectedResponse.overall_feeling] } : undefined}>
                         {selectedResponse.overall_feeling}
                       </Badge>
                       {selectedResponse.overall_feeling_other && (
