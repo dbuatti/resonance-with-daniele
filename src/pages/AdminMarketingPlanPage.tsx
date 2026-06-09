@@ -204,7 +204,7 @@ const AdminMarketingPlanPage: React.FC = () => {
 
   const authenticCaption = `Resonance is a monthly pop-up choir in Armadale where everyone is welcome. No auditions, no experience needed.\n\nWe're back on ${eventDateFormatted} for our next session!\n\nWe'll be diving into "${focusSong}" — I've just finished the arrangement and I can't wait to hear these harmonies come to life with all of you.\n\n📍 ${selectedEvent?.location || "Armadale"}\n⏰ ${eventDateFormatted}, 10am\n\nGrab your spot here: ${eventLink}\n\nCome sing with us. 🌿`;
 
-  if (loadingEvents) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
+  if (loadingEvents) return <div className="py-20 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="w-full px-4 py-8 md:py-12 space-y-10">

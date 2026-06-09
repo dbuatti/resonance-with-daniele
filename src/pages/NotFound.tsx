@@ -17,18 +17,21 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
-      <Card className="max-w-md w-full p-6 text-center shadow-lg rounded-xl border-2 border-muted-foreground/20">
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <Card className="max-w-md w-full p-8 text-center shadow-xl border-none rounded-[2.5rem] animate-fade-in-up">
         <CardHeader className="flex flex-col items-center">
-          <Frown className="h-16 w-16 text-primary mb-4" />
-          <CardTitle className="text-4xl font-bold mb-2 font-lora">404 - Page Not Found</CardTitle>
-          <CardDescription className="text-lg text-muted-foreground">
-            Oops! The page you're looking for doesn't exist.
+          <Frown className="h-20 w-20 text-primary mb-4" />
+          <CardTitle className="text-5xl font-black font-lora tracking-tighter mb-2">404</CardTitle>
+          <CardDescription className="text-xl text-muted-foreground font-medium">
+            Page not found.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button asChild className="mt-6">
-            <Link to="/">Return to Home</Link>
+        <CardContent className="flex flex-col items-center gap-3">
+          <Button size="lg" className="rounded-xl font-black shadow-lg w-full" asChild>
+            <Link to="/">Return Home</Link>
+          </Button>
+          <Button variant="outline" className="rounded-xl font-bold w-full" onClick={() => window.history.back()}>
+            Go Back
           </Button>
         </CardContent>
       </Card>

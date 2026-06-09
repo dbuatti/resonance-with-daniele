@@ -253,7 +253,7 @@ const AdminEventCommandCenter = () => {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="rounded-2xl border-none shadow-sm bg-primary/5">
+            <Card className="rounded-[2.5rem] border-none shadow-sm bg-primary/5">
               <CardHeader className="pb-2">
                 <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary">Tickets Sold</CardDescription>
                 <CardTitle className="text-4xl font-black font-lora flex items-center gap-3">
@@ -265,7 +265,7 @@ const AdminEventCommandCenter = () => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-green-500/5">
+            <Card className="rounded-[2.5rem] border-none shadow-sm bg-green-500/5">
               <CardHeader className="pb-2">
                 <CardDescription className="text-[10px] font-black uppercase tracking-widest text-green-600">Total Revenue</CardDescription>
                 <CardTitle className="text-4xl font-black font-lora flex items-center gap-3 text-green-600">
@@ -277,7 +277,7 @@ const AdminEventCommandCenter = () => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-muted/30">
+            <Card className="rounded-[2.5rem] border-none shadow-sm bg-muted/30">
               <CardHeader className="pb-2">
                 <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Main Song</CardDescription>
                 <CardTitle className="text-2xl font-black font-lora truncate">
@@ -291,7 +291,7 @@ const AdminEventCommandCenter = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="rounded-2xl border-border/50 shadow-sm">
+            <Card className="rounded-[2.5rem] border-border/50 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-xl font-black font-lora flex items-center gap-2">
                   <Info className="h-5 w-5 text-primary" /> Event Description
@@ -343,7 +343,7 @@ const AdminEventCommandCenter = () => {
               <Info className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-black font-lora">Basic Event Info</h2>
             </div>
-            <Card className="rounded-2xl border-border/50 shadow-sm overflow-hidden">
+            <Card className="rounded-[2.5rem] border-border/50 shadow-sm overflow-hidden">
               <CardContent className="p-0">
                 <div className="divide-y divide-border/50">
                   {[
@@ -386,7 +386,7 @@ const AdminEventCommandCenter = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {copyTemplates.map((group) => (
-                <Card key={group.platform} className="rounded-2xl border-border/50 shadow-sm overflow-hidden flex flex-col">
+                <Card key={group.platform} className="rounded-[2.5rem] border-border/50 shadow-sm overflow-hidden flex flex-col">
                   <CardHeader className="bg-muted/30 py-4 flex flex-row items-center gap-3">
                     <div className="p-2 bg-background rounded-lg shadow-sm text-primary">
                       {group.icon}
@@ -426,7 +426,7 @@ const AdminEventCommandCenter = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {postIdeas.map((idea, i) => (
-                <Card key={i} className="rounded-2xl border-none shadow-sm bg-primary/5 p-6 space-y-4">
+                <Card key={i} className="rounded-[2.5rem] border-none shadow-sm bg-primary/5 p-6 space-y-4">
                   <div className="bg-background p-3 rounded-xl w-fit shadow-sm">
                     {idea.icon}
                   </div>

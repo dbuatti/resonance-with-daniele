@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 interface DesktopNavProps {
-  user: any;
+  user: { is_admin: boolean } | null;
   unreadAnnouncementCount?: number;
 }
 
