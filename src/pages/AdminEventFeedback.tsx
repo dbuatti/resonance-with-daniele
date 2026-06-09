@@ -45,8 +45,8 @@ const AdminEventFeedback: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
-  const [aiInsights, setAiInsights] = useState<any>(null);
-  const [selectedResponse, setSelectedResponse] = useState<any>(null);
+  const [aiInsights, setAiInsights] = useState<null>(null);
+  const [selectedResponse, setSelectedResponse] = useState<null>(null);
 
   // Fetch ALL feedback once to handle filtering and month derivation locally
   const { data: allFeedback, isLoading: loadingFeedback } = useQuery({

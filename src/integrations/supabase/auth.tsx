@@ -72,7 +72,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       } else {
         showSuccess("Logged out successfully!");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       showError("An unexpected error occurred during logout.");
     } finally {
       setSession(null);

@@ -80,7 +80,7 @@ const App = () => (
               <Route path="/admin/events/:id" element={<Layout><AdminEventCommandCenter /></Layout>} />
               <Route path="/admin/repertoire" element={<Layout><AdminRepertoireZone /></Layout>} />
               <Route path="/admin/june-poll" element={<Layout><AdminJunePollResults /></Layout>} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
           </SessionContextProvider>
         </BrowserRouter>

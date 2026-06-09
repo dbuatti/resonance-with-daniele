@@ -177,8 +177,8 @@ const WelcomeHub: React.FC = () => {
 
       showSuccess("Profile photo updated!");
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
-    } catch (error: any) {
-      showError("Failed to upload photo: " + error.message);
+    } catch (error: unknown) {
+      showError("Failed to upload photo: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsUploading(false);
     }

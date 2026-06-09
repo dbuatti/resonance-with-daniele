@@ -103,9 +103,9 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
         queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId] }); // Current view
         queryClient.invalidateQueries({ queryKey: ['resources', null] }); // Root folder
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Unexpected error during resource move:", error);
-      showError("An unexpected error occurred: " + error.message);
+      showError("An unexpected error occurred: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsMoving(false);
     }

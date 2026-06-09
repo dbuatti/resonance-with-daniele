@@ -138,8 +138,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
       queryClient.invalidateQueries({ queryKey: ["upcomingEvent"] });
       queryClient.invalidateQueries({ queryKey: ["sessionHubData"] });
       onClose();
-    } catch (error: any) {
-      showError(`Failed to save event: ${error.message}`);
+    } catch (error: unknown) {
+      showError(error instanceof Error ? `Failed to save event: ${error.message}` : "Failed to save event.");
     }
   };
 

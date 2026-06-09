@@ -48,12 +48,3 @@ export const splitLine = (line: string, delimiter: string): string[] => {
   return result;
 };
 
-export const cleanField = (values: string[], idx: number): string =>
-  values[idx]?.replace(/^"|"$/g, "").trim() || "";
-
-export const findHeaderIndex = (headers: string[], possibleNames: string[]): number =>
-  headers.findIndex((h) =>
-    possibleNames.some(
-      (name) => h === name.toLowerCase() || h.includes(name.toLowerCase())
-    )
-  );

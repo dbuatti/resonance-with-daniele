@@ -209,8 +209,8 @@ const Resources: React.FC = () => {
       showSuccess(`File "${file.name}" uploaded successfully!`);
       queryClient.invalidateQueries({ queryKey: ['resources'] });
       queryClient.invalidateQueries({ queryKey: ['allResourcesForLibrary'] });
-    } catch (error: any) {
-      showError(error.message || "Upload failed.");
+    } catch (error: unknown) {
+      showError(error instanceof Error ? error.message : "Upload failed.");
     } finally {
       setIsUploadingFileToFolder(null);
     }
@@ -383,7 +383,7 @@ const Resources: React.FC = () => {
             </div>
             {loadingAllResources ? (
               <div className="space-y-4">
-                {[...Array(5)].map((_, i) => <Skeleton className="h-16 w-full rounded-xl" />)}
+                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
               </div>
             ) : (
               <PdfListView 

@@ -44,7 +44,7 @@ interface EventWithResources {
   humanitix_link: string | null;
   lesson_notes: string | null;
   main_song: string | null;
-  resources: any[];
+  resources: unknown[];
 }
 
 const getYouTubeEmbedUrl = (url: string | null): string | null => {
@@ -144,7 +144,7 @@ const SessionHub: React.FC = () => {
     const hasNotes = !!event.lesson_notes?.trim();
     const isPast = isAfter(startOfToday(), parseISO(event.date));
 
-    const groupedResources: Record<string, any[]> = fileResources.reduce((acc: Record<string, any[]>, res) => {
+    const groupedResources: Record<string, unknown[]> = fileResources.reduce((acc: Record<string, unknown[]>, res) => {
       const part = res.voice_part || "General / Full Choir";
       if (!acc[part]) acc[part] = [];
       acc[part].push(res);

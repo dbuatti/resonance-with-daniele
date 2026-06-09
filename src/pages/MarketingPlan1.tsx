@@ -43,7 +43,6 @@ import {
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/badge";
-import { useLocation } from "react-router-dom";
 import { useSession } from "@/integrations/supabase/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"; // Added missing imports
@@ -80,7 +79,6 @@ interface MarketingTask {
 }
 
 const MarketingPlan1: React.FC = () => {
-  const location = useLocation();
   const { user, profile, loading: loadingSession } = useSession();
   const queryClient = useQueryClient();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -149,7 +147,7 @@ const MarketingPlan1: React.FC = () => {
         .from("events")
         .select("*")
         .eq("id", selectedEventId)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -256,9 +254,9 @@ const MarketingPlan1: React.FC = () => {
       // Placeholder for AI generation logic
       await new Promise(resolve => setTimeout(resolve, 2000));
       showSuccess("Marketing plan generated!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Generation error:", error);
-      showError("Failed to generate plan: " + error.message);
+      showError("Failed to generate plan: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsGenerating(false);
     }

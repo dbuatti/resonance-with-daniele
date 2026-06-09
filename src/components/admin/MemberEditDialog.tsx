@@ -116,8 +116,8 @@ const MemberEditDialog: React.FC<MemberEditDialogProps> = ({ isOpen, onOpenChang
       queryClient.invalidateQueries({ queryKey: ['adminMembers'] });
       queryClient.invalidateQueries({ queryKey: ['profile', member.id] });
       onOpenChange(false);
-    } catch (error: any) {
-      showError(`Failed to update profile: ${error.message}`);
+    } catch (error: unknown) {
+      showError(`Failed to update profile: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsSaving(false);
     }

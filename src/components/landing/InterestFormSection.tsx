@@ -62,9 +62,9 @@ const InterestFormSection: React.FC = () => {
         form.reset();
         setIsSubmitted(true);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Unexpected error during interest form submission:", error);
-      showError("An unexpected error occurred: " + error.message);
+      showError("An unexpected error occurred: " + (error instanceof Error ? error.message : "Unknown error"));
     }
   };
 

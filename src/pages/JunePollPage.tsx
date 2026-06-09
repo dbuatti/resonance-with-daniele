@@ -102,7 +102,7 @@ const JunePollPage: React.FC = () => {
       setHasVoted(true);
       queryClient.invalidateQueries({ queryKey: ["junePollResponses"] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       showError("Failed to submit: " + err.message);
     }
   });

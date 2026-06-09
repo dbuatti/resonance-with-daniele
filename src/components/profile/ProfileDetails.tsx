@@ -125,8 +125,8 @@ const ProfileDetails: React.FC = () => {
       showSuccess("Profile updated successfully!");
       queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       queryClient.invalidateQueries({ queryKey: ['adminMembers'] });
-    } catch (error: any) {
-      showError(`An unexpected error occurred: ${error.message}`);
+    } catch (error: unknown) {
+      showError(`An unexpected error occurred: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsSavingProfile(false);
     }

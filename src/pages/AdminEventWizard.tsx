@@ -131,7 +131,7 @@ const AdminEventWizard = () => {
           humanitix_link: formData.humanitixLink || null,
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (eventError) throw eventError;
 

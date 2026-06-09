@@ -94,7 +94,7 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
       setIsAdding(false);
       showSuccess("Facebook group added!");
     },
-    onError: (error: any) => showError("Failed to add group: " + error.message)
+    onError: (error: Error) => showError("Failed to add group: " + error.message)
   });
 
   const updateMutation = useMutation({
@@ -111,7 +111,7 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
       setEditingId(null);
       showSuccess("Group updated!");
     },
-    onError: (error: any) => showError("Failed to update group: " + error.message)
+    onError: (error: Error) => showError("Failed to update group: " + error.message)
   });
 
   const deleteMutation = useMutation({
@@ -124,7 +124,7 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
       queryClient.invalidateQueries({ queryKey: ["marketingTasks"] });
       showSuccess("Group removed.");
     },
-    onError: (error: any) => showError("Failed to remove group: " + error.message)
+    onError: (error: Error) => showError("Failed to remove group: " + error.message)
   });
 
   const handleCopyPost = () => {

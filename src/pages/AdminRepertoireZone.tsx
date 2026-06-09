@@ -104,7 +104,7 @@ const AdminRepertoireZone: React.FC = () => {
       setIsAddingLink(false);
       showSuccess("Research link saved!");
     },
-    onError: (err: any) => showError(err.message)
+    onError: (err: Error) => showError(err.message)
   });
 
   const deleteLinkMutation = useMutation({

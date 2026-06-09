@@ -116,7 +116,7 @@ const AdminIssueReportsPage: React.FC = () => {
                     <TableCell className="text-sm font-medium text-muted-foreground">
                       {report.page_url ? (
                         <a href={report.page_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                          {new URL(report.page_url).pathname}
+                          {(() => { try { return new URL(report.page_url).pathname; } catch { return report.page_url; } })()}
                         </a>
                       ) : "—"}
                     </TableCell>

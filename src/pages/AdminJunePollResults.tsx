@@ -154,7 +154,7 @@ const AdminJunePollResults: React.FC = () => {
       setShowEditor(false);
       queryClient.invalidateQueries({ queryKey: ["pollConfig"] });
     },
-    onError: (err: any) => showError("Failed to save: " + err.message)
+    onError: (err: Error) => showError("Failed to save: " + err.message)
   });
 
   // Submit manual vote mutation
@@ -177,7 +177,7 @@ const AdminJunePollResults: React.FC = () => {
       setManualSelectedOptions([]);
       queryClient.invalidateQueries({ queryKey: ["junePollResponses"] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       showError("Failed to log vote: " + err.message);
     }
   });

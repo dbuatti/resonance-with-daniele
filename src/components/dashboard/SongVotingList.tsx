@@ -179,7 +179,7 @@ const SongVotingList: React.FC = () => {
         setEditingSong(null);
         queryClient.invalidateQueries({ queryKey: ['songSuggestions'] });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       showError("An unexpected error occurred.");
     }
   };

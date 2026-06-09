@@ -164,8 +164,8 @@ const ResourceFolderDialog: React.FC<ResourceFolderDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['resources'] });
       queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] });
       onClose();
-    } catch (error: any) {
-      showError("Failed to save folder: " + error.message);
+    } catch (error: unknown) {
+      showError("Failed to save folder: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsSaving(false);
     }

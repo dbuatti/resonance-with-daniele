@@ -17,7 +17,6 @@ import FeedbackEmailModal from "@/components/admin/FeedbackEmailModal";
 import EventHorizontalCard from "@/components/events/EventHorizontalCard";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import BackButton from "@/components/ui/BackButton";
 
 interface Event {
   id: string;

@@ -133,8 +133,8 @@ const EventFeedback: React.FC = () => {
       if (error) throw error;
       showSuccess("Thank you for your feedback!");
       setIsSubmitted(true);
-    } catch (error: any) {
-      showError("Failed to submit feedback: " + error.message);
+    } catch (error: unknown) {
+      showError("Failed to submit feedback: " + (error instanceof Error ? error.message : "Unknown error"));
     }
   };
 

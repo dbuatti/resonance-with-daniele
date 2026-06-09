@@ -64,9 +64,9 @@ const ReportIssueButton: React.FC = () => {
         });
         setIsDialogOpen(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Unexpected error during issue report submission:", error);
-      showError("An unexpected error occurred: " + error.message);
+      showError("An unexpected error occurred: " + (error instanceof Error ? error.message : "Unknown error"));
     }
   };
 

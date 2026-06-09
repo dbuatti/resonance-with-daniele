@@ -95,8 +95,8 @@ const AnnouncementDialog: React.FC<AnnouncementDialogProps> = ({ isOpen, onClose
       queryClient.invalidateQueries({ queryKey: ["adminAnnouncements"] });
       queryClient.invalidateQueries({ queryKey: ["latestAnnouncements"] });
       onClose();
-    } catch (error: any) {
-      showError(`Failed to save announcement: ${error.message}`);
+    } catch (error: unknown) {
+      showError(`Failed to save announcement: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 
