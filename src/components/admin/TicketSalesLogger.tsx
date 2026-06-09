@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Info, UserCheck } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import { format, parse, isValid } from "date-fns";
+import { format } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { parseCurrency, parseHumanitixDate, splitLine } from "@/utils/humanitix-csv";
 
 interface TicketSalesLoggerProps {
   eventId: string;
@@ -47,45 +48,12 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   });
 
   const profileMap = useMemo(() => {
-    const map: Record<string, any> = {};
+    const map: Record<string, { avatar_url: string | null; first_name: string | null; last_name: string | null }> = {};
     profiles?.forEach(p => {
       if (p.email) map[p.email.toLowerCase().trim()] = p;
     });
     return map;
   }, [profiles]);
-
-  const parseCurrency = (val: string) => {
-    if (!val) return 0;
-    return parseFloat(val.replace(/[$,]/g, ""));
-  };
-
-  const parseHumanitixDate = (dateStr: string) => {
-    if (!dateStr) return null;
-    const cleanStr = dateStr.trim().replace(/^"|"$/g, "").toLowerCase();
-    const formats = ["dd/MM/yyyy h:mm a", "d/MM/yyyy h:mm a", "dd/MM/yyyy hh:mm a", "d/M/yyyy hh:mm a", "dd/MM/yyyy HH:mm", "d/M/yyyy HH:mm", "yyyy-MM-dd HH:mm:ss", "MM/dd/yyyy h:mm a", "dd/MM/yyyy", "d/M/yyyy"];
-    for (const fmt of formats) {
-      try {
-        const parsed = parse(cleanStr, fmt, new Date());
-        if (isValid(parsed)) return parsed.toISOString();
-      } catch (e) { continue; }
-    }
-    const fallback = new Date(cleanStr);
-    return isValid(fallback) ? fallback.toISOString() : null;
-  };
-
-  const splitLine = (line: string, delimiter: string) => {
-    const result = [];
-    let current = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') inQuotes = !inQuotes;
-      else if (char === delimiter && !inQuotes) { result.push(current.trim()); current = ""; }
-      else current += char;
-    }
-    result.push(current.trim());
-    return result;
-  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -116,7 +84,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
         if (error) throw error;
         showSuccess(`Successfully imported ${ordersToUpsert.length} orders!`);
         queryClient.invalidateQueries({ queryKey: ["eventOrders", eventId] });
-      } catch (err: any) { showError(err.message || "Failed to import file."); } finally { setIsImporting(false); }
+      } catch (err: unknown) { showError(err instanceof Error ? err.message : "Failed to import file."); } finally { setIsImporting(false); }
     };
     reader.readAsText(file);
   }, [eventId, queryClient]);

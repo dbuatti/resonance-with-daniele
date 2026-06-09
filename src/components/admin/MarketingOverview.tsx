@@ -76,6 +76,7 @@ const MarketingOverview: React.FC<MarketingOverviewProps> = ({ eventId }) => {
     let minDate = new Date();
     
     orders.forEach(order => {
+      if (!order.order_date) return;
       const date = parseISO(order.order_date);
       const dateKey = format(date, "yyyy-MM-dd");
       salesByDay[dateKey] = (salesByDay[dateKey] || 0) + (order.valid_tickets || 0);

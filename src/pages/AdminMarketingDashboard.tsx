@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target, Lightbulb, Globe, Plus, Sparkles } from "lucide-react";
+import { TrendingUp, DollarSign, Ticket, Zap, Calendar, Target, Lightbulb, Globe, Plus, Sparkles, Loader2 } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -41,11 +41,21 @@ const AdminMarketingDashboard: React.FC = () => {
     },
   });
 
-  if (loading || loadingEvents) return <div className="p-8 text-center">Loading dashboard...</div>;
-  if (!user?.is_admin) {
-    navigate("/");
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && (!user || !user.is_admin)) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading || loadingEvents) return (
+    <div className="py-20 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+        <p className="text-base font-medium text-muted-foreground">Loading dashboard...</p>
+      </div>
+    </div>
+  );
+  if (!user?.is_admin) return null;
 
   const isGlobal = selectedEventId === "all";
 

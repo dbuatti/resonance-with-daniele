@@ -45,7 +45,6 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
 
   // Fetch all folders for the dropdown
   const fetchAllFolders = async (): Promise<ResourceFolder[]> => {
-    console.log("[MoveResourceDialog] Fetching all folders.");
     const { data, error } = await supabase
       .from("resource_folders")
       .select("*") // Select all fields to include is_nominated_for_dashboard
@@ -86,7 +85,6 @@ const MoveResourceDialog: React.FC<MoveResourceDialogProps> = ({
 
     setIsMoving(true);
     try {
-      console.log(`[MoveResourceDialog] Moving resource ${resourceToMove.id} to folder ${selectedFolder}.`);
       const { error } = await supabase
         .from("resources")
         .update({ folder_id: selectedFolder })

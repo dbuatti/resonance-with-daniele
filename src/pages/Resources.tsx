@@ -185,7 +185,7 @@ const Resources: React.FC = () => {
       showSuccess(isNowNominated ? `"${folder.name}" is now featured on the dashboard!` : `"${folder.name}" removed from dashboard.`);
       queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] });
       queryClient.invalidateQueries({ queryKey: ['nominatedFolder'] });
-    } catch (err: any) {
+    } catch (err: unknown) {
       showError("Failed to update nomination status.");
     }
   };
@@ -298,8 +298,8 @@ const Resources: React.FC = () => {
       if (error) throw error;
       showSuccess("Folder deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ['allResourceFolders'] });
-    } catch (err: any) {
-      showError("Failed to delete folder: " + err.message);
+    } catch (err: unknown) {
+      showError("Failed to delete folder: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setIsDeletingFolder(false);
       setFolderToDelete(null);

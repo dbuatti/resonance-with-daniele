@@ -69,10 +69,7 @@ const SurveyForm: React.FC = () => {
 
   // Effect to set form values when profile data from context becomes available
   useEffect(() => {
-    console.log("[SurveyForm] useEffect: loadingSession:", loadingSession, "User:", user?.id, "Profile from context:", profile ? 'present' : 'null');
-
     if (!loadingSession && user && profile) {
-      console.log("[SurveyForm] Setting form values from context profile:", profile);
       form.reset({
         how_heard: profile.how_heard || "",
         motivation: profile.motivation || [],

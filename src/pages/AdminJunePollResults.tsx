@@ -15,9 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save, Link as LinkIcon, UserPlus } from "lucide-react";
+import { Loader2, Calendar, Users, Copy, Trash2, ShieldCheck, Mail, Check, Settings, Plus, X, Save, Link as LinkIcon, UserPlus, AlertTriangle } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import BackButton from "@/components/ui/BackButton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +62,8 @@ const AdminJunePollResults: React.FC = () => {
   const [manualVoterName, setManualVoterName] = useState("");
   const [manualSelectedOptions, setManualSelectedOptions] = useState<string[]>([]);
 
+  const [deletingResponseId, setDeletingResponseId] = useState<string | null>(null);
+
   React.useEffect(() => {
     if (!loading && (!user || !user.is_admin)) {
       navigate("/");
@@ -83,8 +86,8 @@ const AdminJunePollResults: React.FC = () => {
       if (data?.content) {
         try {
           return JSON.parse(data.content);
-        } catch (e) {
-          console.error("Error parsing JSON:", e);
+        } catch {
+          showError("Failed to parse poll configuration.");
         }
       }
       return DEFAULT_POLL_CONFIG;
@@ -191,7 +194,7 @@ const AdminJunePollResults: React.FC = () => {
       showSuccess("Response deleted.");
       queryClient.invalidateQueries({ queryKey: ["junePollResponses"] });
     },
-    onError: (err: any) => showError(err.message)
+    onError: (err: Error) => showError(err.message)
   });
 
   const handleAddOption = () => {
@@ -501,14 +504,30 @@ Daniele Buatti`;
                         {format(parseISO(r.created_at), "MMM d, h:mm a")}
                       </TableCell>
                       <TableCell className="text-right pr-8">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                          onClick={() => deleteResponse.mutate(r.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              disabled={deletingResponseId === r.id}
+                            >
+                              {deletingResponseId === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-[2.5rem]">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Response?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently remove {r.voter_name}'s vote.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteResponse.mutate(r.id)} className="rounded-xl font-bold bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))

@@ -128,7 +128,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
   });
 
   const profileMap = useMemo(() => {
-    const map: Record<string, any> = {};
+    const map: Record<string, { avatar_url: string | null; first_name: string | null; last_name: string | null }> = {};
     profiles?.forEach(p => { if (p.email) map[p.email.toLowerCase().trim()] = p; });
     return map;
   }, [profiles]);

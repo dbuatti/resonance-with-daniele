@@ -211,7 +211,7 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
 
       if (error) return { error };
       return { error: null };
-    } catch (e: any) {
+    } catch {
       return { error: new Error("Failed to parse file URL for deletion.") };
     }
   };

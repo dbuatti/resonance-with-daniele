@@ -52,7 +52,7 @@ const AdminEventCommandCenter = () => {
         .from("events")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -105,8 +105,8 @@ const AdminEventCommandCenter = () => {
     );
   }
 
-  const eventDate = parseISO(event.date);
-  const eventDateFormatted = format(eventDate, "EEEE, MMMM do");
+  const eventDate = event.date ? parseISO(event.date) : null;
+  const eventDateFormatted = eventDate ? format(eventDate, "EEEE, MMMM do") : "Date TBD";
   const eventTime = `${event.start_time || "10:00am"} - ${event.end_time || "1:00pm"}`;
   const eventLocation = event.location || "Armadale Baptist Church";
   const mainSong = event.main_song || "a beautiful new arrangement";

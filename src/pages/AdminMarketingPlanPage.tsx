@@ -42,6 +42,7 @@ import OutreachTracker from "@/components/admin/OutreachTracker";
 import FacebookGroupTracker from "@/components/admin/FacebookGroupTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/integrations/supabase/auth";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -53,8 +54,15 @@ import FounderStrategyCard from "@/components/admin/FounderStrategyCard";
 import { cn } from "@/lib/utils";
 
 const AdminMarketingPlanPage: React.FC = () => {
-  const { user } = useSession();
+  const { user, loading: sessionLoading } = useSession();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!sessionLoading && (!user || !user.is_admin)) {
+      navigate("/");
+    }
+  }, [user, sessionLoading, navigate]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState("");
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -165,7 +173,7 @@ const AdminMarketingPlanPage: React.FC = () => {
     queryKey: ["adminBrainDump", selectedEventId],
     queryFn: async () => {
       if (!selectedEventId) return "";
-      const { data } = await supabase.from("admin_notes").select("content").eq("note_key", `brain_dump_${selectedEventId}`).single();
+      const { data } = await supabase.from("admin_notes").select("content").eq("note_key", `brain_dump_${selectedEventId}`).maybeSingle();
       return data?.content || "";
     },
     enabled: !!selectedEventId,

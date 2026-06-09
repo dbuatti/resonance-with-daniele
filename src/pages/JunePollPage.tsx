@@ -66,7 +66,7 @@ const JunePollPage: React.FC = () => {
       if (data?.content) {
         try {
           return JSON.parse(data.content);
-        } catch (e) {
+        } catch (e: unknown) {
           console.error("Error parsing poll config JSON:", e);
         }
       }

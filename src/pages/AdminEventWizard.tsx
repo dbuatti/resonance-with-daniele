@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Trash2, ChevronRight, ChevronLeft, CheckCircle2, Sparkles, DollarSign, Tag, Clock } from "lucide-react";
+import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Trash2, Loader2, ChevronRight, ChevronLeft, CheckCircle2, Sparkles, DollarSign, Tag, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -34,10 +36,26 @@ const PHASE_1_TASKS = [
 ];
 
 const AdminEventWizard = () => {
-  const { user } = useSession();
+  const { user, loading } = useSession();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+
+  useEffect(() => {
+    if (!loading && (!user || !user.is_admin)) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) return (
+    <div className="py-20 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+        <p className="text-base font-medium text-muted-foreground">Verifying admin credentials...</p>
+      </div>
+    </div>
+  );
+  if (!user?.is_admin) return null;
 
   // Form State
   const [formData, setFormData] = useState({
@@ -139,8 +157,8 @@ const AdminEventWizard = () => {
 
       showSuccess("Event created successfully!");
       navigate("/admin/marketing");
-    } catch (err: any) {
-      showError(err.message || "Failed to create event");
+    } catch (err: unknown) {
+      showError(err instanceof Error ? err.message : "Failed to create event");
     } finally {
       setIsCreating(false);
     }
@@ -421,6 +439,16 @@ const AdminEventWizard = () => {
           )}
         </div>
       </div>
+
+      {isCreating && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 p-8 bg-card rounded-[2.5rem] shadow-2xl border-2 border-primary/10">
+            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+            <p className="text-lg font-black font-lora">Creating Event...</p>
+            <p className="text-sm text-muted-foreground font-medium">Setting up tasks, expenses, and templates.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

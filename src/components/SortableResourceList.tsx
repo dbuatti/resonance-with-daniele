@@ -162,7 +162,7 @@ const SortableResourceList: React.FC<SortableResourceListProps> = ({
           // Invalidate query to ensure cache reflects new order, especially if other users are viewing
           queryClient.invalidateQueries({ queryKey: ['resources', currentFolderId] });
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error("Unexpected error during order update:", e);
         showError("An unexpected error occurred while saving the order.");
         setResources(initialResources);

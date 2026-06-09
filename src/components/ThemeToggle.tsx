@@ -15,12 +15,7 @@ import {
 export function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme();
 
-  React.useEffect(() => {
-    console.log("[ThemeToggle] Rendered. Current theme:", theme, "Resolved theme:", resolvedTheme);
-  }, [theme, resolvedTheme]);
-
   const handleSetTheme = (newTheme: string) => {
-    console.log("[ThemeToggle] Setting theme to:", newTheme);
     setTheme(newTheme);
   };
 

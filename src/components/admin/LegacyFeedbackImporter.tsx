@@ -47,7 +47,7 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
       try {
         const parsed = parse(cleanStr, fmt, new Date());
         if (isValid(parsed)) return parsed;
-      } catch (e) { continue; }
+      } catch { continue; }
     }
     
     const standardDate = new Date(cleanStr);
@@ -183,9 +183,9 @@ const LegacyFeedbackImporter: React.FC<LegacyFeedbackImporterProps> = ({ eventId
         queryClient.invalidateQueries({ queryKey: ["allEventFeedbackData"] });
         queryClient.invalidateQueries({ queryKey: ["allEventFeedbackForMonths"] });
         setIsOpen(false);
-      } catch (err: any) { 
+      } catch (err: unknown) { 
         console.error("Import error:", err);
-        showError(err.message || "Failed to import CSV."); 
+        showError(err instanceof Error ? err.message : "Failed to import CSV."); 
       } finally { 
         setIsImporting(false); 
       }

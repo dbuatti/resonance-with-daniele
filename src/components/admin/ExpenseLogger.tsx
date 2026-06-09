@@ -122,22 +122,36 @@ const ExpenseLogger: React.FC<ExpenseLoggerProps> = ({ eventId }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {expenses?.map((e) => {
-                const date = new Date(e.created_at);
-                return (
-                  <TableRow key={e.id}>
-                    <TableCell className="text-xs">
-                      {isValid(date) ? format(date, "MMM d") : "N/A"}
-                    </TableCell>
-                    <TableCell className="font-medium">{e.description}</TableCell>
-                    <TableCell><span className="text-xs bg-muted px-2 py-1 rounded-full">{e.category}</span></TableCell>
-                    <TableCell className="text-right font-bold">${Number(e.amount).toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(e.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                  </TableCell>
+                </TableRow>
+              ) : expenses?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground font-medium">
+                    No expenses logged yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                expenses?.map((e) => {
+                  const date = new Date(e.created_at);
+                  return (
+                    <TableRow key={e.id}>
+                      <TableCell className="text-xs">
+                        {isValid(date) ? format(date, "MMM d") : "N/A"}
+                      </TableCell>
+                      <TableCell className="font-medium">{e.description}</TableCell>
+                      <TableCell><span className="text-xs bg-muted px-2 py-1 rounded-full">{e.category}</span></TableCell>
+                      <TableCell className="text-right font-bold">${Number(e.amount).toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(e.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>

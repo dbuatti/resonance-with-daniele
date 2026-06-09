@@ -83,7 +83,7 @@ const Events: React.FC = () => {
       if (error) throw error;
       showSuccess("Event deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ['events'] });
-    } catch (error) {
+    } catch {
       showError("Failed to delete event.");
     }
   };

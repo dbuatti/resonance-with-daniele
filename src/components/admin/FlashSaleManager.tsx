@@ -100,41 +100,56 @@ const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
       </Card>
 
       <div className="lg:col-span-2 space-y-6">
-        {promos?.map((promo) => {
-          const now = new Date();
-          const start = new Date(promo.start_date);
-          const end = new Date(promo.end_date);
-          const isActive = isAfter(now, start) && isBefore(now, end);
-          const isUpcoming = isBefore(now, start);
-          const isExpired = isAfter(now, end);
+        {isLoading ? (
+          <Card className="shadow-lg border-none">
+            <CardContent className="p-12 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </CardContent>
+          </Card>
+        ) : promos?.length === 0 ? (
+          <Card className="shadow-lg border-none border-dashed border-2 bg-muted/10">
+            <CardContent className="p-12 text-center">
+              <Zap className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
+              <p className="text-lg font-bold text-muted-foreground font-lora">No promotions yet.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          promos?.map((promo) => {
+            const now = new Date();
+            const start = new Date(promo.start_date);
+            const end = new Date(promo.end_date);
+            const isActive = isAfter(now, start) && isBefore(now, end);
+            const isUpcoming = isBefore(now, start);
+            const isExpired = isAfter(now, end);
 
-          return (
-            <Card key={promo.id} className={cn("shadow-lg border-none overflow-hidden", isActive && "ring-2 ring-primary")}>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-2xl font-bold font-mono">{promo.code}</h3>
-                      <Badge variant={isActive ? "default" : isUpcoming ? "secondary" : "outline"}>
-                        {isActive ? "Active Now" : isUpcoming ? "Upcoming" : "Expired"}
-                      </Badge>
+            return (
+              <Card key={promo.id} className={cn("shadow-lg border-none overflow-hidden", isActive && "ring-2 ring-primary")}>
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-2xl font-bold font-mono">{promo.code}</h3>
+                        <Badge variant={isActive ? "default" : isUpcoming ? "secondary" : "outline"}>
+                          {isActive ? "Active Now" : isUpcoming ? "Upcoming" : "Expired"}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground">{promo.description}</p>
+                      <div className="flex items-center gap-4 text-sm font-medium">
+                        <div className="flex items-center gap-1"><Clock className="h-4 w-4" /> {format(start, "MMM d, h:mm a")}</div>
+                        <div className="text-muted-foreground">to</div>
+                        <div className="flex items-center gap-1"><Clock className="h-4 w-4" /> {format(end, "MMM d, h:mm a")}</div>
+                      </div>
                     </div>
-                    <p className="text-muted-foreground">{promo.description}</p>
-                    <div className="flex items-center gap-4 text-sm font-medium">
-                      <div className="flex items-center gap-1"><Clock className="h-4 w-4" /> {format(start, "MMM d, h:mm a")}</div>
-                      <div className="text-muted-foreground">to</div>
-                      <div className="flex items-center gap-1"><Clock className="h-4 w-4" /> {format(end, "MMM d, h:mm a")}</div>
+                    <div className="text-right">
+                      <div className="text-4xl font-bold text-primary">{promo.discount_percent}%</div>
+                      <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Discount</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-bold text-primary">{promo.discount_percent}%</div>
-                    <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Discount</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
     </div>
   );

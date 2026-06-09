@@ -18,7 +18,6 @@ const UnreadIssueReportsNotice: React.FC = () => {
   const fetchUnreadCount = async (): Promise<number> => {
     if (!user?.is_admin) return 0; // Only fetch if user is admin
 
-    console.log("[UnreadIssueReportsNotice] Fetching unread issue reports count.");
     const { count, error } = await supabase
       .from("issue_reports")
       .select("id", { count: "exact", head: true })
@@ -29,7 +28,6 @@ const UnreadIssueReportsNotice: React.FC = () => {
       // Don't throw, just return 0 or handle gracefully
       return 0;
     }
-    console.log("[UnreadIssueReportsNotice] Unread reports count:", count);
     return count || 0;
   };
 

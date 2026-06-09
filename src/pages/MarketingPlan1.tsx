@@ -95,7 +95,6 @@ const MarketingPlan1: React.FC = () => {
 
   // Placeholder for action click handler
   const handleActionClick = (taskKey: string) => {
-    console.log("Action clicked for task:", taskKey);
     showSuccess(`Action triggered for ${taskKey}`);
   };
 

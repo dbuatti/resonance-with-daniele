@@ -38,7 +38,7 @@ const CurrentEventPage: React.FC = () => {
       // Get the first part of the path which is the slug
       const parts = url.pathname.split('/').filter(Boolean);
       return parts[0];
-    } catch (e) {
+    } catch {
       return null;
     }
   }, [event]);
@@ -59,7 +59,6 @@ const CurrentEventPage: React.FC = () => {
       script.src = "https://events.humanitix.com/scripts/widgets/inline.js";
       script.type = "module";
       document.body.appendChild(script);
-      console.log("[CurrentEventPage] Injected Humanitix inline script.");
     }
   }, []);
 
