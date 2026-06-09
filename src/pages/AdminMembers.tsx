@@ -114,6 +114,16 @@ const AdminMembers: React.FC = () => {
     setIsUpdatingAdminStatus(null);
   };
 
+  const handleDeleteMember = async (profileId: string) => {
+    const { error } = await supabase.from("profiles").delete().eq("id", profileId);
+    if (error) {
+      showError(error.message);
+    } else {
+      showSuccess("Member removed successfully.");
+      queryClient.invalidateQueries({ queryKey: ['adminMembers'] });
+    }
+  };
+
   const handleSyncToKit = async () => {
     setIsSyncingToKit(true);
     try {
@@ -244,9 +254,31 @@ const AdminMembers: React.FC = () => {
                         </Select>
                       </TableCell>
                       <TableCell className="text-right pr-10">
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all" onClick={() => { setEditingMember(profile); setIsEditProfileDialogOpen(true); }}>
-                          <EditIcon className="h-5 w-5" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all" onClick={() => { setEditingMember(profile); setIsEditProfileDialogOpen(true); }}>
+                            <EditIcon className="h-5 w-5" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                                <Trash2 className="h-5 w-5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-[2.5rem]">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remove Member?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently remove {profile.first_name || 'this member'} from the community directory.
+                                  Their authenticated account will remain, but they will no longer appear in the member list.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteMember(profile.id)} className="rounded-xl font-bold bg-destructive hover:bg-destructive/90">Remove</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

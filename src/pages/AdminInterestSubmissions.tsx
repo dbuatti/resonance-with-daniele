@@ -6,11 +6,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Mail, Phone } from "lucide-react";
-import { showError } from "@/utils/toast";
+import { Button } from "@/components/ui/button";
+import { Loader2, Mail, Phone, Trash2 } from "lucide-react";
+import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface InterestSubmission {
   id: string;
@@ -46,6 +48,18 @@ const AdminInterestSubmissions: React.FC = () => {
     }
     console.log("[AdminInterestSubmissions] Submissions fetched successfully:", data?.length, "submissions.");
     return data || [];
+  };
+
+  const queryClient = useQueryClient();
+
+  const handleDeleteSubmission = async (submissionId: string) => {
+    const { error } = await supabase.from("interest_submissions").delete().eq("id", submissionId);
+    if (error) {
+      showError(error.message);
+    } else {
+      showSuccess("Submission removed successfully.");
+      queryClient.invalidateQueries({ queryKey: ['interestSubmissions'] });
+    }
   };
 
   // Use react-query for submissions data
@@ -131,6 +145,7 @@ const AdminInterestSubmissions: React.FC = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Mobile</TableHead>
                     <TableHead>Submitted On</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -153,6 +168,27 @@ const AdminInterestSubmissions: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {format(new Date(submission.created_at), "PPP p")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-[2.5rem]">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove Interest Submission?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently remove {submission.first_name || 'this submission'} from the interest list.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteSubmission(submission.id)} className="rounded-xl font-bold bg-destructive hover:bg-destructive/90">Remove</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))}
