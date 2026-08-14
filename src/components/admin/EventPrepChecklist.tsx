@@ -162,7 +162,7 @@ const EventPrepChecklist: React.FC<EventPrepChecklistProps> = ({ eventId }) => {
         <Card className="border-dashed border-2 p-8 text-center rounded-2xl bg-muted/20">
           <Brain className="h-8 w-8 text-muted-foreground mx-auto mb-3 opacity-20" />
           <p className="text-sm font-medium text-muted-foreground">
-            Run an AI Analysis on the <a href="/admin/feedback" className="text-primary underline font-bold">Feedback Page</a> to generate a custom "Golden Action" for this event.
+            Run an AI Analysis on the <a href={`/admin/events/${eventId}?tab=feedback`} className="text-primary underline font-bold">Feedback Tab</a> to generate a custom "Golden Action" for this event.
           </p>
         </Card>
       )}

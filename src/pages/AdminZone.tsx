@@ -2,21 +2,23 @@
 
 import React, { useState, useMemo } from "react";
 import { useSession } from "@/integrations/supabase/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AdminDashboardOverview from "@/components/admin/AdminDashboardOverview";
-import AiMarketingToolsCard from "@/components/admin/AiMarketingToolsCard";
-import AdminPageLayout from "@/components/admin/AdminPageLayout";
+import AdminWorkbenchShell from "@/components/admin/AdminWorkbenchShell";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import EmailMembersModal from "@/components/admin/EmailMembersModal";
+import { useQuery } from "@tanstack/react-query";
 import {
-  Users, BarChart3, TrendingUp, Lightbulb, Rocket, ShieldCheck,
-  ArrowRight, MessageSquareQuote, BookOpen, Music, Megaphone,
-  BellRing, Calendar, Mail, Search, Sparkles, LayoutDashboard,
-  MessageSquare, LineChart, Send
+  Send, Music, CalendarDays, Users, Inbox, Star, MessageSquareQuote,
+  ArrowRight, Search, Heart, Frown, ExternalLink
 } from "lucide-react";
+import { parseISO } from "date-fns";
 
 interface AdminTool {
   title: string;
@@ -35,7 +37,7 @@ const AdminZone: React.FC = () => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const adminTools: AdminTool[] = [
+  const adminTools = useMemo<AdminTool[]>(() => [
     {
       title: "Global Broadcast",
       description: "Get a deduplicated BCC list of all members, interest leads, and ticket buyers.",
@@ -46,111 +48,90 @@ const AdminZone: React.FC = () => {
       category: "Communications"
     },
     {
-      title: "Announcements",
-      description: "Create and manage updates that appear on member dashboards.",
-      icon: <BellRing className="h-6 w-6 text-primary" />,
-      link: "/admin/announcements",
-      label: "Manage Updates",
-      category: "Communications"
+      title: "Events",
+      description: "Build, market, and review every session. Checklists, outreach, finance, and feedback in one place.",
+      icon: <CalendarDays className="h-6 w-6 text-primary" />,
+      link: "/admin/events",
+      label: "Open Events Hub",
+      category: "Hubs"
     },
     {
-      title: "Feedback Analysis",
-      description: "Review post-session feedback. See what people loved and what needs refining.",
-      icon: <MessageSquareQuote className="h-6 w-6 text-primary" />,
-      link: "/admin/feedback",
-      label: "Analyze Feedback",
-      category: "Communications"
+      title: "People",
+      description: "Manage members, review survey insights, and convert interest leads.",
+      icon: <Users className="h-6 w-6 text-primary" />,
+      link: "/admin/people",
+      label: "Open People Hub",
+      category: "Hubs"
+    },
+    {
+      title: "Inbox",
+      description: "Publish announcements and triage issue reports from the community.",
+      icon: <Inbox className="h-6 w-6 text-primary" />,
+      link: "/admin/inbox",
+      label: "Open Inbox",
+      category: "Hubs"
     },
     {
       title: "Repertoire Studio",
-      description: "Brainstorm songs, save research links, and access your custom Repertoire AI.",
+      description: "Brainstorm songs, save research links, and track top community suggestions.",
       icon: <Music className="h-6 w-6 text-primary" />,
       link: "/admin/repertoire",
       badge: "Creative",
-      category: "Content"
-    },
-    {
-      title: "Session Hub Guide",
-      description: "Learn how to link resources to events and manage lesson notes.",
-      icon: <BookOpen className="h-6 w-6 text-primary" />,
-      link: "/admin/session-hub-guide",
-      label: "Read Guide",
-      category: "Content"
-    },
-    {
-      title: "Survey Insights",
-      description: "Analyze aggregated feedback and understand community preferences.",
-      icon: <BarChart3 className="h-6 w-6 text-primary" />,
-      link: "/admin/survey-data",
-      label: "View Insights",
-      category: "Content"
-    },
-    {
-      title: "Growth Strategy",
-      description: "High-impact missions to scale Resonance. Track your 1-year vision.",
-      icon: <Rocket className="h-6 w-6 text-primary" />,
-      link: "/admin/growth",
-      badge: "Priority",
-      category: "Growth"
-    },
-    {
-      title: "Marketing & Finance",
-      description: "Track ticket sales, log expenses, and manage flash sale promotions.",
-      icon: <TrendingUp className="h-6 w-6 text-primary" />,
-      link: "/admin/marketing",
-      label: "View Dashboard",
-      category: "Growth"
-    },
-    {
-      title: "Event Command",
-      description: "Outreach trackers, AI prompt generators, and real-time execution.",
-      icon: <Lightbulb className="h-6 w-6 text-primary" />,
-      link: "/admin/marketing-plan",
-      label: "Open Command Center",
-      category: "Growth"
-    },
-    {
-      title: "Member Directory",
-      description: "View profiles, update roles, and sync data with Kit.com.",
-      icon: <Users className="h-6 w-6 text-primary" />,
-      link: "/admin/members",
-      label: "Manage Members",
-      category: "Management"
-    },
-    {
-      title: "June Rehearsal Poll",
-      description: "Track availability for the June show and copy the broadcast email.",
-      icon: <Calendar className="h-6 w-6 text-primary" />,
-      link: "/admin/june-poll",
-      badge: "Active Poll",
-      category: "Management"
+      category: "Hubs"
     }
-  ];
+  ], [setIsEmailModalOpen]);
 
   const filteredTools = useMemo(() => {
     if (!searchQuery.trim()) return adminTools;
     const q = searchQuery.toLowerCase();
     return adminTools.filter(
-      t =>
+      (t) =>
         t.title.toLowerCase().includes(q) ||
         t.description.toLowerCase().includes(q) ||
         t.category.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, adminTools]);
+
+  const { data: recentFeedback } = useQuery({
+    queryKey: ["commandCenterRecentFeedback"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("event_feedback")
+        .select(`*, events (title, date)`)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.is_admin,
+  });
+
+  const feedbackStats = useMemo(() => {
+    if (!recentFeedback || recentFeedback.length === 0) return null;
+    const total = recentFeedback.length;
+    const scored = recentFeedback.filter((f) => f.recommend_score);
+    const avgScore = scored.length ? scored.reduce((acc, f) => acc + f.recommend_score, 0) / scored.length : 0;
+    const feelings: Record<string, number> = {};
+    recentFeedback.forEach((f) => {
+      if (f.overall_feeling) feelings[f.overall_feeling] = (feelings[f.overall_feeling] || 0) + 1;
+    });
+    const topFeeling = Object.entries(feelings).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+    return { total, avgScore, topFeeling };
+  }, [recentFeedback]);
 
   const groupedTools = useMemo(() => {
     const groups: Record<string, AdminTool[]> = {};
-    filteredTools.forEach(t => {
+    filteredTools.forEach((t) => {
       if (!groups[t.category]) groups[t.category] = [];
       groups[t.category].push(t);
     });
     return groups;
   }, [filteredTools]);
 
-  const categoryOrder = ["Communications", "Content", "Growth", "Management"];
+  const categoryOrder = ["Hubs", "Communications"];
 
   return (
-    <AdminPageLayout
+    <AdminWorkbenchShell
       title="Command Center"
       description={`Welcome back${profile?.first_name ? `, ${profile.first_name}` : ''}. Oversee your community and track your growth.`}
       badge="Administrator Access"
@@ -173,7 +154,7 @@ const AdminZone: React.FC = () => {
         />
       </div>
 
-      {categoryOrder.map(category => {
+      {categoryOrder.map((category) => {
         const tools = groupedTools[category];
         if (!tools?.length) return null;
         return (
@@ -225,7 +206,6 @@ const AdminZone: React.FC = () => {
                   )}
                 </div>
               ))}
-              {category === "Growth" && <AiMarketingToolsCard />}
             </div>
           </section>
         );
@@ -238,17 +218,78 @@ const AdminZone: React.FC = () => {
         </div>
       )}
 
+      <section className="space-y-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-1.5 bg-primary rounded-full" />
+            <h2 className="text-lg font-black uppercase tracking-[0.2em] text-muted-foreground">Recent Community Feedback</h2>
+          </div>
+          {feedbackStats && (
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="rounded-full font-black border-primary/20 bg-primary/5 text-primary px-3 py-1">
+                <Star className="h-3 w-3 mr-1 fill-current" /> {feedbackStats.avgScore.toFixed(1)} avg NPS
+              </Badge>
+              <Badge variant="outline" className="rounded-full font-black border-primary/20 bg-primary/5 text-primary px-3 py-1">
+                {feedbackStats.total} recent responses
+              </Badge>
+            </div>
+          )}
+        </div>
+        {recentFeedback && recentFeedback.length > 0 ? (
+          <Card className="w-full soft-shadow border-none overflow-hidden rounded-[2.5rem]">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow>
+                      <TableHead className="pl-10 py-6 text-[10px] font-black uppercase tracking-widest">Event</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest">Feeling</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest">Score</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest">Loved</TableHead>
+                      <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-widest">Improvements</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentFeedback.map((f) => (
+                      <TableRow key={f.id} className="hover:bg-muted/10 transition-colors">
+                        <TableCell className="pl-10 py-4">
+                          {f.events ? (
+                            <Link to={`/admin/events/${f.event_id}?tab=feedback`} className="flex flex-col gap-0.5 group">
+                              <span className="font-black font-lora text-sm group-hover:text-primary transition-colors">{f.events.title}</span>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{parseISO(f.events.date).toLocaleDateString()}</span>
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground font-medium text-sm">Unknown event</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-black text-[10px] uppercase tracking-widest">{f.overall_feeling}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 font-black text-primary"><Star className="h-3 w-3 fill-current" /> {f.recommend_score ?? "—"}</div>
+                        </TableCell>
+                        <TableCell className="text-xs max-w-[220px] truncate italic text-muted-foreground">{f.enjoyed_most}</TableCell>
+                        <TableCell className="text-right pr-10 text-xs max-w-[220px] truncate italic text-destructive">{f.improvements || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="py-12 text-center border-2 border-dashed border-border/50 rounded-[2rem] bg-muted/10">
+            <MessageSquareQuote className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+            <p className="text-lg font-bold text-muted-foreground font-lora">No feedback collected yet.</p>
+          </div>
+        )}
+      </section>
+
       <EmailMembersModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
       />
-
-      <footer className="text-center pt-16 border-t border-border/50 pb-8">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40">
-          Resonance Admin System v2.0
-        </p>
-      </footer>
-    </AdminPageLayout>
+    </AdminWorkbenchShell>
   );
 };
 

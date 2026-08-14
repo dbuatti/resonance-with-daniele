@@ -104,7 +104,7 @@ const AdminDashboardOverview: React.FC = () => {
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{memberCount !== null ? memberCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/admin/members">View All Members</Link>
+            <Link to="/admin/people">View All Members</Link>
           </Button>
         </CardContent>
       </Card>
@@ -117,7 +117,7 @@ const AdminDashboardOverview: React.FC = () => {
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{feedbackCount !== null ? feedbackCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full" variant="secondary">
-            <Link to="/admin/feedback">Analyze Feedback</Link>
+            <Link to="/admin/events">Analyze Feedback</Link>
           </Button>
         </CardContent>
       </Card>
@@ -130,7 +130,7 @@ const AdminDashboardOverview: React.FC = () => {
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{eventCount !== null ? eventCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/events">Manage Events</Link>
+            <Link to="/admin/events">Manage Events</Link>
           </Button>
         </CardContent>
       </Card>
@@ -156,7 +156,7 @@ const AdminDashboardOverview: React.FC = () => {
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{interestSubmissionCount !== null ? interestSubmissionCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/admin/interest-submissions">View Submissions</Link>
+            <Link to="/admin/people?tab=leads">View Submissions</Link>
           </Button>
         </CardContent>
       </Card>
@@ -169,7 +169,7 @@ const AdminDashboardOverview: React.FC = () => {
         <CardContent>
           <div className="text-5xl font-bold text-foreground mb-4">{issueReportCount !== null ? issueReportCount : <Loader2 className="h-8 w-8 animate-spin mx-auto" />}</div>
           <Button asChild className="w-full">
-            <Link to="/admin/issue-reports">View Reports</Link>
+            <Link to="/admin/inbox?tab=issue-reports">View Reports</Link>
           </Button>
         </CardContent>
       </Card>

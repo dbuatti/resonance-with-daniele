@@ -8,18 +8,15 @@ import {
   Library, 
   Music, 
   Shield, 
-  Rocket, 
-  TrendingUp, 
   Users, 
-  MessageSquareQuote, 
-  BellRing,
   Settings,
   LogOut,
   ChevronRight,
   Sparkles,
   CalendarDays,
   Compass,
-  Brain
+  Brain,
+  Inbox
 } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { cn } from "@/lib/utils";
@@ -53,16 +50,18 @@ const AppSidebar: React.FC = () => {
 
   const adminLinks = [
     { title: "Command Center", icon: Shield, url: "/admin" },
+    { title: "Events", icon: CalendarDays, url: "/admin/events" },
+    { title: "People", icon: Users, url: "/admin/people" },
+    { title: "Inbox", icon: Inbox, url: "/admin/inbox" },
     { title: "Repertoire Studio", icon: Brain, url: "/admin/repertoire" },
-    { title: "Manage Events", icon: CalendarDays, url: "/events" },
-    { title: "Growth", icon: Rocket, url: "/admin/growth" },
-    { title: "Marketing", icon: TrendingUp, url: "/admin/marketing-plan" },
-    { title: "Members", icon: Users, url: "/admin/members" },
-    { title: "Feedback", icon: MessageSquareQuote, url: "/admin/feedback" },
-    { title: "Updates", icon: BellRing, url: "/admin/announcements" },
   ];
 
   const isActive = (url: string) => location.pathname === url;
+
+  const isAdminActive = (url: string) => {
+    if (url === "/admin") return location.pathname === "/admin";
+    return location.pathname === url || location.pathname.startsWith(`${url}/`);
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
@@ -131,17 +130,17 @@ const AppSidebar: React.FC = () => {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild 
-                      isActive={isActive(item.url)}
+                      isActive={isAdminActive(item.url)}
                       tooltip={item.title}
                       className={cn(
                         "h-11 px-4 rounded-xl transition-all duration-200",
-                        isActive(item.url) 
+                        isAdminActive(item.url) 
                           ? "bg-sidebar-accent text-sidebar-accent-foreground font-bold shadow-lg shadow-black/20" 
                           : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
                       )}
                     >
                       <Link to={item.url}>
-                        <item.icon className={cn("h-5 w-5 shrink-0", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
+                        <item.icon className={cn("h-5 w-5 shrink-0", isAdminActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
                         <span className="ml-3 text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>

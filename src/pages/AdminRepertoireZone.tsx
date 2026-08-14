@@ -4,25 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  Music, 
-  Sparkles, 
-  StickyNote, 
-  Link as LinkIcon, 
-  Plus, 
-  Trash2, 
-  ExternalLink, 
-  Brain, 
-  Loader2, 
-  Search,
-  Youtube,
-  Globe,
-  MessageSquare,
-  Save,
-  Trophy,
-  ChevronRight
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Music, Globe, Link as LinkIcon, Plus, Trash2, ExternalLink, Brain, Loader2, Youtube, Trophy, MessageSquare, ChevronRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -30,10 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
 import { showSuccess, showError } from "@/utils/toast";
-import BackButton from "@/components/ui/BackButton";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import AdminWorkbenchShell from "@/components/admin/AdminWorkbenchShell";
 
 const AdminRepertoireZone: React.FC = () => {
   const { user } = useSession();
@@ -63,19 +44,19 @@ const AdminRepertoireZone: React.FC = () => {
 
   const saveNoteMutation = useMutation({
     mutationFn: async (content: string) => {
-      await supabase.from("admin_notes").upsert({ 
-        admin_id: user?.id, 
-        note_key: "repertoire_studio_braindump", 
-        content 
+      await supabase.from("admin_notes").upsert({
+        admin_id: user?.id,
+        note_key: "repertoire_studio_braindump",
+        content,
       }, { onConflict: 'note_key' });
-    }
+    },
   });
 
   useEffect(() => {
     if (debouncedBrainDump !== brainDumpData && user) {
       saveNoteMutation.mutate(debouncedBrainDump);
     }
-  }, [debouncedBrainDump, brainDumpData, user]);
+  }, [debouncedBrainDump, brainDumpData, user, saveNoteMutation]);
 
   // 2. Research Links Logic
   const { data: research, isLoading: loadingResearch } = useQuery({
@@ -94,7 +75,7 @@ const AdminRepertoireZone: React.FC = () => {
     mutationFn: async () => {
       const { error } = await supabase.from("repertoire_research").insert({
         admin_id: user?.id,
-        ...newLink
+        ...newLink,
       });
       if (error) throw error;
     },
@@ -104,7 +85,7 @@ const AdminRepertoireZone: React.FC = () => {
       setIsAddingLink(false);
       showSuccess("Research link saved!");
     },
-    onError: (err: Error) => showError(err.message)
+    onError: (err: Error) => showError(err.message),
   });
 
   const deleteLinkMutation = useMutation({
@@ -115,7 +96,7 @@ const AdminRepertoireZone: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["repertoireResearch"] });
       showSuccess("Link removed.");
-    }
+    },
   });
 
   // 3. Community Pulse (Top Suggestions)
@@ -128,37 +109,15 @@ const AdminRepertoireZone: React.FC = () => {
         .order("total_votes", { ascending: false })
         .limit(5);
       return data || [];
-    }
+    },
   });
 
-  const geminiUrl = "https://gemini.google.com/app/e5f79aea81a478f3";
-
   return (
-    <div className="py-8 md:py-12 space-y-10 max-w-7xl mx-auto px-4">
-      <BackButton to="/admin" />
-      
-      <header className="space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
-          <Music className="h-3 w-3" />
-          <span>Creative Workspace</span>
-        </div>
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-5xl md:text-8xl font-black font-lora tracking-tighter leading-none">
-              Repertoire Studio
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl font-medium">
-              Your private space to research, brainstorm, and plan the next great harmony.
-            </p>
-          </div>
-          <Button asChild size="lg" className="h-16 px-10 text-xl font-black rounded-2xl shadow-2xl bg-accent text-accent-foreground hover:bg-accent/90 group">
-            <a href={geminiUrl} target="_blank" rel="noopener noreferrer">
-              <Sparkles className="mr-3 h-6 w-6 animate-pulse" /> Open Repertoire AI
-            </a>
-          </Button>
-        </div>
-      </header>
-
+    <AdminWorkbenchShell
+      title="Repertoire Studio"
+      description="Your private space to research, brainstorm, and plan the next great harmony."
+      badge="Creative Workspace"
+    >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left Column: Brain Dump & Research */}
         <div className="lg:col-span-8 space-y-10">
@@ -178,8 +137,8 @@ const AdminRepertoireZone: React.FC = () => {
             <Card className="border-none shadow-2xl bg-yellow-50/50 dark:bg-yellow-950/10 rounded-[3rem] overflow-hidden relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
               <CardContent className="p-10 relative z-10">
-                <Textarea 
-                  placeholder="Start typing your raw ideas here... songs, themes, arrangements, or just random thoughts. It saves automatically." 
+                <Textarea
+                  placeholder="Start typing your raw ideas here... songs, themes, arrangements, or just random thoughts. It saves automatically."
                   className="min-h-[400px] bg-transparent border-none text-xl font-medium font-lora italic leading-relaxed text-yellow-900 dark:text-yellow-200/80 focus-visible:ring-0 resize-none p-0"
                   value={localBrainDump}
                   onChange={(e) => setLocalBrainDump(e.target.value)}
@@ -195,9 +154,9 @@ const AdminRepertoireZone: React.FC = () => {
                 <Globe className="h-5 w-5 text-primary" />
                 <h2 className="text-xl font-black font-lora">Research & Inspiration</h2>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="rounded-xl font-bold border-primary/20 text-primary"
                 onClick={() => setIsAddingLink(!isAddingLink)}
               >
@@ -211,33 +170,33 @@ const AdminRepertoireZone: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest">Title</Label>
-                      <Input 
-                        placeholder="e.g. Pentatonix Arrangement Reference" 
+                      <Input
+                        placeholder="e.g. Pentatonix Arrangement Reference"
                         value={newLink.title}
-                        onChange={e => setNewLink({...newLink, title: e.target.value})}
+                        onChange={(e) => setNewLink({ ...newLink, title: e.target.value })}
                         className="rounded-xl font-bold"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest">URL</Label>
-                      <Input 
-                        placeholder="https://youtube.com/..." 
+                      <Input
+                        placeholder="https://youtube.com/..."
                         value={newLink.url}
-                        onChange={e => setNewLink({...newLink, url: e.target.value})}
+                        onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
                         className="rounded-xl"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest">Quick Notes</Label>
-                    <Input 
-                      placeholder="Why is this useful?" 
+                    <Input
+                      placeholder="Why is this useful?"
                       value={newLink.notes}
-                      onChange={e => setNewLink({...newLink, notes: e.target.value})}
+                      onChange={(e) => setNewLink({ ...newLink, notes: e.target.value })}
                       className="rounded-xl"
                     />
                   </div>
-                  <Button 
+                  <Button
                     className="w-full h-12 font-black rounded-xl shadow-lg"
                     onClick={() => addLinkMutation.mutate()}
                     disabled={!newLink.title || addLinkMutation.isPending}
@@ -321,39 +280,9 @@ const AdminRepertoireZone: React.FC = () => {
               </CardContent>
             </Card>
           </section>
-
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 px-1">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-black font-lora">AI Prompt Ideas</h2>
-            </div>
-            <div className="space-y-3">
-              {[
-                "Suggest 3 pop songs with strong 3-part harmony potential for a community choir.",
-                "Help me write a warm, encouraging email to members about learning a difficult bridge.",
-                "Analyze the current top suggestions and find a common musical theme."
-              ].map((prompt, i) => (
-                <Card key={i} className="border-none shadow-sm bg-primary/5 rounded-xl p-4 group cursor-pointer hover:bg-primary/10 transition-all" onClick={() => {
-                  navigator.clipboard.writeText(prompt);
-                  showSuccess("Prompt copied!");
-                }}>
-                  <p className="text-xs font-medium text-muted-foreground italic leading-relaxed">"{prompt}"</p>
-                  <div className="flex justify-end mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Badge className="bg-primary text-white text-[8px] font-black uppercase tracking-widest">Copy Prompt</Badge>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </section>
         </div>
       </div>
-
-      <footer className="text-center pt-16 border-t border-border/50 pb-8">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40">
-          Resonance Repertoire Studio v1.0
-        </p>
-      </footer>
-    </div>
+    </AdminWorkbenchShell>
   );
 };
 

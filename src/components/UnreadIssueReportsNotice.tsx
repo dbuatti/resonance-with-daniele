@@ -45,9 +45,7 @@ const UnreadIssueReportsNotice: React.FC = () => {
   });
 
   const handleNavigateToReports = () => {
-    navigate("/admin/issue-reports");
-    // Optionally, mark all as read immediately upon navigation
-    // This will be handled by the AdminIssueReportsPage itself for better UX
+    navigate("/admin/inbox?tab=issue-reports");
   };
 
   if (loadingSession || isLoading || !user?.is_admin || (unreadCount === undefined || unreadCount === 0)) {

@@ -1,28 +1,17 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Resources from "./pages/Resources";
 import Events from "./pages/Events";
 import Login from "./pages/Login";
 import AdminZone from "./pages/AdminZone";
-import AdminMembers from "./pages/AdminMembers";
-import AdminSurveyData from "./pages/AdminSurveyData";
-import AdminInterestSubmissions from "./pages/AdminInterestSubmissions";
-import AdminAnnouncementsPage from "./pages/AdminAnnouncementsPage";
-import AdminIssueReportsPage from "./pages/AdminIssueReportsPage";
-import AdminMarketingDashboard from "./pages/AdminMarketingDashboard";
-import AdminMarketingPlanPage from "./pages/AdminMarketingPlanPage";
-import AdminGrowthStrategy from "./pages/AdminGrowthStrategy";
-import AdminEventFeedback from "./pages/AdminEventFeedback";
-import AdminSessionHubGuide from "./pages/AdminSessionHubGuide";
-import AdminEventWizard from "./pages/AdminEventWizard";
-import AdminEventCommandCenter from "./pages/AdminEventCommandCenter";
+import AdminEventWorkbench from "./pages/AdminEventWorkbench";
+import AdminPeopleHub from "./pages/AdminPeopleHub";
+import AdminInbox from "./pages/AdminInbox";
 import AdminRepertoireZone from "./pages/AdminRepertoireZone";
-import AdminJunePollResults from "./pages/AdminJunePollResults";
-import JunePollPage from "./pages/JunePollPage";
 import CurrentEventPage from "./pages/CurrentEventPage";
 import EventFeedback from "./pages/EventFeedback";
 import SessionHub from "./pages/SessionHub";
@@ -57,29 +46,33 @@ const App = () => (
               <Route path="/learn-more" element={<Layout><LearnMore /></Layout>} />
               <Route path="/song-suggestions" element={<Layout><SongSuggestionsPage /></Layout>} />
               <Route path="/feedback" element={<Layout><EventFeedback /></Layout>} />
-              
-              <Route path="/polls/june-availability" element={<Layout><JunePollPage /></Layout>} />
-              
+
               <Route path="/profile" element={<Layout><ProfileLayoutPage /></Layout>}>
                 <Route index element={<ProfileDetails />} />
                 <Route path="survey" element={<SurveyPage />} />
               </Route>
 
               <Route path="/admin" element={<Layout><AdminZone /></Layout>} />
-              <Route path="/admin/members" element={<Layout><AdminMembers /></Layout>} />
-              <Route path="/admin/survey-data" element={<Layout><AdminSurveyData /></Layout>} />
-              <Route path="/admin/interest-submissions" element={<Layout><AdminInterestSubmissions /></Layout>} />
-              <Route path="/admin/announcements" element={<Layout><AdminAnnouncementsPage /></Layout>} />
-              <Route path="/admin/issue-reports" element={<Layout><AdminIssueReportsPage /></Layout>} />
-              <Route path="/admin/marketing" element={<Layout><AdminMarketingDashboard /></Layout>} />
-              <Route path="/admin/marketing-plan" element={<Layout><AdminMarketingPlanPage /></Layout>} />
-              <Route path="/admin/growth" element={<Layout><AdminGrowthStrategy /></Layout>} />
-              <Route path="/admin/feedback" element={<Layout><AdminEventFeedback /></Layout>} />
-              <Route path="/admin/session-hub-guide" element={<Layout><AdminSessionHubGuide /></Layout>} />
-              <Route path="/admin/events/new" element={<Layout><AdminEventWizard /></Layout>} />
-              <Route path="/admin/events/:id" element={<Layout><AdminEventCommandCenter /></Layout>} />
+              <Route path="/admin/events" element={<Layout><AdminEventWorkbench /></Layout>} />
+              <Route path="/admin/events/:id" element={<Layout><AdminEventWorkbench /></Layout>} />
+              <Route path="/admin/people" element={<Layout><AdminPeopleHub /></Layout>} />
+              <Route path="/admin/inbox" element={<Layout><AdminInbox /></Layout>} />
               <Route path="/admin/repertoire" element={<Layout><AdminRepertoireZone /></Layout>} />
-              <Route path="/admin/june-poll" element={<Layout><AdminJunePollResults /></Layout>} />
+
+              {/* Retired routes → redirects */}
+              <Route path="/admin/marketing" element={<Navigate to="/admin/events" replace />} />
+              <Route path="/admin/marketing-plan" element={<Navigate to="/admin/events" replace />} />
+              <Route path="/admin/events/new" element={<Navigate to="/admin/events?new=1" replace />} />
+              <Route path="/admin/members" element={<Navigate to="/admin/people" replace />} />
+              <Route path="/admin/survey-data" element={<Navigate to="/admin/people?tab=survey" replace />} />
+              <Route path="/admin/interest-submissions" element={<Navigate to="/admin/people?tab=leads" replace />} />
+              <Route path="/admin/announcements" element={<Navigate to="/admin/inbox" replace />} />
+              <Route path="/admin/issue-reports" element={<Navigate to="/admin/inbox?tab=issue-reports" replace />} />
+              <Route path="/admin/feedback" element={<Navigate to="/admin/events" replace />} />
+              <Route path="/admin/growth" element={<Navigate to="/admin" replace />} />
+              <Route path="/admin/june-poll" element={<Navigate to="/admin" replace />} />
+              <Route path="/admin/session-hub-guide" element={<Navigate to="/admin" replace />} />
+
               <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
           </SessionContextProvider>
