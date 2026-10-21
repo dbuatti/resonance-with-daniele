@@ -24,11 +24,17 @@ declare
 begin
     -- pg_cron is what makes the job run. If it is unavailable for any reason,
     -- skip the whole block rather than failing the migration.
+    -- Supabase installs extensions into the "extensions" schema, but pg_cron
+    -- may already be present in pg_catalog, so try both placements.
     begin
-        create extension if not exists pg_cron;
+        create extension if not exists pg_cron with schema extensions;
     exception when others then
-        raise notice 'Could not enable pg_cron (%); skipping keepalive job.', sqlerrm;
-        return;
+        begin
+            create extension if not exists pg_cron;
+        exception when others then
+            raise notice 'Could not enable pg_cron (%); skipping keepalive job.', sqlerrm;
+            return;
+        end;
     end;
 
     -- A single-row table recording the last heartbeat. RLS is enabled with no
