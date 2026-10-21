@@ -19,6 +19,8 @@
 --   select * from cron.job_run_details where jobname = 'keep-project-active';
 
 do $$
+declare
+    existing_jobid bigint;
 begin
     -- pg_cron is what makes the job run. If it is unavailable for any reason,
     -- skip the whole block rather than failing the migration.
@@ -43,8 +45,8 @@ begin
         'Last successful internal keepalive ping. RLS enabled with no policies (not reachable via the public API).';
 
     -- Idempotently (re)schedule the daily job.
-    for existing in select jobid from cron.job where jobname = 'keep-project-active' loop
-        perform cron.unschedule(existing.jobid);
+    for existing_jobid in select jobid from cron.job where jobname = 'keep-project-active' loop
+        perform cron.unschedule(existing_jobid);
     end loop;
 
     perform cron.schedule(

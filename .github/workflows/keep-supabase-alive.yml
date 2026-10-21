@@ -122,7 +122,6 @@ jobs:
     # be auto-disabled again.
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: ping
     steps:
       - uses: actions/checkout@v4
         with:
@@ -132,12 +131,15 @@ jobs:
         run: |
           set -euo pipefail
           MARKER=".keepalive/last-ping"
-          LAST=$(git log -1 --format=%ct -- "$MARKER" 2>/dev/null || echo 0)
+          # Age of the most recent commit of any kind. Real development activity
+          # already keeps the repository active, so no heartbeat commit is made
+          # while the project is being worked on.
+          LAST=$(git log -1 --format=%ct 2>/dev/null || echo 0)
           NOW=$(date +%s)
           AGE_DAYS=$(( (NOW - LAST) / 86400 ))
-          echo "Last heartbeat commit: ${AGE_DAYS} days ago"
+          echo "Most recent commit: ${AGE_DAYS} days ago"
           if [ "$AGE_DAYS" -lt 20 ]; then
-            echo "Heartbeat is fresh; no commit needed."
+            echo "Repository is active; no heartbeat commit needed."
             exit 0
           fi
           mkdir -p .keepalive
