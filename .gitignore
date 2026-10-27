@@ -28,3 +28,6 @@ dist-ssr
 # Supabase CLI scratch directory (project link state, version pins)
 supabase/.temp/
 .vercel
+
+# Generated data exports (may contain member PII — never commit)
+exports/
