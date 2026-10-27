@@ -63,9 +63,16 @@ interface FeedbackRow {
   events: { title: string; date: string } | null;
 }
 
+interface AiInsights {
+  top_highlights?: string[];
+  critical_friction?: string[];
+  strategic_advice?: string;
+  next_event_action?: string;
+}
+
 const EventFeedbackPanel: React.FC<EventFeedbackPanelProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
-  const [aiInsights, setAiInsights] = useState<any>(null);
+  const [aiInsights, setAiInsights] = useState<AiInsights | null>(null);
   const [selectedResponse, setSelectedResponse] = useState<FeedbackRow | null>(null);
 
   const { data: feedback, isLoading } = useQuery<FeedbackRow[]>({

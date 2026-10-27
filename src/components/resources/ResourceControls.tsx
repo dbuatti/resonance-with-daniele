@@ -16,11 +16,11 @@ interface ResourceControlsProps {
   onAddFolder: () => void;
   onAddResource: () => void;
   filterType: string;
-  setFilterType: (val: any) => void;
+  setFilterType: (val: string) => void;
   filterVoicePart: string;
-  setFilterVoicePart: (val: any) => void;
+  setFilterVoicePart: (val: string) => void;
   sortBy: string;
-  setSortBy: (val: any) => void;
+  setSortBy: (val: string) => void;
   sortOrder: 'asc' | 'desc';
   setSortOrder: (val: 'asc' | 'desc') => void;
   voiceParts: string[];

@@ -298,8 +298,8 @@ const ResourceDialog: React.FC<ResourceDialogProps> = ({ isOpen, onClose, editin
       queryClient.invalidateQueries({ queryKey: ['resources'] });
       queryClient.invalidateQueries({ queryKey: ['allResourcesForLibrary'] });
       onClose();
-    } catch (error: any) {
-      showError(error.message || "An unexpected error occurred.");
+    } catch (error: unknown) {
+      showError(error instanceof Error ? error.message : "An unexpected error occurred.");
     } finally {
       setIsSaving(false);
     }

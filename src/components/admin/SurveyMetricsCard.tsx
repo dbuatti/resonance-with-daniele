@@ -48,6 +48,13 @@ interface SurveyMetricsCardProps {
   loading: boolean;
 }
 
+/** Aggregated value shape produced by `aggregateData` and consumed by the charts. */
+interface ChartDatum {
+  name: string;
+  value: number;
+  percentage: string;
+}
+
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ffc658", "#d0ed57", "#a4de6c", "#d3a4de"];
 
 const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading }) => {
@@ -198,7 +205,7 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
     response: p.suggestions,
   }));
 
-  const renderChart = (data: any[], title: string, fill: string, type: 'bar' | 'pie' = 'bar') => {
+  const renderChart = (data: ChartDatum[], title: string, fill: string, type: 'bar' | 'pie' = 'bar') => {
     const chartMargin = { top: 5, right: 5, left: 5, bottom: 5 };
 
     if (data.length === 0) {
@@ -218,7 +225,7 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
             <BarChart data={data} margin={chartMargin}>
               <XAxis dataKey="name" angle={-30} textAnchor="end" height={60} interval={0} style={{ fontSize: '12px' }} />
               <YAxis />
-              <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
+              <Tooltip formatter={(value: number, name: string, props: { payload: ChartDatum }) => [`${value} (${props.payload.percentage}%)`, name]} />
               <Bar dataKey="value" fill={fill} />
             </BarChart>
           ) : (
@@ -237,7 +244,7 @@ const SurveyMetricsCard: React.FC<SurveyMetricsCardProps> = ({ profiles, loading
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: number, name: string, props: any) => [`${value} (${props.payload.percentage}%)`, name]} />
+              <Tooltip formatter={(value: number, name: string, props: { payload: ChartDatum }) => [`${value} (${props.payload.percentage}%)`, name]} />
               <Legend />
             </PieChart>
           )}

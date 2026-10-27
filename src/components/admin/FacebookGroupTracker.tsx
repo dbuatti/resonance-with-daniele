@@ -132,7 +132,7 @@ const FacebookGroupTracker: React.FC<FacebookGroupTrackerProps> = ({ eventId, po
     showSuccess("Post content copied!");
   };
 
-  const startEditing = (task: any) => {
+  const startEditing = (task: { id: string; label: string; url?: string | null }) => {
     setEditingId(task.id);
     setEditName(task.label);
     setEditUrl(task.url || "");

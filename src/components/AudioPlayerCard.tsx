@@ -62,10 +62,10 @@ const AudioPlayerCard: React.FC<AudioPlayerCardProps> = ({ src, onDownload, titl
     setCurrentTime(newTime);
   };
 
-  const handleEnded = () => {
+  const handleEnded = useCallback(() => {
     setIsPlaying(false);
     setCurrentTime(0);
-  };
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;

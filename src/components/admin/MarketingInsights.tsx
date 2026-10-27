@@ -42,6 +42,23 @@ interface MarketingInsightsProps {
   eventId: string;
 }
 
+interface ProfileMember {
+  id?: string;
+  avatar_url: string | null;
+  first_name: string | null;
+  last_name: string | null;
+}
+
+interface PersonRecord {
+  name: string;
+  events: Set<string>;
+  email: string;
+  ltv: number;
+  count?: number;
+  member?: ProfileMember | { avatar_url: string | null; first_name: string | null; last_name: string | null } | undefined;
+  score?: number;
+}
+
 const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
   const isGlobal = eventId === "all";
 
@@ -161,9 +178,9 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       peopleMap[email].ltv += Number(o.your_earnings || 0);
     });
 
-    let returningPeople: any[] = [];
-    let newPeople: any[] = [];
-    let churnRisk: any[] = [];
+    let returningPeople: PersonRecord[] = [];
+    let newPeople: PersonRecord[] = [];
+    let churnRisk: PersonRecord[] = [];
 
     if (isGlobal) {
       const uniqueEmails = Object.keys(peopleMap);

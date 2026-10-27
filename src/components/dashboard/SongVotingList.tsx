@@ -233,7 +233,7 @@ const SongVotingList: React.FC = () => {
               </Button>
             )}
           </div>
-          <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
+          <Select value={sortOrder} onValueChange={(value: string) => setSortOrder(value as 'asc' | 'desc')}>
             <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl font-black shadow-sm border-primary/10">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
