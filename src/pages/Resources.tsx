@@ -142,6 +142,11 @@ const Resources: React.FC = () => {
     setSortOrder('asc');
   };
 
+  const handleEditFolder = (folder: ResourceFolder) => {
+    setEditingFolder(folder);
+    setIsFolderDialogOpen(true);
+  };
+
   const handleEditResource = (resource: Resource) => {
     setEditingResource(resource);
     setIsResourceDialogOpen(true);
@@ -358,7 +363,7 @@ const Resources: React.FC = () => {
             {currentSubFolders.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {currentSubFolders.map(f => (
-                  <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={setEditingFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={handleToggleNomination} />
+                  <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={handleEditFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={handleToggleNomination} />
                 ))}
               </div>
             )}
@@ -398,7 +403,7 @@ const Resources: React.FC = () => {
       </Tabs>
 
       <ResourceDialog isOpen={isResourceDialogOpen} onClose={() => setIsResourceDialogOpen(false)} editingResource={editingResource} currentFolderId={currentFolderId} />
-      <ResourceFolderDialog isOpen={isFolderDialogOpen} onClose={() => setIsFolderDialogOpen(false)} editingFolder={editingFolder} currentParentFolderId={currentFolderId} />
+      <ResourceFolderDialog isOpen={isFolderDialogOpen} onClose={() => { setIsFolderDialogOpen(false); setEditingFolder(null); }} editingFolder={editingFolder} currentParentFolderId={currentFolderId} />
       <MoveResourceDialog isOpen={isMoveDialogOpen} onOpenChange={setIsMoveDialogOpen} resourceToMove={resourceToMove} onMoveSuccess={() => setIsMoveDialogOpen(false)} currentFolderId={currentFolderId} />
     </div>
   );
