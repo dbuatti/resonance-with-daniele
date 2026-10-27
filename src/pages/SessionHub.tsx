@@ -22,7 +22,8 @@ import {
   Clock,
   ExternalLink,
   Ticket,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
 import { format, parseISO, isAfter, startOfToday } from "date-fns";
@@ -32,6 +33,15 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
+
+interface EventResource {
+  id: string;
+  title: string;
+  url: string | null;
+  type: string;
+  voice_part: string | null;
+  youtube_url: string | null;
+}
 
 interface EventWithResources {
   id: string;
@@ -44,7 +54,7 @@ interface EventWithResources {
   humanitix_link: string | null;
   lesson_notes: string | null;
   main_song: string | null;
-  resources: unknown[];
+  resources: EventResource[];
 }
 
 const getYouTubeEmbedUrl = (url: string | null): string | null => {
@@ -70,7 +80,7 @@ const SessionHub: React.FC = () => {
   const { user, loading: loadingSession } = useSession();
   const { hash } = useLocation();
 
-  const { data: allEvents, isLoading } = useQuery({
+  const { data: allEvents, isLoading, isError, refetch } = useQuery({
     queryKey: ['sessionHubData'],
     queryFn: async () => {
       const { data: events, error: eventsError } = await supabase
@@ -210,7 +220,7 @@ const SessionHub: React.FC = () => {
                       <div className="h-px flex-1 bg-border/50" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {(resources as any[]).map((res) => (
+                      {(resources as EventResource[]).map((res) => (
                         <a 
                           key={res.id}
                           href={res.url} 
@@ -385,7 +395,23 @@ const SessionHub: React.FC = () => {
       ) : (
         <div className="text-center py-24 bg-muted/20 rounded-[4rem] border-4 border-dashed border-border/50">
           <Music className="h-20 w-20 text-muted-foreground mx-auto mb-6 opacity-10" />
-          <h2 className="text-3xl font-black font-lora text-muted-foreground">No sessions found</h2>
+          <h2 className="text-3xl font-black font-lora text-muted-foreground">
+            {isError ? "Couldn't load sessions" : "No sessions found"}
+          </h2>
+          {isError ? (
+            <div className="mt-6 space-y-4">
+              <p className="text-lg text-muted-foreground font-medium max-w-md mx-auto">
+                Something went wrong fetching the session list. Please try again.
+              </p>
+              <Button onClick={() => refetch()} variant="outline" className="rounded-xl font-bold">
+                <RefreshCw className="mr-2 h-4 w-4" /> Try again
+              </Button>
+            </div>
+          ) : (
+            <p className="mt-4 text-lg text-muted-foreground font-medium">
+              New dates are added regularly — check back soon.
+            </p>
+          )}
         </div>
       )}
 

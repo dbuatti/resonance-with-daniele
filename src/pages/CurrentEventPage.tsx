@@ -11,7 +11,7 @@ import BackButton from "@/components/ui/BackButton";
 
 const CurrentEventPage: React.FC = () => {
   // Fetch the most recent upcoming event from the database
-  const { data: event, isLoading } = useQuery({
+  const { data: event, isLoading, isError, refetch } = useQuery({
     queryKey: ['currentUpcomingEvent'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -71,6 +71,21 @@ const CurrentEventPage: React.FC = () => {
       <div className="py-20 text-center">
         <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary mb-4" />
         <p className="text-muted-foreground font-medium">Finding the next session...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="py-20 text-center max-w-2xl mx-auto px-4">
+        <Info className="h-16 w-16 text-destructive/40 mx-auto mb-6" />
+        <h1 className="text-4xl font-black font-lora mb-4">Couldn't load the next session</h1>
+        <p className="text-xl text-muted-foreground mb-8">
+          Something went wrong fetching the latest date. Please try again.
+        </p>
+        <Button size="lg" className="rounded-xl font-bold" onClick={() => refetch()}>
+          <RefreshCw className="mr-2 h-4 w-4" /> Try again
+        </Button>
       </div>
     );
   }
