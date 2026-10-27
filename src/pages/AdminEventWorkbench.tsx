@@ -20,6 +20,7 @@ import MarketingOverview from "@/components/admin/MarketingOverview";
 import MarketingInsights from "@/components/admin/MarketingInsights";
 import TaskRolodex from "@/components/admin/TaskRolodex";
 import EmailMembersModal from "@/components/admin/EmailMembersModal";
+import BreakEvenIndicator from "@/components/admin/BreakEvenIndicator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -308,6 +309,7 @@ const AdminEventWorkbench: React.FC = () => {
               </CardHeader>
             </Card>
           </div>
+          <BreakEvenIndicator financials={stats} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="rounded-[2.5rem] border-border/50 shadow-sm">
               <CardHeader><CardTitle className="text-lg font-black font-lora">Quick Links</CardTitle></CardHeader>
@@ -358,9 +360,10 @@ const AdminEventWorkbench: React.FC = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="attendees"><EventOrderList eventId={selectedEvent.id} /></TabsContent>
+        <TabsContent value="attendees"><section className="space-y-6"><BreakEvenIndicator financials={stats} /><EventOrderList eventId={selectedEvent.id} /></section></TabsContent>
 
         <TabsContent value="finance" className="space-y-10">
+          <section className="space-y-4"><BreakEvenIndicator financials={stats} /></section>
           <section className="space-y-4"><h3 className="text-base font-black font-lora">Ticket Sales</h3><TicketSalesLogger eventId={selectedEvent.id} /></section>
           <section className="space-y-4"><h3 className="text-base font-black font-lora">Expenses</h3><ExpenseLogger eventId={selectedEvent.id} /></section>
           <section className="space-y-4"><h3 className="text-base font-black font-lora">Promotions</h3><FlashSaleManager eventId={selectedEvent.id} /></section>
