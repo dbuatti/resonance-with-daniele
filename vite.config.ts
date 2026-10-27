@@ -18,4 +18,17 @@ export default defineConfig(() => ({
     include: ['@supabase/supabase-js'], // Ensure Supabase client is pre-bundled
     dedupe: ['react', 'react-dom'], // Deduplicate React and React DOM
   },
+  build: {
+    // Split large third-party libraries into their own cacheable chunks so the
+    // app shell stays small and vendor code is reused across deploys.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          "data-vendor": ["@tanstack/react-query", "@supabase/supabase-js"],
+          "form-vendor": ["react-hook-form", "@hookform/resolvers", "zod"],
+        },
+      },
+    },
+  },
 }));
