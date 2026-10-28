@@ -294,7 +294,7 @@ const WelcomeHub: React.FC = () => {
             </div>
           </div>
           <Button size="lg" className="h-14 px-8 text-lg font-black bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl shadow-xl" asChild>
-            <Link to={`/feedback?eventId=${recentPastEvent.id}`}>
+            <Link to={`/feedback/${recentPastEvent.id}`}>
               Give Feedback <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

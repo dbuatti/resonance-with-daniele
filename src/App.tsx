@@ -73,6 +73,7 @@ const App = () => (
                 <Route path="/learn-more" element={<Page><LearnMore /></Page>} />
                 <Route path="/song-suggestions" element={<Page><SongSuggestionsPage /></Page>} />
                 <Route path="/feedback" element={<Page><EventFeedback /></Page>} />
+                <Route path="/feedback/:eventId" element={<Page><EventFeedback /></Page>} />
 
                 <Route path="/profile" element={<Page><ProfileLayoutPage /></Page>}>
                   <Route

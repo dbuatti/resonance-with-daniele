@@ -90,7 +90,7 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
     },
     enabled: isOpen && !!eventId });
 
-  const feedbackLink = `${window.location.origin}/feedback?eventId=${eventId}`;
+  const feedbackLink = `${window.location.origin}/feedback/${eventId}`;
 
   const sampleBody = useMemo(() => {
     return `Hi everyone,\n\nThank you so much for joining us for ${eventTitle} on ${eventDate}! It was such a joy to sing together.\n\nI’d love to hear your thoughts on how the session went. Your feedback helps me make the next one even better. It only takes about 2 minutes and you can choose to submit anonymously if you prefer.\n\nYou can share your feedback here: ${feedbackLink}\n\nHope to see you in the circle again soon!\n\n— Daniele`;

@@ -34,7 +34,7 @@ const AdminFeedback: React.FC = () => {
   });
 
   const getFeedbackLink = (eventId: string) => {
-    return `${window.location.origin}/feedback?eventId=${eventId}`;
+    return `${window.location.origin}/feedback/${eventId}`;
   };
 
   const copyLink = (eventId: string) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -53,7 +53,8 @@ type FeedbackFormData = z.infer<typeof feedbackSchema>;
 
 const EventFeedback: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const urlEventId = searchParams.get("eventId");
+  const { eventId: routeEventId } = useParams();
+  const urlEventId = routeEventId || searchParams.get("eventId");
   const { user, loading: loadingSession } = useSession();
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
