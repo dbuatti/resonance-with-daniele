@@ -36,9 +36,9 @@ const HeroSection: React.FC = () => {
         <div className="flex flex-col items-center gap-4 animate-fade-in-up [animation-delay:800ms]">
           <div className="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-md mx-auto">
             <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl shadow-xl bg-[#D69FB0] text-[#2f1f17] hover:bg-[#D69FB0]/90 group flex-1" asChild>
-              <Link to="/current-event">
+              <a href="/next">
                 Book Your Spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Link>
+              </a>
             </Button>
             <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold rounded-xl bg-white/10 backdrop-blur-sm border-white/40 text-white hover:bg-white/20 flex-1" asChild>
               <Link to="/learn-more">How it works</Link>

@@ -17,7 +17,7 @@ const CallToActionSection: React.FC = () => {
           Join my choir today — no experience needed!
         </p>
         <Button size="lg" className="h-16 px-10 text-xl font-black rounded-2xl bg-[#2f1f17] text-white hover:bg-[#2f1f17]/90 shadow-2xl" asChild>
-          <Link to="/current-event">Book Your Spot</Link>
+          <a href="/next">Book Your Spot</a>
         </Button>
       </div>
     </section>
