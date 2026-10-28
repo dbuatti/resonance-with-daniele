@@ -7,7 +7,12 @@ import { ArrowRight, Music, MapPin, LogIn } from "lucide-react";
 
 const HeroSection: React.FC = () => {
   return (
-    <section className="relative bg-gradient-to-br from-hero-gradient-start to-hero-gradient-end dark:from-hero-gradient-start-dark dark:to-hero-gradient-end-dark py-16 md:py-32 text-center overflow-hidden border-b border-border/50">
+    <section className="relative py-16 md:py-32 text-center overflow-hidden border-b border-border/50">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/hero-bg.jpeg')" }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/70 to-background/90 dark:from-background/95 dark:via-background/80 dark:to-background/95" />
       <div className="container mx-auto px-4 relative z-10">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-8 animate-fade-in-up">
           <Music className="h-4 w-4" />
