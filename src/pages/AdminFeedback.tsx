@@ -6,13 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MessageSquareQuote, Copy, ExternalLink, Calendar, CheckCircle2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageSquareQuote, Copy, ExternalLink, Calendar, CheckCircle2, ClipboardList } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess } from "@/utils/toast";
 import { format, parseISO } from "date-fns";
 import GlobalFeedbackPanel from "@/components/admin/GlobalFeedbackPanel";
 import FeedbackEmailModal from "@/components/admin/FeedbackEmailModal";
+import SurveyMetricsCard from "@/components/admin/SurveyMetricsCard";
 
 const AdminFeedback: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +30,15 @@ const AdminFeedback: React.FC = () => {
         .from("events")
         .select("id, title, date")
         .order("date", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: profiles, isLoading: profilesLoading } = useQuery({
+    queryKey: ["adminProfilesForSurvey"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("*");
       if (error) throw error;
       return data || [];
     },
@@ -61,6 +72,19 @@ const AdminFeedback: React.FC = () => {
         </div>
       </div>
 
+      <Tabs defaultValue="event-feedback" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="event-feedback" className="flex items-center gap-2">
+            <MessageSquareQuote className="h-4 w-4" />
+            Event Feedback
+          </TabsTrigger>
+          <TabsTrigger value="signup-survey" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Signup Survey
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="event-feedback" className="space-y-8">
       <Card className="rounded-2xl">
         <CardHeader>
           <CardTitle>Generate Feedback Links</CardTitle>
@@ -124,6 +148,12 @@ const AdminFeedback: React.FC = () => {
       </Card>
 
       <GlobalFeedbackPanel />
+        </TabsContent>
+
+        <TabsContent value="signup-survey">
+          <SurveyMetricsCard profiles={profiles || []} loading={profilesLoading} />
+        </TabsContent>
+      </Tabs>
 
       {selectedEvent && (
         <FeedbackEmailModal
