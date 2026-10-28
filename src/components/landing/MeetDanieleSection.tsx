@@ -4,6 +4,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Music } from "lucide-react";
 const MeetDanieleSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">

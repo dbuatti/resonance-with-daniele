@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search, LayoutDashboard, ListTodo, Megaphone, Users, DollarSign, MessageSquareQuote, Brain, Ticket, TrendingUp, Clock, ExternalLink, Send, Pencil, Check, X } from "lucide-react";
+import { Loader2, Plus, Search, LayoutDashboard, ListTodo, Megaphone, Users, DollarSign, MessageSquareQuote, Brain, Ticket, TrendingUp, Clock, ExternalLink, Send, Pencil, Check, X, Music } from "lucide-react";
 import { format, differenceInDays, startOfDay, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
@@ -463,7 +463,7 @@ const AdminEventWorkbench: React.FC = () => {
 };
 
 const MusicBadge: React.FC = () => (
-  <div className="p-2 bg-primary/10 rounded-lg"><ListTodo className="h-4 w-4 text-primary" /></div>
+  <div className="p-2 bg-primary/10 rounded-lg"><Music className="h-4 w-4 text-primary" /></div>
 );
 
 export default AdminEventWorkbench;
