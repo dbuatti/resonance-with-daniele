@@ -11,8 +11,9 @@ import ReportIssueButton from "./ReportIssueButton";
 import UnreadIssueReportsNotice from "./UnreadIssueReportsNotice";
 import BackToTopButton from "./BackToTopButton";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sparkles, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import resonanceLogo from "@/assets/resonance-logo.png";
 
 interface LayoutProps { children: React.ReactNode; }
 
@@ -39,9 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <header className="glass-header p-4 md:p-6 sticky top-0 z-50">
           <div className="w-full flex justify-between items-center px-4">
             <div className="flex items-center gap-3">
-              <div className="bg-primary-foreground text-primary rounded-xl p-2">
-                <Sparkles className="h-5 w-5" />
-              </div>
+              <img src={resonanceLogo} alt="Resonance" className="h-9 w-9 rounded-xl shadow-lg" />
               <span className="text-xl font-black font-lora text-primary-foreground tracking-tighter">
                 Resonance
               </span>
@@ -69,9 +68,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <header className="h-14 border-b border-border/50 flex items-center px-4 sticky top-0 bg-background/80 backdrop-blur-md z-40">
             <SidebarTrigger className="h-9 w-9 rounded-lg hover:bg-muted transition-colors" />
             <div className="md:hidden flex items-center gap-3 ml-4">
-              <div className="bg-primary rounded-lg p-1.5">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
+              <img src={resonanceLogo} alt="Resonance" className="h-8 w-8 rounded-lg" />
               <span className="font-black font-lora text-lg tracking-tighter">Resonance</span>
             </div>
           </header>
