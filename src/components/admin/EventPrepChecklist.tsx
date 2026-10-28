@@ -4,7 +4,7 @@ import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, ListTodo Printer, Music, Megaphone, Loader2, Brain } from "lucide-react";
+import { CheckCircle2, Circle, ListTodo, Printer, Music, Megaphone, Loader2, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

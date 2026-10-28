@@ -354,7 +354,7 @@ const TaskRolodex: React.FC = () => {
             }
           }}
         >
-          <className="h-3 w-3 mr-2 text-primary" />
+          <Target className="h-3 w-3 mr-2 text-primary" />
           Jump to Today
         </Button>
       </div>

@@ -170,7 +170,7 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
           <div className="space-y-2">
             <div className="flex justify-between items-end">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                <className="h-3 w-3 text-primary" /> Suggested Subjects
+                Suggested Subjects
               </Label>
               <Button 
                 variant="ghost" 

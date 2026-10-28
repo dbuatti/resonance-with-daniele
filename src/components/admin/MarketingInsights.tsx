@@ -20,7 +20,7 @@ import {
   Info,
   Tag,
   ChevronRight,
-  Heart
+  Heart,
   Trophy,
   Ticket,
   BarChart3,

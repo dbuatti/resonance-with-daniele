@@ -60,7 +60,7 @@ const AdminEventWorkbench: React.FC = () => {
     },
   });
 
-  const selectedEvent = useMemo(() => events?.find((e) => e.id === id) || null, [events, id]);
+  const selectedEvent = useMemo(() => events?.find((e) => e.id === id) || null, [events, id]) as (typeof events extends (infer T)[] | undefined ? (T & { humanitix_link?: string | null }) | null : null);
 
   const filteredEvents = useMemo(() => {
     if (!events) return [];
@@ -144,7 +144,7 @@ const AdminEventWorkbench: React.FC = () => {
       setHumanitixInput(selectedEvent.humanitix_link || "");
       setIsEditingHumanitix(false);
     }
-  }, [selectedEvent?.id]);
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (!selectedEvent?.date) return;
@@ -281,7 +281,7 @@ const AdminEventWorkbench: React.FC = () => {
 
   // --- EVENT SELECTED ---
   const eventDateFormatted = format(parseISO(selectedEvent.date), "EEEE, MMMM do");
-  const eventLink = (selectedEvent as any)?.humanitix_link || "https://events.humanitix.com/resonance-choir";
+  const eventLink = selectedEvent.humanitix_link || "https://events.humanitix.com/resonance-choir";
   const postText = `Resonance is a monthly pop-up choir in ${selectedEvent.title.includes("Armadale") ? "Armadale" : "Melbourne"} where everyone is welcome. No auditions, no experience needed.\n\nWe're back on ${eventDateFormatted} for our next session!\n\nGrab your spot here: ${eventLink}`;
 
   const quickLinks = [
@@ -355,8 +355,8 @@ const AdminEventWorkbench: React.FC = () => {
             <Card className="rounded-[2.5rem] border-border/50 shadow-sm">
               <CardHeader><CardTitle className="text-lg font-black font-lora">Reference Link</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <Button asChild variant="outline" className="w-full h-12 rounded-xl font-bold border-primary/20 hover:bg-primary/5" disabled={!selectedEvent || !((selectedEvent as any)?.humanitix_link)}>
-                  <a href={(selectedEvent as any)?.humanitix_link || "#"} target="_blank" rel="noopener noreferrer">Humanitix <ExternalLink className="h-4 w-4 ml-2" /></a>
+                <Button asChild variant="outline" className="w-full h-12 rounded-xl font-bold border-primary/20 hover:bg-primary/5" disabled={!selectedEvent || !selectedEvent.humanitix_link}>
+                  <a href={selectedEvent.humanitix_link || "#"} target="_blank" rel="noopener noreferrer">Humanitix <ExternalLink className="h-4 w-4 ml-2" /></a>
                 </Button>
                 <div className="space-y-2">
                   {isEditingHumanitix ? (
@@ -381,7 +381,7 @@ const AdminEventWorkbench: React.FC = () => {
                         className="rounded-xl"
                         disabled={saveHumanitixMutation.isPending}
                         onClick={() => {
-                          setHumanitixInput((selectedEvent as any)?.humanitix_link || "");
+                          setHumanitixInput(selectedEvent.humanitix_link || "");
                           setIsEditingHumanitix(false);
                         }}
                       >
@@ -391,11 +391,11 @@ const AdminEventWorkbench: React.FC = () => {
                   ) : (
                     <Button variant="ghost" size="sm" className="font-bold text-muted-foreground" onClick={() => setIsEditingHumanitix(true)}>
                       <Pencil className="h-4 w-4 mr-2" />
-                      {(selectedEvent as any)?.humanitix_link ? "Edit Humanitix link" : "Add Humanitix link"}
+                      {selectedEvent.humanitix_link ? "Edit Humanitix link" : "Add Humanitix link"}
                     </Button>
                   )}
-                  {(selectedEvent as any)?.humanitix_link && !isEditingHumanitix && (
-                    <p className="text-xs text-muted-foreground break-all font-mono">{(selectedEvent as any).humanitix_link}</p>
+                  {selectedEvent.humanitix_link && !isEditingHumanitix && (
+                    <p className="text-xs text-muted-foreground break-all font-mono">{selectedEvent.humanitix_link}</p>
                   )}
                 </div>
               </CardContent>

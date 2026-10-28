@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Loader2, Star, TrendingUp, Users, Globe, Clock, DollarSign, UserCheck,
-  Music, Zap Brain, AlertTriangle, CheckCircle2,
+  Music, Zap, Brain, AlertTriangle, CheckCircle2,
   PieChart as PieChartIcon, BarChart3, MapPin, LineChart as LineChartIcon,
   UserPlus, EyeOff, ListMusic, Heart, BarChart, CalendarCheck,
   Calendar, MessageSquare, ExternalLink, SearchCode, Frown, MessageSquareText
@@ -632,7 +632,7 @@ const GlobalFeedbackPanel: React.FC = () => {
                 {/* The Experience Section */}
                 <div className="space-y-6">
                   <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
-                    <className="h-4 w-4" /> The Experience
+                    The Experience
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
