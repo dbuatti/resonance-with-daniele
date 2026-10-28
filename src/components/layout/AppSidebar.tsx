@@ -18,6 +18,7 @@ import {
   Brain,
   Inbox
 } from "lucide-react";
+import resonanceLogo from "@/assets/resonance-logo.png";
 import { useSession } from "@/integrations/supabase/auth";
 import { cn } from "@/lib/utils";
 import {
@@ -67,9 +68,7 @@ const AppSidebar: React.FC = () => {
     <Sidebar collapsible="icon" className="border-r border-border/50">
       <SidebarHeader className="p-2 md:p-4">
         <Link to="/" className="flex items-center gap-3 px-2 justify-center md:justify-start">
-          <div className="bg-primary rounded-xl p-2 shadow-lg shadow-primary/20 shrink-0">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
+          <img src={resonanceLogo} alt="Resonance" className="h-9 w-9 rounded-xl shadow-lg shadow-primary/20 shrink-0 object-cover" />
           <span className="font-black font-lora text-xl tracking-tighter group-data-[collapsible=icon]:hidden truncate">
             Resonance
           </span>
