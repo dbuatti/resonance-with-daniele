@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Mic, Users, Heart, ArrowRight, ArrowLeft } from "lucide-react";
@@ -8,6 +8,17 @@ import VoicePhilosophy from "@/components/landing/VoicePhilosophy";
 import Footer from "@/components/Footer";
 
 const LearnMore: React.FC = () => {
+  useEffect(() => {
+    document.title = "Learn More | Resonance Choir Armadale — Daniele Buatti";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute(
+        "content",
+        "Learn about Resonance, a welcoming pop-up choir in Armadale, Melbourne. No auditions, no experience needed — just joyful singing with Daniele Buatti."
+      );
+    }
+  }, []);
+
   const steps = [
     {
       icon: <CheckCircle className="h-12 w-12 text-primary" />,

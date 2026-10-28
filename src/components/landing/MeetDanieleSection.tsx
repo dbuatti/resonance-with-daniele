@@ -13,6 +13,7 @@ const MeetDanieleSection: React.FC = () => {
             <img
               src="/images/daniele-buatti-headshot.jpeg"
               alt="Daniele Buatti"
+              loading="lazy"
               className="w-full h-[320px] md:h-[420px] lg:h-[520px] object-cover rounded-lg"
             />
           </div>

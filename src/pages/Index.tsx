@@ -62,6 +62,86 @@ const Index: React.FC = () => {
           <MeetDanieleSection />
           <CallToActionSection />
           <Footer />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "LocalBusiness",
+                "name": "Resonance with Daniele",
+                "alternateName": "Resonance Choir",
+                "description": "A welcoming, piano-led pop-up community choir in Armadale, Melbourne. No auditions, no experience needed.",
+                "url": "https://resonancechoir.danielebuatti.com",
+                "telephone": "",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": "Armadale",
+                  "addressRegion": "VIC",
+                  "addressCountry": "AU",
+                  "postalCode": "3143"
+                },
+                "image": "https://resonancechoir.danielebuatti.com/images/choir-session-3.jpg",
+                "sameAs": [
+                  "https://www.instagram.com/",
+                  "https://danielebuatti.com"
+                ],
+                "priceRange": "$30",
+                "hasOfferCatalog": {
+                  "@type": "OfferCatalog",
+                  "name": "Choir Sessions",
+                  "itemOffered": {
+                    "@type": "Offer",
+                    "name": "Monthly Pop-Up Choir Session",
+                    "description": "Piano-led group singing session in Armadale, Melbourne",
+                    "price": "30.00",
+                    "priceCurrency": "AUD",
+                    "availability": "https://schema.org/InStock"
+                  }
+                }
+              })
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Event",
+                "name": "Resonance Choir — December Session",
+                "description": "A welcoming, piano-led pop-up choir session in Armadale, Melbourne. No auditions, no experience needed.",
+                "startDate": "2026-12-05T10:00:00+11:00",
+                "endDate": "2026-12-05T13:00:00+11:00",
+                "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+                "eventStatus": "https://schema.org/EventScheduled",
+                "location": {
+                  "@type": "Place",
+                  "name": "Armadale Baptist Church",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Armadale",
+                    "addressRegion": "VIC",
+                    "postalCode": "3143",
+                    "addressCountry": "AU"
+                  }
+                },
+                "image": "https://resonancechoir.danielebuatti.com/images/choir-session-2.jpg",
+                "offers": {
+                  "@type": "Offer",
+                  "name": "Early Bird Ticket",
+                  "price": "30.00",
+                  "priceCurrency": "AUD",
+                  "priceValidUntil": "2026-11-22",
+                  "availability": "https://schema.org/InStock",
+                  "url": "https://resonancechoir.danielebuatti.com/next"
+                },
+                "organizer": {
+                  "@type": "Person",
+                  "name": "Daniele Buatti",
+                  "url": "https://danielebuatti.com"
+                }
+              })
+            }}
+          />
         </>
       )}
     </div>

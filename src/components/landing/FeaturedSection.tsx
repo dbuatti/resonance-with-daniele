@@ -99,6 +99,7 @@ const FeaturedSection: React.FC = () => {
               <img 
                 src="/images/choir-session-2.jpg" 
                 alt="Daniele conducting the choir" 
+                loading="lazy"
                 className="w-full h-[320px] md:h-[420px] lg:h-[520px] object-cover rounded-xl"
               />
             </div>
