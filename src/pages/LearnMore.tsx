@@ -34,14 +34,7 @@ const LearnMore: React.FC = () => {
   return (
     <div className="space-y-24 py-8 md:py-16">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <div className="pt-6 md:pt-8 mb-8 flex justify-between items-center">
-          <Button asChild variant="ghost" size="sm" className="px-0 hover:bg-transparent">
-            <Link to="/" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Home
-            </Link>
-          </Button>
-        </div>
+        <div className="pt-4 md:pt-6 mb-6 flex justify-between items-center">
         
         <section className="text-center space-y-8 mb-32 md:mb-40">
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black font-lora text-foreground tracking-tighter leading-none">
