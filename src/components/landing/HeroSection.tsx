@@ -13,7 +13,7 @@ const HeroSection: React.FC = () => {
         style={{ backgroundImage: "url('/hero-bg.jpeg')" }}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-[#2f1f17]/90 via-[#2f1f17]/70 to-[#2f1f17]/40" />
-      <div className="relative mx-auto max-w-6xl px-4 md:px-6 py-20 md:py-28 lg:py-36">
+      <div className="relative mx-auto max-w-6xl px-4 md:px-6 py-28 md:py-36 lg:py-44 xl:py-52">
         <div className="max-w-3xl">
           <p className="mb-4 text-sm md:text-base font-semibold tracking-[0.2em] uppercase text-[#F6CFCB]/90">
             Melbourne's Monthly Pop-Up Choir
