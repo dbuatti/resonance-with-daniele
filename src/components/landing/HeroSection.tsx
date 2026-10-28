@@ -9,7 +9,7 @@ const HeroSection: React.FC = () => {
   return (
     <section className="relative overflow-hidden">
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center scale-x-[-1]"
         style={{ backgroundImage: "url('/hero-bg.jpeg')" }}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-[#2f1f17]/90 via-[#2f1f17]/70 to-[#2f1f17]/40" />
