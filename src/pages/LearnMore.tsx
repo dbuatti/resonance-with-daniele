@@ -34,8 +34,6 @@ const LearnMore: React.FC = () => {
   return (
     <div className="space-y-24 py-8 md:py-16">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <div className="pt-4 md:pt-6 mb-6 flex justify-between items-center">
-        
         <section className="text-center space-y-8 mb-32 md:mb-40">
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black font-lora text-foreground tracking-tighter leading-none">
             Find your <br /> <span className="text-primary">resonance.</span>
@@ -116,7 +114,6 @@ const LearnMore: React.FC = () => {
         </section>
       </div>
         <Footer />
-      </div>
     </div>
   );
 };
