@@ -29,36 +29,43 @@ const VoicePhilosophy: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-muted/30 rounded-3xl overflow-hidden">
+    <section className="py-16 md:py-24">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-3xl md:text-4xl font-bold font-lora">What I believe about singing</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <div className="text-center mb-12 md:mb-16 space-y-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-lora">What I believe about singing</h2>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
             Singing is for everyone. It's a simple, powerful way to connect with ourselves and each other.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {traits.map((trait, i) => (
-            <div key={i} className="flex flex-col gap-4 p-6 bg-card rounded-2xl shadow-sm">
+            <div key={i} className="flex flex-col gap-4 p-6 md:p-8 bg-card/60 backdrop-blur-sm rounded-xl border border-border/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  {trait.icon}
+                <div className="p-2.5 bg-primary/10 rounded-lg">
+                  <div className="h-6 w-6 text-primary">{React.cloneElement(trait.icon, { className: "h-6 w-6" })}</div>
                 </div>
-                <h3 className="text-xl font-bold font-lora">{trait.title}</h3>
+                <h3 className="text-xl md:text-2xl font-bold font-lora">{trait.title}</h3>
               </div>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed text-base md:text-lg">
                 {trait.description}
               </p>
             </div>
           ))}
         </div>
 
-        <div className="mt-16 p-8 bg-primary text-primary-foreground rounded-2xl shadow-xl text-center">
-          <p className="text-xl md:text-2xl font-lora italic leading-relaxed">
-            "My goal is to help you find the voice that feels most like you, and to experience the joy of sharing that with others."
-          </p>
-          <p className="mt-4 font-bold uppercase tracking-widest text-sm opacity-80">— Daniele Buatti</p>
+        <div className="mt-12 md:mt-16 p-8 md:p-10 bg-primary text-primary-foreground rounded-xl text-center">
+          <div className="flex flex-col items-center gap-4">
+            <img
+              src="/images/daniele-buatti-headshot.jpeg"
+              alt="Daniele Buatti"
+              className="w-16 h-16 rounded-full object-cover"
+            />
+            <p className="text-xl md:text-2xl lg:text-3xl font-lora italic leading-relaxed max-w-3xl">
+              "My goal is to help you find the voice that feels most like you, and to experience the joy of sharing that with others."
+            </p>
+            <p className="font-semibold tracking-wide text-sm opacity-90">— Daniele Buatti</p>
+          </div>
         </div>
       </div>
     </section>
