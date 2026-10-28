@@ -3,9 +3,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Mic, Users, Heart, CalendarDays, ArrowRight } from "lucide-react";
+import { CheckCircle, Mic, Users, Heart, ArrowRight } from "lucide-react";
 import VoicePhilosophy from "@/components/landing/VoicePhilosophy";
-import BackButton from "@/components/ui/BackButton";
+import { ArrowLeft } from "lucide-react";
 
 const LearnMore: React.FC = () => {
   const steps = [
