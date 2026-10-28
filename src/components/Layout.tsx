@@ -37,20 +37,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col">
-        <header className="glass-header p-4 md:p-6 sticky top-0 z-50">
-          <div className="w-full flex justify-between items-center px-4">
-            <div className="flex items-center gap-3">
-              <img src={resonanceLogo} alt="Resonance" className="h-9 w-9 rounded-xl shadow-lg" />
-              <span className="text-xl font-black font-lora text-primary-foreground tracking-tighter">
+        <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/60">
+          <div className="mx-auto max-w-6xl w-full flex justify-between items-center px-4 md:px-6 py-3 md:py-4">
+            <a href="/" className="flex items-center gap-2.5">
+              <img src={resonanceLogo} alt="Resonance" className="h-9 w-9 rounded-lg" />
+              <span className="text-lg md:text-xl font-black font-lora tracking-tight text-foreground">
                 Resonance
               </span>
-            </div>
-            <div className="flex items-center gap-4">
+            </a>
+            <nav className="flex items-center gap-2 md:gap-4">
               <ThemeToggle />
-              <Button asChild variant="outline" className="bg-primary-foreground text-primary border-none font-bold rounded-xl">
+              <Button asChild variant="ghost" className="hidden md:inline-flex font-semibold">
+                <a href="/learn-more">How it works</a>
+              </Button>
+              <Button asChild className="rounded-lg font-bold px-4 md:px-5">
+                <a href="/next">Book Your Spot</a>
+              </Button>
+              <Button asChild variant="outline" className="hidden sm:inline-flex rounded-lg font-semibold">
                 <a href="/login">Member Login</a>
               </Button>
-            </div>
+            </nav>
           </div>
         </header>
         <main className="flex-grow w-full">{children}</main>

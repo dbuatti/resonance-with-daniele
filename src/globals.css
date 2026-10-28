@@ -94,9 +94,16 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-size: 16px;
+    line-height: 1.7;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-lora tracking-tight;
+    text-wrap: balance;
+  }
+  p {
+    @apply text-[1rem] md:text-[1.0625rem] leading-relaxed;
+    max-width: 65ch;
   }
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;

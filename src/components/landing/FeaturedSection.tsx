@@ -43,68 +43,64 @@ const FeaturedSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="py-24 md:py-32 bg-muted/30 border-y border-border/50">
-      <div className="max-w-6xl mx-auto px-4">
+    <section className="py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
         {loading ? (
-          <div className="space-y-8 text-center">
-            <Skeleton className="h-12 w-48 mx-auto rounded-full" />
-            <Skeleton className="h-20 w-3/4 mx-auto" />
-            <Skeleton className="h-40 w-full mx-auto rounded-[3rem]" />
+          <div className="space-y-6">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-12 w-3/4" />
+            <Skeleton className="h-40 w-full" />
           </div>
         ) : featuredEvent ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8 text-center lg:text-left">
-              <div className="space-y-4">
-                <Badge className="bg-primary text-primary-foreground px-4 py-1 rounded-full font-black uppercase tracking-widest text-[10px]">
-                  Next Session
-                </Badge>
-                <h2 className="text-5xl md:text-7xl font-black font-lora tracking-tighter leading-none">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+            <div className="lg:col-span-7 space-y-6">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+                  Upcoming session
+                </p>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold font-lora leading-[1.05]">
                   {featuredEvent.title}
                 </h2>
-                <p className="text-2xl font-black text-primary tracking-tight">
-                  {format(new Date(featuredEvent.date), "EEEE, MMMM do")}
+                <p className="text-xl md:text-2xl font-semibold text-foreground/90">
+                  {format(new Date(featuredEvent.date), "EEEE, MMMM do, yyyy")}
                 </p>
               </div>
 
-              <div className="flex flex-wrap justify-center lg:justify-start gap-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-background rounded-full border border-primary/10 text-sm font-bold shadow-sm">
-                  <MapPin className="h-4 w-4 text-primary" />
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-base text-foreground/90">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
                   {featuredEvent.location || "Armadale, VIC"}
                 </div>
                 {featuredEvent.main_song && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-background rounded-full border border-primary/10 text-sm font-bold shadow-sm">
-                    <Music className="h-4 w-4 text-primary" />
+                  <div className="flex items-center gap-2">
+                    <Music className="h-4 w-4" />
                     Focus: {featuredEvent.main_song}
                   </div>
                 )}
               </div>
 
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl">
                 {featuredEvent.description || "Join us for a morning of harmony and connection. No auditions, no experience needed—just bring your voice!"}
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <Button size="lg" className="h-16 px-10 text-xl font-black rounded-2xl shadow-2xl shadow-primary/20 group/btn transition-all hover:scale-105 w-full sm:w-auto" asChild>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <Button size="lg" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-bold rounded-lg" asChild>
                   <a href="/next">
-                    Reserve Your Spot <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover/btn:translate-x-2" />
+                    Reserve Your Spot <ArrowRight className="ml-2 h-5 w-5" />
                   </a>
                 </Button>
-                <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">
+                <p className="text-sm text-muted-foreground">
                   Tickets $30 via Humanitix
                 </p>
               </div>
             </div>
 
-            <div className="relative hidden lg:block">
-              <div className="absolute -inset-4 bg-primary/5 rounded-[4rem] rotate-3" />
+            <div className="lg:col-span-5">
               <img 
                 src="/images/choir-session-2.jpg" 
-                alt="Daniele conducting" 
-                className="relative rounded-[3rem] shadow-2xl object-cover aspect-square"
+                alt="Daniele conducting the choir" 
+                className="w-full h-[320px] md:h-[420px] lg:h-[520px] object-cover rounded-xl"
               />
-              <div className="absolute -bottom-6 -right-6 bg-accent p-8 rounded-[2rem] shadow-2xl max-w-xs">
-                <p className="text-accent-foreground font-black text-xl font-lora leading-tight">"The harmonies are sounding beautiful already."</p>
-              </div>
             </div>
           </div>
         ) : (

@@ -28,26 +28,30 @@ const HowItWorksSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 relative overflow-hidden border-y border-border/50">
-      <div className="absolute inset-0 texture-bg opacity-15" />
-      <div className="absolute inset-0 bg-secondary/40" />
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold font-lora">How it works</h2>
-          <p className="text-lg text-muted-foreground">Four simple steps to join the circle.</p>
+    <section className="py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <div className="max-w-2xl mb-10 md:mb-14">
+          <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
+            How it works
+          </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-lora leading-[1.05] mb-3">
+            No experience necessary
+          </h2>
+          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+            Three simple steps to joining the harmony.
+          </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {steps.map((step, index) => (
-            <div key={index} className="relative group">
-              <div className="mb-6 w-16 h-16 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                {step.icon}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+          {steps.slice(0, 3).map((step, index) => (
+            <div key={index} className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-sm">
+                  {index + 1}
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold font-lora">{step.title}</h3>
               </div>
-              <h3 className="text-xl font-bold font-lora mb-3">{step.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{step.description}</p>
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-8 left-full w-full h-px bg-border -translate-x-8" />
-              )}
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">{step.description}</p>
             </div>
           ))}
         </div>
