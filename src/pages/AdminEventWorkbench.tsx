@@ -280,6 +280,7 @@ const AdminEventWorkbench: React.FC = () => {
   }
 
   // --- EVENT SELECTED ---
+  const eventDateFormatted = format(parseISO(selectedEvent.date), "EEEE, MMMM do");
   const eventLink = (selectedEvent as any)?.humanitix_link || "https://events.humanitix.com/resonance-choir";
   const postText = `Resonance is a monthly pop-up choir in ${selectedEvent.title.includes("Armadale") ? "Armadale" : "Melbourne"} where everyone is welcome. No auditions, no experience needed.\n\nWe're back on ${eventDateFormatted} for our next session!\n\nGrab your spot here: ${eventLink}`;
 
