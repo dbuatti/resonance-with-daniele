@@ -38,7 +38,7 @@ const CommunityGallery: React.FC = () => {
               key={i}
               src={image.src}
               alt={image.alt}
-              className="w-full h-[260px] md:h-[320px] object-cover rounded-lg"
+              className="w-full h-[260px] md:h-[320px] object-cover rounded-lg transition-all duration-500 hover:scale-105 hover:shadow-lg"
             />
           ))}
         </div>

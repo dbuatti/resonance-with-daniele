@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Star, Quote as QuoteIcon } from "lucide-react";
 
 const testimonials = [
   {

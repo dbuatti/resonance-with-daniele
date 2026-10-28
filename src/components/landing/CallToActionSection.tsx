@@ -6,8 +6,8 @@ import { ArrowRight } from "lucide-react";
 
 const CallToActionSection: React.FC = () => {
   return (
-    <section className="py-12 md:py-16">
-      <div className="mx-auto max-w-5xl px-4 md:px-6">
+    <section className="py-16 md:py-20 md:bg-[#f8f0f3] relative overflow-hidden">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
         <div className="text-center">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-lora leading-[1.05] mb-4">
             Ready to sing with us?

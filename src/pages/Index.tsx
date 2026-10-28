@@ -42,7 +42,7 @@ const Index: React.FC = () => {
         <>
           <HeroSection />
           <FeaturedSection />
-          <section className="py-12 md:py-16">
+          <section className="py-16 md:py-20">
             <div className="mx-auto max-w-6xl px-4 md:px-6">
               <div className="max-w-3xl">
                 <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
@@ -55,9 +55,9 @@ const Index: React.FC = () => {
                   A piano-led pop-up choir in Armadale. Learn harmony parts through piano-led teaching, sing with a welcoming group, and enjoy making music together without pressure to be perfect.
                 </p>
                 <ul className="space-y-2 text-base md:text-lg text-foreground/90">
-                  <li>• Piano-led teaching of harmony parts</li>
-                  <li>• Welcoming group, no auditions or prior experience required</li>
-                  <li>• Make music together without pressure to be perfect</li>
+                  <li className="flex items-start gap-2">• Piano-led teaching of harmony parts</li>
+                  <li className="flex items-start gap-2">• Welcoming group, no auditions or prior experience required</li>
+                  <li className="flex items-start gap-2">• Make music together without pressure to be perfect</li>
                 </ul>
               </div>
             </div>
