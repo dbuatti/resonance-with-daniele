@@ -15,7 +15,8 @@ import {
   CalendarDays,
   Compass,
   Brain,
-  Inbox
+  Inbox,
+  MessageSquareQuote
 } from "lucide-react";
 import resonanceLogo from "@/assets/resonance-logo.png";
 import { useSession } from "@/integrations/supabase/auth";
@@ -51,6 +52,7 @@ const AppSidebar: React.FC = () => {
   const adminLinks = [
     { title: "Command Center", icon: Shield, url: "/admin" },
     { title: "Events", icon: CalendarDays, url: "/admin/events" },
+    { title: "Feedback", icon: MessageSquareQuote, url: "/admin/feedback" },
     { title: "People", icon: Users, url: "/admin/people" },
     { title: "Inbox", icon: Inbox, url: "/admin/inbox" },
     { title: "Repertoire Studio", icon: Brain, url: "/admin/repertoire" },

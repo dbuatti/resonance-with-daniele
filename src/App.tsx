@@ -25,6 +25,7 @@ const AdminInbox = lazy(() => import("./pages/AdminInbox"));
 const AdminRepertoireZone = lazy(() => import("./pages/AdminRepertoireZone"));
 const CurrentEventPage = lazy(() => import("./pages/CurrentEventPage"));
 const EventFeedback = lazy(() => import("./pages/EventFeedback"));
+const AdminFeedback = lazy(() => import("./pages/AdminFeedback"));
 const SessionHub = lazy(() => import("./pages/SessionHub"));
 const ProfileLayoutPage = lazy(() => import("./pages/ProfileLayoutPage"));
 const ProfileDetails = lazy(() => import("./components/profile/ProfileDetails"));
@@ -108,7 +109,7 @@ const App = () => (
                 <Route path="/admin/interest-submissions" element={<Navigate to="/admin/people?tab=leads" replace />} />
                 <Route path="/admin/announcements" element={<Navigate to="/admin/inbox" replace />} />
                 <Route path="/admin/issue-reports" element={<Navigate to="/admin/inbox?tab=issue-reports" replace />} />
-                <Route path="/admin/feedback" element={<Navigate to="/admin/events" replace />} />
+                <Route path="/admin/feedback" element={<Page><AdminFeedback /></Page>} />
                 <Route path="/admin/growth" element={<Navigate to="/admin" replace />} />
                 <Route path="/admin/june-poll" element={<Navigate to="/admin" replace />} />
                 <Route path="/admin/session-hub-guide" element={<Navigate to="/admin" replace />} />
