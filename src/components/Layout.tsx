@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Link } from "react-router-dom";
 import { useSession } from "@/integrations/supabase/auth";
 import AppSidebar from "./layout/AppSidebar";
 import BottomNav from "./layout/BottomNav";
