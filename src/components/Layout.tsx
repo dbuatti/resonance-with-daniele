@@ -67,10 +67,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Consistent Header for Trigger */}
           <header className="h-14 border-b border-border/50 flex items-center px-4 sticky top-0 bg-background/80 backdrop-blur-md z-40">
             <SidebarTrigger className="h-9 w-9 rounded-lg hover:bg-muted transition-colors" />
-            <div className="md:hidden flex items-center gap-3 ml-4">
+            <Link to="/" className="md:hidden flex items-center gap-3 ml-4">
               <img src={resonanceLogo} alt="Resonance" className="h-8 w-8 rounded-lg" />
               <span className="font-black font-lora text-lg tracking-tighter">Resonance</span>
-            </div>
+            </Link>
           </header>
 
           <main className="flex-1 p-4 md:p-8 pt-4 md:pt-6 pb-24 md:pb-8">
