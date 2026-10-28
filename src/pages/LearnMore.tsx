@@ -33,13 +33,15 @@ const LearnMore: React.FC = () => {
 
   return (
     <div className="space-y-24 py-8 md:py-16">
-      <div className="max-w-6xl mx-auto px-4">
-        <Button asChild variant="ghost" className="mb-8 -ml-2 hover:bg-primary/5">
-          <Link to="/">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Link>
-        </Button>
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <div className="pt-6 md:pt-10 mb-10">
+          <Button asChild variant="ghost" size="sm" className="hover:bg-primary/5">
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to home
+            </Link>
+          </Button>
+        </div>
         
         <section className="text-center space-y-8 mb-32 md:mb-40">
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black font-lora text-foreground tracking-tighter leading-none">
@@ -68,35 +70,29 @@ const LearnMore: React.FC = () => {
 
         <VoicePhilosophy />
 
-        <section className="space-y-16 md:space-y-20 mt-32 md:mt-40">
-          <div className="text-center space-y-4">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black font-lora text-foreground tracking-tight">
+        <section className="mt-32 md:mt-40">
+          <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16 px-4">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black font-lora tracking-tight mb-4">
               What to expect
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground font-medium">A gentle journey through a typical session.</p>
+            <p className="text-lg md:text-xl text-muted-foreground">
+              A gentle journey through a typical session.
+            </p>
           </div>
           
-          <div className="max-w-4xl mx-auto space-y-8">
+          <div className="max-w-3xl mx-auto px-4 space-y-10">
             {steps.map((step, i) => (
-              <div key={i} className="relative grid grid-cols-[auto_1fr] gap-6 md:gap-8 items-start">
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
-                    {i + 1}
+              <div key={i} className="flex items-start gap-5 md:gap-6">
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    {React.cloneElement(step.icon, { className: "h-6 w-6 md:h-7 md:w-7 text-primary" })}
                   </div>
-                  {i < steps.length - 1 && (
-                    <div className="w-px h-full bg-border mt-4" />
-                  )}
                 </div>
-                <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start pb-8">
-                  <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
-                    {React.cloneElement(step.icon, { className: "h-8 w-8 text-primary" })}
-                  </div>
-                  <div className="space-y-2 flex-1">
-                    <h3 className="text-2xl md:text-3xl font-black font-lora">{step.title}</h3>
-                    <p className="text-lg text-muted-foreground leading-relaxed">
-                      {step.description}
-                    </p>
-                  </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-xl md:text-2xl font-bold font-lora">{step.title}</h3>
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                    {step.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -126,7 +122,9 @@ const LearnMore: React.FC = () => {
           </div>
         </section>
       </div>
-      <Footer />
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <Footer />
+      </div>
     </div>
   );
 };
