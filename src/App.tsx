@@ -69,7 +69,7 @@ const App = () => (
                 <Route path="/sessions" element={<Page><SessionHub /></Page>} />
                 <Route path="/events" element={<Page><Events /></Page>} />
                 <Route path="/login" element={<Page><Login /></Page>} />
-                <Route path="/current-event" element={<Page><CurrentEventPage /></Page>} />
+                <Route path="/current-event" element={<Navigate to="/next" replace />} />
                 <Route path="/learn-more" element={<Page><LearnMore /></Page>} />
                 <Route path="/song-suggestions" element={<Page><SongSuggestionsPage /></Page>} />
                 <Route path="/feedback" element={<Page><EventFeedback /></Page>} />

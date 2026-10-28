@@ -367,7 +367,7 @@ const WelcomeHub: React.FC = () => {
                 </div>
                 {upcomingEvent ? (
                   <Button size="lg" className="w-full h-14 text-lg font-black rounded-xl shadow-lg" asChild>
-                    <Link to={upcomingEvent.humanitix_link || "/current-event"}>
+                    <Link to={upcomingEvent.humanitix_link || "/next"}>
                       RSVP Now <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>

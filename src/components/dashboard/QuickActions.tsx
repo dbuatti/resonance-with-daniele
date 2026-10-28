@@ -24,7 +24,7 @@ const QuickActions: React.FC = () => {
     {
       label: "RSVP to Event",
       icon: <Calendar className="h-4 w-4" />,
-      link: "/current-event",
+      link: "/next",
       color: "text-green-500",
       bg: "bg-green-500/10"
     },

@@ -85,9 +85,9 @@ const FeaturedSection: React.FC = () => {
 
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <Button size="lg" className="h-16 px-10 text-xl font-black rounded-2xl shadow-2xl shadow-primary/20 group/btn transition-all hover:scale-105 w-full sm:w-auto" asChild>
-                  <Link to="/current-event">
+                  <a href="/next">
                     Reserve Your Spot <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover/btn:translate-x-2" />
-                  </Link>
+                  </a>
                 </Button>
                 <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">
                   Tickets $30 via Humanitix

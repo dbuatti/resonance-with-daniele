@@ -28,7 +28,7 @@ interface InternalLinkSelectorProps {
 const staticPages = [
   { path: "/", name: "Home (Dashboard)", icon: Home },
   { path: "/events", name: "Events List", icon: CalendarDays },
-  { path: "/current-event", name: "Current Event / RSVP", icon: CalendarDays },
+  { path: "/next", name: "Next Event / RSVP", icon: CalendarDays },
   { path: "/resources", name: "Resources Home", icon: FileText },
   { path: "/song-suggestions", name: "Song Suggestions", icon: Music },
   { path: "/profile", name: "My Profile", icon: Home },
