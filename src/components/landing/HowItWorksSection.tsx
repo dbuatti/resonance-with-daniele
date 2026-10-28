@@ -28,8 +28,10 @@ const HowItWorksSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-secondary/30 border-y border-border/50">
-      <div className="container mx-auto px-4">
+    <section className="py-16 md:py-24 relative overflow-hidden border-y border-border/50">
+      <div className="absolute inset-0 texture-bg opacity-15" />
+      <div className="absolute inset-0 bg-secondary/40" />
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold font-lora">How it works</h2>
           <p className="text-lg text-muted-foreground">Four simple steps to join the circle.</p>
