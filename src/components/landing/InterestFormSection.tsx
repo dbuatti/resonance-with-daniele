@@ -70,28 +70,33 @@ const InterestFormSection: React.FC = () => {
 
   if (isSubmitted) {
     return (
-      <section className="py-16 md:py-24 bg-muted text-foreground">
-        <div className="max-w-2xl mx-auto">
-          <Card className="p-6 md:p-8 shadow-lg rounded-xl text-center">
-            <CardHeader>
-              <CardTitle className="text-3xl font-bold font-lora">Thank You!</CardTitle>
-              <CardDescription className="text-lg text-muted-foreground">
-                Your interest has been recorded. We'll reach out to you soon with more details about Resonance with Daniele.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">In the meantime, feel free to explore the rest of the site!</p>
-            </CardContent>
-          </Card>
+      <section className="py-16 md:py-24 relative overflow-hidden text-foreground">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#B0BCD3]/20 to-transparent" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-2xl mx-auto">
+            <Card className="p-6 md:p-8 shadow-lg rounded-xl text-center">
+              <CardHeader>
+                <CardTitle className="text-3xl font-bold font-lora">Thank You!</CardTitle>
+                <CardDescription className="text-lg text-muted-foreground">
+                  Your interest has been recorded. We'll reach out to you soon with more details about Resonance with Daniele.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">In the meantime, feel free to explore the rest of the site!</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="py-16 md:py-24 bg-muted text-foreground">
+    <section className="py-16 md:py-24 relative overflow-hidden text-foreground">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#B0BCD3]/20 to-transparent" />
+      <div className="container mx-auto px-4 relative z-10">
       <div className="max-w-2xl mx-auto">
-        <Card className="p-6 md:p-8 shadow-lg rounded-xl">
+        <Card className="p-6 md:p-8 shadow-lg rounded-xl bg-card/80 backdrop-blur-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold font-lora">Stay Up-to-Date on the Choir!</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
@@ -166,6 +171,7 @@ const InterestFormSection: React.FC = () => {
             </Form>
           </CardContent>
         </Card>
+        </div>
       </div>
     </section>
   );
