@@ -88,6 +88,9 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -97,6 +100,9 @@
   }
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  img {
+    @apply max-w-full h-auto;
   }
 }
 
@@ -138,5 +144,9 @@
   
   .interactive {
     @apply transition-all duration-200 ease-out;
+  }
+
+  .smooth-transition {
+    @apply transition-all duration-300 ease-in-out;
   }
 }
