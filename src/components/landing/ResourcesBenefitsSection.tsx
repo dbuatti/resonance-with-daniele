@@ -51,8 +51,8 @@ const ResourcesBenefitsSection: React.FC = () => {
         <div className="max-w-3xl mx-auto text-center">
           <Card className="p-10 shadow-xl rounded-[2.5rem] bg-card border-l-8 border-primary">
             <CardContent className="text-xl md:text-2xl italic font-medium text-muted-foreground leading-relaxed">
-              “I enjoyed the open, fun, inclusive and relaxed atmosphere. Beautiful arrangement and fantastic people.”
-              <p className="mt-6 font-black text-foreground not-italic text-sm uppercase tracking-widest">— Past Participant</p>
+              “A beautiful space to sing, connect and be welcomed exactly as you are.”
+              <p className="mt-6 font-black text-foreground not-italic text-sm uppercase tracking-widest">— Singer</p>
             </CardContent>
           </Card>
         </div>
