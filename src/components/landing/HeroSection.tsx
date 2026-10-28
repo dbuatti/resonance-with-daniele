@@ -19,10 +19,17 @@ const HeroSection: React.FC = () => {
           <span>Melbourne's Monthly Pop-Up Choir</span>
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 font-lora text-white leading-[1.1] animate-fade-in-up [animation-delay:200ms] drop-shadow-lg">
-          Come and sing <br />
-          <span className="text-[#F6CFCB]">with us.</span>
-        </h1>
+        <div className="mb-6 animate-fade-in-up [animation-delay:200ms] drop-shadow-lg">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight font-playfair text-white leading-[1.1]">
+            RECREATE
+          </h1>
+          <h2 className="text-4xl md:text-6xl font-bold tracking-tight font-poppins text-white leading-[1.1] mt-2">
+            HARMONY
+          </h2>
+          <p className="text-lg md:text-2xl font-medium mt-4 font-dmsans text-white/95 tracking-wide">
+            Find your voice in a joyful community choir
+          </p>
+        </div>
         
         <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto text-white/90 leading-relaxed animate-fade-in-up [animation-delay:400ms] drop-shadow-md">
           I run a joyful pop-up choir in Armadale. You don't need to audition or have any experience—just come along and sing great songs in harmony with a friendly group.
