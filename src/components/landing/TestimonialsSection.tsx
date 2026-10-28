@@ -24,36 +24,24 @@ const testimonials = [
 
 const TestimonialsSection: React.FC = () => {
   return (
-    <section className="py-16 md:py-24 bg-secondary/20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold font-lora">What Our Singers Say</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join a community built on joy, support, and the shared love of music.
+    <section className="py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <div className="mb-8">
+          <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
+            Voices
           </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-lora leading-[1.05]">
+            What singers say
+          </h2>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((t, i) => (
-            <Card key={i} className="border-none shadow-xl bg-card rounded-2xl overflow-hidden hover:scale-[1.02] transition-transform duration-300">
-              <CardContent className="p-8 space-y-6">
-                <div className="flex justify-between items-start">
-                  <div className="flex gap-1 text-accent">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-current" />
-                    ))}
-                  </div>
-                  <QuoteIcon className="h-8 w-8 text-primary/10" />
-                </div>
-                <p className="text-lg italic leading-relaxed text-foreground/90">
-                  "{t.quote}"
-                </p>
-                <div className="pt-4 border-t border-border/50">
-                  <p className="font-bold text-primary">{t.author}</p>
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t.role}</p>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+          {testimonials.slice(0, 2).map((t, i) => (
+            <div key={i} className="space-y-4">
+              <blockquote className="text-lg md:text-xl leading-relaxed">
+                “{t.quote}”
+              </blockquote>
+              <p className="text-sm text-muted-foreground">— {t.author}</p>
+            </div>
           ))}
         </div>
       </div>

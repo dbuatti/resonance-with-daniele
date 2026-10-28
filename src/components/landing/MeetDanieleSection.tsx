@@ -7,42 +7,37 @@ import { Link } from "react-router-dom";
 import { Music } from "lucide-react";
 const MeetDanieleSection: React.FC = () => {
   return (
-    <section className="py-16 md:py-24 bg-background text-foreground">
-      <div className="max-w-6xl mx-auto text-center px-4">
-        <h2 className="text-4xl md:text-6xl font-black font-lora tracking-tight mb-12">Hi, I'm Daniele</h2>
-        <div className="max-w-4xl mx-auto p-8 md:p-12 flex flex-col md:flex-row items-center gap-10">
-          <div className="relative flex-shrink-0">
+    <section className="py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+          <div className="lg:col-span-5">
             <img
               src="/images/daniele-buatti-headshot.jpeg"
               alt="Daniele Buatti"
-              className="w-56 h-56 rounded-full object-cover shadow-xl border-4 border-background"
+              className="w-full h-[320px] md:h-[420px] lg:h-[520px] object-cover rounded-lg"
             />
-            <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-3 rounded-full shadow-lg">
-              <Music className="h-6 w-6" />
-            </div>
           </div>
-          <div className="text-left space-y-6">
-            <div>
-              <CardTitle className="text-2xl md:text-3xl font-black font-lora mb-2">Daniele Buatti</CardTitle>
-              <CardDescription className="text-lg md:text-xl text-primary font-bold">
-                Vocal Coach and Musical Director
-              </CardDescription>
-            </div>
-            <div className="p-0 space-y-4 text-muted-foreground text-lg leading-relaxed font-medium">
+          <div className="lg:col-span-7 space-y-4">
+            <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+              About
+            </p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-lora leading-[1.05]">
+              Daniele Buatti
+            </h2>
+            <p className="text-lg text-muted-foreground">Musical Director & Vocal Coach</p>
+            <div className="space-y-4 text-base md:text-lg text-foreground/90 leading-relaxed max-w-2xl">
               <p>
-                I believe that singing should feel good. My approach is all about helping you find a natural, easy way to use your voice that feels authentic to you.
+                I believe singing should feel good. My approach helps you find a natural, easy way to use your voice that feels authentic to you.
               </p>
               <p>
-                In our sessions, I focus on creating a warm and relaxed environment where we can focus on the music and the connection between us. It's not just about hitting the right notes; it's about the joy of singing together.
+                In our sessions, I focus on creating a warm and relaxed environment where we can focus on the music and the connection between us. It's about the joy of singing together.
               </p>
-              <div className="pt-4">
-                <Button variant="link" className="p-0 h-auto text-primary font-black text-lg hover:underline group" asChild>
-                  <a href="https://DanieleBuatti.com" target="_blank" rel="noopener noreferrer">
-                    See more of my work <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
-                  </a>
-                </Button>
-              </div>
             </div>
+            <Button asChild variant="outline" className="rounded-lg">
+              <a href="https://danielebuatti.com" target="_blank" rel="noopener noreferrer">
+                See more of my work
+              </a>
+            </Button>
           </div>
         </div>
       </div>

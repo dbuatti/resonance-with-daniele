@@ -42,11 +42,28 @@ const Index: React.FC = () => {
         <>
           <HeroSection />
           <FeaturedSection />
-          <HowItWorksSection />
-          <AboutChoirSection />
+          <section className="py-12 md:py-16">
+            <div className="mx-auto max-w-6xl px-4 md:px-6">
+              <div className="max-w-3xl">
+                <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
+                  The experience
+                </p>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-lora leading-[1.05] mb-4">
+                  Learn harmony, sing together
+                </h2>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
+                  A piano-led pop-up choir in Armadale. Learn harmony parts through piano-led teaching, sing with a welcoming group, and enjoy making music together without pressure to be perfect.
+                </p>
+                <ul className="space-y-2 text-base md:text-lg text-foreground/90">
+                  <li>• Piano-led teaching of harmony parts</li>
+                  <li>• Welcoming group, no auditions or prior experience required</li>
+                  <li>• Make music together without pressure to be perfect</li>
+                </ul>
+              </div>
+            </div>
+          </section>
           <CommunityGallery />
           <TestimonialsSection />
-          <ResourcesBenefitsSection />
           <MeetDanieleSection />
           <CallToActionSection />
         </>

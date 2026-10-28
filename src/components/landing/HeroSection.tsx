@@ -21,26 +21,22 @@ const HeroSection: React.FC = () => {
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold font-playfair leading-[1.02] text-white mb-4">
             Come and sing <span className="text-[#F6CFCB]">with us</span>
           </h1>
-          <p className="text-lg md:text-xl text-white/90 leading-relaxed mb-6 max-w-2xl">
-            A welcoming, low-pressure community choir in Armadale. No audition, no experience needed — just come along and sing great songs in harmony.
+          <p className="text-lg md:text-xl text-white/90 leading-relaxed mb-4 max-w-2xl">
+            A welcoming, piano-led pop-up choir in Armadale. No auditions, no experience needed.
           </p>
-          <div className="flex items-center gap-2 text-[#F6CFCB] font-semibold mb-8">
-            <MapPin className="h-5 w-5" />
-            <span>Armadale, VIC 3143</span>
-          </div>
+          <p className="text-base md:text-lg text-white/85 leading-relaxed mb-6 max-w-2xl">
+            Learn harmony parts together and make music without pressure to be perfect.
+          </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
             <Button size="lg" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-bold rounded-lg bg-[#D69FB0] text-[#2f1f17] hover:bg-[#D69FB0]/90 group" asChild>
               <a href="/next">
-                Book Your Spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                Book your spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </a>
             </Button>
             <Button size="lg" variant="outline" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-semibold rounded-lg bg-white/10 backdrop-blur-sm border-white/40 text-white hover:bg-white/15" asChild>
-              <Link to="/learn-more">How it works</Link>
+              <Link to="/learn-more">Learn more</Link>
             </Button>
           </div>
-          <p className="text-sm text-white/80">
-            Tickets $30 via Humanitix
-          </p>
         </div>
       </div>
     </section>

@@ -62,7 +62,7 @@ const FeaturedSection: React.FC = () => {
                   {featuredEvent.title}
                 </h2>
                 <p className="text-xl md:text-2xl font-semibold text-foreground/90">
-                  {format(new Date(featuredEvent.date), "EEEE, MMMM do, yyyy")}
+                  {format(new Date(featuredEvent.date), "EEEE, d MMMM yyyy")} · 10am–1pm · Armadale
                 </p>
               </div>
 
@@ -85,12 +85,12 @@ const FeaturedSection: React.FC = () => {
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <Button size="lg" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-bold rounded-lg" asChild>
-                  <a href="/next">
-                    Reserve Your Spot <ArrowRight className="ml-2 h-5 w-5" />
+                  <a href={featuredEvent.humanitix_link || "/next"}>
+                    Book your spot <ArrowRight className="ml-2 h-5 w-5" />
                   </a>
                 </Button>
                 <p className="text-sm text-muted-foreground">
-                  Tickets $30 via Humanitix
+                  Early bird $30 · Early bird deadline 22 November
                 </p>
               </div>
             </div>

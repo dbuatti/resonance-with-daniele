@@ -22,27 +22,24 @@ const CommunityGallery: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-black font-lora tracking-tight">Community in Action</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
-            A glimpse into our monthly sessions at Armadale.
+    <section className="py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <div className="mb-8">
+          <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
+            Community
           </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-lora leading-[1.05]">
+            Moments of harmony
+          </h2>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {images.map((image, i) => (
-            <div key={i} className="group relative overflow-hidden rounded-[2rem] shadow-xl aspect-[4/5]">
-              <img
-                src={image.src}
-                alt={image.alt}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-8">
-                <p className="text-white font-bold text-xl font-lora">{image.caption}</p>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          {images.slice(0, 3).map((image, i) => (
+            <img
+              key={i}
+              src={image.src}
+              alt={image.alt}
+              className="w-full h-[260px] md:h-[320px] object-cover rounded-lg"
+            />
           ))}
         </div>
       </div>
