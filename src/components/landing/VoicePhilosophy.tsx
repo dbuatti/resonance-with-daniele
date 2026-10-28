@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic2, Heart, Sparkles, Users } from "lucide-react";
+import { Mic2, Heart, Users } from "lucide-react";
 
 const VoicePhilosophy: React.FC = () => {
   const traits = [
@@ -12,7 +12,7 @@ const VoicePhilosophy: React.FC = () => {
       description: "Singing is a natural human experience. I focus on making it feel easy and accessible for everyone."
     },
     {
-      icon: <Sparkles className="h-6 w-6 text-primary" />,
+      icon: <Music className="h-6 w-6 text-primary" />,
       title: "Natural Ease",
       description: "We work on using your voice in a way that feels comfortable and relaxed, without any strain."
     },

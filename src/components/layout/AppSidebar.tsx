@@ -12,7 +12,6 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  Sparkles,
   CalendarDays,
   Compass,
   Brain,

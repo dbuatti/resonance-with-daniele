@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Trash2, Loader2, ChevronRight, ChevronLeft, Sparkles, DollarSign, Clock } from "lucide-react";
+import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Trash2, Loader2, ChevronRight, ChevronLeft, DollarSign, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -290,7 +290,7 @@ const EventCreatePanel: React.FC<EventCreatePanelProps> = ({ onCreated, onCancel
           <Button onClick={nextStep} className="font-black px-8 rounded-xl shadow-lg">Next <ChevronRight className="ml-2 h-4 w-4" /></Button>
         ) : (
           <Button onClick={handleCreateEvent} disabled={isCreating} className="font-black px-8 rounded-xl shadow-lg bg-primary hover:bg-primary/90">
-            {isCreating ? "Creating..." : (<><Sparkles className="mr-2 h-4 w-4" /> Create Event</>)}
+            {isCreating ? "Creating..." : "Create Event"}
           </Button>
         )}
       </div>

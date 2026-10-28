@@ -4,8 +4,6 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Sparkles } from "lucide-react";
-
 const MeetDanieleSection: React.FC = () => {
   return (
     <section className="py-16 md:py-24 bg-background text-foreground">
@@ -19,7 +17,7 @@ const MeetDanieleSection: React.FC = () => {
               className="w-56 h-56 rounded-full object-cover shadow-xl border-4 border-background"
             />
             <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-3 rounded-full shadow-lg">
-              <Sparkles className="h-6 w-6" />
+              <Music className="h-6 w-6" />
             </div>
           </div>
           <div className="text-left space-y-6">

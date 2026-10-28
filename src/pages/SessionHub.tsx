@@ -22,7 +22,6 @@ import {
   Clock,
   ExternalLink,
   Ticket,
-  Sparkles,
   RefreshCw
 } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";

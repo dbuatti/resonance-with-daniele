@@ -4,7 +4,7 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Ticket, TrendingUp, Sparkles } from "lucide-react";
+import { Ticket, TrendingUp } from "lucide-react";
 
 /** Same financial shape returned by the event workbench stats query. */
 export interface EventFinancials {
@@ -83,7 +83,7 @@ const BreakEvenIndicator: React.FC<BreakEvenIndicatorProps> = ({ financials }) =
     <Card className={`rounded-[2.5rem] border shadow-sm bg-gradient-to-br ${cardBackground}`}>
       <CardHeader className="pb-2">
         <CardDescription className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
-          {state === "profit" ? <TrendingUp className="h-3 w-3" /> : state === "free" ? <Sparkles className="h-3 w-3" /> : <Ticket className="h-3 w-3" />}
+          {state === "profit" ? <TrendingUp className="h-3 w-3" /> : <Ticket className="h-3 w-3" />}
           Break-Even
         </CardDescription>
         <CardTitle className="text-4xl font-black font-lora flex items-center gap-3">

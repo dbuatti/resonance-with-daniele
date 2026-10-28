@@ -2,7 +2,7 @@
 
 import React from "react";
 import { format, parseISO } from "date-fns";
-import { CalendarDays, MapPin, MessageSquareQuote, Share2, Edit, Trash2, ExternalLink, ChevronRight, Sparkles, LayoutDashboard } from "lucide-react";
+import { CalendarDays, MapPin, MessageSquareQuote, Share2, Edit, Trash2, ExternalLink, ChevronRight, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -115,7 +115,7 @@ const EventHorizontalCard: React.FC<EventHorizontalCardProps> = ({
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-primary hover:bg-primary/10" asChild>
                       <a href={event.ai_chat_link} target="_blank" rel="noopener noreferrer">
-                        <Sparkles className="h-4 w-4" />
+                        <Music className="h-4 w-4" />
                       </a>
                     </Button>
                   </TooltipTrigger>

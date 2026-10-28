@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarDays, Loader2, Sparkles, Music, StickyNote, Link as LinkIcon, Clock } from "lucide-react";
+import { CalendarDays, Loader2, Music, StickyNote, Link as LinkIcon, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -329,7 +329,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, onClose, editingEvent
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                      <Sparkles className="h-3 w-3 text-primary" /> Gemini AI Link
+                      <Music className="h-3 w-3 text-primary" /> Gemini AI Link
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="https://gemini.google.com/..." {...field} className="rounded-xl font-bold" />

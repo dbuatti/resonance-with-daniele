@@ -7,12 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Copy, CheckCircle2, Mail, Loader2, ExternalLink, Sparkles } from "lucide-react";
+import { Copy, CheckCircle2, Mail, Loader2, ExternalLink} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { showSuccess } from "@/utils/toast";
@@ -32,8 +31,7 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
   onClose,
   eventId,
   eventTitle,
-  eventDate,
-}) => {
+  eventDate }) => {
   const [copiedEmails, setCopiedEmails] = useState(false);
   const [copiedBody, setCopiedBody] = useState(false);
   const [copiedSubject, setCopiedSubject] = useState(false);
@@ -90,8 +88,7 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
         missingCount: missing.length
       };
     },
-    enabled: isOpen && !!eventId,
-  });
+    enabled: isOpen && !!eventId });
 
   const feedbackLink = `${window.location.origin}/feedback?eventId=${eventId}`;
 
@@ -173,7 +170,7 @@ const FeedbackEmailModal: React.FC<FeedbackEmailModalProps> = ({
           <div className="space-y-2">
             <div className="flex justify-between items-end">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-primary" /> Suggested Subjects
+                <className="h-3 w-3 text-primary" /> Suggested Subjects
               </Label>
               <Button 
                 variant="ghost" 

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  Loader2, Star, TrendingUp, Users, Sparkles, Brain, AlertTriangle,
+  Loader2, Star, TrendingUp, Users, Brain, AlertTriangle,
   CheckCircle2, PieChart as PieChartIcon, BarChart3, UserCheck, UserPlus,
   Heart, Frown, EyeOff, ExternalLink, Music, MessageSquareText,
   MapPin, CalendarCheck, Calendar, SearchCode, Zap, ListMusic,
@@ -248,7 +248,7 @@ const EventFeedbackPanel: React.FC<EventFeedbackPanelProps> = ({ eventId }) => {
               </div>
             </div>
             <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 font-black rounded-xl" onClick={() => analyzeMutation.mutate()} disabled={analyzeMutation.isPending}>
-              {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-4 w-4" /> {aiInsights ? "Refresh AI Analysis" : "Run AI Analysis"}</>}
+              {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> : <>{aiInsights ? "Refresh Analysis" : "Run Analysis"}</>}
             </Button>
           </CardContent>
         </Card>

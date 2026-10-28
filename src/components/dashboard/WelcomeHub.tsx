@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, Music, FileText, ArrowRight, Mic2, MessageSquareQuote, MapPin, Heart, Sparkles, BookOpen, User as UserIcon, Camera, Loader2 } from "lucide-react";
+import { CalendarDays, Music, FileText, ArrowRight, Mic2, MessageSquareQuote, MapPin, Heart, BookOpen, User as UserIcon, Camera, Loader2 } from "lucide-react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -380,7 +380,7 @@ const WelcomeHub: React.FC = () => {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Community Voice</h3>
-                <Sparkles className="h-4 w-4 text-accent opacity-50" />
+                <Music className="h-4 w-4 text-accent opacity-50" />
               </div>
               <div className="bg-accent/5 rounded-[2rem] p-8 space-y-8 border border-accent/20 shadow-inner">
                 <div className="space-y-3">

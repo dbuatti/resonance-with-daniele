@@ -20,8 +20,7 @@ import {
   Info,
   Tag,
   ChevronRight,
-  Heart,
-  Sparkles,
+  Heart
   Trophy,
   Ticket,
   BarChart3,
@@ -71,8 +70,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       if (error) throw error;
       return data;
     },
-    enabled: !isGlobal,
-  });
+    enabled: !isGlobal });
 
   // 2. Fetch Orders
   const { data: orders, isLoading: loadingOrders } = useQuery({
@@ -83,8 +81,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       const { data, error } = await query;
       if (error) throw error;
       return data || [];
-    },
-  });
+    } });
 
   // 3. Fetch ALL orders ever
   const { data: allOrders } = useQuery({
@@ -93,8 +90,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       const { data, error } = await supabase.from("event_orders").select("*");
       if (error) throw error;
       return data || [];
-    },
-  });
+    } });
 
   // 4. Fetch Profiles
   const { data: profiles } = useQuery({
@@ -115,8 +111,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
       const { data, error } = await query;
       if (error) throw error;
       return data || [];
-    },
-  });
+    } });
 
   // 6. Fetch Engagement Data
   const { data: suggestions } = useQuery({

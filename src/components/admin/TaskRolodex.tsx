@@ -14,9 +14,7 @@ import {
   Calendar, 
   ChevronDown, 
   ChevronUp,
-  Target,
-  Sparkles
-} from "lucide-react";
+  Target} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, subDays, parseISO, isToday, isPast, startOfDay, addDays, isSameDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -66,8 +64,7 @@ const TaskRolodex: React.FC = () => {
         .order("date", { ascending: true });
       if (error) throw error;
       return data;
-    },
-  });
+    } });
 
   // Fetch task definitions
   const { data: taskDefinitions, isLoading: loadingTasks } = useQuery<MarketingTask[]>({
@@ -79,8 +76,7 @@ const TaskRolodex: React.FC = () => {
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data as MarketingTask[];
-    },
-  });
+    } });
 
   // Fetch all completion statuses for these events
   const { data: completionStatuses, isLoading: loadingStatus } = useQuery({
@@ -96,8 +92,7 @@ const TaskRolodex: React.FC = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!events?.length,
-  });
+    enabled: !!events?.length });
 
   const toggleMutation = useMutation({
     mutationFn: async ({ taskKey, eventId, isCompleted }: { taskKey: string, eventId: string, isCompleted: boolean }) => {
@@ -114,8 +109,7 @@ const TaskRolodex: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rolodexTaskStatus"] });
       queryClient.invalidateQueries({ queryKey: ["marketingTaskStatus"] });
-    },
-  });
+    } });
 
   const taskInstances = useMemo(() => {
     if (!events || !taskDefinitions) return [];
@@ -360,7 +354,7 @@ const TaskRolodex: React.FC = () => {
             }
           }}
         >
-          <Sparkles className="h-3 w-3 mr-2 text-primary" />
+          <className="h-3 w-3 mr-2 text-primary" />
           Jump to Today
         </Button>
       </div>

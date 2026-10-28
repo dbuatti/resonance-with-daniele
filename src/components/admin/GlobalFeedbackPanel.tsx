@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Loader2, Star, TrendingUp, Users, Globe, Clock, DollarSign, UserCheck,
-  Music, Zap, Sparkles, Brain, AlertTriangle, CheckCircle2,
+  Music, Zap Brain, AlertTriangle, CheckCircle2,
   PieChart as PieChartIcon, BarChart3, MapPin, LineChart as LineChartIcon,
   UserPlus, EyeOff, ListMusic, Heart, BarChart, CalendarCheck,
   Calendar, MessageSquare, ExternalLink, SearchCode, Frown, MessageSquareText
@@ -32,8 +32,7 @@ const SENTIMENT_COLORS: Record<string, string> = {
   "Loved It": "#10b981",
   "Good": "#3b82f6",
   "Neutral": "#94a3b8",
-  "Not for me": "#ef4444",
-};
+  "Not for me": "#ef4444" };
 
 interface FeedbackRow {
   id: string;
@@ -95,8 +94,7 @@ const GlobalFeedbackPanel: React.FC = () => {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data as FeedbackRow[]) || [];
-    },
-  });
+    } });
 
   // Generate unique months from all feedback data
   const uniqueMonths = useMemo(() => {
@@ -138,8 +136,7 @@ const GlobalFeedbackPanel: React.FC = () => {
       if (error) return null;
       return (data?.content as AiInsights) || null;
     },
-    enabled: !!selectedFilter,
-  });
+    enabled: !!selectedFilter });
 
   useEffect(() => {
     if (savedAiSummary) setAiInsights(savedAiSummary);
@@ -148,16 +145,14 @@ const GlobalFeedbackPanel: React.FC = () => {
   const analyzeMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('analyze-feedback', {
-        body: { eventId: selectedFilter },
-      });
+        body: { eventId: selectedFilter } });
       if (error) throw error;
 
       await supabase.from("event_ai_summaries").upsert({
         event_id: selectedFilter,
         summary_type: selectedFilter === "all" ? "global" : "month",
         content: data,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'event_id,summary_type' });
+        updated_at: new Date().toISOString() }, { onConflict: 'event_id,summary_type' });
 
       return data as AiInsights;
     },
@@ -166,8 +161,7 @@ const GlobalFeedbackPanel: React.FC = () => {
       showSuccess("AI Analysis Complete!");
       queryClient.invalidateQueries({ queryKey: ["savedGlobalAiSummary", selectedFilter] });
     },
-    onError: (err: Error) => showError(err.message),
-  });
+    onError: (err: Error) => showError(err.message) });
 
   const stats = useMemo(() => {
     if (!filteredFeedback || filteredFeedback.length === 0) return null;
@@ -219,8 +213,7 @@ const GlobalFeedbackPanel: React.FC = () => {
       topPreferredTime: getMode(filteredFeedback.map((f) => f.best_times_ongoing?.[0] || null)),
       topFrequency: getMode(filteredFeedback.map((f) => f.attendance_frequency)),
       ongoingTimes,
-      frequencies,
-    };
+      frequencies };
   }, [filteredFeedback]);
 
   if (loadingFeedback) {
@@ -369,7 +362,7 @@ const GlobalFeedbackPanel: React.FC = () => {
               </p>
             </div>
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-black rounded-2xl h-16 px-8 shadow-2xl group" onClick={() => analyzeMutation.mutate()} disabled={analyzeMutation.isPending}>
-              {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Sparkles className="mr-2 h-5 w-5" /> {aiInsights ? "Refresh AI Analysis" : "Run AI Analysis"}</>}
+              {analyzeMutation.isPending ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <>{aiInsights ? "Refresh Analysis" : "Run Analysis"}</>}
             </Button>
           </CardContent>
         </Card>
@@ -639,7 +632,7 @@ const GlobalFeedbackPanel: React.FC = () => {
                 {/* The Experience Section */}
                 <div className="space-y-6">
                   <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" /> The Experience
+                    <className="h-4 w-4" /> The Experience
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">

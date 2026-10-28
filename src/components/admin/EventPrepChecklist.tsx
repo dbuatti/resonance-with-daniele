@@ -4,7 +4,7 @@ import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Circle, ListTodo, Sparkles, Printer, Music, Megaphone, Loader2, Brain } from "lucide-react";
+import { CheckCircle2, Circle, ListTodo Printer, Music, Megaphone, Loader2, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -46,8 +46,7 @@ const EventPrepChecklist: React.FC<EventPrepChecklistProps> = ({ eventId }) => {
         .limit(1)
         .maybeSingle();
       return data?.content?.next_event_action || null;
-    },
-  });
+    } });
 
   const { data: completedTaskIds, isLoading } = useQuery<string[]>({
     queryKey: ["eventPrepStatus", eventId],
@@ -60,8 +59,7 @@ const EventPrepChecklist: React.FC<EventPrepChecklistProps> = ({ eventId }) => {
       if (error) throw error;
       return data.map(d => d.task_id);
     },
-    enabled: !!user && !!eventId,
-  });
+    enabled: !!user && !!eventId });
 
   const toggleMutation = useMutation({
     mutationFn: async (taskId: string) => {
@@ -76,8 +74,7 @@ const EventPrepChecklist: React.FC<EventPrepChecklistProps> = ({ eventId }) => {
         }, { onConflict: 'event_id,task_id' });
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["eventPrepStatus", eventId] }),
-  });
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["eventPrepStatus", eventId] }) });
 
   if (isLoading) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>;
 

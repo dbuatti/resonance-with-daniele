@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CheckCircle2, MapPin, Music, Sparkles, EyeOff, UserPlus, Search, Calendar, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, MapPin, Music, EyeOff, UserPlus, Search, Calendar, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSaturday, isSunday, parseISO } from "date-fns";
 import BackButton from "@/components/ui/BackButton";
@@ -370,7 +370,7 @@ const EventFeedback: React.FC = () => {
                   name="future_ideas"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-lg font-bold flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Any songs or styles for next time?</FormLabel>
+                      <FormLabel className="text-lg font-bold flex items-center gap-2"><Music className="h-5 w-5 text-primary" /> Any songs or styles for next time?</FormLabel>
                       <FormControl><Textarea placeholder="I'd love to sing some..." {...field} className="rounded-xl min-h-[100px] bg-background font-medium" /></FormControl>
                       <FormMessage />
                     </FormItem>

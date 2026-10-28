@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, PlusCircle, Search, AlertCircle, MapPin, Clock, Share2, Sparkles, Calendar as CalendarIcon, ArrowRight, ExternalLink, Info, Edit, ShieldCheck, Loader2 } from "lucide-react";
+import { CalendarDays, PlusCircle, Search, AlertCircle, MapPin, Clock, Share2, Calendar as CalendarIcon, ArrowRight, ExternalLink, Info, Edit, ShieldCheck, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { format, parseISO, isAfter, startOfToday } from "date-fns";

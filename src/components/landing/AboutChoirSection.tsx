@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Users, Heart, Sparkles, Music, MapPin } from "lucide-react";
+import { Users, Heart, Music, MapPin } from "lucide-react";
 
 const AboutChoirSection: React.FC = () => {
   return (
@@ -41,7 +41,7 @@ const AboutChoirSection: React.FC = () => {
               </div>
               <div className="flex gap-4">
                 <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                  <Sparkles className="w-6 h-6" />
+                  <Music className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="font-bold text-lg mb-1">No Pressure</h4>

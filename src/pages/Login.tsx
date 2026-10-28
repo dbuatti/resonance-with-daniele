@@ -6,7 +6,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Music, Sparkles } from 'lucide-react';
+import { ArrowLeft, Music} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSession } from '@/integrations/supabase/auth';
 
@@ -48,7 +48,7 @@ const Login: React.FC = () => {
         </div>
 
         <div className="bg-accent/10 p-4 rounded-2xl mb-8 border border-accent/20 flex items-start gap-3">
-          <Sparkles className="h-5 w-5 text-accent-foreground shrink-0 mt-0.5" />
+          <Music className="h-5 w-5 text-accent-foreground shrink-0 mt-0.5" />
           <p className="text-xs font-bold text-accent-foreground leading-tight">
             New here? Just sign in with Google to instantly create your member account and access your resources.
           </p>

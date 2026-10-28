@@ -261,7 +261,7 @@ const AdminEventWorkbench: React.FC = () => {
         <div className="space-y-10">
           <section className="space-y-4">
             <div className="flex items-center gap-2">
-              <SparklesBadge /> <h2 className="text-lg font-black font-lora">Task Rolodex</h2>
+              <MusicBadge /> <h2 className="text-lg font-black font-lora">Task Rolodex</h2>
             </div>
             <p className="text-sm text-muted-foreground font-medium">Your ever-evolving timeline across all upcoming concerts.</p>
             <TaskRolodex />
@@ -462,8 +462,8 @@ const AdminEventWorkbench: React.FC = () => {
   );
 };
 
-const SparklesBadge: React.FC = () => (
-  <div className="p-2 bg-primary/10 rounded-lg"><TrendingUp className="h-4 w-4 text-primary" /></div>
+const MusicBadge: React.FC = () => (
+  <div className="p-2 bg-primary/10 rounded-lg"><ListTodo className="h-4 w-4 text-primary" /></div>
 );
 
 export default AdminEventWorkbench;
