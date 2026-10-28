@@ -2,7 +2,7 @@
 
 import React from "react";
 import { format, parseISO } from "date-fns";
-import { CalendarDays, MapPin, MessageSquareQuote, Share2, Edit, Trash2, ExternalLink, ChevronRight, LayoutDashboard } from "lucide-react";
+import { CalendarDays, MapPin, MessageSquareQuote, Share2, Edit, Trash2, ExternalLink, ChevronRight, LayoutDashboard, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
