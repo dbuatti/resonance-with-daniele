@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic2, Heart, Users } from "lucide-react";
+import { Mic2, Heart, Users, Music } from "lucide-react";
 
 const VoicePhilosophy: React.FC = () => {
   const traits = [
