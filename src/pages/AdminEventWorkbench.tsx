@@ -27,9 +27,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search, LayoutDashboard, ListTodo, Megaphone, Users, DollarSign, MessageSquareQuote, Brain, Ticket, TrendingUp, Clock, ExternalLink, Send } from "lucide-react";
+import { Loader2, Plus, Search, LayoutDashboard, ListTodo, Megaphone, Users, DollarSign, MessageSquareQuote, Brain, Ticket, TrendingUp, Clock, ExternalLink, Send, Pencil, Check, X } from "lucide-react";
 import { format, differenceInDays, startOfDay, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { showSuccess, showError } from "@/utils/toast";
 
 const AdminEventWorkbench: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -44,13 +45,15 @@ const AdminEventWorkbench: React.FC = () => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [localBrainDump, setLocalBrainDump] = useState("");
+  const [isEditingHumanitix, setIsEditingHumanitix] = useState(false);
+  const [humanitixInput, setHumanitixInput] = useState("");
 
   const { data: events, isLoading: loadingEvents } = useQuery({
     queryKey: ["allEventsForWorkbench"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id, title, date")
+        .select("id, title, date, humanitix_link")
         .order("date", { ascending: false });
       if (error) throw error;
       return data || [];
@@ -113,9 +116,35 @@ const AdminEventWorkbench: React.FC = () => {
       }, { onConflict: "note_key" });
     },
   });
+  const saveHumanitixMutation = useMutation({
+    mutationFn: async (link: string) => {
+      if (!id) throw new Error("No event selected");
+      const clean = link.trim();
+      const { error } = await supabase
+        .from("events")
+        .update({ humanitix_link: clean || null })
+        .eq("id", id);
+      if (error) throw error;
+      return clean;
+    },
+    onSuccess: (saved) => {
+      queryClient.invalidateQueries({ queryKey: ["allEventsForWorkbench"] });
+      queryClient.invalidateQueries({ queryKey: ["sessionHubData"] });
+      queryClient.invalidateQueries({ queryKey: ["upcomingEvent"] });
+      showSuccess("Humanitix link updated");
+      setIsEditingHumanitix(false);
+    },
+    onError: (err: unknown) => {
+      showError(err instanceof Error ? err.message : "Failed to save Humanitix link");
+    },
+  });
+
   useEffect(() => {
-    if (debouncedBrainDump !== brainDumpData && id) saveNoteMutation.mutate(debouncedBrainDump);
-  }, [debouncedBrainDump, brainDumpData, id, saveNoteMutation]);
+    if (selectedEvent) {
+      setHumanitixInput(selectedEvent.humanitix_link || "");
+      setIsEditingHumanitix(false);
+    }
+  }, [selectedEvent?.id]);
 
   useEffect(() => {
     if (!selectedEvent?.date) return;
@@ -251,8 +280,7 @@ const AdminEventWorkbench: React.FC = () => {
   }
 
   // --- EVENT SELECTED ---
-  const eventDateFormatted = format(parseISO(selectedEvent.date), "EEEE, MMMM do");
-  const eventLink = "https://events.humanitix.com/resonance-choir";
+  const eventLink = (selectedEvent as any)?.humanitix_link || "https://events.humanitix.com/resonance-choir";
   const postText = `Resonance is a monthly pop-up choir in ${selectedEvent.title.includes("Armadale") ? "Armadale" : "Melbourne"} where everyone is welcome. No auditions, no experience needed.\n\nWe're back on ${eventDateFormatted} for our next session!\n\nGrab your spot here: ${eventLink}`;
 
   const quickLinks = [
@@ -325,10 +353,50 @@ const AdminEventWorkbench: React.FC = () => {
             </Card>
             <Card className="rounded-[2.5rem] border-border/50 shadow-sm">
               <CardHeader><CardTitle className="text-lg font-black font-lora">Reference Link</CardTitle></CardHeader>
-              <CardContent>
-                <Button asChild variant="outline" className="w-full h-12 rounded-xl font-bold border-primary/20 hover:bg-primary/5" disabled={!selectedEvent}>
-                  <a href={eventLink} target="_blank" rel="noopener noreferrer">Humanitix <ExternalLink className="h-4 w-4 ml-2" /></a>
+              <CardContent className="space-y-3">
+                <Button asChild variant="outline" className="w-full h-12 rounded-xl font-bold border-primary/20 hover:bg-primary/5" disabled={!selectedEvent || !((selectedEvent as any)?.humanitix_link)}>
+                  <a href={(selectedEvent as any)?.humanitix_link || "#"} target="_blank" rel="noopener noreferrer">Humanitix <ExternalLink className="h-4 w-4 ml-2" /></a>
                 </Button>
+                <div className="space-y-2">
+                  {isEditingHumanitix ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={humanitixInput}
+                        onChange={(e) => setHumanitixInput(e.target.value)}
+                        placeholder="https://events.humanitix.com/..."
+                        className="h-10 rounded-xl font-bold"
+                      />
+                      <Button
+                        size="sm"
+                        className="rounded-xl"
+                        disabled={saveHumanitixMutation.isPending}
+                        onClick={() => saveHumanitixMutation.mutate(humanitixInput)}
+                      >
+                        {saveHumanitixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-xl"
+                        disabled={saveHumanitixMutation.isPending}
+                        onClick={() => {
+                          setHumanitixInput((selectedEvent as any)?.humanitix_link || "");
+                          setIsEditingHumanitix(false);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button variant="ghost" size="sm" className="font-bold text-muted-foreground" onClick={() => setIsEditingHumanitix(true)}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      {(selectedEvent as any)?.humanitix_link ? "Edit Humanitix link" : "Add Humanitix link"}
+                    </Button>
+                  )}
+                  {(selectedEvent as any)?.humanitix_link && !isEditingHumanitix && (
+                    <p className="text-xs text-muted-foreground break-all font-mono">{(selectedEvent as any).humanitix_link}</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
