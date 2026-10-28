@@ -5,7 +5,7 @@ import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Loader2, UploadCloud, LayoutGrid, ListFilter, Library as LibraryIcon } from "lucide-react";
+import { Loader2, UploadCloud, LayoutGrid, ListFilter, Library as LibraryIcon, ChevronRight, Folder } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import ResourceCard from "@/components/ResourceCard";
@@ -114,7 +114,13 @@ const Resources: React.FC = () => {
 
   const currentSubFolders = useMemo(() => {
     if (debouncedSearchTerm) return [];
-    return allFolders?.filter(f => f.parent_folder_id === currentFolderId) || [];
+    const folders = allFolders?.filter(f => f.parent_folder_id === currentFolderId) || [];
+    return [...folders].sort((a, b) => {
+      // Try to sort by event date if available, otherwise by created_at descending (newest first)
+      const dateA = (a as any).event_date || a.created_at;
+      const dateB = (b as any).event_date || b.created_at;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    });
   }, [allFolders, currentFolderId, debouncedSearchTerm]);
 
   const breadcrumbs = useMemo(() => {
@@ -361,9 +367,24 @@ const Resources: React.FC = () => {
             )}
 
             {currentSubFolders.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="space-y-2">
                 {currentSubFolders.map(f => (
-                  <ResourceFolderCard key={f.id} folder={f} onNavigate={() => handleNavigate(f.id)} onEdit={handleEditFolder} onDelete={() => setFolderToDelete(f)} isDeleting={isDeletingFolder} onFileUpload={handleFileUploadToFolder} isUploading={isUploadingFileToFolder === f.id} onToggleNomination={handleToggleNomination} />
+                  <button
+                    key={f.id}
+                    onClick={() => handleNavigate(f.id)}
+                    className="w-full flex items-center justify-between p-4 rounded-xl border border-border/50 bg-card hover:bg-muted/50 hover:border-primary/30 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Folder className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-bold">{f.name}</p>
+                        <p className="text-xs text-muted-foreground">{f.description || "View contents"}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
                 ))}
               </div>
             )}
