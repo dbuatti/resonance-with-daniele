@@ -45,9 +45,6 @@ const LearnMore: React.FC = () => {
           <Button size="lg" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-bold rounded-lg" asChild>
             <a href="/next">Book Your Spot</a>
           </Button>
-          <Button size="lg" variant="ghost" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-semibold" asChild>
-            <Link to="/next">See next session →</Link>
-          </Button>
         </div>
         <div className="relative inline-block mt-6">
           <div className="absolute -inset-8 bg-gradient-to-r from-primary/10 to-accent/10 rounded-full blur-3xl" />
@@ -107,11 +104,11 @@ const LearnMore: React.FC = () => {
                   Book Your Spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </a>
               </Button>
-              <Button size="lg" variant="ghost" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg" asChild>
-                <Link to="/">
-                  Back to Home
-                </Link>
-              </Button>
+          <Button size="lg" variant="ghost" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg" asChild>
+            <Link to="/">
+              Back to Home
+            </Link>
+          </Button>
             </div>
           </div>
         </div>
