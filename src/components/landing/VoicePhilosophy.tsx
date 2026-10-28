@@ -55,16 +55,16 @@ const VoicePhilosophy: React.FC = () => {
         </div>
 
         <div className="mt-12 md:mt-16 p-8 md:p-10 bg-primary text-primary-foreground rounded-xl text-center">
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-3">
             <img
               src="/images/daniele-buatti-headshot.jpeg"
               alt="Daniele Buatti"
-              className="w-16 h-16 rounded-full object-cover"
+              className="w-14 h-14 rounded-full object-cover"
             />
             <p className="text-xl md:text-2xl lg:text-3xl font-lora italic leading-relaxed max-w-3xl">
               "My goal is to help you find the voice that feels most like you, and to experience the joy of sharing that with others."
             </p>
-            <p className="font-semibold tracking-wide text-sm opacity-90">— Daniele Buatti</p>
+            <p className="text-sm opacity-90 -mt-1">— Daniele Buatti</p>
           </div>
         </div>
       </div>

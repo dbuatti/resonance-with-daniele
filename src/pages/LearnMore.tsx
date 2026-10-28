@@ -34,11 +34,11 @@ const LearnMore: React.FC = () => {
   return (
     <div className="space-y-24 py-8 md:py-16">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <div className="pt-6 md:pt-10 mb-10">
-          <Button asChild variant="ghost" size="sm" className="hover:bg-primary/5">
-            <Link to="/">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to home
+        <div className="pt-6 md:pt-8 mb-8 flex justify-between items-center">
+          <Button asChild variant="ghost" size="sm" className="px-0 hover:bg-transparent">
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Home
             </Link>
           </Button>
         </div>
