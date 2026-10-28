@@ -113,6 +113,7 @@ const LearnMore: React.FC = () => {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };
