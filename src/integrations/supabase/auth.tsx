@@ -39,12 +39,10 @@ interface SessionContextType {
   loading: boolean;
   profileLoading: boolean;
   isLoggingOut: boolean;
-  isAdminView: boolean;
   isActualAdmin: boolean;
   isProfileCompleted: boolean;
   isSurveyCompleted: boolean;
   incompleteTasksCount: number;
-  toggleAdminView: () => void;
   logout: () => Promise<void>;
 }
 
@@ -54,7 +52,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const [session, setSession] = useState<Session | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isAdminView, setIsAdminView] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -79,19 +76,8 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       queryClient.clear();
       navigate('/login');
       setIsLoggingOut(false);
-      setIsAdminView(true);
     }
   }, [queryClient, navigate]);
-
-  const toggleAdminView = useCallback(() => {
-    setIsAdminView(prev => {
-      const next = !prev;
-      showSuccess(`Switched to ${next ? 'Admin' : 'User'} View.`);
-      return next;
-    });
-    queryClient.invalidateQueries({ queryKey: ['resources'] });
-    queryClient.invalidateQueries({ queryKey: ['adminDashboardCounts'] });
-  }, [queryClient]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
@@ -131,8 +117,8 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   const user = useMemo(() => {
     if (!session?.user) return null;
-    return { ...session.user, is_admin: actualIsAdmin && isAdminView } as CustomUser;
-  }, [session?.user, actualIsAdmin, isAdminView]);
+    return { ...session.user, is_admin: actualIsAdmin } as CustomUser;
+  }, [session?.user, actualIsAdmin]);
 
   const isProfileCompleted = useMemo(() => {
     return !!(profile?.first_name && profile?.last_name);
@@ -161,12 +147,10 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     loading: initialLoading || profileLoading,
     profileLoading,
     isLoggingOut,
-    isAdminView,
     isActualAdmin: actualIsAdmin,
     isProfileCompleted,
     isSurveyCompleted,
     incompleteTasksCount,
-    toggleAdminView,
     logout
   }), [
     session,
@@ -175,12 +159,10 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     initialLoading,
     profileLoading,
     isLoggingOut,
-    isAdminView,
     actualIsAdmin,
     isProfileCompleted,
     isSurveyCompleted,
     incompleteTasksCount,
-    toggleAdminView,
     logout
   ]);
 

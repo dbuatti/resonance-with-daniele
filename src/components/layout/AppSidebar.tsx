@@ -8,13 +8,7 @@ import {
   Library, 
   Music, 
   Shield, 
-  Users, 
-  ChevronRight,
-  CalendarDays,
-  Brain,
-  Inbox,
-  MessageSquareQuote,
-  ChevronDown
+  ChevronRight
 } from "lucide-react";
 import resonanceLogo from "@/assets/resonance-logo.png";
 import { useSession } from "@/integrations/supabase/auth";
@@ -31,17 +25,11 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import AdminViewToggle from "@/components/AdminViewToggle";
 
 const AppSidebar: React.FC = () => {
-  const { user, profile, isAdminView, isActualAdmin } = useSession();
+  const { user, profile, isActualAdmin } = useSession();
   const location = useLocation();
 
   const memberLinks = [
@@ -51,241 +39,114 @@ const AppSidebar: React.FC = () => {
     { title: "Suggestions", icon: Music, url: "/song-suggestions" },
   ];
 
-  const adminLinks = [
-    { title: "Command Center", icon: Shield, url: "/admin" },
-    { title: "Events", icon: CalendarDays, url: "/admin/events" },
-    { title: "Feedback", icon: MessageSquareQuote, url: "/admin/feedback" },
-    { title: "People", icon: Users, url: "/admin/people" },
-    { title: "Inbox", icon: Inbox, url: "/admin/inbox" },
-    { title: "Repertoire Studio", icon: Brain, url: "/admin/repertoire" },
-  ];
-
   const isActive = (url: string) => location.pathname === url;
-
-  const isAdminActive = (url: string) => {
-    if (url === "/admin") return location.pathname === "/admin";
-    return location.pathname === url || location.pathname.startsWith(`${url}/`);
-  };
 
   if (!user) return null;
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
-      {isAdminView ? (
-        // ── ADMIN CONSOLE SIDEBAR ──
-        <>
-          <SidebarHeader className="p-2 md:p-4">
-            <Link to="/admin" className="flex items-center gap-3 px-2 justify-center md:justify-start">
-              <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 shrink-0">
-                <Shield className="h-5 w-5" />
-              </div>
-              <span className="font-black font-lora text-xl tracking-tighter group-data-[collapsible=icon]:hidden truncate">
-                Admin Console
-              </span>
-            </Link>
-          </SidebarHeader>
+      <SidebarHeader className="p-2 md:p-4">
+        <Link to="/" className="flex items-center gap-3 px-2 justify-center md:justify-start">
+          <img src={resonanceLogo} alt="Resonance" className="h-9 w-9 rounded-xl shadow-lg shadow-primary/20 shrink-0 object-cover" />
+          <span className="font-black font-lora text-xl tracking-tighter group-data-[collapsible=icon]:hidden truncate">
+            Resonance
+          </span>
+        </Link>
+      </SidebarHeader>
 
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
-                Admin Zone
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminLinks.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
-                        isActive={isAdminActive(item.url)}
-                        tooltip={item.title}
-                        className={cn(
-                          "h-11 px-4 rounded-xl transition-all duration-200",
-                          isAdminActive(item.url) 
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-bold shadow-lg shadow-black/20" 
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
-                        )}
-                      >
-                        <Link to={item.url}>
-                          <item.icon className={cn("h-5 w-5 shrink-0", isAdminActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
-                          <span className="ml-3 text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Member Hub folded away in admin mode */}
-            <Collapsible defaultOpen={false} className="group/collapsible">
-              <SidebarGroup className="mt-2">
-                <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
-                  <CollapsibleTrigger className="flex items-center gap-1 w-full outline-none">
-                    Member Hub
-                    <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                  </CollapsibleTrigger>
-                </SidebarGroupLabel>
-                <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {memberLinks.map((item) => (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton 
-                            asChild 
-                            isActive={isActive(item.url)}
-                            tooltip={item.title}
-                            className={cn(
-                              "h-10 px-4 rounded-xl transition-all duration-200",
-                              isActive(item.url) 
-                                ? "bg-sidebar-accent/60 text-sidebar-accent-foreground font-bold" 
-                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
-                            )}
-                          >
-                            <Link to={item.url}>
-                              <item.icon className={cn("h-4 w-4 shrink-0", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/70")} />
-                              <span className="ml-3 text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </SidebarGroup>
-            </Collapsible>
-          </SidebarContent>
-
-          <SidebarFooter className="p-4 border-t border-border/50 space-y-4">
-            <div className="hidden group-data-[collapsible=icon]:block">
-              <AdminViewToggle collapsed />
-            </div>
-            <div className="block group-data-[collapsible=icon]:hidden">
-              <AdminViewToggle />
-            </div>
-            <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-4">
-              <ThemeToggle />
-            </div>
-            
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
+            Member Hub
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  asChild 
-                  className="h-14 px-2 rounded-2xl hover:bg-sidebar-accent/20 transition-all group"
-                >
-                  <Link to="/profile" className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border-2 border-background shadow-sm shrink-0">
-                      <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
-                      <AvatarFallback className="bg-sidebar-accent/20 text-sidebar-accent font-black text-xs">
-                        {profile?.first_name?.[0] || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-                      <span className="text-sm font-black truncate text-sidebar-foreground">
-                        {profile?.first_name || "My Account"}
-                      </span>
-                      <span className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-widest">
-                        View Profile
-                      </span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 ml-auto text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {memberLinks.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                    className={cn(
+                      "h-11 px-4 rounded-xl transition-all duration-200",
+                      isActive(item.url) 
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-bold" 
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <Link to={item.url}>
+                      <item.icon className={cn("h-5 w-5 shrink-0", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
+                      <span className="ml-3 text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
-          </SidebarFooter>
-        </>
-      ) : (
-        // ── MEMBER SIDEBAR ──
-        <>
-          <SidebarHeader className="p-2 md:p-4">
-            <Link to="/" className="flex items-center gap-3 px-2 justify-center md:justify-start">
-              <img src={resonanceLogo} alt="Resonance" className="h-9 w-9 rounded-xl shadow-lg shadow-primary/20 shrink-0 object-cover" />
-              <span className="font-black font-lora text-xl tracking-tighter group-data-[collapsible=icon]:hidden truncate">
-                Resonance
-              </span>
-            </Link>
-          </SidebarHeader>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
-                Member Hub
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {memberLinks.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
-                        isActive={isActive(item.url)}
-                        tooltip={item.title}
-                        className={cn(
-                          "h-11 px-4 rounded-xl transition-all duration-200",
-                          isActive(item.url) 
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-bold" 
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
-                        )}
-                      >
-                        <Link to={item.url}>
-                          <item.icon className={cn("h-5 w-5 shrink-0", isActive(item.url) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground")} />
-                          <span className="ml-3 text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+        {isActualAdmin && (
+          <SidebarGroup className="mt-4">
+            <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
+              Administrator
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip="Admin Console"
+                    className={cn(
+                      "h-11 px-4 rounded-xl transition-all duration-200",
+                      location.pathname.startsWith("/admin")
+                        ? "bg-primary text-primary-foreground font-bold shadow-md" 
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <Link to="/admin">
+                      <Shield className={cn("h-5 w-5 shrink-0", location.pathname.startsWith("/admin") ? "text-primary-foreground" : "text-sidebar-foreground")} />
+                      <span className="ml-3 text-sm group-data-[collapsible=icon]:hidden">Admin Console</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      </SidebarContent>
 
-            {isActualAdmin && (
-              <SidebarGroup className="mt-4 group-data-[collapsible=icon]:hidden">
-                <SidebarGroupLabel className="px-4 text-[11px] font-black uppercase tracking-[0.2em] text-sidebar-foreground/50">
-                  Administrator
-                </SidebarGroupLabel>
-                <SidebarGroupContent className="px-2">
-                  <AdminViewToggle />
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
-          </SidebarContent>
-
-          <SidebarFooter className="p-4 border-t border-border/50 space-y-4">
-            <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-4">
-              <div className="hidden group-data-[collapsible=icon]:block">
-                {isActualAdmin && <AdminViewToggle collapsed />}
-              </div>
-              <ThemeToggle />
-            </div>
-            
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  asChild 
-                  className="h-14 px-2 rounded-2xl hover:bg-sidebar-accent/20 transition-all group"
-                >
-                  <Link to="/profile" className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border-2 border-background shadow-sm shrink-0">
-                      <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
-                      <AvatarFallback className="bg-sidebar-accent/20 text-sidebar-accent font-black text-xs">
-                        {profile?.first_name?.[0] || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-                      <span className="text-sm font-black truncate text-sidebar-foreground">
-                        {profile?.first_name || "My Account"}
-                      </span>
-                      <span className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-widest">
-                        View Profile
-                      </span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 ml-auto text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
-        </>
-      )}
+      <SidebarFooter className="p-4 border-t border-border/50 space-y-4">
+        <div className="flex items-center justify-between px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-4">
+          <ThemeToggle />
+        </div>
+        
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              asChild 
+              className="h-14 px-2 rounded-2xl hover:bg-sidebar-accent/20 transition-all group"
+            >
+              <Link to="/profile" className="flex items-center gap-3">
+                <Avatar className="h-9 w-9 border-2 border-background shadow-sm shrink-0">
+                  <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
+                  <AvatarFallback className="bg-sidebar-accent/20 text-sidebar-accent font-black text-xs">
+                    {profile?.first_name?.[0] || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
+                  <span className="text-sm font-black truncate text-sidebar-foreground">
+                    {profile?.first_name || "My Account"}
+                  </span>
+                  <span className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-widest">
+                    View Profile
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 ml-auto text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden" />
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 };

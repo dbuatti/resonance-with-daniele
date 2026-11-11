@@ -21,13 +21,14 @@ import MarketingInsights from "@/components/admin/MarketingInsights";
 import TaskRolodex from "@/components/admin/TaskRolodex";
 import EmailMembersModal from "@/components/admin/EmailMembersModal";
 import BreakEvenIndicator from "@/components/admin/BreakEvenIndicator";
+import EventSwitcher from "@/components/admin/EventSwitcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search, LayoutDashboard, ListTodo, Megaphone, Users, DollarSign, MessageSquareQuote, Brain, Ticket, TrendingUp, Clock, ExternalLink, Send, Pencil, Check, X, Music } from "lucide-react";
+import { Loader2, Plus, LayoutDashboard, ListTodo, Megaphone, Users, DollarSign, MessageSquareQuote, Brain, Ticket, TrendingUp, Clock, ExternalLink, Send, Pencil, Check, X, Music } from "lucide-react";
 import { format, differenceInDays, startOfDay, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
@@ -41,7 +42,6 @@ const AdminEventWorkbench: React.FC = () => {
   const isCreateMode = searchParams.get("new") === "1";
   const activeTab = searchParams.get("tab") || "overview";
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [localBrainDump, setLocalBrainDump] = useState("");
@@ -61,13 +61,6 @@ const AdminEventWorkbench: React.FC = () => {
   });
 
   const selectedEvent = useMemo(() => events?.find((e) => e.id === id) || null, [events, id]) as (typeof events extends (infer T)[] | undefined ? (T & { humanitix_link?: string | null }) | null : null);
-
-  const filteredEvents = useMemo(() => {
-    if (!events) return [];
-    if (!searchTerm.trim()) return events;
-    const q = searchTerm.toLowerCase();
-    return events.filter((e) => e.title.toLowerCase().includes(q));
-  }, [events, searchTerm]);
 
   const { data: stats } = useQuery({
     queryKey: ["eventWorkbenchStats", id],
@@ -170,10 +163,6 @@ const AdminEventWorkbench: React.FC = () => {
     setSearchParams(next, { replace: true });
   };
 
-  const selectEvent = (eventId: string) => {
-    navigate(`/admin/events/${eventId}`);
-  };
-
   const startCreate = () => {
     setSearchParams({ new: "1" }, { replace: true });
   };
@@ -196,37 +185,6 @@ const AdminEventWorkbench: React.FC = () => {
       </div>
     );
   }
-
-  const eventList = (
-    <div className="space-y-4">
-      <Button onClick={startCreate} className="w-full h-11 font-black rounded-xl shadow-lg">
-        <Plus className="mr-2 h-4 w-4" /> New Event
-      </Button>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search events..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-10 rounded-xl font-bold bg-muted/30 border-none focus-visible:ring-primary" />
-      </div>
-      <div className="space-y-1.5">
-        {filteredEvents.map((e) => {
-          const active = e.id === id;
-          return (
-            <button key={e.id} onClick={() => selectEvent(e.id)} className={cn(
-              "w-full text-left px-4 py-3 rounded-xl border transition-all",
-              active ? "bg-primary text-primary-foreground border-primary shadow-md" : "bg-card border-border/50 hover:border-primary/30 hover:bg-muted/30"
-            )}>
-              <p className={cn("font-black font-lora text-sm leading-tight truncate", active ? "text-primary-foreground" : "text-foreground")}>{e.title}</p>
-              <p className={cn("text-[10px] font-black uppercase tracking-widest mt-1", active ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                {format(parseISO(e.date), "MMM d, yyyy")}
-              </p>
-            </button>
-          );
-        })}
-        {filteredEvents.length === 0 && (
-          <p className="text-xs font-medium text-muted-foreground italic px-2 py-4">No events found.</p>
-        )}
-      </div>
-    </div>
-  );
 
   // --- CREATE MODE ---
   if (isCreateMode) {
@@ -252,11 +210,13 @@ const AdminEventWorkbench: React.FC = () => {
         description="Aggregated financial health, the task rolodex, and community trends across all sessions."
         badge="All Events"
         toolbar={
-          <Button onClick={startCreate} className="font-black rounded-xl shadow-md h-12">
-            <Plus className="mr-2 h-4 w-4" /> New Event
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center justify-between">
+            <EventSwitcher events={events || []} onCreate={startCreate} />
+            <Button onClick={startCreate} className="font-black rounded-xl shadow-md h-12">
+              <Plus className="mr-2 h-4 w-4" /> New Event
+            </Button>
+          </div>
         }
-        left={eventList}
       >
         <div className="space-y-10">
           <section className="space-y-4">
@@ -304,7 +264,14 @@ const AdminEventWorkbench: React.FC = () => {
           </Button>
         </>
       }
-      left={eventList}
+      toolbar={
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center justify-between">
+          <EventSwitcher events={events || []} selectedEventId={selectedEvent.id} onCreate={startCreate} />
+          <Button onClick={startCreate} className="font-black rounded-xl shadow-md h-12">
+            <Plus className="mr-2 h-4 w-4" /> New Event
+          </Button>
+        </div>
+      }
     >
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-8">
         <TabsList className="bg-muted/50 p-1.5 rounded-2xl h-auto w-full grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1">

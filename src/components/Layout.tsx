@@ -7,9 +7,7 @@ import AppSidebar from "./layout/AppSidebar";
 import BottomNav from "./layout/BottomNav";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "./ThemeToggle";
-import AdminViewToggle from "./AdminViewToggle";
 import ReportIssueButton from "./ReportIssueButton";
-import { Shield } from "lucide-react";
 import UnreadIssueReportsNotice from "./UnreadIssueReportsNotice";
 import BackToTopButton from "./BackToTopButton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +18,7 @@ import resonanceLogo from "@/assets/resonance-logo.png";
 interface LayoutProps { children: React.ReactNode; }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, loading, isActualAdmin, isAdminView } = useSession();
+  const { user, loading, isActualAdmin } = useSession();
 
   if (loading) {
     return (
@@ -79,12 +77,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <img src={resonanceLogo} alt="Resonance" className="h-8 w-8 rounded-lg" />
               <span className="font-black font-lora text-lg tracking-tighter">Resonance</span>
             </Link>
-            {isAdminView && (
-              <div className="hidden md:flex ml-auto items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/10">
-                <Shield className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Admin Console</span>
-              </div>
-            )}
           </header>
 
           <main className="flex-1 p-4 md:p-8 pt-4 md:pt-6 pb-24 md:pb-8">

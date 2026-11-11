@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SessionContextProvider } from "./integrations/supabase/auth";
 import Layout from "./components/Layout";
+import AdminLayout from "./components/admin/AdminLayout";
 import { ThemeProvider } from "@/components/theme-provider";
 import ScrollToTop from "./components/ScrollToTop";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -54,6 +55,12 @@ const Page = ({ children }: { children: ReactNode }) => (
   </Layout>
 );
 
+const AdminPage = ({ children }: { children: ReactNode }) => (
+  <AdminLayout>
+    <Suspense fallback={<PageLoadingFallback />}>{children}</Suspense>
+  </AdminLayout>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -94,12 +101,12 @@ const App = () => (
                   />
                 </Route>
 
-                <Route path="/admin" element={<Page><AdminZone /></Page>} />
-                <Route path="/admin/events" element={<Page><AdminEventWorkbench /></Page>} />
-                <Route path="/admin/events/:id" element={<Page><AdminEventWorkbench /></Page>} />
-                <Route path="/admin/people" element={<Page><AdminPeopleHub /></Page>} />
-                <Route path="/admin/inbox" element={<Page><AdminInbox /></Page>} />
-                <Route path="/admin/repertoire" element={<Page><AdminRepertoireZone /></Page>} />
+                <Route path="/admin" element={<AdminPage><AdminZone /></AdminPage>} />
+                <Route path="/admin/events" element={<AdminPage><AdminEventWorkbench /></AdminPage>} />
+                <Route path="/admin/events/:id" element={<AdminPage><AdminEventWorkbench /></AdminPage>} />
+                <Route path="/admin/people" element={<AdminPage><AdminPeopleHub /></AdminPage>} />
+                <Route path="/admin/inbox" element={<AdminPage><AdminInbox /></AdminPage>} />
+                <Route path="/admin/repertoire" element={<AdminPage><AdminRepertoireZone /></AdminPage>} />
 
                 {/* Retired routes → redirects */}
                 <Route path="/admin/marketing" element={<Navigate to="/admin/events" replace />} />
@@ -110,7 +117,7 @@ const App = () => (
                 <Route path="/admin/interest-submissions" element={<Navigate to="/admin/people?tab=leads" replace />} />
                 <Route path="/admin/announcements" element={<Navigate to="/admin/inbox" replace />} />
                 <Route path="/admin/issue-reports" element={<Navigate to="/admin/inbox?tab=issue-reports" replace />} />
-                <Route path="/admin/feedback" element={<Page><AdminFeedback /></Page>} />
+                <Route path="/admin/feedback" element={<AdminPage><AdminFeedback /></AdminPage>} />
                 <Route path="/admin/growth" element={<Navigate to="/admin" replace />} />
                 <Route path="/admin/june-poll" element={<Navigate to="/admin" replace />} />
                 <Route path="/admin/session-hub-guide" element={<Navigate to="/admin" replace />} />
