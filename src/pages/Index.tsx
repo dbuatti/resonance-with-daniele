@@ -6,7 +6,6 @@ import FeaturedSection from "@/components/landing/FeaturedSection";
 import MeetDanieleSection from "@/components/landing/MeetDanieleSection";
 import CallToActionSection from "@/components/landing/CallToActionSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
-import CommunityGallery from "@/components/landing/CommunityGallery";
 import Footer from "@/components/Footer";
 import WelcomeHub from "@/components/dashboard/WelcomeHub";
 import { useSession } from "@/integrations/supabase/auth";
@@ -57,7 +56,6 @@ const Index: React.FC = () => {
               </div>
             </div>
           </section>
-          <CommunityGallery />
           <TestimonialsSection />
           <MeetDanieleSection />
           <CallToActionSection />
