@@ -55,8 +55,8 @@ const Login: React.FC = () => {
         </div>
 
         <div className="bg-accent/10 p-4 rounded-2xl mb-8 border border-accent/20 flex items-start gap-3">
-          <Music className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-          <p className="text-xs font-bold text-accent leading-tight">
+          <Music className="h-5 w-5 text-primary dark:text-accent shrink-0 mt-0.5" />
+          <p className="text-xs font-bold text-primary dark:text-accent leading-tight">
             New here? Just sign in with Google to instantly create your member account and access your resources.
           </p>
         </div>

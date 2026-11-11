@@ -301,7 +301,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="text-3xl font-black">{insights.engagementScores[0]?.score || 0}</div>
-                <Badge variant="secondary" className="bg-accent/10 text-accent border-none font-bold">Top Score</Badge>
+                <Badge variant="secondary" className="bg-accent/10 text-primary dark:text-accent border-none font-bold">Top Score</Badge>
               </div>
               <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                 Based on attendance and community activity.
@@ -344,7 +344,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="text-3xl font-black">${insights.suggestedPrice}</div>
-                <Badge variant="secondary" className="bg-accent/10 text-accent border-none font-bold">Target</Badge>
+                <Badge variant="secondary" className="bg-accent/10 text-primary dark:text-accent border-none font-bold">Target</Badge>
               </div>
               <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                 Maintains a healthy $20 profit margin per singer based on current costs.
@@ -535,8 +535,8 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
               <div className="space-y-2">
                 <p className="text-xl font-black font-lora">Revenue vs. Cost</p>
                 <p className="text-sm opacity-80 leading-relaxed">
-                  Your average revenue per head is <span className="font-bold text-accent">${insights.revenuePerHead.toFixed(2)}</span>. 
-                  After expenses, you are making <span className="font-bold text-accent">${(insights.revenuePerHead - insights.costPerHead).toFixed(2)}</span> profit per attendee.
+                  Your average revenue per head is <span className="font-bold text-primary-foreground">${insights.revenuePerHead.toFixed(2)}</span>. 
+                  After expenses, you are making <span className="font-bold text-primary-foreground">${(insights.revenuePerHead - insights.costPerHead).toFixed(2)}</span> profit per attendee.
                 </p>
               </div>
               <div className="space-y-2">

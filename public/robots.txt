@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /profile/
 
-Sitemap: https://resonance-with-daniele.vercel.app/sitemap.xml
+Sitemap: https://resonancechoir.danielebuatti.com/sitemap.xml

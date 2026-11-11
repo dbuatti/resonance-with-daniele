@@ -418,7 +418,7 @@ const WelcomeHub: React.FC = () => {
                       <ol className="space-y-2.5">
                         {topSuggestions.map((song, index) => (
                           <li key={song.id} className="flex items-center gap-3">
-                            <span className="w-5 shrink-0 text-lg font-black text-accent leading-none">
+                            <span className="w-5 shrink-0 text-lg font-black text-primary dark:text-accent leading-none">
                               {index + 1}
                             </span>
                             <div className="min-w-0 flex-1">
@@ -488,7 +488,7 @@ const WelcomeHub: React.FC = () => {
       <footer className="text-center pt-16 border-t border-border/50 pb-8">
         <div className="flex flex-col items-center gap-6">
           <Heart className="h-8 w-8 text-primary opacity-20" />
-          <p className="text-2xl font-lora italic font-medium text-muted-foreground max-xl leading-relaxed">
+          <p className="text-2xl font-lora italic font-medium text-muted-foreground max-w-xl leading-relaxed">
             "Singing is the shortest distance between two people."
           </p>
         </div>

@@ -33,7 +33,7 @@ const HeroSection: React.FC = () => {
                 Book your spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </a>
             </Button>
-            <Button size="lg" variant="outline" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-semibold rounded-lg bg-white/10 backdrop-blur-sm border-white/40 text-white hover:bg-white/15" asChild>
+            <Button size="lg" variant="outline" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-semibold rounded-lg bg-white/10 backdrop-blur-sm border-white/60 text-white hover:bg-white/20 hover:text-white" asChild>
               <Link to="/learn-more">Learn more</Link>
             </Button>
           </div>
