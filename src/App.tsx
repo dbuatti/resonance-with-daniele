@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -61,6 +61,18 @@ const AdminPage = ({ children }: { children: ReactNode }) => (
   </AdminLayout>
 );
 
+/**
+ * Hard navigation for paths that live outside the SPA (e.g. "/next", which is a
+ * serverless redirect to the booking provider). Using <Navigate> would hit the
+ * client router and land on NotFound instead.
+ */
+const ServerRedirect = ({ to }: { to: string }) => {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return <PageLoadingFallback />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -76,7 +88,7 @@ const App = () => (
                 <Route path="/sessions" element={<Page><SessionHub /></Page>} />
                 <Route path="/events" element={<Page><Events /></Page>} />
                 <Route path="/login" element={<Page><Login /></Page>} />
-                <Route path="/current-event" element={<Navigate to="/next" replace />} />
+                <Route path="/current-event" element={<ServerRedirect to="/next" />} />
                 <Route path="/learn-more" element={<Page><LearnMore /></Page>} />
                 <Route path="/song-suggestions" element={<Page><SongSuggestionsPage /></Page>} />
                 <Route path="/feedback" element={<Page><EventFeedback /></Page>} />

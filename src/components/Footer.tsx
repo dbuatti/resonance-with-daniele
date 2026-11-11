@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
             <p className="text-sm text-muted-foreground">A community choir in Armadale, Melbourne</p>
           </div>
           <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm">
-            <Link to="/next" className="hover:text-foreground">Book a session</Link>
+            <a href="/next" className="hover:text-foreground">Book a session</a>
             <Link to="/learn-more" className="hover:text-foreground">Learn more</Link>
             <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-foreground">
               <Instagram className="h-4 w-4" />

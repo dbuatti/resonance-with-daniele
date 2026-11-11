@@ -30,6 +30,13 @@ interface Event {
   ai_chat_link?: string;
 }
 
+interface TopSuggestion {
+  id: string;
+  title: string;
+  artist: string;
+  total_votes: number;
+}
+
 const resourcePillStyles: { [key: string]: { text: string, border: string } } = {
   pdf: { text: "text-red-600", border: "border-red-300" },
   audio: { text: "text-green-600", border: "border-green-300" },
@@ -139,6 +146,22 @@ const WelcomeHub: React.FC = () => {
       return data || null;
     },
     enabled: !loadingSession,
+  });
+
+  const { data: topSuggestions } = useQuery<TopSuggestion[], Error, TopSuggestion[], ['topSongSuggestions']>({
+    queryKey: ['topSongSuggestions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("song_suggestions")
+        .select("id, title, artist, total_votes")
+        .order("total_votes", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !loadingSession,
+    staleTime: 5 * 60 * 1000,
   });
 
   const handlePhotoUpload = useCallback(async (file: File) => {
@@ -367,9 +390,9 @@ const WelcomeHub: React.FC = () => {
                 </div>
                 {upcomingEvent ? (
                   <Button size="lg" className="w-full h-14 text-lg font-black rounded-xl shadow-lg" asChild>
-                    <Link to={upcomingEvent.humanitix_link || "/next"}>
+                    <a href={upcomingEvent.humanitix_link || "/next"}>
                       RSVP Now <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
+                    </a>
                   </Button>
                 ) : (
                   <p className="text-base text-muted-foreground italic font-medium">Check back soon for new dates!</p>
@@ -382,18 +405,42 @@ const WelcomeHub: React.FC = () => {
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Community Voice</h3>
                 <Music className="h-4 w-4 text-accent opacity-50" />
               </div>
-              <div className="bg-accent/5 rounded-[2rem] p-8 space-y-8 border border-accent/20 shadow-inner">
+              <div className="bg-accent/5 rounded-[2rem] p-8 space-y-6 border border-accent/20 shadow-inner">
                 <div className="space-y-3">
                   <p className="text-3xl font-black font-lora leading-tight">
                     Song Suggestions
                   </p>
-                  <p className="text-base font-medium text-muted-foreground leading-relaxed">
-                    Have a song you'd love to sing? Suggest it and vote on others!
-                  </p>
+                  {topSuggestions && topSuggestions.length > 0 ? (
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        Most requested
+                      </p>
+                      <ol className="space-y-2.5">
+                        {topSuggestions.map((song, index) => (
+                          <li key={song.id} className="flex items-center gap-3">
+                            <span className="w-5 shrink-0 text-lg font-black text-accent leading-none">
+                              {index + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-black leading-tight truncate">{song.title}</p>
+                              <p className="text-xs font-medium text-muted-foreground truncate">{song.artist}</p>
+                            </div>
+                            <span className="shrink-0 text-sm font-black tabular-nums text-muted-foreground">
+                              {song.total_votes}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ) : (
+                    <p className="text-base font-medium text-muted-foreground leading-relaxed">
+                      Have a song you'd love to sing? Suggest it and vote on others!
+                    </p>
+                  )}
                 </div>
-                <Button size="lg" variant="outline" className="w-full h-14 text-lg font-black border-accent/50 text-accent-foreground hover:bg-accent hover:text-accent-foreground rounded-xl shadow-sm" asChild>
+                <Button size="lg" variant="outline" className="w-full h-14 text-lg font-black border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground rounded-xl shadow-sm" asChild>
                   <Link to="/song-suggestions">
-                    Go to Suggestions <ArrowRight className="ml-2 h-5 w-5" />
+                    {topSuggestions && topSuggestions.length > 0 ? "Vote on more" : "Go to Suggestions"} <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
               </div>

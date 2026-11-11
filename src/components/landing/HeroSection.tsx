@@ -29,9 +29,9 @@ const HeroSection: React.FC = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
             <Button size="lg" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-bold rounded-lg bg-sky-400 text-slate-900 hover:bg-sky-300 group" asChild>
-              <Link to="/next">
+              <a href="/next">
                 Book your spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Link>
+              </a>
             </Button>
             <Button size="lg" variant="outline" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-semibold rounded-lg bg-white/10 backdrop-blur-sm border-white/40 text-white hover:bg-white/15" asChild>
               <Link to="/learn-more">Learn more</Link>
