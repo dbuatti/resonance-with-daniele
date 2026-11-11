@@ -12,14 +12,14 @@ const HeroSection: React.FC = () => {
         className="absolute inset-0 bg-cover bg-center scale-x-[-1]"
         style={{ backgroundImage: "url('/hero-bg.jpeg')" }}
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#2f1f17]/90 via-[#2f1f17]/70 to-[#2f1f17]/40" />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-slate-900/40" />
       <div className="relative mx-auto max-w-6xl px-4 md:px-6 py-28 md:py-36 lg:py-44 xl:py-52">
         <div className="max-w-3xl">
-          <p className="mb-4 text-sm md:text-base font-semibold tracking-[0.2em] uppercase text-[#F6CFCB]/90">
+          <p className="mb-4 text-sm md:text-base font-semibold tracking-[0.2em] uppercase text-sky-300/90">
             Melbourne's Monthly Pop-Up Choir
           </p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold font-playfair leading-[1.02] text-white mb-4">
-            Come and sing <span className="text-[#F6CFCB]">with us</span>
+            Come and sing <span className="text-sky-300">with us</span>
           </h1>
           <p className="text-lg md:text-xl text-white/90 leading-relaxed mb-4 max-w-2xl">
             A welcoming, piano-led pop-up choir in Armadale. No auditions, no experience needed.
@@ -28,7 +28,7 @@ const HeroSection: React.FC = () => {
             Learn harmony parts together and make music without pressure to be perfect.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
-            <Button size="lg" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-bold rounded-lg bg-[#D69FB0] text-[#2f1f17] hover:bg-[#D69FB0]/90 group" asChild>
+            <Button size="lg" className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-bold rounded-lg bg-sky-400 text-slate-900 hover:bg-sky-300 group" asChild>
               <a href="/next">
                 Book your spot <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </a>

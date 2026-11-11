@@ -301,7 +301,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="text-3xl font-black">{insights.engagementScores[0]?.score || 0}</div>
-                <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-none font-bold">Top Score</Badge>
+                <Badge variant="secondary" className="bg-accent/10 text-accent border-none font-bold">Top Score</Badge>
               </div>
               <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                 Based on attendance and community activity.
@@ -344,7 +344,7 @@ const MarketingInsights: React.FC<MarketingInsightsProps> = ({ eventId }) => {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="text-3xl font-black">${insights.suggestedPrice}</div>
-                <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-none font-bold">Target</Badge>
+                <Badge variant="secondary" className="bg-accent/10 text-accent border-none font-bold">Target</Badge>
               </div>
               <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                 Maintains a healthy $20 profit margin per singer based on current costs.

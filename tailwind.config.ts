@@ -72,11 +72,11 @@ export default {
         },
         'hero-gradient-start': {
           DEFAULT: 'hsl(220 30% 98%)',
-          dark: 'hsl(220 15% 25%)',
+          dark: 'hsl(222 35% 12%)',
         },
         'hero-gradient-end': {
-          DEFAULT: 'hsl(54 30% 98%)',
-          dark: 'hsl(54 15% 25%)',
+          DEFAULT: 'hsl(220 25% 96%)',
+          dark: 'hsl(222 30% 10%)',
         },
         'hero-description-foreground': {
           DEFAULT: 'hsl(220 10% 40%)',

@@ -71,7 +71,7 @@ const InterestFormSection: React.FC = () => {
   if (isSubmitted) {
     return (
       <section className="py-16 md:py-24 relative overflow-hidden text-foreground">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#B0BCD3]/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-2xl mx-auto">
             <Card className="p-6 md:p-8 shadow-lg rounded-xl text-center">
@@ -93,7 +93,7 @@ const InterestFormSection: React.FC = () => {
 
   return (
     <section className="py-16 md:py-24 relative overflow-hidden text-foreground">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#B0BCD3]/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent" />
       <div className="container mx-auto px-4 relative z-10">
       <div className="max-w-2xl mx-auto">
         <Card className="p-6 md:p-8 shadow-lg rounded-xl bg-card/80 backdrop-blur-sm">

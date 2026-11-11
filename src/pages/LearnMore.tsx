@@ -100,7 +100,7 @@ const LearnMore: React.FC = () => {
       </section>
 
       {/* Final CTA - edge-to-edge */}
-      <section className="py-16 md:py-24 md:bg-[#f8f0f3] relative overflow-hidden">
+      <section className="py-16 md:py-24 md:bg-slate-100 dark:md:bg-slate-900/50 relative overflow-hidden">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center space-y-8">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black font-lora tracking-tight">
