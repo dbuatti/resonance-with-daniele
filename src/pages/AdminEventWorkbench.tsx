@@ -307,14 +307,14 @@ const AdminEventWorkbench: React.FC = () => {
       left={eventList}
     >
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-8">
-        <TabsList className="bg-muted/50 p-1 rounded-2xl h-14 w-full flex overflow-x-auto no-scrollbar">
-          <TabsTrigger value="overview" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"><LayoutDashboard className="h-4 w-4 mr-2 shrink-0" /> Overview</TabsTrigger>
-          <TabsTrigger value="preparation" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"><ListTodo className="h-4 w-4 mr-2 shrink-0" /> Preparation</TabsTrigger>
-          <TabsTrigger value="marketing" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"><Megaphone className="h-4 w-4 mr-2 shrink-0" /> Marketing</TabsTrigger>
-          <TabsTrigger value="attendees" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"><Users className="h-4 w-4 mr-2 shrink-0" /> Attendees</TabsTrigger>
-          <TabsTrigger value="finance" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"><DollarSign className="h-4 w-4 mr-2 shrink-0" /> Finance</TabsTrigger>
-          <TabsTrigger value="feedback" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"><MessageSquareQuote className="h-4 w-4 mr-2 shrink-0" /> Feedback</TabsTrigger>
-          <TabsTrigger value="notes" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm"><Brain className="h-4 w-4 mr-2 shrink-0" /> Notes</TabsTrigger>
+        <TabsList className="bg-muted/50 p-1.5 rounded-2xl h-auto w-full grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1">
+          <TabsTrigger value="overview" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-11"><LayoutDashboard className="h-4 w-4 mr-2 shrink-0" /> Overview</TabsTrigger>
+          <TabsTrigger value="preparation" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-11"><ListTodo className="h-4 w-4 mr-2 shrink-0" /> Preparation</TabsTrigger>
+          <TabsTrigger value="marketing" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-11"><Megaphone className="h-4 w-4 mr-2 shrink-0" /> Marketing</TabsTrigger>
+          <TabsTrigger value="attendees" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-11"><Users className="h-4 w-4 mr-2 shrink-0" /> Attendees</TabsTrigger>
+          <TabsTrigger value="finance" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-11"><DollarSign className="h-4 w-4 mr-2 shrink-0" /> Finance</TabsTrigger>
+          <TabsTrigger value="feedback" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-11"><MessageSquareQuote className="h-4 w-4 mr-2 shrink-0" /> Feedback</TabsTrigger>
+          <TabsTrigger value="notes" className="rounded-xl font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-11"><Brain className="h-4 w-4 mr-2 shrink-0" /> Notes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-8">

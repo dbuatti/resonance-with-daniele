@@ -3,69 +3,52 @@
 import React from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Shield } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"; // Import ToggleGroup components
+import { Shield, LogOut } from "lucide-react";
 
-const AdminViewToggle: React.FC = () => {
+interface AdminViewToggleProps {
+  collapsed?: boolean;
+}
+
+const AdminViewToggle: React.FC<AdminViewToggleProps> = ({ collapsed = false }) => {
   const { user, loading, isAdminView, toggleAdminView } = useSession();
 
   if (loading || !user || !user.is_admin) {
-    return null; // Only show if user is an admin and session is loaded
+    return null;
   }
 
-  // Determine the current value for the ToggleGroup
-  const currentValue = isAdminView ? "admin" : "user";
+  if (collapsed) {
+    return (
+      <Button
+        onClick={toggleAdminView}
+        variant={isAdminView ? "outline" : "default"}
+        size="icon"
+        className="h-9 w-9 rounded-lg shrink-0"
+        aria-label={isAdminView ? "Exit Admin Console" : "Open Admin Console"}
+      >
+        {isAdminView ? <LogOut className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
+      </Button>
+    );
+  }
 
-  const handleToggleChange = (value: string) => {
-    if (value === "admin" && !isAdminView) {
-      toggleAdminView();
-    } else if (value === "user" && isAdminView) {
-      toggleAdminView();
-    }
-  };
+  if (isAdminView) {
+    return (
+      <Button
+        onClick={toggleAdminView}
+        variant="outline"
+        className="w-full h-11 gap-2 rounded-xl font-bold border-dashed border-primary/30 hover:bg-primary/5 hover:text-primary"
+      >
+        <LogOut className="h-4 w-4" /> Exit Admin Console
+      </Button>
+    );
+  }
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <ToggleGroup
-          type="single"
-          value={currentValue}
-          onValueChange={handleToggleChange}
-          className="bg-primary-foreground/10 rounded-full p-0.5 shadow-inner h-auto"
-          aria-label="Toggle Admin View"
-        >
-          <ToggleGroupItem 
-            value="admin" 
-            aria-label="Admin View"
-            className={cn(
-              "px-3 py-1 h-8 rounded-full text-sm font-medium transition-all duration-200",
-              "data-[state=on]:bg-primary-foreground data-[state=on]:text-primary data-[state=on]:shadow-md",
-              "data-[state=off]:text-primary-foreground data-[state=off]:hover:bg-primary-foreground/5"
-            )}
-          >
-            <Shield className="h-4 w-4 mr-1" />
-            Admin
-          </ToggleGroupItem>
-          <ToggleGroupItem 
-            value="user" 
-            aria-label="User View"
-            className={cn(
-              "px-3 py-1 h-8 rounded-full text-sm font-medium transition-all duration-200",
-              "data-[state=on]:bg-primary-foreground data-[state=on]:text-primary data-[state=on]:shadow-md",
-              "data-[state=off]:text-primary-foreground data-[state=off]:hover:bg-primary-foreground/5"
-            )}
-          >
-            <EyeOff className="h-4 w-4 mr-1" />
-            User
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </TooltipTrigger>
-      <TooltipContent>
-        {isAdminView ? "Currently Admin View (Click to switch to User View)" : "Currently User View (Click to switch to Admin View)"}
-      </TooltipContent>
-    </Tooltip>
+    <Button
+      onClick={toggleAdminView}
+      className="w-full h-11 gap-2 rounded-xl font-bold shadow-md bg-primary text-primary-foreground hover:bg-primary/90"
+    >
+      <Shield className="h-4 w-4" /> Open Admin Console
+    </Button>
   );
 };
 
