@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Music} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSession } from '@/integrations/supabase/auth';
@@ -15,6 +16,12 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const redirectToUrl = window.location.origin + '/';
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const authTheme = resolvedTheme === 'dark' ? 'dark' : 'light';
 
   // Redirect to home if already logged in
@@ -54,27 +61,35 @@ const Login: React.FC = () => {
           </p>
         </div>
 
-        <Auth
-          supabaseClient={supabase}
-          providers={['google']}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: 'hsl(var(--primary))',
-                  brandAccent: 'hsl(var(--accent))',
+        {mounted ? (
+          <Auth
+            supabaseClient={supabase}
+            providers={['google']}
+            appearance={{
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: 'hsl(var(--primary))',
+                    brandAccent: 'hsl(var(--accent))',
+                  },
+                  radii: {
+                    borderRadiusButton: '1rem',
+                    inputBorderRadius: '1rem',
+                  }
                 },
-                radii: {
-                  borderRadiusButton: '1rem',
-                  inputBorderRadius: '1rem',
-                }
               },
-            },
-          }}
-          theme={authTheme}
-          redirectTo={redirectToUrl}
-        />
+            }}
+            theme={authTheme}
+            redirectTo={redirectToUrl}
+          />
+        ) : (
+          <div className="space-y-4 py-2">
+            <Skeleton className="h-11 w-full rounded-xl" />
+            <Skeleton className="h-11 w-full rounded-xl" />
+            <Skeleton className="h-11 w-full rounded-xl" />
+          </div>
+        )}
         
         <div className="mt-8 text-center">
           <Button variant="ghost" asChild className="text-muted-foreground hover:text-primary font-bold">
