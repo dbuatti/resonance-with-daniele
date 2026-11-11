@@ -13,7 +13,7 @@ import BackToTopButton from "./BackToTopButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import resonanceLogo from "@/assets/resonance-logo.png";
+import resonanceLogo from "@/assets/resonance-logo.webp";
 
 interface LayoutProps { children: React.ReactNode; }
 

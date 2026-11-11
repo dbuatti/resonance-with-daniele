@@ -41,13 +41,13 @@ const Login: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center p-4 min-h-[calc(100vh-80px)] bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <div className="p-8 md:p-12 max-w-md w-full bg-card rounded-2xl soft-shadow border border-white/10 animate-fade-in-up">
+      <div className="p-8 md:p-12 max-w-md w-full bg-card rounded-2xl soft-shadow border border-border animate-fade-in-up">
         <div className="flex flex-col items-center mb-8 text-center space-y-4">
           <div className="bg-primary/10 p-3 rounded-xl text-primary">
             <Music className="h-10 w-10" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-black font-lora tracking-tight">Join the Circle</h2>
+            <h2 className="text-3xl font-black font-lora tracking-tight">Member sign in</h2>
             <p className="text-muted-foreground font-medium leading-relaxed">
               Sign in to access your sheet music, practice tracks, and community updates.
             </p>

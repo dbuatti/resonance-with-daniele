@@ -10,7 +10,7 @@ import {
   Shield, 
   ChevronRight
 } from "lucide-react";
-import resonanceLogo from "@/assets/resonance-logo.png";
+import resonanceLogo from "@/assets/resonance-logo.webp";
 import { useSession } from "@/integrations/supabase/auth";
 import { cn } from "@/lib/utils";
 import {

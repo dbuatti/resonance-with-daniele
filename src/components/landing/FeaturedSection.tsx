@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { CalendarDays, ArrowRight, MapPin, Music } from "lucide-react";
+import { CalendarDays, ArrowRight, MapPin, Music, Users, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +19,24 @@ interface Event {
   ai_chat_link?: string;
   main_song?: string;
 }
+
+const experience = [
+  {
+    icon: Music,
+    title: "Piano-led teaching",
+    description: "Learn your harmony part by ear, with Daniele guiding every section from the piano.",
+  },
+  {
+    icon: Users,
+    title: "No auditions",
+    description: "All voices welcome. No sheet music reading, no prior experience, no solo pressure.",
+  },
+  {
+    icon: Heart,
+    title: "No pressure",
+    description: "Come to sing, not to perform. Leave feeling lighter than when you walked in.",
+  },
+];
 
 const FeaturedSection: React.FC = () => {
   const [featuredEvent, setFeaturedEvent] = useState<Event | null>(null);
@@ -112,6 +130,18 @@ const FeaturedSection: React.FC = () => {
             </Button>
           </div>
         )}
+
+        <div className="mt-14 md:mt-20 grid grid-cols-1 sm:grid-cols-3 gap-5 md:gap-6">
+          {experience.map((item) => (
+            <div key={item.title} className="rounded-2xl border border-border bg-card p-6">
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <item.icon className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold font-lora mb-1.5">{item.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
