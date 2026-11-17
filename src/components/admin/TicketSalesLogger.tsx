@@ -3,10 +3,9 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Info, UserCheck } from "lucide-react";
+import { Loader2, Upload, FileSpreadsheet, UserCheck, Ticket } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { format } from "date-fns";
 import { Progress } from "@/components/ui/progress";
@@ -14,7 +13,17 @@ import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { parseCurrency, parseHumanitixDate, splitLine } from "@/utils/humanitix-csv";
+import Section from "@/components/ui/section";
+import EmptyState from "@/components/ui/empty-state";
 
 interface TicketSalesLoggerProps {
   eventId: string;
@@ -23,6 +32,7 @@ interface TicketSalesLoggerProps {
 const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const { data: orders, isLoading: loadingOrders } = useQuery({
     queryKey: ["eventOrders", eventId],
@@ -83,6 +93,7 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
         const { error } = await supabase.from("event_orders").upsert(ordersToUpsert, { onConflict: "order_id" });
         if (error) throw error;
         showSuccess(`Successfully imported ${ordersToUpsert.length} orders!`);
+        setIsImportOpen(false);
         queryClient.invalidateQueries({ queryKey: ["eventOrders", eventId] });
       } catch (err: unknown) { showError(err instanceof Error ? err.message : "Failed to import file."); } finally { setIsImporting(false); }
     };
@@ -96,57 +107,68 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
   const targetTickets = 125;
   const progress = (totalTickets / targetTickets) * 100;
 
-  return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-1 shadow-lg border-none">
-          <CardHeader><CardTitle className="flex items-center gap-2"><Upload className="h-5 w-5 text-primary" /> Import Orders</CardTitle><CardDescription>Upload your Humanitix Order Report</CardDescription></CardHeader>
-          <CardContent>
-            <div {...getRootProps()} className={cn("border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer", isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/50", isImporting && "opacity-50 pointer-events-none")}>
-              <input {...getInputProps()} />
-              {isImporting ? <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" /> : <FileSpreadsheet className="h-10 w-10 mx-auto text-muted-foreground mb-4" />}
-              <p className="text-sm font-medium">{isDragActive ? "Drop the file here" : "Drag & drop Humanitix file"}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="shadow-lg border-none bg-primary/5">
-            <CardHeader><CardTitle className="text-sm font-bold uppercase tracking-widest text-primary">Live Sales Progress</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-end">
-                <div className="text-4xl font-bold">{totalTickets} <span className="text-lg text-muted-foreground font-normal">/ {targetTickets} tickets</span></div>
-                <div className="text-right"><p className="text-xs font-bold text-muted-foreground uppercase">Total Earnings</p><p className="text-2xl font-bold text-green-600">${totalEarnings.toFixed(2)}</p></div>
-              </div>
-              <Progress value={progress} className="h-3" />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+  const importAction = (
+    <Button onClick={() => setIsImportOpen(true)} className="h-10 rounded-xl font-bold shadow-sm">
+      <Upload className="h-4 w-4 mr-1.5" /> Import Orders
+    </Button>
+  );
 
-      <Card className="shadow-lg border-none overflow-hidden">
-        <CardHeader className="bg-muted/30 border-b"><CardTitle>Order History</CardTitle><CardDescription>Showing {orders?.length || 0} individual orders</CardDescription></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="pl-6">Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-center">Tickets</TableHead>
-                  <TableHead className="text-right pr-6">Earnings</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loadingOrders ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8"><Loader2 className="animate-spin h-6 w-6 mx-auto" /></TableCell></TableRow>
-                ) : orders?.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No orders imported yet.</TableCell></TableRow>
-                ) : (
-                  orders?.map((order) => {
+  return (
+    <>
+      <div className="space-y-6">
+        {/* Live progress — the single glanceable summary */}
+        <div className="rounded-[2rem] border border-border/60 bg-primary/5 p-5 md:p-6 shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Live Sales Progress</p>
+              <div className="text-4xl font-black font-lora leading-none">
+                {totalTickets} <span className="text-lg text-muted-foreground font-bold">/ {targetTickets} tickets</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total Earnings</p>
+              <p className="text-2xl font-black text-green-600 leading-none">${totalEarnings.toFixed(2)}</p>
+            </div>
+          </div>
+          <Progress value={progress} className="h-2.5 mt-4" />
+        </div>
+
+        <Section
+          title="Ticket Sales"
+          description="Import your Humanitix Order Report to sync every sale and earning."
+          icon={<Ticket className="h-4 w-4" />}
+          action={importAction}
+          badge={<Badge variant="secondary" className="text-[10px] font-black rounded-full">{orders?.length || 0} orders</Badge>}
+        >
+          {loadingOrders ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="animate-spin h-6 w-6 text-primary" />
+            </div>
+          ) : !orders || orders.length === 0 ? (
+            <EmptyState
+              icon={<FileSpreadsheet className="h-7 w-7" />}
+              title="No orders imported yet"
+              description="Upload the Order Report exported from your Humanitix event page to see live sales here."
+              action={{ label: "Import Orders", onClick: () => setIsImportOpen(true), icon: <Upload className="h-4 w-4" /> }}
+              hint="Accepts .csv and .tsv files"
+            />
+          ) : (
+            <div className="overflow-x-auto -mx-5 md:-mx-6">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-5 md:pl-6 text-[10px] font-black uppercase tracking-widest">Customer</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest">Date</TableHead>
+                    <TableHead className="text-center text-[10px] font-black uppercase tracking-widest">Tickets</TableHead>
+                    <TableHead className="text-right pr-5 md:pr-6 text-[10px] font-black uppercase tracking-widest">Earnings</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => {
                     const member = order.email ? profileMap[order.email.toLowerCase().trim()] : null;
                     return (
                       <TableRow key={order.order_id}>
-                        <TableCell className="pl-6">
+                        <TableCell className="pl-5 md:pl-6">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8 border border-border">
                               <AvatarImage src={member?.avatar_url || ""} />
@@ -165,19 +187,52 @@ const TicketSalesLogger: React.FC<TicketSalesLoggerProps> = ({ eventId }) => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-xs">{format(new Date(order.order_date), "MMM d, h:mm a")}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{format(new Date(order.order_date), "MMM d, h:mm a")}</TableCell>
                         <TableCell className="text-center font-bold">{order.valid_tickets}</TableCell>
-                        <TableCell className="text-right pr-6 font-bold text-green-600">${Number(order.your_earnings).toFixed(2)}</TableCell>
+                        <TableCell className="text-right pr-5 md:pr-6 font-bold text-green-600 tabular-nums">${Number(order.your_earnings).toFixed(2)}</TableCell>
                       </TableRow>
                     );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </Section>
+      </div>
+
+      <Dialog open={isImportOpen} onOpenChange={(open) => !isImporting && setIsImportOpen(open)}>
+        <DialogContent className="rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-lora font-black">Import Humanitix orders</DialogTitle>
+            <DialogDescription>
+              Export the Order Report from your Humanitix event page, then drop it below. Existing orders are updated, not duplicated.
+            </DialogDescription>
+          </DialogHeader>
+          <div
+            {...getRootProps()}
+            className={cn(
+              "border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer",
+              isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/50",
+              isImporting && "opacity-50 pointer-events-none",
+            )}
+          >
+            <input {...getInputProps()} />
+            {isImporting ? (
+              <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
+            ) : (
+              <FileSpreadsheet className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+            )}
+            <p className="text-sm font-medium">{isImporting ? "Importing orders…" : isDragActive ? "Drop the file here" : "Drag & drop Humanitix file"}</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mt-1">or click to browse</p>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          <DialogFooter className="pt-2">
+            <Button variant="ghost" className="font-bold" onClick={() => setIsImportOpen(false)} disabled={isImporting}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

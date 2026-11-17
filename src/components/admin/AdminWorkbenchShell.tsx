@@ -58,32 +58,32 @@ const AdminWorkbenchShell: React.FC<AdminWorkbenchShellProps> = ({
 
   return (
     <div className={cn("w-full space-y-8", className)}>
-      <header className="space-y-6">
+      <header className="space-y-5">
         {backTo && <BackButton to={backTo} />}
 
         {(badge || badgeIcon) && (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
             {badgeIcon || <ShieldCheck className="h-3 w-3" />}
             {badge && <span>{badge}</span>}
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="space-y-3">
-            <h1 className="text-4xl md:text-6xl font-black font-lora tracking-tighter leading-none">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2 min-w-0">
+            <h1 className="text-3xl md:text-5xl font-black font-lora tracking-tighter leading-none">
               {title}
             </h1>
             {description && (
-              <p className="text-lg text-muted-foreground max-w-2xl font-medium leading-relaxed">
+              <p className="text-base md:text-lg text-muted-foreground max-w-2xl font-medium leading-relaxed">
                 {description}
               </p>
             )}
           </div>
-          {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+          {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
         </div>
       </header>
 
-      {toolbar && <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">{toolbar}</div>}
+      {toolbar && <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">{toolbar}</div>}
 
       {left ? (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[20rem_1fr]">

@@ -28,10 +28,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, LayoutDashboard, ListTodo, Megaphone, Users, DollarSign, MessageSquareQuote, Brain, Ticket, TrendingUp, Clock, ExternalLink, Send, Pencil, Check, X, Music } from "lucide-react";
+import { Loader2, LayoutDashboard, ListTodo, Megaphone, Users, DollarSign, MessageSquareQuote, Brain, Ticket, TrendingUp, Clock, ExternalLink, Send, Pencil, Check, X, Music } from "lucide-react";
 import { format, differenceInDays, startOfDay, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
+import Section from "@/components/ui/section";
+import OverflowMenu from "@/components/ui/overflow-menu";
+import EmptyState from "@/components/ui/empty-state";
 
 const AdminEventWorkbench: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -212,9 +215,6 @@ const AdminEventWorkbench: React.FC = () => {
         toolbar={
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center justify-between">
             <EventSwitcher events={events || []} onCreate={startCreate} />
-            <Button onClick={startCreate} className="font-black rounded-xl shadow-md h-12">
-              <Plus className="mr-2 h-4 w-4" /> New Event
-            </Button>
           </div>
         }
       >
@@ -259,18 +259,13 @@ const AdminEventWorkbench: React.FC = () => {
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black h-9 px-3 flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" /> {timeLeft || "—"}
           </Badge>
-          <Button asChild variant="ghost" className="font-bold" onClick={() => setIsEmailModalOpen(true)}>
-            <span><Send className="h-4 w-4 mr-2" /> Broadcast</span>
+          <Button onClick={() => setIsEmailModalOpen(true)} className="h-10 px-4 rounded-xl font-bold shadow-sm">
+            <Send className="h-4 w-4 mr-2" /> Broadcast
           </Button>
         </>
       }
       toolbar={
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center justify-between">
-          <EventSwitcher events={events || []} selectedEventId={selectedEvent.id} onCreate={startCreate} />
-          <Button onClick={startCreate} className="font-black rounded-xl shadow-md h-12">
-            <Plus className="mr-2 h-4 w-4" /> New Event
-          </Button>
-        </div>
+        <EventSwitcher events={events || []} selectedEventId={selectedEvent.id} onCreate={startCreate} />
       }
     >
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-8">
@@ -306,68 +301,91 @@ const AdminEventWorkbench: React.FC = () => {
             </Card>
           </div>
           <BreakEvenIndicator financials={stats} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="rounded-[2.5rem] border-border/50 shadow-sm">
-              <CardHeader><CardTitle className="text-lg font-black font-lora">Quick Links</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
+          <Section
+            title="Links & Tools"
+            description="Your booking page and go-to tools — always one click away."
+            icon={<ExternalLink className="h-4 w-4" />}
+            menu={
+              <OverflowMenu
+                label="Reference link"
+                triggerLabel="Link actions"
+                actions={[
+                  {
+                    label: selectedEvent.humanitix_link ? "Edit Humanitix link" : "Add Humanitix link",
+                    icon: <Pencil className="h-4 w-4" />,
+                    onSelect: () => setIsEditingHumanitix(true),
+                  },
+                ]}
+              />
+            }
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {quickLinks.map((l) => (
-                  <Button key={l.label} variant="ghost" className="justify-between h-12 px-4 rounded-xl border border-border/50 bg-card hover:bg-muted w-full" asChild>
+                  <Button key={l.label} variant="outline" className="justify-between h-12 px-4 rounded-xl border-border/60 hover:bg-muted" asChild>
                     <a href={l.url} target="_blank" rel="noopener noreferrer">
-                      <span className="font-bold text-sm">{l.label}</span><ExternalLink className="h-3 w-3 opacity-30" />
+                      <span className="font-bold text-sm">{l.label}</span><ExternalLink className="h-3.5 w-3.5 opacity-40" />
                     </a>
                   </Button>
                 ))}
-              </CardContent>
-            </Card>
-            <Card className="rounded-[2.5rem] border-border/50 shadow-sm">
-              <CardHeader><CardTitle className="text-lg font-black font-lora">Reference Link</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                <Button asChild variant="outline" className="w-full h-12 rounded-xl font-bold border-primary/20 hover:bg-primary/5" disabled={!selectedEvent || !selectedEvent.humanitix_link}>
-                  <a href={selectedEvent.humanitix_link || "#"} target="_blank" rel="noopener noreferrer">Humanitix <ExternalLink className="h-4 w-4 ml-2" /></a>
-                </Button>
-                <div className="space-y-2">
-                  {isEditingHumanitix ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={humanitixInput}
-                        onChange={(e) => setHumanitixInput(e.target.value)}
-                        placeholder="https://events.humanitix.com/..."
-                        className="h-10 rounded-xl font-bold"
-                      />
-                      <Button
-                        size="sm"
-                        className="rounded-xl"
-                        disabled={saveHumanitixMutation.isPending}
-                        onClick={() => saveHumanitixMutation.mutate(humanitixInput)}
-                      >
-                        {saveHumanitixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="rounded-xl"
-                        disabled={saveHumanitixMutation.isPending}
-                        onClick={() => {
-                          setHumanitixInput(selectedEvent.humanitix_link || "");
-                          setIsEditingHumanitix(false);
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button variant="ghost" size="sm" className="font-bold text-muted-foreground" onClick={() => setIsEditingHumanitix(true)}>
-                      <Pencil className="h-4 w-4 mr-2" />
-                      {selectedEvent.humanitix_link ? "Edit Humanitix link" : "Add Humanitix link"}
+              </div>
+
+              <div className="pt-2 border-t border-border/50">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Humanitix Booking Page</p>
+                    {selectedEvent.humanitix_link ? (
+                      <a href={selectedEvent.humanitix_link} target="_blank" rel="noopener noreferrer" className="text-sm font-mono text-primary hover:underline break-all">
+                        {selectedEvent.humanitix_link}
+                      </a>
+                    ) : (
+                      <p className="text-sm font-medium text-muted-foreground">No link added yet.</p>
+                    )}
+                  </div>
+                  {selectedEvent.humanitix_link && (
+                    <Button variant="secondary" className="h-10 rounded-xl font-bold shrink-0" asChild>
+                      <a href={selectedEvent.humanitix_link} target="_blank" rel="noopener noreferrer">
+                        Open <ExternalLink className="h-4 w-4 ml-2" />
+                      </a>
                     </Button>
                   )}
-                  {selectedEvent.humanitix_link && !isEditingHumanitix && (
-                    <p className="text-xs text-muted-foreground break-all font-mono">{selectedEvent.humanitix_link}</p>
-                  )}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+
+                {isEditingHumanitix && (
+                  <div className="flex items-center gap-2 mt-3">
+                    <Input
+                      value={humanitixInput}
+                      onChange={(e) => setHumanitixInput(e.target.value)}
+                      placeholder="https://events.humanitix.com/..."
+                      className="h-10 rounded-xl font-bold"
+                    />
+                    <Button
+                      size="icon"
+                      className="rounded-xl shrink-0"
+                      disabled={saveHumanitixMutation.isPending}
+                      aria-label="Save link"
+                      onClick={() => saveHumanitixMutation.mutate(humanitixInput)}
+                    >
+                      {saveHumanitixMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="rounded-xl shrink-0"
+                      aria-label="Cancel"
+                      disabled={saveHumanitixMutation.isPending}
+                      onClick={() => {
+                        setHumanitixInput(selectedEvent.humanitix_link || "");
+                        setIsEditingHumanitix(false);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Section>
         </TabsContent>
 
         <TabsContent value="preparation"><EventPrepChecklist eventId={selectedEvent.id} /></TabsContent>
@@ -396,25 +414,40 @@ const AdminEventWorkbench: React.FC = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="attendees"><section className="space-y-6"><BreakEvenIndicator financials={stats} /><EventOrderList eventId={selectedEvent.id} /></section></TabsContent>
+        <TabsContent value="attendees" className="space-y-8">
+          <BreakEvenIndicator financials={stats} />
+          <EventOrderList eventId={selectedEvent.id} />
+        </TabsContent>
 
-        <TabsContent value="finance" className="space-y-10">
-          <section className="space-y-4"><BreakEvenIndicator financials={stats} /></section>
-          <section className="space-y-4"><h3 className="text-base font-black font-lora">Ticket Sales</h3><TicketSalesLogger eventId={selectedEvent.id} /></section>
-          <section className="space-y-4"><h3 className="text-base font-black font-lora">Expenses</h3><ExpenseLogger eventId={selectedEvent.id} /></section>
-          <section className="space-y-4"><h3 className="text-base font-black font-lora">Promotions</h3><FlashSaleManager eventId={selectedEvent.id} /></section>
+        <TabsContent value="finance" className="space-y-8">
+          <BreakEvenIndicator financials={stats} />
+          <TicketSalesLogger eventId={selectedEvent.id} />
+          <ExpenseLogger eventId={selectedEvent.id} />
+          <FlashSaleManager eventId={selectedEvent.id} />
         </TabsContent>
 
         <TabsContent value="feedback"><EventFeedbackPanel eventId={selectedEvent.id} /></TabsContent>
 
         <TabsContent value="notes" className="space-y-4">
-          <h3 className="text-base font-black font-lora">Brain Dump</h3>
-          <Card className="rounded-2xl bg-yellow-50/50 dark:bg-yellow-950/10">
-            <CardContent className="p-6 space-y-3">
-              <Textarea placeholder="Brain dump ideas for this event... saves automatically." className="min-h-[200px] bg-transparent border-yellow-200/50 rounded-xl resize-none" value={localBrainDump} onChange={(e) => setLocalBrainDump(e.target.value)} />
-              {saveNoteMutation.isPending && <p className="text-[9px] text-yellow-600 font-bold uppercase tracking-widest animate-pulse">Saving...</p>}
-            </CardContent>
-          </Card>
+          <Section
+            title="Brain Dump"
+            description="A scratchpad for ideas, reminders, and setlists. Saves automatically as you type."
+            icon={<Brain className="h-4 w-4" />}
+            badge={
+              saveNoteMutation.isPending ? (
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 animate-pulse">Saving…</span>
+              ) : localBrainDump ? (
+                <span className="text-[10px] font-black uppercase tracking-widest text-green-600">Saved</span>
+              ) : undefined
+            }
+          >
+            <Textarea
+              placeholder="Brain dump ideas for this event..."
+              className="min-h-[240px] bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-900/40 rounded-xl resize-y leading-relaxed"
+              value={localBrainDump}
+              onChange={(e) => setLocalBrainDump(e.target.value)}
+            />
+          </Section>
         </TabsContent>
       </Tabs>
 

@@ -1,20 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Zap, Clock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, Zap, Clock, Plus, Tag } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { format, isAfter, isBefore } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import Section from "@/components/ui/section";
+import EmptyState from "@/components/ui/empty-state";
 
 const promoSchema = z.object({
   code: z.string().min(1, "Code is required"),
@@ -32,9 +41,17 @@ interface FlashSaleManagerProps {
 
 const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const form = useForm<PromoFormData>({
     resolver: zodResolver(promoSchema),
-    defaultValues: { code: "SING20", discount_percent: "20", start_date: "", end_date: "", description: "48-Hour Flash Sale" },
+    defaultValues: {
+      code: "SING20",
+      discount_percent: "20",
+      start_date: "",
+      end_date: "",
+      description: "48-Hour Flash Sale",
+    },
   });
 
   const { data: promos, isLoading } = useQuery({
@@ -50,6 +67,17 @@ const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
     },
   });
 
+  const openDialog = () => {
+    form.reset({
+      code: "SING20",
+      discount_percent: "20",
+      start_date: "",
+      end_date: "",
+      description: "48-Hour Flash Sale",
+    });
+    setIsDialogOpen(true);
+  };
+
   const onSubmit = async (data: PromoFormData) => {
     const { error } = await supabase.from("marketing_promos").upsert({
       event_id: eventId,
@@ -63,95 +91,190 @@ const FlashSaleManager: React.FC<FlashSaleManagerProps> = ({ eventId }) => {
     if (error) showError("Failed to save promo.");
     else {
       showSuccess("Promotion saved!");
+      setIsDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["marketingPromos", eventId] });
     }
   };
 
+  const createPromotionAction = (
+    <Button onClick={openDialog} className="h-10 rounded-xl font-bold shadow-sm">
+      <Plus className="h-4 w-4 mr-1.5" /> Create Promotion
+    </Button>
+  );
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-1 shadow-lg border-none rounded-[2.5rem]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" /> Manage Promo
-          </CardTitle>
-          <CardDescription>Set up your flash sale codes</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField control={form.control} name="code" render={({ field }) => (
-                <FormItem><FormLabel>Promo Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="discount_percent" render={({ field }) => (
-                <FormItem><FormLabel>Discount (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="start_date" render={({ field }) => (
-                <FormItem><FormLabel>Start Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="end_date" render={({ field }) => (
-                <FormItem><FormLabel>End Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : "Save Promotion"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      <div className="lg:col-span-2 space-y-6">
+    <>
+      <Section
+        title="Promotions"
+        description="Run time-boxed discount codes to drive a burst of ticket sales."
+        icon={<Zap className="h-4 w-4" />}
+        action={createPromotionAction}
+      >
         {isLoading ? (
-          <Card className="shadow-lg border-none rounded-[2.5rem]">
-            <CardContent className="p-12 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </CardContent>
-          </Card>
-        ) : promos?.length === 0 ? (
-          <Card className="shadow-lg border-none border-dashed border-2 bg-muted/10 rounded-[2.5rem]">
-            <CardContent className="p-12 text-center">
-              <Zap className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
-              <p className="text-lg font-bold text-muted-foreground font-lora">No promotions yet.</p>
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : !promos || promos.length === 0 ? (
+          <EmptyState
+            icon={<Tag className="h-7 w-7" />}
+            title="No promotions yet"
+            description="Create a discount code to reward your community and fill seats fast."
+            action={{ label: "Create Promotion", onClick: openDialog, icon: <Plus className="h-4 w-4" /> }}
+          />
         ) : (
-          promos?.map((promo) => {
-            const now = new Date();
-            const start = new Date(promo.start_date);
-            const end = new Date(promo.end_date);
-            const isActive = isAfter(now, start) && isBefore(now, end);
-            const isUpcoming = isBefore(now, start);
-            const isExpired = isAfter(now, end);
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {promos.map((promo) => {
+              const now = new Date();
+              const start = new Date(promo.start_date);
+              const end = new Date(promo.end_date);
+              const isActive = isAfter(now, start) && isBefore(now, end);
+              const isUpcoming = isBefore(now, start);
 
-            return (
-              <Card key={promo.id} className={cn("shadow-lg border-none overflow-hidden rounded-[2.5rem]", isActive && "ring-2 ring-primary")}>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-2xl font-bold font-mono">{promo.code}</h3>
-                        <Badge variant={isActive ? "default" : isUpcoming ? "secondary" : "outline"}>
-                          {isActive ? "Active Now" : isUpcoming ? "Upcoming" : "Expired"}
+              return (
+                <div
+                  key={promo.id}
+                  className={cn(
+                    "rounded-2xl border p-5 space-y-3 transition-shadow",
+                    isActive
+                      ? "border-primary/30 bg-primary/5 ring-1 ring-primary/20"
+                      : "border-border/60 bg-card",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xl font-black font-mono tracking-tight">{promo.code}</span>
+                        <Badge
+                          variant={isActive ? "default" : isUpcoming ? "secondary" : "outline"}
+                          className="text-[9px] font-black uppercase tracking-widest"
+                        >
+                          {isActive ? "Active" : isUpcoming ? "Upcoming" : "Expired"}
                         </Badge>
                       </div>
-                      <p className="text-muted-foreground">{promo.description}</p>
-                      <div className="flex items-center gap-4 text-sm font-medium">
-                        <div className="flex items-center gap-1"><Clock className="h-4 w-4" /> {format(start, "MMM d, h:mm a")}</div>
-                        <div className="text-muted-foreground">to</div>
-                        <div className="flex items-center gap-1"><Clock className="h-4 w-4" /> {format(end, "MMM d, h:mm a")}</div>
-                      </div>
+                      {promo.description && (
+                        <p className="text-sm text-muted-foreground font-medium">{promo.description}</p>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <div className="text-4xl font-bold text-primary">{promo.discount_percent}%</div>
-                      <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Discount</div>
+                    <div className="text-right shrink-0">
+                      <div className="text-3xl font-black text-primary leading-none">{promo.discount_percent}%</div>
+                      <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1">Off</div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    {format(start, "MMM d, h:mm a")}
+                    <span className="opacity-50">→</span>
+                    {format(end, "MMM d, h:mm a")}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
-      </div>
-    </div>
+      </Section>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-lora font-black">Create a promotion</DialogTitle>
+            <DialogDescription>
+              Set a discount code and the window it's valid for. Share the code anywhere you promote the event.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Promo Code</FormLabel>
+                      <FormControl>
+                        <Input className="font-mono uppercase" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="discount_percent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discount (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="start_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date &amp; Time</FormLabel>
+                      <FormControl>
+                        <Input type="datetime-local" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="end_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date &amp; Time</FormLabel>
+                      <FormControl>
+                        <Input type="datetime-local" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. 48-Hour Flash Sale" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter className="gap-2 sm:gap-0 pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="font-bold"
+                  onClick={() => setIsDialogOpen(false)}
+                  disabled={form.formState.isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="font-bold rounded-xl" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? (
+                    <Loader2 className="animate-spin h-4 w-4" />
+                  ) : (
+                    "Save Promotion"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

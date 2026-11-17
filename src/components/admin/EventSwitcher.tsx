@@ -98,9 +98,9 @@ const EventSwitcher: React.FC<EventSwitcherProps> = ({ events, selectedEventId, 
       </Popover>
 
       {onCreate && (
-        <Button onClick={onCreate} className="h-11 rounded-xl font-bold px-3">
+        <Button onClick={onCreate} className="h-11 rounded-xl font-bold px-3 shrink-0">
           <Plus className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">New</span>
+          <span className="hidden sm:inline">New Event</span>
         </Button>
       )}
     </div>

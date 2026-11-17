@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trash2, Edit as EditIcon, Search, MessageSquare, Send, Mail, Phone, Users as UsersIcon } from "lucide-react";
@@ -23,6 +22,9 @@ import { syncMembersToKit } from "@/utils/kit";
 import { format } from "date-fns";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import OverflowMenu from "@/components/ui/overflow-menu";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
+import EmptyState from "@/components/ui/empty-state";
 
 interface Profile {
   id: string;
@@ -58,6 +60,7 @@ const AdminPeopleHub: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteMemberTarget, setDeleteMemberTarget] = useState<Profile | null>(null);
 
   const { data: profiles, isLoading: loadingProfiles } = useQuery<Profile[], Error>({
     queryKey: ['adminMembers'],
@@ -130,13 +133,18 @@ const AdminPeopleHub: React.FC = () => {
     setIsUpdatingAdminStatus(null);
   };
 
-  const handleDeleteMember = async (profileId: string) => {
+  const handleDeleteMember = async () => {
+    if (!deleteMemberTarget) return;
+    const profileId = deleteMemberTarget.id;
+    setDeletingId(profileId);
     const { error } = await supabase.from("profiles").delete().eq("id", profileId);
     if (error) showError(error.message);
     else {
       showSuccess("Member removed successfully.");
       queryClient.invalidateQueries({ queryKey: ['adminMembers'] });
     }
+    setDeletingId(null);
+    setDeleteMemberTarget(null);
   };
 
   const handleDeleteSubmission = async (submissionId: string) => {
@@ -179,9 +187,8 @@ const AdminPeopleHub: React.FC = () => {
       actions={
         <>
           <Button
-            variant="outline"
             onClick={() => setIsEmailModalOpen(true)}
-            className="h-12 px-5 rounded-xl font-black border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
+            className="h-11 px-5 rounded-xl font-bold shadow-sm"
           >
             <MessageSquare className="mr-2 h-4 w-4" /> Message All
           </Button>
@@ -189,9 +196,9 @@ const AdminPeopleHub: React.FC = () => {
             variant="outline"
             onClick={handleSyncToKit}
             disabled={isSyncingToKit}
-            className="h-12 px-5 rounded-xl font-black border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
+            className="h-11 px-4 rounded-xl font-bold border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
           >
-            <Send className="mr-2 h-4 w-4" /> {isSyncingToKit ? "Syncing..." : "Sync to Kit.com"}
+            <Send className="mr-2 h-4 w-4" /> {isSyncingToKit ? "Syncing..." : "Sync to Kit"}
           </Button>
         </>
       }
@@ -290,29 +297,23 @@ const AdminPeopleHub: React.FC = () => {
                             </TableCell>
                             <TableCell className="text-right pr-10">
                               <div className="flex items-center justify-end gap-2">
-                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all" onClick={() => { setEditingMember(profile); setIsEditProfileDialogOpen(true); }}>
-                                  <EditIcon className="h-5 w-5" />
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
-                                      <Trash2 className="h-5 w-5" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent className="rounded-[2.5rem]">
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Remove Member?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        This will permanently remove {profile.first_name || 'this member'} from the community directory.
-                                        Their authenticated account will remain, but they will no longer appear in the member list.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteMember(profile.id)} className="rounded-xl font-bold bg-destructive hover:bg-destructive/90">Remove</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
+                                <OverflowMenu
+                                  label="Member"
+                                  triggerLabel="Member actions"
+                                  actions={[
+                                    {
+                                      label: "Edit profile",
+                                      icon: <EditIcon className="h-4 w-4" />,
+                                      onSelect: () => { setEditingMember(profile); setIsEditProfileDialogOpen(true); },
+                                    },
+                                    {
+                                      label: "Remove member",
+                                      icon: <Trash2 className="h-4 w-4" />,
+                                      destructive: true,
+                                      onSelect: () => setDeleteMemberTarget(profile),
+                                    },
+                                  ]}
+                                />
                               </div>
                             </TableCell>
                           </TableRow>
@@ -322,9 +323,14 @@ const AdminPeopleHub: React.FC = () => {
                   </Table>
                 </div>
                 {filteredProfiles.length === 0 && (
-                  <div className="p-20 text-center">
-                    <UsersIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-10" />
-                    <p className="text-xl font-bold text-muted-foreground font-lora">No members found matching your search.</p>
+                  <div className="p-4">
+                    <EmptyState
+                      icon={<UsersIcon className="h-7 w-7" />}
+                      title={searchTerm || roleFilter !== "all" ? "No members match your filters" : "No members yet"}
+                      description={searchTerm || roleFilter !== "all"
+                        ? "Try clearing the search or role filter to see more people."
+                        : "Members appear here as they join your community."}
+                    />
                   </div>
                 )}
               </CardContent>
@@ -374,30 +380,21 @@ const AdminPeopleHub: React.FC = () => {
                           {format(new Date(submission.created_at), "PPP p")}
                         </TableCell>
                         <TableCell className="text-right pr-10">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                                disabled={deletingId === submission.id}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-[2.5rem]">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Remove Interest Submission?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will permanently remove {submission.first_name || 'this submission'} from the interest list.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteSubmission(submission.id)} className="rounded-xl font-bold bg-destructive hover:bg-destructive/90">Remove</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <div className="flex items-center justify-end">
+                            <OverflowMenu
+                              label="Interest lead"
+                              triggerLabel="Lead actions"
+                              actions={[
+                                {
+                                  label: "Remove lead",
+                                  icon: <Trash2 className="h-4 w-4" />,
+                                  destructive: true,
+                                  disabled: deletingId === submission.id,
+                                  onSelect: () => handleDeleteSubmission(submission.id),
+                                },
+                              ]}
+                            />
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -425,6 +422,18 @@ const AdminPeopleHub: React.FC = () => {
       <EmailMembersModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={deleteMemberTarget !== null}
+        onOpenChange={(open) => !open && setDeleteMemberTarget(null)}
+        title="Remove this member?"
+        description={deleteMemberTarget
+          ? `This permanently removes ${deleteMemberTarget.first_name || "this member"} from the community directory. Their account remains, but they won't appear in the member list.`
+          : ""}
+        confirmLabel="Remove Member"
+        loading={deletingId !== null}
+        onConfirm={handleDeleteMember}
       />
     </AdminWorkbenchShell>
   );
