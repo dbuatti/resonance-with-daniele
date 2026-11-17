@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Music, Globe, Link as LinkIcon, Plus, Trash2, ExternalLink, Brain, Loader2, Youtube, Trophy, MessageSquare, ChevronRight } from "lucide-react";
+import { Music, Globe, Link as LinkIcon, Plus, Trash2, ExternalLink, Brain, Loader2, Youtube, Trophy, MessageSquare, ChevronRight, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,11 +16,25 @@ import { showSuccess, showError } from "@/utils/toast";
 import { Badge } from "@/components/ui/badge";
 import AdminWorkbenchShell from "@/components/admin/AdminWorkbenchShell";
 
+const IDEA_STATUSES = ["idea", "considering", "chosen", "performed", "passed"] as const;
+type IdeaStatus = (typeof IDEA_STATUSES)[number];
+
+interface RepertoireIdea {
+  id: string;
+  title: string;
+  artist: string | null;
+  notes: string | null;
+  status: IdeaStatus;
+  created_at: string;
+}
+
 const AdminRepertoireZone: React.FC = () => {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [newLink, setNewLink] = useState({ title: "", url: "", notes: "" });
   const [isAddingLink, setIsAddingLink] = useState(false);
+  const [newIdea, setNewIdea] = useState({ title: "", artist: "", notes: "" });
+  const [isAddingIdea, setIsAddingIdea] = useState(false);
 
   // 1. Brain Dump Logic (using admin_notes)
   const { data: brainDumpData } = useQuery({
@@ -99,7 +113,67 @@ const AdminRepertoireZone: React.FC = () => {
     },
   });
 
-  // 3. Community Pulse (Top Suggestions)
+  // 3. Next Up — the running shortlist of future songs
+  const { data: ideas, isLoading: loadingIdeas } = useQuery({
+    queryKey: ["repertoireIdeas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("repertoire_ideas")
+        .select("id, title, artist, notes, status, created_at")
+        .neq("status", "passed")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as RepertoireIdea[];
+    },
+  });
+
+  const addIdeaMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("repertoire_ideas").insert({
+        admin_id: user?.id,
+        title: newIdea.title.trim(),
+        artist: newIdea.artist.trim() || null,
+        notes: newIdea.notes.trim() || null,
+        status: "idea",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["repertoireIdeas"] });
+      setNewIdea({ title: "", artist: "", notes: "" });
+      setIsAddingIdea(false);
+      showSuccess("Added to Next Up!");
+    },
+    onError: (err: Error) => showError(err.message),
+  });
+
+  const setIdeaStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: IdeaStatus }) => {
+      const { error } = await supabase
+        .from("repertoire_ideas")
+        .update({ status })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["repertoireIdeas"] });
+      showSuccess("Moved.");
+    },
+    onError: (err: Error) => showError(err.message),
+  });
+
+  const deleteIdeaMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("repertoire_ideas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["repertoireIdeas"] });
+      showSuccess("Idea removed.");
+    },
+  });
+
+  // 4. Community Pulse (Top Suggestions)
   const { data: topSuggestions } = useQuery({
     queryKey: ["topSongSuggestions"],
     queryFn: async () => {
@@ -143,6 +217,126 @@ const AdminRepertoireZone: React.FC = () => {
                   value={localBrainDump}
                   onChange={(e) => setLocalBrainDump(e.target.value)}
                 />
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Next Up — future song ideas */}
+          <section className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-accent" />
+                <h2 className="text-xl font-black font-lora">Next Up</h2>
+                {!!ideas?.length && (
+                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-accent/30 text-accent">
+                    {ideas.length} in the pipeline
+                  </Badge>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl font-bold border-accent/30 text-accent"
+                onClick={() => setIsAddingIdea(!isAddingIdea)}
+              >
+                {isAddingIdea ? "Cancel" : <><Plus className="mr-2 h-4 w-4" /> Log a Song</>}
+              </Button>
+            </div>
+
+            {isAddingIdea && (
+              <Card className="border-2 border-accent/20 shadow-xl rounded-2xl bg-accent/5 animate-in fade-in slide-in-from-top-4">
+                <CardContent className="p-6 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest">Song</Label>
+                      <Input
+                        placeholder="e.g. A Million Dreams"
+                        value={newIdea.title}
+                        onChange={(e) => setNewIdea({ ...newIdea, title: e.target.value })}
+                        className="rounded-xl font-bold"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest">Show / Artist</Label>
+                      <Input
+                        placeholder="e.g. The Greatest Showman"
+                        value={newIdea.artist}
+                        onChange={(e) => setNewIdea({ ...newIdea, artist: e.target.value })}
+                        className="rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Why this one?</Label>
+                    <Input
+                      placeholder="What would make it land?"
+                      value={newIdea.notes}
+                      onChange={(e) => setNewIdea({ ...newIdea, notes: e.target.value })}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <Button
+                    className="w-full h-12 font-black rounded-xl shadow-lg"
+                    onClick={() => addIdeaMutation.mutate()}
+                    disabled={!newIdea.title.trim() || addIdeaMutation.isPending}
+                  >
+                    {addIdeaMutation.isPending ? <Loader2 className="animate-spin h-5 w-5" /> : "Save to Next Up"}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden">
+              <CardContent className="p-0">
+                {loadingIdeas ? (
+                  <div className="p-6 space-y-3">
+                    {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+                  </div>
+                ) : ideas?.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <Lightbulb className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-20" />
+                    <p className="text-lg font-bold text-muted-foreground font-lora">No songs on the horizon yet.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border/50">
+                    {ideas.map((idea) => {
+                      const nextStatus = IDEA_STATUSES[IDEA_STATUSES.indexOf(idea.status) + 1];
+                      return (
+                        <div key={idea.id} className="group p-5 flex items-start justify-between gap-4 hover:bg-muted/20 transition-colors">
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-black text-base leading-tight">{idea.title}</p>
+                              {idea.artist && <span className="text-sm text-muted-foreground font-medium">· {idea.artist}</span>}
+                              <Badge
+                                variant="outline"
+                                className="text-[9px] font-black uppercase tracking-widest border-accent/30 bg-accent/10 text-accent shrink-0"
+                              >
+                                {idea.status}
+                              </Badge>
+                            </div>
+                            {idea.notes && <p className="text-xs text-muted-foreground italic line-clamp-2">"{idea.notes}"</p>}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {nextStatus && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-[10px] font-black uppercase tracking-widest text-primary"
+                                disabled={setIdeaStatusMutation.isPending}
+                                onClick={() => setIdeaStatusMutation.mutate({ id: idea.id, status: nextStatus })}
+                              >
+                                → {nextStatus}
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteIdeaMutation.mutate(idea.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>
