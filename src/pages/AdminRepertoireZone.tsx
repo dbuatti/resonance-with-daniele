@@ -25,6 +25,7 @@ interface RepertoireIdea {
   artist: string | null;
   notes: string | null;
   status: IdeaStatus;
+  url: string | null;
   created_at: string;
 }
 
@@ -33,7 +34,7 @@ const AdminRepertoireZone: React.FC = () => {
   const queryClient = useQueryClient();
   const [newLink, setNewLink] = useState({ title: "", url: "", notes: "" });
   const [isAddingLink, setIsAddingLink] = useState(false);
-  const [newIdea, setNewIdea] = useState({ title: "", artist: "", notes: "" });
+  const [newIdea, setNewIdea] = useState({ title: "", artist: "", notes: "", url: "" });
   const [isAddingIdea, setIsAddingIdea] = useState(false);
 
   // 1. Brain Dump Logic (using admin_notes)
@@ -111,6 +112,7 @@ const AdminRepertoireZone: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["repertoireResearch"] });
       showSuccess("Link removed.");
     },
+    onError: (err: Error) => showError(err.message),
   });
 
   // 3. Next Up — the running shortlist of future songs
@@ -119,7 +121,7 @@ const AdminRepertoireZone: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("repertoire_ideas")
-        .select("id, title, artist, notes, status, created_at")
+        .select("id, title, artist, notes, status, url, created_at")
         .neq("status", "passed")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -134,13 +136,14 @@ const AdminRepertoireZone: React.FC = () => {
         title: newIdea.title.trim(),
         artist: newIdea.artist.trim() || null,
         notes: newIdea.notes.trim() || null,
+        url: newIdea.url.trim() || null,
         status: "idea",
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["repertoireIdeas"] });
-      setNewIdea({ title: "", artist: "", notes: "" });
+      setNewIdea({ title: "", artist: "", notes: "", url: "" });
       setIsAddingIdea(false);
       showSuccess("Added to Next Up!");
     },
@@ -171,6 +174,7 @@ const AdminRepertoireZone: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["repertoireIdeas"] });
       showSuccess("Idea removed.");
     },
+    onError: (err: Error) => showError(err.message),
   });
 
   // 4. Community Pulse (Top Suggestions)
@@ -275,10 +279,20 @@ const AdminRepertoireZone: React.FC = () => {
                       className="rounded-xl"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Score / Chart URL (optional)</Label>
+                    <Input
+                      type="url"
+                      placeholder="https://..."
+                      value={newIdea.url}
+                      onChange={(e) => setNewIdea({ ...newIdea, url: e.target.value })}
+                      className="rounded-xl"
+                    />
+                  </div>
                   <Button
                     className="w-full h-12 font-black rounded-xl shadow-lg"
                     onClick={() => addIdeaMutation.mutate()}
-                    disabled={!newIdea.title.trim() || addIdeaMutation.isPending}
+                    disabled={!newIdea.title.trim() || addIdeaMutation.isPending || (newIdea.url.trim() !== "" && !newIdea.url.startsWith("http"))}
                   >
                     {addIdeaMutation.isPending ? <Loader2 className="animate-spin h-5 w-5" /> : "Save to Next Up"}
                   </Button>
@@ -315,8 +329,15 @@ const AdminRepertoireZone: React.FC = () => {
                               </Badge>
                             </div>
                             {idea.notes && <p className="text-xs text-muted-foreground italic line-clamp-2">"{idea.notes}"</p>}
+                            {idea.url && (
+                              <Button asChild variant="link" className="p-0 h-auto text-primary font-black text-xs">
+                                <a href={idea.url} target="_blank" rel="noopener noreferrer">
+                                  Score ↗
+                                </a>
+                              </Button>
+                            )}
                           </div>
-                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                             {nextStatus && (
                               <Button
                                 variant="ghost"
@@ -328,7 +349,7 @@ const AdminRepertoireZone: React.FC = () => {
                                 → {nextStatus}
                               </Button>
                             )}
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteIdeaMutation.mutate(idea.id)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label={`Delete ${idea.title}`} onClick={() => deleteIdeaMutation.mutate(idea.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -393,7 +414,7 @@ const AdminRepertoireZone: React.FC = () => {
                   <Button
                     className="w-full h-12 font-black rounded-xl shadow-lg"
                     onClick={() => addLinkMutation.mutate()}
-                    disabled={!newLink.title || addLinkMutation.isPending}
+                    disabled={!newLink.title || addLinkMutation.isPending || (newLink.url.trim() !== "" && !newLink.url.startsWith("http"))}
                   >
                     {addLinkMutation.isPending ? <Loader2 className="animate-spin h-5 w-5" /> : "Save to Research"}
                   </Button>
@@ -418,8 +439,8 @@ const AdminRepertoireZone: React.FC = () => {
                           <h3 className="font-black text-lg leading-tight truncate">{item.title}</h3>
                           {item.notes && <p className="text-xs text-muted-foreground line-clamp-2 italic">"{item.notes}"</p>}
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteLinkMutation.mutate(item.id)}>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label={`Delete ${item.title}`} onClick={() => deleteLinkMutation.mutate(item.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
