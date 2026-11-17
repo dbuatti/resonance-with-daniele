@@ -63,7 +63,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Button asChild className="rounded-lg font-bold px-4 md:px-5">
                 <a href="/next">Book Your Spot</a>
               </Button>
-              <Button asChild variant="outline" className="hidden sm:inline-flex rounded-lg font-semibold">
+              <Button asChild variant="outline" className="rounded-lg font-semibold px-3 sm:px-4">
                 <Link to="/login">Member Login</Link>
               </Button>
             </nav>

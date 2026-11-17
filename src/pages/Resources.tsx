@@ -291,10 +291,10 @@ const Resources: React.FC = () => {
           <h2 className="text-xl font-black font-lora uppercase tracking-widest text-muted-foreground">{title}</h2>
         </div>
         {isAdmin && sortBy === 'sort_order' ? (
-          <SortableResourceList resources={res} isAdmin={isAdmin} currentFolderId={currentFolderId} onEdit={handleEditResource} onDelete={setResourceToDelete} onMove={handleMoveResource} />
+          <SortableResourceList resources={res} isAdmin={isAdmin} currentFolderId={currentFolderId} onEdit={handleEditResource} onDelete={handleDeleteResource} onMove={handleMoveResource} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {res.map(r => <ResourceCard key={r.id} resource={r} isAdmin={isAdmin} onEdit={handleEditResource} onDelete={setResourceToDelete} onMove={handleMoveResource} />)}
+            {res.map(r => <ResourceCard key={r.id} resource={r} isAdmin={isAdmin} onEdit={handleEditResource} onDelete={handleDeleteResource} onMove={handleMoveResource} />)}
           </div>
         )}
       </section>
@@ -314,6 +314,21 @@ const Resources: React.FC = () => {
     } finally {
       setIsDeletingFolder(false);
       setFolderToDelete(null);
+    }
+  };
+
+  const handleDeleteResource = async (resource: Resource) => {
+    if (!isAdmin) return;
+    try {
+      const { error } = await supabase.from("resources").delete().eq("id", resource.id);
+      if (error) throw error;
+      showSuccess("Resource deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ['folderResources'] });
+      queryClient.invalidateQueries({ queryKey: ['allResourcesForLibrary'] });
+    } catch (err: unknown) {
+      showError("Failed to delete resource: " + (err instanceof Error ? err.message : "Unknown error"));
+    } finally {
+      setResourceToDelete(null);
     }
   };
 

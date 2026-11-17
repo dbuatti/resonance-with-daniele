@@ -112,6 +112,12 @@ const AdminEventWorkbench: React.FC = () => {
       }, { onConflict: "note_key" });
     },
   });
+
+  useEffect(() => {
+    if (debouncedBrainDump !== brainDumpData && id) {
+      saveNoteMutation.mutate(debouncedBrainDump);
+    }
+  }, [debouncedBrainDump, brainDumpData, id, saveNoteMutation]);
   const saveHumanitixMutation = useMutation({
     mutationFn: async (link: string) => {
       if (!id) throw new Error("No event selected");
@@ -436,7 +442,7 @@ const AdminEventWorkbench: React.FC = () => {
             badge={
               saveNoteMutation.isPending ? (
                 <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 animate-pulse">Saving…</span>
-              ) : localBrainDump ? (
+              ) : saveNoteMutation.isSuccess && localBrainDump === brainDumpData ? (
                 <span className="text-[10px] font-black uppercase tracking-widest text-green-600">Saved</span>
               ) : undefined
             }

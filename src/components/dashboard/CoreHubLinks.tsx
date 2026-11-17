@@ -2,8 +2,9 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { FileText, CalendarDays, Music, Users, BookOpen } from "lucide-react";
+import { FileText, CalendarDays, Music, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/integrations/supabase/auth";
 
 const coreLinks = [
   {
@@ -28,7 +29,8 @@ const coreLinks = [
     description: "Upcoming sessions.",
     link: "/events",
     color: "text-green-500",
-    bg: "bg-green-500/10"
+    bg: "bg-green-500/10",
+    adminOnly: true
   },
   {
     icon: <Music className="h-6 w-6" />,
@@ -41,9 +43,14 @@ const coreLinks = [
 ];
 
 const CoreHubLinks: React.FC = () => {
+  const { user } = useSession();
+  const isAdmin = user?.is_admin;
+
+  const filteredLinks = coreLinks.filter(item => !item.adminOnly || isAdmin);
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-      {coreLinks.map((item, index) => (
+    <div className={cn("grid grid-cols-2 gap-6", filteredLinks.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3")}>
+      {filteredLinks.map((item, index) => (
         <Link key={index} to={item.link} className="group">
           <div className={cn(
             "h-full flex flex-col p-8 transition-all duration-300 rounded-[2rem] border-2 border-border/50 bg-card shadow-sm",
