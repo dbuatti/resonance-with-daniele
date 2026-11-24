@@ -25,6 +25,11 @@ dist-ssr
 .dyad/
 .vercel/
 
+# Environment (direnv)
+.env
+.env.local
+.env.*.local
+
 # Supabase CLI scratch directory (project link state, version pins)
 supabase/.temp/
 .vercel
