@@ -36,3 +36,6 @@ supabase/.temp/
 
 # Generated data exports (may contain member PII — never commit)
 exports/
+
+# direnv (tracked - no secrets, just variable names)
+!.envrc
